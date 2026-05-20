@@ -1,0 +1,8 @@
+<div class="nas-progress">
+  <div class="nas-progress__track">
+    <div class="nas-progress__fill"
+         [style.width.%]="clamped()"
+         [attr.data-tone]="resolvedTone()"></div>
+  </div>
+  @if (showValue) { <span class="nas-progress__value">{{ clamped() }}%</span> }
+</div>

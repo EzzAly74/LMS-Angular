@@ -1,0 +1,13 @@
+<div class="nas-tabs" role="tablist">
+  @for (tab of tabs; track tab.id) {
+    <button type="button"
+            role="tab"
+            class="nas-tab"
+            [class.active]="tab.id === activeId"
+            [attr.aria-selected]="tab.id === activeId"
+            (click)="select(tab.id)">
+      <span>{{ tab.label }}</span>
+      @if (tab.count != null) { <span class="nas-tab__count">{{ tab.count }}</span> }
+    </button>
+  }
+</div>

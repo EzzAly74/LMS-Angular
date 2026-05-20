@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 16.6732 9.64237" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="_x3C_Radial_Repeat_x3E_">
+<path id="Vector" d="M13.1669 8.47359C13.8124 9.11909 14.859 9.11909 15.5045 8.47359C16.15 7.8281 16.15 6.78154 15.5045 6.13605L10.5372 1.16877C9.8917 0.523276 8.84514 0.523277 8.19965 1.16877C7.55415 1.81427 7.55415 2.86082 8.19965 3.50631L13.1669 8.47359Z" fill="url(#paint0_linear_0_328)"/>
+<path id="Vector_2" d="M8.67769 9.28993C9.59055 9.28993 10.3306 8.5499 10.3306 7.63703C10.3306 6.72417 9.59055 5.98414 8.67769 5.98414L1.65289 5.98414C0.740026 5.98414 0 6.72417 0 7.63703C0 8.5499 0.740026 9.28993 1.65289 9.28993H8.67769Z" fill="url(#paint1_linear_0_328)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_328" x1="7.71608" y1="4.816" x2="16.0012" y2="4.816" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0C2427" stop-opacity="0"/>
+<stop offset="1" stop-color="#75DEFF"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_328" x1="-0.0206609" y1="7.63703" x2="10.3306" y2="7.63703" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0C2427" stop-opacity="0"/>
+<stop offset="1" stop-color="#75DEFF"/>
+</linearGradient>
+</defs>
+</svg>

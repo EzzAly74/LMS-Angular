@@ -1,0 +1,51 @@
+<div class="p-4">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h2 class="text-2xl font-semibold text-900 m-0">Resources</h2>
+    <p-button icon="pi pi-plus" label="Add Resource" size="small" routerLink="/admin/resources/add" />
+  </div>
+
+  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
+    <p-table
+      [value]="items()"
+      [loading]="loading()"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="perPage"
+      [totalRecords]="total()"
+      (onLazyLoad)="onPage($event)"
+      [rowHover]="true"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Qualification</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td class="font-medium">
+            <i [class]="typeIcon(item.type) + ' mr-2 text-color-secondary'"></i>
+            {{ item.title }}
+          </td>
+          <td>
+            <p-tag [value]="item.type | titlecase"
+                   [severity]="item.type === 'file' ? 'warning' : item.type === 'link' ? 'secondary' : 'info'" />
+          </td>
+          <td class="text-color-secondary text-sm">{{ item.qualification ?? '—' }}</td>
+          <td class="text-color-secondary text-sm">{{ item.created_at | date:'mediumDate' }}</td>
+          <td>
+            <p-button icon="pi pi-eye" size="small" severity="secondary" [text]="true"
+                      [routerLink]="['/admin/resources', item.id]" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="text-center p-4 text-color-secondary">No resources found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

@@ -1,0 +1,84 @@
+:host { display: block; height: 100%; }
+
+.nas-stat {
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  padding: var(--nas-space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nas-space-4);
+  height: 100%;
+  box-sizing: border-box;
+  transition: box-shadow var(--transition-speed),
+              border-color var(--transition-speed);
+
+  &--clickable {
+    cursor: pointer;
+    &:hover {
+      box-shadow: var(--nas-shadow-md);
+      border-color: var(--nas-color-border-strong);
+    }
+  }
+}
+
+.nas-stat__icon {
+  width:  44px;
+  height: 44px;
+  border-radius: var(--nas-radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &[data-tone="teal"]    { background: var(--nas-teal-200);            color: var(--nas-teal-800); }
+  &[data-tone="amber"]   { background: var(--nas-status-amber-500-16); color: var(--nas-status-amber-500); }
+  &[data-tone="green"]   { background: var(--nas-status-green-500-16); color: var(--nas-status-green-500); }
+  &[data-tone="sky"]     { background: var(--nas-sky-300);             color: var(--nas-sky-1000); }
+  &[data-tone="neutral"] { background: var(--nas-neutral-300);         color: var(--nas-color-text-muted); }
+
+  i { font-size: 20px; }
+}
+
+.nas-stat__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.nas-stat__value {
+  font-size:   var(--nas-size-2xl);
+  line-height: var(--nas-height-2xl);
+  font-weight: var(--nas-weight-bold);
+  color:       var(--nas-color-text-strong);
+}
+
+.nas-stat__label {
+  font-size:   var(--nas-size-xs);
+  color:       var(--nas-color-text-muted);
+  font-weight: var(--nas-weight-medium);
+}
+
+.nas-stat__subline {
+  font-size: var(--nas-size-2xs);
+  color:     var(--nas-color-text-muted);
+  display:   inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+}
+
+.nas-stat__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-1);
+  font-size:   var(--nas-size-3xs);
+  font-weight: var(--nas-weight-medium);
+
+  i { font-size: 10px; }
+
+  &[data-direction="up"]   { color: var(--nas-status-green-500); }
+  &[data-direction="down"] { color: var(--nas-status-red-500); }
+  &[data-direction="flat"] { color: var(--nas-color-text-muted); }
+}

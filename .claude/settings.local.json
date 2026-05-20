@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx ng *)",
+      "Bash(npm install *)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(Remove-Item -Recurse -Force \"src\\\\app\\\\features\\\\auth\\\\pages\\\\admin-login\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"src\\\\app\\\\layouts\\\\user-layout\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"src\\\\app\\\\features\\\\my-courses\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"src\\\\app\\\\features\\\\my-exams\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"src\\\\app\\\\features\\\\my-assignments\" -ErrorAction SilentlyContinue)",
+      "Bash(Test-Path *)",
+      "mcp__plugin_figma_figma__get_design_context",
+      "Bash(Get-ChildItem *)",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "Bash(mkdir -p src/assets/images)",
+      "Bash(curl -s -o src/assets/images/nas-logo-wordmark.png \"https://www.figma.com/api/mcp/asset/aa29882e-68dd-411a-8419-a644872bdf97\")",
+      "Bash(curl -s -o src/assets/images/pattern-ring-lg.png \"https://www.figma.com/api/mcp/asset/d9fa1f31-0198-44ed-9720-c9366ab96e66\")",
+      "Bash(curl -s -o src/assets/images/pattern-ring-md.png \"https://www.figma.com/api/mcp/asset/ebaae16d-0b40-440c-8af6-4cd0990bb9c0\")",
+      "Bash(curl -s -o src/assets/images/pattern-ring-sm.png \"https://www.figma.com/api/mcp/asset/c4fccbe2-9e98-433e-8070-3a3cc9902729\")",
+      "Bash(curl -s -o src/assets/images/nas-radial-0.png \"https://www.figma.com/api/mcp/asset/990ba1a1-9b0e-4495-a163-fdbaf52e9198\")",
+      "Bash(curl -s -o src/assets/images/nas-radial-1.png \"https://www.figma.com/api/mcp/asset/2ce8cc32-0f0a-473f-b303-832dda523291\")",
+      "Bash(curl -s -o src/assets/images/nas-radial-2.png \"https://www.figma.com/api/mcp/asset/56ee09ee-280c-4c9c-b06f-30057635bc27\")",
+      "Bash(curl -s -o src/assets/images/nas-radial-3.png \"https://www.figma.com/api/mcp/asset/cf3066e9-5163-448c-ab40-3aa76864acc7\")",
+      "Bash(curl -s -o src/assets/images/nas-radial-4.png \"https://www.figma.com/api/mcp/asset/99696b72-df5c-4cff-b63b-06a1e81e238b\")",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('angular.json','utf8'\\)\\); const build=a.projects['2-b-academy-angular'].architect.build; console.log\\(JSON.stringify\\({assets:build.options.assets,styles:build.options.styles,scripts:build.options.scripts},null,2\\)\\)\")",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('angular.json','utf8'\\)\\); const keys=Object.keys\\(a.projects\\); console.log\\('projects:', keys\\)\")",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('angular.json','utf8'\\)\\); const build=a.projects['2B-Academy-Angular'].architect.build; console.log\\(JSON.stringify\\({assets:build.options.assets,styles:build.options.styles},null,2\\)\\)\")",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('angular.json','utf8'\\)\\); console.log\\(JSON.stringify\\(a.projects['2B-Academy-Angular'].architect.build.options,null,2\\)\\)\")",
+      "Bash(dir \"D:\\\\2b-source-code\\\\2B-Academy-Angular\\\\src\\\\assets\" /s /b)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\2b-source-code\\\\2B-Academy-Angular\\\\src\\\\assets\" -Recurse -File | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\2b-source-code\\\\2B-Academy-Angular\\\\public\" -Recurse -File | ForEach-Object { $_.FullName })"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+<div class="nas-locale-input" [class.nas-locale-input--error]="showError()">
+  <label class="nas-locale-input__label" [attr.for]="inputId + '-en'">
+    {{ label }}
+    @if (required) { <span class="nas-locale-input__req">*</span> }
+  </label>
+  <div class="nas-locale-input__grid">
+    <div class="nas-locale-input__cell">
+      <span class="nas-locale-input__lang">EN</span>
+      <input
+        class="nas-locale-input__field"
+        [id]="inputId + '-en'"
+        type="text"
+        [placeholder]="placeholderEn"
+        [value]="value().en"
+        (input)="onInput('en', $event)"
+        [disabled]="disabled"
+      />
+    </div>
+    <div class="nas-locale-input__cell">
+      <span class="nas-locale-input__lang">AR</span>
+      <input
+        class="nas-locale-input__field"
+        [id]="inputId + '-ar'"
+        type="text"
+        dir="rtl"
+        [placeholder]="placeholderAr"
+        [value]="value().ar"
+        (input)="onInput('ar', $event)"
+        [disabled]="disabled"
+      />
+    </div>
+  </div>
+</div>

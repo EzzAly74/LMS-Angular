@@ -1,0 +1,24 @@
+<div class="nas-stat" [class.nas-stat--clickable]="clickable">
+  <div class="nas-stat__icon" [attr.data-tone]="iconTone">
+    <i [class]="icon"></i>
+  </div>
+
+  <div class="nas-stat__body">
+    <div class="nas-stat__value">{{ value }}</div>
+    <div class="nas-stat__label">{{ label }}</div>
+
+    @if (subline) {
+      <div class="nas-stat__subline">
+        <ng-content select="[subline]" />
+        @if (!hasSubline) { {{ subline }} }
+      </div>
+    }
+
+    @if (trend) {
+      <div class="nas-stat__trend" [attr.data-direction]="trendDirection">
+        <i [class]="trendIcon"></i>
+        <span>{{ trend }}</span>
+      </div>
+    }
+  </div>
+</div>

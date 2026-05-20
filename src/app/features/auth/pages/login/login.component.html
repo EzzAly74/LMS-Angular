@@ -1,0 +1,167 @@
+<div class="login-page" [class.is-rtl]="locale.isRtl">
+
+  <!-- ── Form Panel (60 %) ───────────────────────────────────────────── -->
+  <div class="form-panel">
+    <div class="form-wrapper">
+
+      <h1 class="form-title">{{ 'auth.welcome_back' | translate }}</h1>
+      <p class="form-subtitle">{{ 'auth.sign_in_to_continue' | translate }}</p>
+
+      @if (error()) {
+        <div class="error-banner" role="alert">
+          <svg class="error-banner__icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="10" cy="6.5" r="0.75" fill="currentColor"/>
+          </svg>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+        <!-- Email field -->
+        <div class="field" [class.field--error]="submitted() && f['email'].invalid">
+          <label class="field__label" for="login-email">
+            {{ 'auth.email_address' | translate }}
+          </label>
+          <input
+            class="field__input"
+            type="email"
+            id="login-email"
+            formControlName="email"
+            [placeholder]="'auth.email_address' | translate"
+            autocomplete="email"
+          />
+          @if (submitted() && f['email'].hasError('required')) {
+            <div class="field__error">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10" cy="6.5" r="0.75" fill="currentColor"/>
+              </svg>
+              {{ 'errors.required' | translate }}
+            </div>
+          }
+          @if (submitted() && f['email'].hasError('email')) {
+            <div class="field__error">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10" cy="6.5" r="0.75" fill="currentColor"/>
+              </svg>
+              {{ 'auth.email_invalid' | translate }}
+            </div>
+          }
+        </div>
+
+        <!-- Password field -->
+        <div class="field" [class.field--error]="submitted() && f['password'].invalid">
+          <label class="field__label" for="login-password">
+            {{ 'auth.password' | translate }}
+          </label>
+          <div class="field__input-wrap">
+            <input
+              class="field__input field__input--icon"
+              [type]="showPassword() ? 'text' : 'password'"
+              id="login-password"
+              formControlName="password"
+              [placeholder]="'auth.password' | translate"
+              autocomplete="current-password"
+            />
+            <button type="button" class="field__eye" (click)="togglePassword()" [attr.aria-label]="'Toggle password visibility'">
+              @if (showPassword()) {
+                <!-- eye-off -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/>
+                </svg>
+              } @else {
+                <!-- eye -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (submitted() && f['password'].hasError('required')) {
+            <div class="field__error">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10" cy="6.5" r="0.75" fill="currentColor"/>
+              </svg>
+              {{ 'auth.password_required' | translate }}
+            </div>
+          }
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="loading()">
+          @if (loading()) {
+            <span class="submit-btn__spinner" aria-hidden="true"></span>
+          }
+          {{ 'auth.sign_in' | translate }}
+        </button>
+
+      </form>
+
+      <p class="form-footer">{{ 'auth.having_trouble' | translate }}</p>
+
+    </div>
+  </div>
+
+  <!-- ── Brand Panel (40 %) ──────────────────────────────────────────── -->
+  <div class="brand-panel">
+
+    <!-- Decorative rings -->
+    <div class="ring ring--1">
+      <img src="assets/images/pattern-ring-lg.svg" alt="" aria-hidden="true" />
+    </div>
+    <div class="ring ring--2">
+      <img src="assets/images/pattern-ring-md.svg" alt="" aria-hidden="true" />
+    </div>
+    <div class="ring ring--3">
+      <img src="assets/images/pattern-ring-sm.svg" alt="" aria-hidden="true" />
+    </div>
+    <div class="ring ring--4">
+      <img src="assets/images/pattern-ring-xs.svg" alt="" aria-hidden="true" />
+    </div>
+
+    <!-- Dot grid -->
+    <div class="dot-grid" aria-hidden="true">
+      @for (dot of dots; track $index) {
+        <div class="dot"></div>
+      }
+    </div>
+
+    <!-- Brand content -->
+    <div class="brand-content">
+
+      <!-- NAS Logo -->
+      <div class="brand-logo" aria-label="NAS Logo">
+        <div class="logo-mark">
+          <img class="radial r0" src="assets/images/nas-radial-0.svg" alt="" />
+          <img class="radial r1" src="assets/images/nas-radial-1.svg" alt="" />
+          <img class="radial r2" src="assets/images/nas-radial-2.svg" alt="" />
+          <img class="radial r3" src="assets/images/nas-radial-3.svg" alt="" />
+          <img class="radial r4" src="assets/images/nas-radial-4.svg" alt="" />
+          <img class="radial r5" src="assets/images/nas-radial-5.svg" alt="" />
+          <img class="radial r6" src="assets/images/nas-radial-6.svg" alt="" />
+          <img class="radial r7" src="assets/images/nas-radial-7.svg" alt="" />
+        </div>
+        <img class="logo-wordmark" src="assets/images/nas-logo-wordmark.svg" alt="NAS" />
+      </div>
+
+      <!-- Tagline -->
+      <div class="brand-tagline">
+        <p>{{ 'auth.brand_line1' | translate }}</p>
+        <p>{{ 'auth.brand_line2' | translate }}</p>
+      </div>
+
+      <p class="brand-subtitle">{{ 'auth.brand_subtitle' | translate }}</p>
+
+    </div>
+  </div>
+
+</div>

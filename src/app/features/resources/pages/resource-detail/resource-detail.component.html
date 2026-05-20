@@ -1,0 +1,94 @@
+<div class="p-4" style="max-width:800px; margin:0 auto;">
+  <div class="flex align-items-center gap-3 mb-4">
+    <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" routerLink="/admin/resources" />
+    <h2 class="text-2xl font-semibold text-900 m-0">Resource Detail</h2>
+    @if (!editing()) {
+      <p-button icon="pi pi-pencil" label="Edit" size="small" severity="secondary" class="ml-auto" (onClick)="startEdit()" />
+    }
+  </div>
+
+  @if (loading()) {
+    <p-skeleton height="300px" borderRadius="12px" />
+  } @else if (resource()) {
+
+    @if (editing()) {
+      <!-- Edit Mode -->
+      <div class="surface-card border-round-xl shadow-1 p-4">
+        <div class="flex flex-column gap-4">
+          <div class="flex flex-column gap-1">
+            <label class="font-medium text-sm">Title</label>
+            <input pInputText [(ngModel)]="editForm.title" class="w-full" />
+          </div>
+          @if (resource()!.type === 'article') {
+            <div class="flex flex-column gap-1">
+              <label class="font-medium text-sm">Content</label>
+              <textarea pTextarea [(ngModel)]="editForm.content" [rows]="8" class="w-full"></textarea>
+            </div>
+          }
+          @if (resource()!.type === 'link') {
+            <div class="flex flex-column gap-1">
+              <label class="font-medium text-sm">URL</label>
+              <input pInputText [(ngModel)]="editForm.url" class="w-full" />
+            </div>
+          }
+          <div class="flex gap-2 justify-content-end">
+            <p-button label="Cancel" severity="secondary" size="small" (onClick)="cancelEdit()" />
+            <p-button label="Save Changes" size="small" [loading]="saving()" (onClick)="save()" />
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- View Mode -->
+      <div class="surface-card border-round-xl shadow-1 p-4">
+        <div class="flex align-items-start justify-content-between mb-4">
+          <div>
+            <h3 class="text-xl font-semibold m-0 mb-2">{{ resource()!.title }}</h3>
+            <p-tag [value]="resource()!.type | titlecase"
+                   [severity]="resource()!.type === 'file' ? 'warning' : resource()!.type === 'link' ? 'secondary' : 'info'" />
+          </div>
+        </div>
+
+        <div class="flex flex-column gap-3">
+          @if (resource()!.qualification) {
+            <div class="flex gap-2 align-items-center">
+              <span class="text-color-secondary text-sm w-8rem">Qualification:</span>
+              <span class="text-sm">{{ resource()!.qualification }}</span>
+            </div>
+          }
+          <div class="flex gap-2 align-items-center">
+            <span class="text-color-secondary text-sm w-8rem">Created:</span>
+            <span class="text-sm">{{ resource()!.created_at | date:'medium' }}</span>
+          </div>
+
+          @if (resource()!.type === 'article' && resource()!.content) {
+            <div class="border-top-1 surface-border pt-3 mt-2">
+              <div class="font-medium text-sm mb-2">Content</div>
+              <div class="text-sm leading-loose" style="white-space: pre-wrap">{{ resource()!.content }}</div>
+            </div>
+          }
+
+          @if (resource()!.type === 'link' && resource()!.url) {
+            <div class="flex gap-2 align-items-center">
+              <span class="text-color-secondary text-sm w-8rem">URL:</span>
+              <a [href]="resource()!.url" target="_blank" rel="noopener" class="text-primary text-sm">{{ resource()!.url }}</a>
+            </div>
+          }
+
+          @if (resource()!.type === 'file' && resource()!.file_url) {
+            <div class="flex gap-2 align-items-center">
+              <span class="text-color-secondary text-sm w-8rem">File:</span>
+              <a [href]="resource()!.file_url" target="_blank" rel="noopener" class="text-primary text-sm">
+                <i class="pi pi-download mr-1"></i>Download
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  } @else {
+    <div class="surface-card border-round-xl shadow-1 p-6 text-center text-color-secondary">
+      Resource not found.
+    </div>
+  }
+</div>

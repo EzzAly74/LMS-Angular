@@ -1,0 +1,7 @@
+<span class="nas-avatar" [attr.data-size]="size" [style.background]="bg()">
+  @if (src) {
+    <img [src]="src" [alt]="displayName() ?? 'avatar'" />
+  } @else {
+    <span>{{ initials() }}</span>
+  }
+</span>

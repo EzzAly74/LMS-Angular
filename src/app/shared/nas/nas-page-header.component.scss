@@ -1,0 +1,42 @@
+:host { display: block; }
+
+.nas-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+  flex-wrap: wrap;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nas-space-1);
+  }
+
+  &__eyebrow {
+    font-size:   var(--nas-size-2xs);
+    color:       var(--nas-color-text-muted);
+    font-weight: var(--nas-weight-medium);
+  }
+
+  &__title {
+    font-size:   var(--nas-size-xl);
+    line-height: var(--nas-height-xl);
+    font-weight: var(--nas-weight-bold);
+    color:       var(--nas-color-text-strong);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: var(--nas-size-xs);
+    color:     var(--nas-color-text-muted);
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--nas-space-3);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}

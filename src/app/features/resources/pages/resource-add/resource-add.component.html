@@ -1,0 +1,81 @@
+<div class="p-4" style="max-width:720px; margin:0 auto;">
+  <div class="flex align-items-center gap-3 mb-4">
+    <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" routerLink="/admin/resources" />
+    <h2 class="text-2xl font-semibold text-900 m-0">Add Resource</h2>
+  </div>
+
+  <div class="surface-card border-round-xl shadow-1 p-4">
+    <div class="flex flex-column gap-4">
+
+      <!-- Title -->
+      <div class="flex flex-column gap-1">
+        <label class="font-medium text-sm">Title <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="form.title" placeholder="Resource title" class="w-full" />
+      </div>
+
+      <!-- Type -->
+      <div class="flex flex-column gap-1">
+        <label class="font-medium text-sm">Type <span class="text-red-500">*</span></label>
+        <p-dropdown
+          [options]="typeOptions"
+          [(ngModel)]="form.type"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select type"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Conditional: Article content -->
+      @if (form.type === 'article') {
+        <div class="flex flex-column gap-1">
+          <label class="font-medium text-sm">Content</label>
+          <textarea pInputTextarea [(ngModel)]="form.content" placeholder="Article content..." [rows]="8" class="w-full"></textarea>
+        </div>
+      }
+
+      <!-- Conditional: Link URL -->
+      @if (form.type === 'link') {
+        <div class="flex flex-column gap-1">
+          <label class="font-medium text-sm">URL <span class="text-red-500">*</span></label>
+          <input pInputText [(ngModel)]="form.url" placeholder="https://..." class="w-full" />
+        </div>
+      }
+
+      <!-- Conditional: File Upload -->
+      @if (form.type === 'file') {
+        <div class="flex flex-column gap-1">
+          <label class="font-medium text-sm">File <span class="text-red-500">*</span></label>
+          <p-fileUpload
+            mode="basic"
+            chooseLabel="Choose File"
+            [auto]="false"
+            (onSelect)="onFileSelect($event)"
+            class="w-full"
+          />
+        </div>
+      }
+
+      <!-- Qualification (optional) -->
+      <div class="flex flex-column gap-1">
+        <label class="font-medium text-sm">Qualification (optional)</label>
+        <p-dropdown
+          [options]="qualOptions()"
+          [(ngModel)]="form.qualification_skill_id"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Link to a qualification..."
+          [showClear]="true"
+          [filter]="true"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2 justify-content-end pt-2">
+        <p-button label="Cancel" severity="secondary" size="small" routerLink="/admin/resources" />
+        <p-button label="Add Resource" icon="pi pi-check" size="small" [loading]="saving()" (onClick)="submit()" />
+      </div>
+    </div>
+  </div>
+</div>

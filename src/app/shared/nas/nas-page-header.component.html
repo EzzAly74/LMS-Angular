@@ -1,0 +1,10 @@
+<header class="nas-page-header">
+  <div class="nas-page-header__text">
+    @if (eyebrow) { <div class="nas-page-header__eyebrow">{{ eyebrow }}</div> }
+    <h1 class="nas-page-header__title">{{ title }}</h1>
+    @if (subtitle) { <p class="nas-page-header__subtitle">{{ subtitle }}</p> }
+  </div>
+  <div class="nas-page-header__actions">
+    <ng-content />
+  </div>
+</header>

@@ -1,0 +1,23 @@
+<div class="page-container">
+      <div class="page-header">
+        <h2 class="page-title">{{ 'nav.settings' | translate }}</h2>
+        <p-button [label]="'common.save' | translate" icon="pi pi-save" [loading]="saving()" (onClick)="save()" />
+      </div>
+
+      @if (loading()) {
+        <div class="flex flex-column gap-3">
+          @for (i of [1,2,3,4,5]; track i) {
+            <p-skeleton height="3rem" borderRadius="6px" />
+          }
+        </div>
+      } @else {
+        <form [formGroup]="form" class="settings-form">
+          @for (setting of settings(); track setting.key) {
+            <div class="setting-row">
+              <label [for]="setting.key">{{ setting.label }}</label>
+              <input pInputText [id]="setting.key" [formControlName]="setting.key" class="setting-input" />
+            </div>
+          }
+        </form>
+      }
+    </div>

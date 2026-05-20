@@ -1,0 +1,264 @@
+/* ── PrimeNG theme ─────────────────────────────────────────────────────────── */
+@import "primeng/resources/themes/lara-light-blue/theme.css";
+@import "primeng/resources/primeng.css";
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
+
+/* ── Fonts ──────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Almarai:wght@400;700;800&display=swap');
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  /* Layout */
+  --sidebar-width:           260px;
+  --sidebar-width-collapsed: 72px;
+  --header-height:           64px;
+  --transition-speed:        0.2s;
+
+  /* NAS Design System ─ Deep Teal ramp (primary) */
+  --nas-teal-100:  #F2FBFA;
+  --nas-teal-200:  #D5F2F0;
+  --nas-teal-300:  #AAE5E1;
+  --nas-teal-400:  #78D0CE;
+  --nas-teal-500:  #4CB4B5;
+  --nas-teal-600:  #339699;
+  --nas-teal-700:  #26787B;
+  --nas-teal-800:  #225F63;
+  --nas-teal-900:  #1F4C50;
+  --nas-teal-950:  #1E4043;
+  --nas-teal-1000: #0C2427;
+  --nas-teal-1000-08: rgba(12, 36, 39, 0.08);
+  --nas-teal-1000-16: rgba(12, 36, 39, 0.16);
+
+  /* NAS Design System ─ Accent Sky ramp */
+  --nas-sky-100: #F1FCFF;
+  --nas-sky-200: #EAFAFF;
+  --nas-sky-300: #D4F5FF;
+  --nas-sky-400: #75DEFF;
+  --nas-sky-500: #69C8E6;
+  --nas-sky-600: #5EB2CC;
+  --nas-sky-700: #58A7BF;
+  --nas-sky-800: #468599;
+  --nas-sky-900: #356473;
+  --nas-sky-1000: #294E59;
+  --nas-sky-400-08: rgba(117, 222, 255, 0.08);
+  --nas-sky-400-16: rgba(117, 222, 255, 0.16);
+  --nas-sky-400-24: rgba(117, 222, 255, 0.24);
+
+  /* NAS Design System ─ Essential colors */
+  --nas-essential-background: #FDFDFD;
+  --nas-essential-text:       #171819;
+  --nas-essential-cta:        #0C2427;
+  --nas-essential-additional: #0C2427;
+
+  /* NAS Design System ─ Neutral (Grey) */
+  --nas-neutral-0:    #FFFFFF;
+  --nas-neutral-50:   #FAFAFA;
+  --nas-neutral-100:  #FFFBF7;
+  --nas-neutral-200:  #FCFCFC;
+  --nas-neutral-300:  #F5F5F5;
+  --nas-neutral-400:  #E6E7E8;
+  --nas-neutral-500:  #CFD0D1;
+  --nas-neutral-600:  #B8B9BA;
+  --nas-neutral-700:  #8C8C8C;
+  --nas-neutral-750:  #676E76;
+  --nas-neutral-800:  #595959;
+  --nas-neutral-900:  #454545;
+  --nas-neutral-1000: #171819;
+  --nas-neutral-2000: #000000;
+  --nas-neutral-700-08:  rgba(140, 140, 140, 0.08);
+  --nas-neutral-750-08:  rgba(103, 110, 118, 0.08);
+  --nas-neutral-750-16:  rgba(103, 110, 118, 0.16);
+  --nas-neutral-2000-12: rgba(0, 0, 0, 0.12);
+  --nas-neutral-2000-64: rgba(0, 0, 0, 0.64);
+
+  /* NAS Design System ─ Status colors */
+  --nas-status-green-50:      #E7F8F0;
+  --nas-status-green-500:     #0FB86A;
+  --nas-status-green-500-08:  rgba(15, 184, 106, 0.08);
+  --nas-status-green-500-16:  rgba(15, 184, 106, 0.16);
+  --nas-status-green-500-40:  rgba(15, 184, 106, 0.4);
+
+  --nas-status-red-50:        #FDECEA;
+  --nas-status-red-500:       #F14437;
+  --nas-status-red-500-08:    rgba(241, 68, 55, 0.08);
+  --nas-status-red-500-16:    rgba(241, 68, 55, 0.16);
+
+  --nas-status-amber-50:      #FEF4E6;
+  --nas-status-amber-500:     #F79008;
+  --nas-status-amber-500-08:  rgba(247, 144, 8, 0.08);
+  --nas-status-amber-500-16:  rgba(247, 144, 8, 0.16);
+
+  --nas-status-blue-50:       #E8F1FE;
+  --nas-status-blue-500:      #2E7CF6;
+  --nas-status-blue-500-08:   rgba(46, 124, 246, 0.08);
+  --nas-status-blue-500-16:   rgba(46, 124, 246, 0.16);
+
+  /* Semantic role aliases */
+  --nas-color-bg-app:       var(--nas-essential-background);
+  --nas-color-bg-surface:   var(--nas-neutral-0);
+  --nas-color-bg-muted:     var(--nas-neutral-300);
+  --nas-color-bg-sidebar:   var(--nas-essential-cta);
+  --nas-color-text-strong:  var(--nas-essential-text);
+  --nas-color-text-body:    var(--nas-neutral-900);
+  --nas-color-text-muted:   var(--nas-neutral-750);
+  --nas-color-text-subtle:  var(--nas-neutral-700);
+  --nas-color-text-onDark:  #FCFCFC;
+  --nas-color-onDark-soft:  rgba(255, 255, 255, 0.18);
+  --nas-color-onDark-translucent: rgba(255, 255, 255, 0.30);
+  --nas-color-border:       var(--nas-neutral-400);
+  --nas-color-border-strong:var(--nas-neutral-500);
+  --nas-color-accent:       var(--nas-teal-600);
+
+  /* NAS Design System ─ Typography */
+  --nas-font-en: 'Fira Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nas-font-ar: 'Almarai', "Segoe UI", Tahoma, sans-serif;
+  --nas-font:    var(--nas-font-en);
+
+  /* Font weights */
+  --nas-weight-regular: 400;
+  --nas-weight-medium:  500;
+  --nas-weight-semibold:600;
+  --nas-weight-bold:    700;
+
+  /* Font sizes */
+  --nas-size-3xs:  10px;
+  --nas-size-2xs:  12px;
+  --nas-size-xs:   14px;
+  --nas-size-s:    16px;
+  --nas-size-m:    18px;
+  --nas-size-l:    20px;
+  --nas-size-xl:   24px;
+  --nas-size-2xl:  32px;
+  --nas-size-3xl:  48px;
+
+  /* Line heights */
+  --nas-height-3xs:  12px;
+  --nas-height-2xs:  14.4px;
+  --nas-height-xs:   16.8px;
+  --nas-height-s:    19.2px;
+  --nas-height-m:    21.6px;
+  --nas-height-l:    24px;
+  --nas-height-xl:   28.8px;
+  --nas-height-2xl:  38.8px;
+
+  /* Spacing scale */
+  --nas-space-1:  4px;
+  --nas-space-2:  8px;
+  --nas-space-3:  12px;
+  --nas-space-4:  16px;
+  --nas-space-5:  20px;
+  --nas-space-6:  24px;
+  --nas-space-8:  32px;
+  --nas-space-10: 40px;
+  --nas-space-12: 48px;
+
+  /* Radius */
+  --nas-radius-xs:  4px;
+  --nas-radius-sm:  6px;
+  --nas-radius-md:  8px;
+  --nas-radius-lg:  12px;
+  --nas-radius-xl:  16px;
+  --nas-radius-2xl: 20px;
+  --nas-radius-full: 9999px;
+
+  /* Shadows */
+  --nas-shadow-xs: 0 1px 2px 0 rgba(12, 36, 39, 0.05);
+  --nas-shadow-sm: 0 1px 3px 0 rgba(12, 36, 39, 0.08), 0 1px 2px -1px rgba(12, 36, 39, 0.08);
+  --nas-shadow-md: 0 4px 6px -1px rgba(12, 36, 39, 0.08), 0 2px 4px -2px rgba(12, 36, 39, 0.06);
+  --nas-shadow-lg: 0 10px 24px -8px rgba(12, 36, 39, 0.12), 0 4px 6px -4px rgba(12, 36, 39, 0.06);
+  --nas-shadow-xl: 0 20px 32px -12px rgba(12, 36, 39, 0.16), 0 8px 16px -8px rgba(12, 36, 39, 0.08);
+  --nas-shadow-sidebar: 0 16px 22px rgba(0, 0, 0, 0.07);
+  --nas-shadow-card: 0 1px 2px 0 rgba(12, 36, 39, 0.04), 0 0 1px 0 rgba(12, 36, 39, 0.08);
+}
+
+/* ── Reset & base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--nas-font);
+  font-size: var(--nas-size-xs);
+  line-height: var(--nas-height-xs);
+  color: var(--nas-color-text-body);
+  background: var(--nas-color-bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── RTL support ───────────────────────────────────────────────────────────── */
+[dir="rtl"], [dir="rtl"] body {
+  font-family: var(--nas-font-ar);
+}
+[dir="rtl"] {
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td { text-align: right; }
+  .p-inputtext { text-align: right; }
+  .pi { transform: scaleX(-1); }
+  .pi-search, .pi-times, .pi-check, .pi-info-circle,
+  .pi-exclamation-triangle, .pi-spin, .pi-spinner { transform: none; }
+}
+
+/* ── Typography utilities (NAS scale) ──────────────────────────────────────── */
+.nas-heading-1 { font-size: var(--nas-size-xl);  line-height: var(--nas-height-xl);  font-weight: var(--nas-weight-bold);     color: var(--nas-color-text-strong); }
+.nas-heading-2 { font-size: var(--nas-size-l);   line-height: var(--nas-height-l);   font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
+.nas-heading-3 { font-size: var(--nas-size-m);   line-height: var(--nas-height-m);   font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
+.nas-display   { font-size: var(--nas-size-2xl); line-height: var(--nas-height-2xl); font-weight: var(--nas-weight-bold);     color: var(--nas-color-text-strong); }
+.nas-body      { font-size: var(--nas-size-xs);  line-height: var(--nas-height-xs);  color: var(--nas-color-text-body); }
+.nas-body-strong { font-size: var(--nas-size-xs); line-height: var(--nas-height-xs); font-weight: var(--nas-weight-medium); color: var(--nas-color-text-body); }
+.nas-caption   { font-size: var(--nas-size-2xs); line-height: var(--nas-height-2xs); color: var(--nas-color-text-muted); }
+.nas-overline  { font-size: var(--nas-size-3xs); line-height: var(--nas-height-3xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--nas-color-text-muted); }
+
+/* ── Page scaffold utilities ───────────────────────────────────────────────── */
+.nas-page-container {
+  padding: var(--nas-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-6);
+  animation: nasFadeIn .2s ease;
+}
+.nas-card {
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  box-shadow: var(--nas-shadow-card);
+}
+
+/* ── PrimeNG overrides (NAS-themed) ────────────────────────────────────────── */
+.p-card .p-card-body  { padding: var(--nas-space-5); }
+.p-button.p-button-sm { font-size: var(--nas-size-2xs); }
+
+/* PrimeNG button -> NAS dark CTA */
+.p-button {
+  background: var(--nas-essential-cta);
+  border-color: var(--nas-essential-cta);
+  color: var(--nas-color-text-onDark);
+  font-weight: var(--nas-weight-medium);
+  border-radius: var(--nas-radius-md);
+  &:enabled:hover { background: var(--nas-teal-900); border-color: var(--nas-teal-900); }
+  &.p-button-outlined {
+    background: transparent;
+    color: var(--nas-essential-cta);
+    border-color: var(--nas-color-border-strong);
+    &:enabled:hover { background: var(--nas-neutral-300); }
+  }
+  &.p-button-text {
+    background: transparent;
+    color: var(--nas-essential-cta);
+    border-color: transparent;
+    &:enabled:hover { background: var(--nas-neutral-300); }
+  }
+}
+
+.p-inputtext, .p-dropdown, .p-multiselect, .p-calendar, .p-inputnumber-input {
+  border-radius: var(--nas-radius-md);
+  border-color: var(--nas-color-border);
+  font-size: var(--nas-size-xs);
+  &:enabled:focus, &.p-focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes nasFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.page-container { animation: nasFadeIn .2s ease; }

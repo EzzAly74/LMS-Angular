@@ -1,0 +1,125 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="nas-shell" [class.rtl]="locale.isRtl" [class.collapsed]="sidebarCollapsed()">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────── -->
+  <aside class="nas-sidebar" [class.collapsed]="sidebarCollapsed()">
+
+    <!-- Brand -->
+    <div class="nas-sidebar__brand">
+      <div class="nas-sidebar__logo">
+        <span class="nas-logo-mark">
+          <i class="pi pi-prime"></i>
+        </span>
+        @if (!sidebarCollapsed()) { <span class="nas-logo-wordmark">nas</span> }
+      </div>
+      <button type="button" class="nas-sidebar__collapse-btn" (click)="toggleSidebar()"
+              [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+        <i [class]="sidebarCollapsed() ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"></i>
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="nas-sidebar__nav">
+      @for (group of navGroups; track group.label) {
+        <div class="nas-nav-group">
+          @if (!sidebarCollapsed()) {
+            <div class="nas-nav-group__label">{{ group.label | translate }}</div>
+          }
+
+          @for (item of group.items; track item.label) {
+            @if (item.children?.length) {
+              <button type="button"
+                      class="nas-nav-item"
+                      [class.active]="isItemActive(item)"
+                      [class.has-children]="true"
+                      (click)="toggleGroup(item.label)"
+                      [title]="item.label | translate">
+                <i [class]="item.icon" class="nas-nav-item__icon"></i>
+                @if (!sidebarCollapsed()) {
+                  <span class="nas-nav-item__label">{{ item.label | translate }}</span>
+                  <i class="pi nas-nav-item__chevron"
+                     [class.pi-chevron-down]="isGroupExpanded(item.label)"
+                     [class.pi-chevron-right]="!isGroupExpanded(item.label)"></i>
+                }
+              </button>
+
+              @if (!sidebarCollapsed() && isGroupExpanded(item.label)) {
+                <div class="nas-nav-children">
+                  @for (child of item.children; track child.route) {
+                    <a [routerLink]="child.route"
+                       routerLinkActive="active"
+                       class="nas-nav-child"
+                       [title]="child.label | translate">
+                      <span class="nas-nav-child__dot"></span>
+                      <span>{{ child.label | translate }}</span>
+                    </a>
+                  }
+                </div>
+              }
+            } @else {
+              <a [routerLink]="item.route"
+                 routerLinkActive="active"
+                 class="nas-nav-item"
+                 [title]="item.label | translate">
+                <i [class]="item.icon" class="nas-nav-item__icon"></i>
+                @if (!sidebarCollapsed()) {
+                  <span class="nas-nav-item__label">{{ item.label | translate }}</span>
+                }
+              </a>
+            }
+          }
+        </div>
+      }
+    </nav>
+
+    <!-- Footer profile -->
+    <div class="nas-sidebar__footer">
+      <div class="nas-profile">
+        <div class="nas-profile__avatar">A</div>
+        @if (!sidebarCollapsed()) {
+          <div class="nas-profile__meta">
+            <div class="nas-profile__hello">{{ 'nav.welcome_back' | translate }}</div>
+            <div class="nas-profile__name">Admin</div>
+          </div>
+          <button class="nas-profile__logout" (click)="auth.logout()" [title]="'nav.logout' | translate">
+            <i class="pi pi-sign-out"></i>
+          </button>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Body ──────────────────────────────────────────────────────── -->
+  <div class="nas-body">
+    <!-- Header -->
+    <header class="nas-header">
+      <div class="nas-search">
+        <i class="pi pi-search nas-search__icon"></i>
+        <input type="text"
+               [(ngModel)]="searchTerm"
+               class="nas-search__input"
+               placeholder="Quick search..." />
+      </div>
+
+      <div class="nas-header__actions">
+        <div class="nas-lang-toggle">
+          <button type="button"
+                  class="nas-lang-toggle__btn"
+                  [class.active]="locale.locale() === 'en'"
+                  (click)="toggleLocale('en')">English</button>
+          <button type="button"
+                  class="nas-lang-toggle__btn"
+                  [class.active]="locale.locale() === 'ar'"
+                  (click)="toggleLocale('ar')">العربية</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Routed content -->
+    <main class="nas-main">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,0 +1,183 @@
+<div class="nas-page-container">
+
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <nas-page-header
+    [title]="'inbox.title' | translate"
+    [subtitle]="'inbox.subtitle' | translate">
+    <button type="button" class="nas-cta-btn" (click)="openCompose()">
+      <i class="pi pi-plus-circle"></i>
+      <span>{{ 'inbox.new_message' | translate }}</span>
+    </button>
+  </nas-page-header>
+
+  <nas-pill-tabs
+    [tabs]="tabs()"
+    [activeId]="activeTab()"
+    (activeIdChange)="setTab($event)" />
+
+  <!-- ── Inbox list ──────────────────────────────────────────────────── -->
+  <div class="nas-card inbox-list">
+    @for (m of items(); track m.id) {
+      <article class="inbox-item" [class.inbox-item--unread]="!m.is_read">
+        <div class="inbox-item__icon"><i class="pi pi-envelope"></i></div>
+        <div class="inbox-item__body">
+          <h3 class="inbox-item__subject">{{ m.subject }}</h3>
+          <p class="inbox-item__preview">{{ m.preview }}</p>
+          <div class="inbox-item__meta">
+            <i class="pi pi-users"></i>
+            <span>{{ m.recipients_text }}</span>
+          </div>
+        </div>
+        <div class="inbox-item__time">{{ m.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
+      </article>
+    }
+    @if (!items().length && !loading()) {
+      <div class="nas-table__empty">
+        <i class="pi pi-inbox"></i>
+        <p>No messages yet</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ── Compose dialog ────────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="showCompose()"
+  (visibleChange)="showCompose.set($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="nas-dialog"
+  [style]="{ width: '460px' }"
+  [header]="'inbox.new_message' | translate">
+
+  <form [formGroup]="composeForm" (ngSubmit)="send()" class="nas-form">
+    <div class="nas-form__field">
+      <label>{{ 'inbox.compose_title' | translate }} *</label>
+      <input class="nas-input" type="text"
+             formControlName="title"
+             [placeholder]="'inbox.compose_subject' | translate" />
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'inbox.compose_recipients' | translate }} *</label>
+
+      <div class="nas-input-with-icon">
+        <i class="pi pi-search"></i>
+        <input type="text"
+               class="nas-input"
+               [ngModel]="recipientSearch()"
+               [ngModelOptions]="{ standalone: true }"
+               (ngModelChange)="recipientSearch.set($event)"
+               [placeholder]="'inbox.compose_search_recipients' | translate" />
+      </div>
+
+      <div class="nas-yesno nas-yesno--filters">
+        <button type="button" class="nas-yesno__opt"
+                [class.active]="recipientFilter() === 'all'"
+                (click)="recipientFilter.set('all')">{{ 'common.all' | translate }}</button>
+        <button type="button" class="nas-yesno__opt"
+                [class.active]="recipientFilter() === 'learners'"
+                (click)="recipientFilter.set('learners')">{{ 'inbox.filter_learners' | translate }}</button>
+        <button type="button" class="nas-yesno__opt"
+                [class.active]="recipientFilter() === 'instructors'"
+                (click)="recipientFilter.set('instructors')">{{ 'inbox.filter_instructors' | translate }}</button>
+      </div>
+
+      <div class="recipient-list">
+        @if (learners().length) {
+          <div class="recipient-list__group">{{ 'inbox.group_learners' | translate }}</div>
+          <label class="nas-checklist__item">
+            <p-checkbox [ngModel]="composeForm.value.all_learners"
+                        [ngModelOptions]="{ standalone: true }"
+                        [binary]="true"
+                        (onChange)="toggleAllLearners($event.checked)" />
+            <span>{{ 'inbox.all_learners' | translate }}</span>
+          </label>
+          @for (u of learners(); track u.id) {
+            <label class="nas-checklist__item">
+              <p-checkbox [ngModel]="isRecipientSelected(u.id)"
+                          [ngModelOptions]="{ standalone: true }"
+                          [binary]="true"
+                          (onChange)="toggleRecipient(u.id, $event.checked)" />
+              <span>{{ u.name }}</span>
+            </label>
+          }
+        }
+        @if (instructors().length) {
+          <div class="recipient-list__group">{{ 'inbox.group_instructors' | translate }}</div>
+          @for (u of instructors(); track u.id) {
+            <label class="nas-checklist__item">
+              <p-checkbox [ngModel]="isRecipientSelected(u.id)"
+                          [ngModelOptions]="{ standalone: true }"
+                          [binary]="true"
+                          (onChange)="toggleRecipient(u.id, $event.checked)" />
+              <span>{{ u.name }}</span>
+            </label>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'inbox.compose_message' | translate }} *</label>
+      <textarea formControlName="message"
+                class="nas-input nas-input--area"
+                rows="4"
+                [placeholder]="'inbox.compose_message_placeholder' | translate"></textarea>
+    </div>
+
+    <footer class="nas-form__footer">
+      <button type="button" class="nas-btn nas-btn--ghost" (click)="showCompose.set(false)">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="submit" class="nas-btn nas-btn--primary" [disabled]="saving()">
+        <i class="pi pi-send"></i>
+        {{ 'inbox.send' | translate }}
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- ── Welcome modal (sample) ───────────────────────────────────────── -->
+<p-dialog
+  [visible]="showWelcome()"
+  (visibleChange)="showWelcome.set($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="nas-dialog"
+  [style]="{ width: '420px' }"
+  [header]="'inbox.welcome_title' | translate">
+
+  <div class="nas-form">
+    <p style="margin:0;color:var(--nas-color-text-body);font-size:var(--nas-size-xs);line-height:var(--nas-height-l);">
+      We are excited to announce the launch of our new Learning Management System.
+      Please explore the available courses and complete your required qualifications.
+    </p>
+
+    <dl class="settings-list" style="margin-top:var(--nas-space-3);">
+      <div>
+        <dt>{{ 'inbox.welcome_recipients' | translate }}</dt>
+        <dd>Name 1, Name 2, Name 3</dd>
+      </div>
+      <div>
+        <dt>{{ 'inbox.welcome_type' | translate }}</dt>
+        <dd><nas-status-badge tone="info">All Learners</nas-status-badge></dd>
+      </div>
+      <div>
+        <dt>{{ 'inbox.welcome_sent' | translate }}</dt>
+        <dd>2026-05-15 09:00</dd>
+      </div>
+    </dl>
+
+    <footer class="nas-form__footer">
+      <button type="button" class="nas-btn nas-btn--primary" style="width:100%;justify-content:center;"
+              (click)="showWelcome.set(false)">
+        {{ 'inbox.done' | translate }}
+      </button>
+    </footer>
+  </div>
+</p-dialog>

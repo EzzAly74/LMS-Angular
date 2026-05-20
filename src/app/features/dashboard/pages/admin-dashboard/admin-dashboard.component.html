@@ -1,0 +1,156 @@
+<div class="nas-page-container">
+
+  <!-- ── Greeting row ─────────────────────────────────────────────── -->
+  <header class="dashboard-greeting">
+    <div>
+      <h1 class="dashboard-greeting__title">
+        {{ greeting() | translate }}, {{ 'dashboard.admin' | translate }}
+      </h1>
+      <p class="dashboard-greeting__date">{{ today | date:'fullDate' }}</p>
+    </div>
+    <button type="button" class="dashboard-add-btn" routerLink="/admin/courses">
+      <i class="pi pi-plus-circle"></i>
+      <span>{{ 'dashboard.add_course' | translate }}</span>
+    </button>
+  </header>
+
+  @if (loading()) {
+  <div class="kpi-row">
+    @for (i of [1,2,3,4]; track i) {
+    <p-skeleton height="120px" borderRadius="12px" />
+    }
+  </div>
+  } @else {
+  <!-- ── KPI Row ─────────────────────────────────────────────────── -->
+  <section class="kpi-row">
+    <nas-stat-card icon="pi pi-users" iconTone="teal" [label]="'dashboard.active_learners' | translate"
+      [value]="data()?.statistics?.active_learners ?? 0" [trend]="'+12% vs last month'" trendDirection="up">
+      <div subline class="kpi-subline">
+        <span class="kpi-pill kpi-pill--online">
+          <span class="kpi-pill__dot"></span>
+          {{ data()?.statistics?.active_learners_online ?? 0 }} {{ 'dashboard.online' | translate }}
+        </span>
+        <span class="kpi-pill">
+          <span class="kpi-pill__dot kpi-pill__dot--offline"></span>
+          {{ data()?.statistics?.active_learners_offline ?? 0 }} {{ 'dashboard.offline' | translate }}
+        </span>
+      </div>
+    </nas-stat-card>
+
+    <nas-stat-card icon="pi pi-book" iconTone="amber" [label]="'dashboard.active_courses' | translate"
+      [value]="data()?.statistics?.active_courses ?? data()?.statistics?.courses ?? 0">
+    </nas-stat-card>
+
+    <nas-stat-card icon="pi pi-shield" iconTone="green" [label]="'dashboard.average_completion' | translate"
+      [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'" trend="-3% vs last month" trendDirection="down">
+    </nas-stat-card>
+
+    <nas-stat-card icon="pi pi-users" iconTone="sky" [label]="'dashboard.instructors' | translate"
+      [value]="data()?.statistics?.instructors ?? 0">
+    </nas-stat-card>
+  </section>
+
+  <!-- ── Chart + Notifications row ───────────────────────────────── -->
+  <section class="chart-row">
+    <!-- Chart -->
+    <article class="nas-card chart-card">
+      <header class="chart-card__head">
+        <div>
+          <div class="chart-card__title-row">
+            <h2 class="chart-card__title">{{ 'dashboard.enrollment_trend' | translate }}</h2>
+            <span class="chart-card__delta">
+              <i class="pi pi-arrow-up"></i> +5%
+            </span>
+          </div>
+          <p class="chart-card__sub">82 {{ 'dashboard.enrollments' | translate }}</p>
+        </div>
+        <nas-pill-tabs [tabs]="rangeTabs" [activeId]="trendRange()" (activeIdChange)="trendRange.set($any($event))" />
+      </header>
+
+      <div class="chart-card__chart">
+        @if (chartData()) {
+        <p-chart type="line" [data]="chartData()!" [options]="chartOptions" height="280px" />
+        } @else {
+        <div class="chart-card__empty">
+          <i class="pi pi-chart-line"></i>
+          <p>No trend data yet</p>
+        </div>
+        }
+      </div>
+    </article>
+
+    <!-- Notifications -->
+    <article class="nas-card notif-card">
+      <header class="notif-card__head">
+        <h2 class="notif-card__title">{{ 'dashboard.notifications' | translate }}</h2>
+        <a routerLink="/admin/notifications" class="notif-card__view-all">
+          {{ 'dashboard.view_all' | translate }}
+        </a>
+      </header>
+      <ul class="notif-list">
+        @for (note of data()?.notifications ?? []; track $index) {
+        <li class="notif-item">
+          <span class="notif-item__dot" [class.notif-item__dot--unread]="$index < 2"></span>
+          <div class="notif-item__body">
+            <div class="notif-item__title">{{ note.title || note.message }}</div>
+            <div class="notif-item__detail">{{ note.detail || note.meta }}</div>
+          </div>
+          <div class="notif-item__time">{{ note.time }}</div>
+        </li>
+        }
+      </ul>
+    </article>
+  </section>
+
+  <!-- ── Top Enrolled Courses table ──────────────────────────────── -->
+  <section class="top-courses">
+    <header class="top-courses__head">
+      <h2 class="top-courses__title">{{ 'dashboard.top_courses' | translate }}</h2>
+      <a routerLink="/admin/courses" class="top-courses__view-all">
+        {{ 'dashboard.view_all' | translate }}
+        <i class="pi pi-arrow-right"></i>
+      </a>
+    </header>
+
+    <div class="nas-card top-courses__table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>{{ 'dashboard.table_course' | translate }}</th>
+            <th>{{ 'dashboard.table_instructor' | translate }}</th>
+            <th>{{ 'dashboard.table_enrolled' | translate }}</th>
+            <th>{{ 'dashboard.table_completion' | translate }}</th>
+            <th>{{ 'dashboard.table_status' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of data()?.top_courses ?? []; track c.id) {
+          <tr class="nas-table__row" [routerLink]="['/admin/courses', c.id]">
+            <td class="nas-table__primary">{{ c.title }}</td>
+            <td>{{ c.instructor ?? '—' }}</td>
+            <td>{{ c.users_count }}</td>
+            <td style="min-width: 180px;">
+              <nas-progress [value]="c.completion_percent ?? 0" />
+            </td>
+            <td>
+              <nas-status-badge [tone]="statusTone(c.status)" [dot]="true">
+                {{ c.status ?? 'active' | titlecase }}
+              </nas-status-badge>
+            </td>
+            <td class="nas-table__action">
+              <i class="pi pi-chevron-right"></i>
+            </td>
+          </tr>
+          }
+          @if (!(data()?.top_courses?.length)) {
+          <tr>
+            <td colspan="6" class="nas-table__empty">No courses yet</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</div>

@@ -1,0 +1,29 @@
+:host { display: inline-flex; }
+
+.nas-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  padding: var(--nas-space-1) var(--nas-space-3);
+  border-radius: var(--nas-radius-full);
+  font-size: var(--nas-size-2xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &[data-tone="success"] { background: var(--nas-status-green-500-16); color: var(--nas-status-green-500); }
+  &[data-tone="danger"]  { background: var(--nas-status-red-500-16);   color: var(--nas-status-red-500); }
+  &[data-tone="warning"] { background: var(--nas-status-amber-500-16); color: var(--nas-status-amber-500); }
+  &[data-tone="info"]    { background: var(--nas-status-blue-500-16);  color: var(--nas-status-blue-500); }
+  &[data-tone="neutral"] { background: var(--nas-neutral-300);         color: var(--nas-color-text-muted); }
+  &[data-tone="teal"]    { background: var(--nas-teal-200);            color: var(--nas-teal-800); }
+  &[data-tone="sky"]     { background: var(--nas-sky-400-24);          color: var(--nas-sky-1000); }
+}

@@ -1,0 +1,219 @@
+<p-confirmDialog />
+
+<div class="nas-page-container">
+
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <nas-page-header
+    [title]="'courses_list.title' | translate"
+    [subtitle]="'courses_list.subtitle' | translate">
+    <button type="button" class="nas-cta-btn" (click)="openAddCourse()">
+      <i class="pi pi-plus-circle"></i>
+      <span>{{ 'courses_list.new_course' | translate }}</span>
+    </button>
+  </nas-page-header>
+
+  <!-- ── Tabs ────────────────────────────────────────────────────────── -->
+  <nas-pill-tabs
+    [tabs]="tabs()"
+    [activeId]="activeTab()"
+    (activeIdChange)="setTab($any($event))" />
+
+  <!-- ── Table ───────────────────────────────────────────────────────── -->
+  <div class="nas-card course-table-card">
+    <div class="course-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>{{ 'courses_list.col_course' | translate }}</th>
+            <th>{{ 'courses_list.col_category' | translate }}</th>
+            <th>{{ 'courses_list.col_instructor' | translate }}</th>
+            <th>{{ 'courses_list.col_cohorts' | translate }}</th>
+            <th>{{ 'courses_list.col_enrolled' | translate }}</th>
+            <th>{{ 'courses_list.col_completion' | translate }}</th>
+            <th>{{ 'courses_list.col_rating' | translate }}</th>
+            <th>{{ 'courses_list.col_status' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of items(); track c.id) {
+            <tr class="nas-table__row">
+              <td class="nas-table__primary" [routerLink]="['/admin/courses', c.id]">
+                <div class="course-cell">
+                  <span class="course-cell__title">{{ c.title }}</span>
+                  <span class="course-cell__meta">
+                    <nas-status-badge [tone]="typeTone(c.type)">{{ typeLabel(c.type) }}</nas-status-badge>
+                    @if (c.updated_at) {
+                      <span class="course-cell__date">
+                        {{ 'courses_list.updated_at' | translate }} {{ c.updated_at | date:'dd MMM yyyy' }}
+                      </span>
+                    }
+                  </span>
+                </div>
+              </td>
+              <td>{{ c.category?.name ?? '—' }}</td>
+              <td>{{ c.instructor?.name ?? '—' }}</td>
+              <td>{{ c.cohorts_count ?? 0 }}</td>
+              <td>{{ c.users_count ?? 0 }}</td>
+              <td style="min-width: 160px;"><nas-progress [value]="c.completion_percent ?? 0" /></td>
+              <td>
+                <span class="rating-cell">
+                  <i class="pi pi-star-fill"></i>
+                  {{ (c.rating ?? 0) | number:'1.1-1' }}
+                </span>
+              </td>
+              <td>
+                <nas-status-badge [tone]="statusTone(c.status)" dot>
+                  {{ c.status | titlecase }}
+                </nas-status-badge>
+              </td>
+              <td class="nas-table__action">
+                <button type="button" class="row-action-btn" (click)="openRowMenu($event, c)">
+                  <i class="pi pi-ellipsis-h"></i>
+                </button>
+              </td>
+            </tr>
+          }
+          @if (!items().length && !loading()) {
+            <tr><td colspan="9" class="nas-table__empty">No courses found</td></tr>
+          }
+          @if (loading()) {
+            @for (i of [1,2,3,4,5]; track i) {
+              <tr><td colspan="9" class="nas-table__skeleton"></td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Row actions menu ──────────────────────────────────────────────── -->
+<p-overlayPanel #rowMenu>
+  @if (activeRow(); as row) {
+    <div class="row-menu">
+      <button class="row-menu__item" (click)="goToDetail(row)">
+        <i class="pi pi-eye"></i>{{ 'dashboard.view_details' | translate }}
+      </button>
+      <button class="row-menu__item" (click)="editCourse(row)">
+        <i class="pi pi-pencil"></i>{{ 'dashboard.edit_course' | translate }}
+      </button>
+    </div>
+  }
+</p-overlayPanel>
+
+<!-- ── Add Course modal ──────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="showAddCourse()"
+  (visibleChange)="showAddCourse.set($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  styleClass="nas-dialog"
+  [style]="{ width: '560px' }"
+  header="{{ 'add_course.title' | translate }}">
+
+  <form [formGroup]="form" (ngSubmit)="submitAddCourse()" class="nas-form">
+    <nas-locale-input
+      formControlName="title"
+      [label]="'add_course.course_title' | translate"
+      [required]="true"
+      placeholderEn="{{ 'add_course.course_title_placeholder' | translate }}"
+    />
+
+    <div class="nas-form__row">
+      <div class="nas-form__field">
+        <label>{{ 'add_course.type' | translate }} *</label>
+        <p-dropdown [options]="typeOpts" optionLabel="name" optionValue="id"
+                    formControlName="type"
+                    [placeholder]="'add_course.select_type' | translate"
+                    styleClass="w-full" />
+      </div>
+      <div class="nas-form__field">
+        <label>{{ 'add_course.category' | translate }}</label>
+        <p-dropdown [options]="catOptions()" optionLabel="name" optionValue="id"
+                    formControlName="category_id"
+                    [placeholder]="'add_course.select_category' | translate"
+                    [showClear]="true"
+                    styleClass="w-full" />
+      </div>
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'add_course.instructor' | translate }} *</label>
+      <p-dropdown [options]="instOptions()" optionLabel="name" optionValue="id"
+                  formControlName="instructor_id"
+                  [placeholder]="'add_course.assign_instructor' | translate"
+                  styleClass="w-full" />
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'add_course.issue_certificate' | translate }} *</label>
+      <div class="nas-yesno">
+        <button type="button" class="nas-yesno__opt" [class.active]="form.value.certificate === true"
+                (click)="form.patchValue({ certificate: true })">Yes</button>
+        <button type="button" class="nas-yesno__opt" [class.active]="form.value.certificate === false"
+                (click)="form.patchValue({ certificate: false })">No</button>
+      </div>
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'add_course.review_content' | translate }} *</label>
+      <div class="nas-yesno">
+        <button type="button" class="nas-yesno__opt" [class.active]="form.value.require_instructor === true"
+                (click)="form.patchValue({ require_instructor: true })">Yes</button>
+        <button type="button" class="nas-yesno__opt" [class.active]="form.value.require_instructor === false"
+                (click)="form.patchValue({ require_instructor: false })">No</button>
+      </div>
+    </div>
+
+    <nas-locale-input
+      formControlName="description"
+      [label]="'add_course.description' | translate"
+      [required]="true"
+      placeholderEn="{{ 'add_course.description_placeholder' | translate }}"
+    />
+
+    <div class="nas-form__field">
+      <label>{{ 'add_course.max_learners' | translate }}</label>
+      <p-inputNumber formControlName="max_learners" [min]="1" [max]="500" [showButtons]="true"
+                     styleClass="w-full" />
+    </div>
+
+    <div class="nas-form__row">
+      <div class="nas-form__field">
+        <label>{{ 'add_course.cohort_start' | translate }}</label>
+        <p-calendar formControlName="cohort_start" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+      </div>
+      <div class="nas-form__field">
+        <label>{{ 'add_course.cohort_end' | translate }}</label>
+        <p-calendar formControlName="cohort_end"   dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+      </div>
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'add_course.qualifications_earned' | translate }}</label>
+      <p class="nas-form__hint">{{ 'add_course.qualifications_hint' | translate }}</p>
+      <div class="nas-checklist">
+        @for (q of qualOptions(); track q.id) {
+          <label class="nas-checklist__item">
+            <p-checkbox [value]="q.id" formControlName="qualification_ids" />
+            <span>{{ q.name }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <footer class="nas-form__footer">
+      <button type="button" class="nas-btn nas-btn--ghost" (click)="showAddCourse.set(false)">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="submit" class="nas-btn nas-btn--primary" [disabled]="saving()">
+        <i class="pi pi-plus-circle"></i>
+        {{ 'add_course.create' | translate }}
+      </button>
+    </footer>
+  </form>
+</p-dialog>

@@ -1,0 +1,173 @@
+<p-confirmDialog />
+
+<!-- Profile Slide-over -->
+@if (profileUser()) {
+  <div class="profile-overlay" (click)="closeProfile()"></div>
+  <div class="profile-panel">
+    <div class="flex align-items-center justify-content-between p-4 border-bottom-1 surface-border">
+      <h3 class="m-0 text-lg font-semibold">User Profile</h3>
+      <p-button icon="pi pi-times" [text]="true" severity="secondary" size="small" (onClick)="closeProfile()" />
+    </div>
+    <div class="p-4 flex flex-column gap-3">
+      <div class="flex align-items-center gap-3">
+        <div class="avatar-circle avatar-lg">{{ profileUser()!.name[0].toUpperCase() }}</div>
+        <div>
+          <div class="font-semibold text-lg">{{ profileUser()!.name }}</div>
+          <div class="text-color-secondary text-sm">{{ profileUser()!.email }}</div>
+        </div>
+      </div>
+      <div class="flex flex-column gap-2 mt-2">
+        <div class="profile-field">
+          <span class="text-color-secondary text-sm">Job Title</span>
+          <span class="font-medium">{{ profileUser()!.job_title || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="text-color-secondary text-sm">Department</span>
+          <span class="font-medium">{{ profileUser()!.department_name || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="text-color-secondary text-sm">Learner Type</span>
+          <span class="font-medium">{{ profileUser()!.learner_type || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="text-color-secondary text-sm">Status</span>
+          <span class="font-medium flex align-items-center gap-2">
+            <span class="status-dot" [class.online]="profileUser()!.is_online"></span>
+            {{ profileUser()!.is_online ? 'Online' : 'Offline' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Dialog -->
+<p-dialog [(visible)]="editVisible" header="Edit User" [modal]="true" [style]="{ width: '460px' }">
+  <div class="flex flex-column gap-3 pt-2">
+    <div class="flex flex-column gap-1">
+      <label class="font-medium text-sm">Name</label>
+      <input pInputText [(ngModel)]="editForm.name" class="w-full" />
+    </div>
+    <div class="flex flex-column gap-1">
+      <label class="font-medium text-sm">Email</label>
+      <input pInputText type="email" [(ngModel)]="editForm.email" class="w-full" />
+    </div>
+    <div class="flex flex-column gap-1">
+      <label class="font-medium text-sm">Job Title</label>
+      <input pInputText [(ngModel)]="editForm.job_title" class="w-full" />
+    </div>
+    <div class="flex flex-column gap-1">
+      <label class="font-medium text-sm">Department</label>
+      <input pInputText [(ngModel)]="editForm.department_name" class="w-full" />
+    </div>
+    <div class="flex flex-column gap-1">
+      <label class="font-medium text-sm">Learner Type</label>
+      <p-dropdown
+        [options]="learnerTypeOptions"
+        [(ngModel)]="editForm.learner_type"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select type"
+        class="w-full"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" size="small" (onClick)="editVisible = false" />
+    <p-button label="Save" size="small" [loading]="saving()" (onClick)="saveEdit()" />
+  </ng-template>
+</p-dialog>
+
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <h2 class="text-2xl font-semibold text-900 m-0">Users</h2>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-2 mb-3 flex-wrap">
+    @for (tab of tabs; track tab.key) {
+      <button class="tab-btn" [class.tab-active]="activeTab() === tab.key" (click)="setTab(tab.key)">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Learner Sub-filter -->
+  @if (activeTab() === 'learner') {
+    <div class="flex gap-2 mb-3 flex-wrap">
+      @for (sf of subFilters; track sf.key) {
+        <button class="tab-btn sub-btn" [class.tab-active]="learnerSubFilter() === sf.key" (click)="setSubFilter(sf.key)">
+          {{ sf.label }}
+        </button>
+      }
+    </div>
+  }
+
+  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
+    <!-- Search -->
+    <div class="p-3 border-bottom-1 surface-border">
+      <span class="p-input-icon-left w-full md:w-20rem">
+        <i class="pi pi-search"></i>
+        <input pInputText placeholder="Search users..." (input)="onSearch($event)" class="w-full" />
+      </span>
+    </div>
+
+    <p-table
+      [value]="items()"
+      [loading]="loading()"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="perPage"
+      [totalRecords]="total()"
+      (onLazyLoad)="onPage($event)"
+      [rowHover]="true"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>User</th>
+          <th>Job Title</th>
+          <th>Department</th>
+          <th>Type</th>
+          <th style="width:100px">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr (click)="openProfile(user)" style="cursor:pointer;">
+          <td>
+            <div class="flex align-items-center gap-3">
+              <div class="avatar-wrapper">
+                <div class="avatar-circle">{{ user.name[0].toUpperCase() }}</div>
+                <span class="status-dot" [class.online]="user.is_online"></span>
+              </div>
+              <div>
+                <div class="font-medium">{{ user.name }}</div>
+                <div class="text-color-secondary text-sm">{{ user.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-color-secondary">{{ user.job_title || '—' }}</td>
+          <td class="text-color-secondary">{{ user.department_name || '—' }}</td>
+          <td>
+            @if (user.learner_type) {
+              <p-tag [value]="user.learner_type"
+                     [severity]="user.learner_type === 'online' ? 'success' : user.learner_type === 'offline' ? 'secondary' : 'warning'" />
+            }
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="flex gap-1">
+              <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" (onClick)="openEdit(user)" />
+              <p-button icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="confirmDelete(user)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="text-center p-4 text-color-secondary">No users found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
