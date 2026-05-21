@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
+import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { pickLocalized } from '../../../../core/utils/localized';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface Qualification {
   id: number;
@@ -19,40 +19,53 @@ interface Qualification {
   name_en?: string;
   name_ar?: string;
   courses_count?: number;
+  enrolled_count?: number;
   created_at?: string;
-}
-
-interface QualificationForm {
-  name_en: string;
-  name_ar: string;
 }
 
 @Component({
   selector: 'app-qualification-list',
   standalone: true,
   imports: [
-    CommonModule, TranslateModule, TableModule, ButtonModule, DialogModule,
-    InputTextModule, SkeletonModule, ConfirmDialogModule, FormsModule,
+    CommonModule, FormsModule, DialogModule, SkeletonModule,
+    ConfirmDialogModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './qualification-list.component.html',
+  styleUrl: './qualification-list.component.scss',
 })
 export class QualificationListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private localeService  = inject(LocaleService);
 
-  items   = signal<Qualification[]>([]);
-  total   = signal(0);
-  loading = signal(true);
-  saving  = signal(false);
+  constructor() { withLocaleReload(() => this.load()); }
 
-  perPage       = 15;
-  page          = 1;
-  search        = '';
-  dialogVisible = false;
+  qualName(item: Qualification): string {
+    const locale = this.localeService.locale() === 'ar' ? 'ar' : 'en';
+    return (
+      pickLocalized(item.name, locale, '') ||
+      (locale === 'ar' ? (item.name_ar ?? '') : (item.name_en ?? '')) ||
+      (item.name_en ?? item.name_ar ?? '') ||
+      '—'
+    );
+  }
+
+  items     = signal<Qualification[]>([]);
+  total     = signal(0);
+  loading   = signal(true);
+  saving    = signal(false);
+  activeRow = signal<Qualification | null>(null);
+
+  readonly perPage    = 15;
+  page                = 1;
+  search              = '';
+  dialogVisible       = false;
   editingId: number | null = null;
-  form: QualificationForm = { name_en: '', name_ar: '' };
+  form = { name_en: '', name_ar: '' };
+
+  readonly skeletons = [1, 2, 3, 4, 5];
 
   private search$ = new Subject<string>();
 
@@ -72,24 +85,19 @@ export class QualificationListComponent implements OnInit {
     });
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
-    this.load();
-  }
-
-  onSearch(e: Event): void {
-    this.search$.next((e.target as HTMLInputElement).value);
-  }
+  onSearch(term: string): void { this.search$.next(term); }
 
   openCreate(): void {
     this.editingId = null;
     this.form = { name_en: '', name_ar: '' };
+    this.activeRow.set(null);
     this.dialogVisible = true;
   }
 
   openEdit(item: Qualification): void {
     this.editingId = item.id;
-    this.form = { name_en: item.name_en ?? item.name, name_ar: item.name_ar ?? item.name };
+    this.form = { name_en: item.name_en ?? item.name, name_ar: item.name_ar ?? '' };
+    this.activeRow.set(null);
     this.dialogVisible = true;
   }
 
@@ -112,18 +120,35 @@ export class QualificationListComponent implements OnInit {
         this.saving.set(false);
         this.closeDialog();
         this.load();
-        this.messageService.add({ severity: 'success', detail: this.editingId ? 'Updated.' : 'Created.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: this.editingId ? 'Qualification updated.' : 'Qualification created.',
+        });
       },
       error: () => this.saving.set(false),
     });
   }
 
+  toggleRowMenu(item: Qualification, event: Event): void {
+    event.stopPropagation();
+    this.activeRow.set(this.activeRow()?.id === item.id ? null : item);
+  }
+
+  closeAllMenus(): void { this.activeRow.set(null); }
+
   confirmDelete(item: Qualification): void {
+    this.activeRow.set(null);
     this.confirmService.confirm({
       message: `Delete "${item.name_en ?? item.name}"?`,
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.QUALIFICATIONS}/${item.id}`).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'Deleted.' }); this.load(); },
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Qualification deleted.' });
+            this.load();
+          },
         });
       },
     });

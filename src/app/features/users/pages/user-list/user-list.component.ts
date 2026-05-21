@@ -4,18 +4,17 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
+import { NasStatusBadgeComponent, NasStatusTone } from '../../../../shared/nas/nas-status-badge.component';
+import { NasDataTableComponent, NasCellTplDirective, NasTableColumn } from '../../../../shared/nas/nas-data-table.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 type UserRole        = 'learner' | 'instructor';
 type LearnerType     = 'online' | 'offline' | 'hybrid';
@@ -25,13 +24,13 @@ type LearnerSubFilter = 'all' | 'online' | 'offline' | 'hybrid';
 interface User {
   id: number;
   name: string;
-  email: string;
-  job_title?: string;
-  department_name?: string;
-  machine_code?: string;
-  learner_type?: LearnerType;
+  email?: string;
+  phone?: string;
+  job_title?: string | null;
+  department_name?: string | null;
+  machine_code?: string | null;
+  learner_type?: LearnerType | null;
   role?: UserRole;
-  is_online?: boolean;
 }
 
 interface EditForm {
@@ -46,9 +45,10 @@ interface EditForm {
   selector: 'app-user-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, TranslateModule,
-    TableModule, ButtonModule, InputTextModule, SkeletonModule,
-    DialogModule, ConfirmDialogModule, DropdownModule, TagModule,
+    CommonModule, FormsModule,
+    SkeletonModule, DialogModule, DropdownModule, ConfirmDialogModule,
+    NasPageHeaderComponent, NasStatusBadgeComponent,
+    NasDataTableComponent, NasCellTplDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './user-list.component.html',
@@ -59,21 +59,31 @@ export class UserListComponent implements OnInit {
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
 
-  items      = signal<User[]>([]);
-  total      = signal(0);
-  loading    = signal(true);
-  saving     = signal(false);
-  activeTab  = signal<ActiveTab>('all');
+  constructor() { withLocaleReload(() => this.load()); }
+
+  items            = signal<User[]>([]);
+  total            = signal(0);
+  loading          = signal(true);
+  saving           = signal(false);
+  activeTab        = signal<ActiveTab>('all');
   learnerSubFilter = signal<LearnerSubFilter>('all');
-  profileUser = signal<User | null>(null);
+  profileUser      = signal<User | null>(null);
 
   editVisible = false;
   editUserId: number | null = null;
   editForm: EditForm = { name: '', email: '', job_title: '', department_name: '', learner_type: '' };
 
-  perPage = 15;
-  page    = 1;
-  search  = '';
+  readonly perPage = 15;
+  page             = 1;
+  search           = '';
+
+  readonly columns: NasTableColumn[] = [
+    { field: 'user',            header: 'User',       minWidth: '220px' },
+    { field: 'job_title',       header: 'Job Title' },
+    { field: 'department_name', header: 'Department' },
+    { field: 'learner_type',    header: 'Type' },
+    { field: 'actions',         header: '',           headerless: true, width: '80px', align: 'end' },
+  ];
 
   private search$ = new Subject<string>();
 
@@ -130,28 +140,26 @@ export class UserListComponent implements OnInit {
     this.load();
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
-    this.load();
+  onPage(p: number): void { this.page = p; this.load(); }
+  onSearch(term: string): void { this.search$.next(term); }
+
+  learnerTone(t: LearnerType | undefined): NasStatusTone {
+    switch (t) {
+      case 'online':  return 'teal';
+      case 'offline': return 'neutral';
+      case 'hybrid':  return 'success';
+      default:        return 'neutral';
+    }
   }
 
-  onSearch(e: Event): void {
-    this.search$.next((e.target as HTMLInputElement).value);
-  }
-
-  openProfile(user: User): void {
-    this.profileUser.set(user);
-  }
-
-  closeProfile(): void {
-    this.profileUser.set(null);
-  }
+  openProfile(user: User): void { this.profileUser.set(user); }
+  closeProfile(): void { this.profileUser.set(null); }
 
   openEdit(user: User): void {
     this.editUserId = user.id;
     this.editForm = {
-      name:            user.name,
-      email:           user.email,
+      name:            user.name ?? '',
+      email:           user.email ?? '',
       job_title:       user.job_title ?? '',
       department_name: user.department_name ?? '',
       learner_type:    user.learner_type ?? '',
@@ -176,12 +184,11 @@ export class UserListComponent implements OnInit {
   confirmDelete(user: User): void {
     this.confirmService.confirm({
       message: `Delete "${user.name}"?`,
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.USERS}/${user.id}`).subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', detail: 'Deleted.' });
-            this.load();
-          },
+          next: () => { this.messageService.add({ severity: 'success', detail: 'User deleted.' }); this.load(); },
         });
       },
     });

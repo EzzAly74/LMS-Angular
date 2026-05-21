@@ -1,20 +1,21 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { SkeletonModule } from 'primeng/skeleton';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { SkeletonModule } from 'primeng/skeleton';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface JobTitle {
   id: number;
   name: string;
-  qualifications?: Qualification[];
+  /** Optional because counts are only included when relation is loaded. */
+  employees_count?: number;
+  learners_count?: number;
   qualifications_count?: number;
+  qualifications?: Qualification[];
 }
 
 interface Qualification {
@@ -25,23 +26,32 @@ interface Qualification {
 @Component({
   selector: 'app-job-title-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TableModule, ButtonModule, DialogModule, MultiSelectModule, SkeletonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogModule, SkeletonModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-title-list.component.html',
+  styleUrl: './job-title-list.component.scss',
 })
 export class JobTitleListComponent implements OnInit {
   private api = inject(ApiService);
 
-  items              = signal<JobTitle[]>([]);
-  total              = signal(0);
-  loading            = signal(true);
-  saving             = signal(false);
-  allQualifications  = signal<Qualification[]>([]);
-  selectedJobTitle   = signal<JobTitle | null>(null);
-  selectedQualIds: number[] = [];
-  dialogVisible      = false;
-  perPage            = 15;
-  page               = 1;
+  constructor() {
+    withLocaleReload(() => {
+      this.load();
+      this.loadQualifications();
+    });
+  }
+
+  items             = signal<JobTitle[]>([]);
+  loading           = signal(true);
+  saving            = signal(false);
+  allQualifications = signal<Qualification[]>([]);
+  filteredQuals     = signal<Qualification[]>([]);
+  selectedJobTitle  = signal<JobTitle | null>(null);
+  selectedQualIds   = signal<number[]>([]);
+  dialogVisible     = signal(false);
+  modalSearch       = signal('');
+
+  readonly skeletons = [1, 2, 3, 4, 5, 6];
 
   ngOnInit(): void {
     this.load();
@@ -50,46 +60,68 @@ export class JobTitleListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.api.getPaginated<JobTitle>(API.JOB_TITLES, { page: this.page, per_page: this.perPage })
+    this.api.getPaginated<JobTitle>(API.JOB_TITLES, { page: 1, per_page: 100 })
       .subscribe({
-        next:  res => { this.items.set(res.result.data); this.total.set(res.result.total); this.loading.set(false); },
+        next:  res => { this.items.set(res.result.data); this.loading.set(false); },
         error: ()  => this.loading.set(false),
       });
   }
 
   loadQualifications(): void {
     this.api.get<Qualification[]>(`${API.QUALIFICATIONS}/active`)
-      .subscribe({ next: res => this.allQualifications.set(res.result) });
-  }
-
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
-    this.load();
+      .subscribe({ next: res => {
+        this.allQualifications.set(res.result ?? []);
+        this.filteredQuals.set(res.result ?? []);
+      }});
   }
 
   openDialog(jobTitle: JobTitle): void {
     this.selectedJobTitle.set(jobTitle);
-    this.selectedQualIds = [];
-    this.dialogVisible = true;
-    // Fetch full details to get currently assigned qualifications
+    this.selectedQualIds.set([]);
+    this.modalSearch.set('');
+    this.filteredQuals.set(this.allQualifications());
+    this.dialogVisible.set(true);
     this.api.get<JobTitle>(`${API.JOB_TITLES}/${jobTitle.id}`)
-      .subscribe({ next: res => { this.selectedQualIds = (res.result.qualifications ?? []).map(q => q.id); } });
+      .subscribe({ next: res => {
+        this.selectedQualIds.set((res.result.qualifications ?? []).map((q: Qualification) => q.id));
+      }});
   }
 
   closeDialog(): void {
-    this.dialogVisible = false;
+    this.dialogVisible.set(false);
     this.selectedJobTitle.set(null);
-    this.selectedQualIds = [];
+    this.selectedQualIds.set([]);
+    this.modalSearch.set('');
+  }
+
+  onModalSearch(term: string): void {
+    this.modalSearch.set(term);
+    const q = term.toLowerCase();
+    this.filteredQuals.set(
+      q ? this.allQualifications().filter(x => x.name.toLowerCase().includes(q)) : this.allQualifications()
+    );
+  }
+
+  toggleQual(id: number): void {
+    const current = this.selectedQualIds();
+    this.selectedQualIds.set(
+      current.includes(id) ? current.filter(x => x !== id) : [...current, id]
+    );
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedQualIds().includes(id);
   }
 
   saveQualifications(): void {
     const jt = this.selectedJobTitle();
     if (!jt) return;
     this.saving.set(true);
-    this.api.put(`${API.JOB_TITLES}/${jt.id}/qualifications`, { qualification_skill_ids: this.selectedQualIds })
+    this.api.put(`${API.JOB_TITLES}/${jt.id}/qualifications`, { qualification_skill_ids: this.selectedQualIds() })
       .subscribe({
-        next: () => { this.saving.set(false); this.closeDialog(); this.load(); },
+        next:  () => { this.saving.set(false); this.closeDialog(); this.load(); },
         error: () => this.saving.set(false),
       });
   }
+
 }

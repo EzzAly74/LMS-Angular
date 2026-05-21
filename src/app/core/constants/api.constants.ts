@@ -26,6 +26,7 @@ export const API = {
   ARTICLES:       `${API_BASE}/articles`,
   FORMS:          `${API_BASE}/forms`,
   ROLES:          `${API_BASE}/roles`,
+  PERMISSIONS:    `${API_BASE}/permissions`,
   NOTIFICATIONS:  `${API_BASE}/notifications`,
   SETTINGS:       `${API_BASE}/settings`,
   ADMIN_SETTINGS: `${API_BASE}/admin/settings`,
@@ -51,4 +52,8 @@ export const courseUrl = {
   session:     (courseId: number, sessionId: number) =>
     `${API.COURSES}/${courseId}/sessions/${sessionId}`,
   enrollments: (id: number) => `${API.COURSES}/${id}/enrollments`,
+  modules:     (id: number) => `${API.COURSES}/${id}/modules`,
+  lectures:    (id: number) => `${API.COURSES}/${id}/lectures`,
+  lecture:     (courseId: number, lectureId: number) =>
+    `${API.COURSES}/${courseId}/lectures/${lectureId}`,
 } as const;

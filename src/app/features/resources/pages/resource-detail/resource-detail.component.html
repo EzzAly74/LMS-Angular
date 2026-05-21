@@ -49,10 +49,10 @@
         </div>
 
         <div class="flex flex-column gap-3">
-          @if (resource()!.qualification) {
+          @if (resource()!.qualification?.name) {
             <div class="flex gap-2 align-items-center">
               <span class="text-color-secondary text-sm w-8rem">Qualification:</span>
-              <span class="text-sm">{{ resource()!.qualification }}</span>
+              <span class="text-sm">{{ resource()!.qualification!.name }}</span>
             </div>
           }
           <div class="flex gap-2 align-items-center">
@@ -74,11 +74,12 @@
             </div>
           }
 
-          @if (resource()!.type === 'file' && resource()!.file_url) {
+          @if (resource()!.type === 'file' && (resource()!.file_path || resource()!.file_url)) {
             <div class="flex gap-2 align-items-center">
               <span class="text-color-secondary text-sm w-8rem">File:</span>
-              <a [href]="resource()!.file_url" target="_blank" rel="noopener" class="text-primary text-sm">
-                <i class="pi pi-download mr-1"></i>Download
+              <a [href]="resource()!.file_path || resource()!.file_url" target="_blank" rel="noopener" class="text-primary text-sm">
+                <i class="pi pi-download mr-1"></i>
+                {{ resource()!.file_name || 'Download' }}
               </a>
             </div>
           }

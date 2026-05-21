@@ -1,59 +1,74 @@
 <p-confirmDialog />
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">{{ 'evaluations.title' | translate }}</h2>
-    <p-button icon="pi pi-plus" [label]="'evaluations.create' | translate" size="small" />
-  </div>
 
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <div class="p-3 border-bottom-1 surface-border">
-      <span class="p-input-icon-left w-full md:w-20rem">
-        <i class="pi pi-search"></i>
-        <input pInputText [placeholder]="'common.search' | translate" (input)="onSearch($event)" class="w-full" />
-      </span>
+<div class="nas-page-container">
+
+  <nas-page-header
+    title="Evaluations"
+    subtitle="Manage evaluation forms and requirements">
+  </nas-page-header>
+
+  <div class="nas-card eval-table-card">
+    <div class="eval-toolbar">
+      <div class="nas-search">
+        <i class="pi pi-search nas-search__icon"></i>
+        <input type="text" class="nas-search__input" placeholder="Search evaluations..."
+          (input)="onSearch($any($event.target).value)" />
+      </div>
     </div>
 
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>{{ 'common.title' | translate }}</th>
-          <th>{{ 'evaluations.type' | translate }}</th>
-          <th>{{ 'evaluations.category' | translate }}</th>
-          <th>{{ 'evaluations.is_required' | translate }}</th>
-          <th>{{ 'common.created_at' | translate }}</th>
-          <th>{{ 'common.actions' | translate }}</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-medium">{{ item.title }}</td>
-          <td><p-tag [value]="item.type" severity="info" /></td>
-          <td>{{ item.category?.name ?? '—' }}</td>
-          <td>
-            <i [class]="item.is_required ? 'pi pi-check-circle text-green-500' : 'pi pi-times-circle text-red-400'"></i>
-          </td>
-          <td>{{ item.created_at }}</td>
-          <td>
-            <div class="flex gap-2">
-              <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" />
-              <p-button icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="confirmDelete(item)" />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="6" class="text-center p-4">{{ 'common.no_data' | translate }}</td></tr>
-      </ng-template>
-    </p-table>
+    <div class="eval-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Required</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>@for (c of [1,2,3,4,5,6]; track c) { <td><p-skeleton height="20px" /></td> }</tr>
+            }
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td class="nas-table__primary">{{ item.title }}</td>
+                <td><nas-status-badge tone="info">{{ item.type | titlecase }}</nas-status-badge></td>
+                <td class="nas-table__muted">{{ item.category?.name ?? '—' }}</td>
+                <td>
+                  <nas-status-badge [tone]="item.is_required ? 'success' : 'neutral'">
+                    {{ item.is_required ? 'Required' : 'Optional' }}
+                  </nas-status-badge>
+                </td>
+                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
+                <td class="nas-table__action">
+                  <button type="button" class="row-action-btn" title="Delete" (click)="confirmDelete(item)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr><td colspan="6" class="nas-table__empty">No evaluations found.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (total() > perPage) {
+      <div class="nas-table-pagination">
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <div class="nas-table-pagination__nav">
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+        </div>
+      </div>
+    }
   </div>
+
 </div>

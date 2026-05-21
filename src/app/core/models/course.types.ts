@@ -55,6 +55,7 @@ export interface CourseDetail {
   status: CourseStatus;
   type: CourseType;
   description?: string;
+  category?: { id: number; name: string } | null;
   instructor?: { id: number; name: string };
   instructors?: Array<{ id: number; name: string }>;
   sections?: CourseSection[];
@@ -106,5 +107,48 @@ export interface CreateCoursePayload {
   instructors: number[];
   qualification_skill_ids?: number[];
   active?: boolean;
+  /** Per-course override for "Max per Cohort". Null/undefined → platform default. */
+  max_learners?: number | null;
   image?: File;
+}
+
+/** Possible content types for a course module — drives form fields + chip label. */
+export type ModuleContentType = 'video' | 'document' | 'article' | 'link';
+
+/** Who can see the module: every cohort or one specific cohort/session. */
+export type ModuleLearnerScope = 'all' | 'cohort';
+
+/**
+ * One module belonging to a course (backed by `course_lectures` rows).
+ * `title` / `instructions` arrive as bilingual JSON so the edit dialog can
+ * pre-fill both languages without a second request.
+ */
+export interface CourseModule {
+  id: number;
+  course_id: number;
+  section_id: number;
+  title: LocalizedText;
+  instructions?: LocalizedText | null;
+  content_type: ModuleContentType;
+  learner_scope: ModuleLearnerScope;
+  session_id?: number | null;
+  duration_minutes?: number | null;
+  type?: 'url' | 'file';
+  video: string;
+  require_completion: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Payload for creating or updating a module via the course-lectures endpoint. */
+export interface ModulePayload {
+  title: LocalizedText;
+  instructions?: LocalizedText | null;
+  content_type: ModuleContentType;
+  learner_scope: ModuleLearnerScope;
+  session_id?: number | null;
+  duration_minutes?: number | null;
+  type?: 'url' | 'file';
+  video: string;
+  require_completion: boolean;
 }

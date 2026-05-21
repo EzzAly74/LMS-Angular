@@ -6,13 +6,14 @@ import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { MessageService } from 'primeng/api';
 import {
   NasPageHeaderComponent,
   NasPillTabsComponent,
   NasPillTab,
   NasStatusBadgeComponent,
-  NasAvatarComponent,
+  NasShimmerComponent,
 } from '../../../../shared/nas';
 
 interface MessageItem {
@@ -23,6 +24,7 @@ interface MessageItem {
   recipients_count: number;
   read_count: number;
   recipients_text?: string;
+  recipient_tags?: string[];
   created_at: string;
   is_read?: boolean;
   resolved?: boolean;
@@ -42,7 +44,7 @@ type InboxTab = 'all' | 'unread' | 'sent' | 'resolved';
   imports: [
     CommonModule, TranslateModule, FormsModule, ReactiveFormsModule, DatePipe,
     DialogModule, CheckboxModule,
-    NasPageHeaderComponent, NasPillTabsComponent, NasStatusBadgeComponent, NasAvatarComponent,
+    NasPageHeaderComponent, NasPillTabsComponent, NasStatusBadgeComponent, NasShimmerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './messages-list.component.html',
@@ -52,6 +54,8 @@ export class MessagesListComponent implements OnInit {
   private api  = inject(ApiService);
   private fb   = inject(FormBuilder);
   private toast = inject(MessageService);
+
+  constructor() { withLocaleReload(() => this.load()); }
 
   items     = signal<MessageItem[]>([]);
   total     = signal(0);
@@ -68,6 +72,7 @@ export class MessagesListComponent implements OnInit {
 
   page = 1;
   perPage = 50;
+  readonly skeletonRows = [0, 1, 2, 3, 4];
 
   tabs = computed<NasPillTab[]>(() => [
     { id: 'all',      label: 'All' },
@@ -121,15 +126,49 @@ export class MessagesListComponent implements OnInit {
     });
   }
 
-  private mapMessage(m: MessageItem & { total_recipients?: number; read_count?: number }): MessageItem {
+  private mapMessage(
+    m: MessageItem & {
+      total_recipients?: number;
+      read_count?: number;
+      recipients?: Array<{ name?: string; role?: string; is_instructor?: boolean }>;
+    },
+  ): MessageItem {
     const count = m.recipients_count ?? m.total_recipients ?? 0;
+    const recipients = m.recipients ?? [];
+
+    // Build "Name 1, Name 2 + N" recipient summary
+    const names = recipients
+      .map(r => (r?.name ?? '').trim())
+      .filter(Boolean);
+
+    const head = names.slice(0, 2).join(', ');
+    const rest = Math.max(0, count - 2);
+    const recipientsText = m.recipients_text
+      ?? (names.length
+            ? rest > 0 ? `${head} + ${rest}` : head
+            : count ? `${count} recipients` : 'Recipients');
+
+    // Build role tags (Learners / Instructors)
+    const tagSet = new Set<string>();
+    recipients.forEach(r => {
+      if (r?.is_instructor || r?.role === 'instructor') tagSet.add('Instructors');
+      else tagSet.add('Learners');
+    });
+    if (tagSet.size === 0 && count > 0) tagSet.add('Learners');
+
     return {
       ...m,
       recipients_count: count,
-      read_count: m.read_count ?? 0,
-      preview: m.preview ?? (m.body ? m.body.slice(0, 100) : ''),
-      recipients_text: m.recipients_text ?? (count ? `${count} recipients` : 'Recipients'),
+      read_count:       m.read_count ?? 0,
+      preview:          m.preview ?? (m.body ? m.body.slice(0, 200) : ''),
+      recipients_text:  recipientsText,
+      recipient_tags:   Array.from(tagSet),
     };
+  }
+
+  /** Opens a message in the welcome dialog (placeholder for future detail view) */
+  openMessage(_m: MessageItem): void {
+    this.showWelcome.set(true);
   }
 
   /* ── Tabs ─────────────────────────────────────────────────────────── */

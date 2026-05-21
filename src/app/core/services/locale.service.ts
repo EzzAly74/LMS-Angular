@@ -1,4 +1,5 @@
 import { Injectable, signal, effect } from '@angular/core';
+import { Subject, Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import {
   DEFAULT_LOCALE,
@@ -12,11 +13,25 @@ import {
 export class LocaleService {
   readonly locale = signal<SupportedLocale>(this.loadSaved());
 
+  /**
+   * Emits the new locale whenever the user switches language.
+   * List/detail components subscribe to this and re-fetch with the
+   * new `Accept-Language` header so the UI never displays stale text.
+   */
+  private readonly _changes$ = new Subject<SupportedLocale>();
+  readonly changes$: Observable<SupportedLocale> = this._changes$.asObservable();
+
   constructor(private translate: TranslateService) {
     translate.addLangs([...SUPPORTED_LOCALES]);
     translate.setDefaultLang(DEFAULT_LOCALE);
 
-    effect(() => this.applyLocale(this.locale()));
+    let previous: SupportedLocale | null = null;
+    effect(() => {
+      const next = this.locale();
+      this.applyLocale(next);
+      if (previous !== null && previous !== next) this._changes$.next(next);
+      previous = next;
+    });
   }
 
   switch(locale: SupportedLocale): void {

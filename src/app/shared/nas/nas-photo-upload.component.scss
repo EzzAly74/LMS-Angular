@@ -1,0 +1,116 @@
+:host { display: block; }
+
+.photo-upload {
+  display: flex;
+  gap: var(--nas-space-3);
+  align-items: stretch;
+
+  &__drop {
+    flex: 1 1 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nas-space-3);
+
+    padding: var(--nas-space-4) var(--nas-space-4) var(--nas-space-5);
+    min-height: 146px;
+    border: 1px dashed var(--nas-color-border-strong);
+    border-radius: var(--nas-radius-md);
+    background: var(--nas-color-bg-surface);
+    cursor: pointer;
+    transition: border-color var(--transition-speed), background var(--transition-speed);
+
+    &:hover {
+      border-color: var(--nas-teal-600);
+      background: var(--nas-teal-100);
+    }
+  }
+
+  &__hidden { display: none; }
+
+  &__centre {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    color: var(--nas-color-text-muted);
+  }
+
+  &__icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--nas-color-text-strong);
+    margin-bottom: 4px;
+  }
+
+  &__ratio {
+    font-size: var(--nas-size-3xs);
+    color: var(--nas-color-text-body);
+  }
+
+  &__formats,
+  &__max {
+    font-size: var(--nas-size-3xs);
+    color: var(--nas-color-text-muted);
+  }
+
+  &__cta {
+    width: 100%;
+    max-width: 1052px;
+    height: 40px;
+    border: 1px solid var(--nas-color-border-strong);
+    border-radius: var(--nas-radius-md);
+    background: var(--nas-color-bg-surface);
+    color: var(--nas-color-text-strong);
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-medium);
+    cursor: pointer;
+    transition: background var(--transition-speed), border-color var(--transition-speed);
+
+    &:hover { background: var(--nas-neutral-200); border-color: var(--nas-essential-cta); }
+  }
+
+  &__preview {
+    flex: 0 0 174px;
+    position: relative;
+    border: 1px dashed var(--nas-color-border-strong);
+    border-radius: var(--nas-radius-md);
+    background: var(--nas-neutral-200);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 146px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__clear {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-speed);
+    &:hover { background: rgba(0, 0, 0, 0.75); }
+  }
+}

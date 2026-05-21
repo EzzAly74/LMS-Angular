@@ -18,74 +18,91 @@
     [activeId]="activeTab()"
     (activeIdChange)="setTab($any($event))" />
 
-  <!-- ── Table ───────────────────────────────────────────────────────── -->
-  <div class="nas-card course-table-card">
-    <div class="course-table-wrap">
-      <table class="nas-table">
-        <thead>
-          <tr>
-            <th>{{ 'courses_list.col_course' | translate }}</th>
-            <th>{{ 'courses_list.col_category' | translate }}</th>
-            <th>{{ 'courses_list.col_instructor' | translate }}</th>
-            <th>{{ 'courses_list.col_cohorts' | translate }}</th>
-            <th>{{ 'courses_list.col_enrolled' | translate }}</th>
-            <th>{{ 'courses_list.col_completion' | translate }}</th>
-            <th>{{ 'courses_list.col_rating' | translate }}</th>
-            <th>{{ 'courses_list.col_status' | translate }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (c of items(); track c.id) {
-            <tr class="nas-table__row">
-              <td class="nas-table__primary" [routerLink]="['/admin/courses', c.id]">
-                <div class="course-cell">
-                  <span class="course-cell__title">{{ c.title }}</span>
-                  <span class="course-cell__meta">
-                    <nas-status-badge [tone]="typeTone(c.type)">{{ typeLabel(c.type) }}</nas-status-badge>
-                    @if (c.updated_at) {
-                      <span class="course-cell__date">
-                        {{ 'courses_list.updated_at' | translate }} {{ c.updated_at | date:'dd MMM yyyy' }}
-                      </span>
-                    }
-                  </span>
-                </div>
-              </td>
-              <td>{{ c.category?.name ?? '—' }}</td>
-              <td>{{ c.instructor?.name ?? '—' }}</td>
-              <td>{{ c.cohorts_count ?? 0 }}</td>
-              <td>{{ c.users_count ?? 0 }}</td>
-              <td style="min-width: 160px;"><nas-progress [value]="c.completion_percent ?? 0" /></td>
-              <td>
-                <span class="rating-cell">
-                  <i class="pi pi-star-fill"></i>
-                  {{ (c.rating ?? 0) | number:'1.1-1' }}
-                </span>
-              </td>
-              <td>
-                <nas-status-badge [tone]="statusTone(c.status)" dot>
-                  {{ c.status | titlecase }}
-                </nas-status-badge>
-              </td>
-              <td class="nas-table__action">
-                <button type="button" class="row-action-btn" (click)="openRowMenu($event, c)">
-                  <i class="pi pi-ellipsis-h"></i>
-                </button>
-              </td>
-            </tr>
+  <!-- ── Reusable data table ─────────────────────────────────────────── -->
+  <nas-data-table
+    [columns]="columns"
+    [items]="items()"
+    [loading]="loading()"
+    [total]="total()"
+    [perPage]="perPage"
+    [page]="page"
+    [rowClickable]="true"
+    emptyText="No courses found"
+    emptyIcon="pi pi-book"
+    (pageChange)="onPage($event)"
+    (rowClick)="goToDetail($any($event))">
+
+    <!-- Course -->
+    <ng-template nasCellTpl="course" let-row>
+      <div class="course-cell">
+        <div class="course-cell__top">
+          <span class="course-cell__title">{{ row.title }}</span>
+          @if (row.type) {
+            <nas-status-badge [tone]="typeTone(row.type)">
+              {{ typeLabel(row.type) }}
+            </nas-status-badge>
           }
-          @if (!items().length && !loading()) {
-            <tr><td colspan="9" class="nas-table__empty">No courses found</td></tr>
-          }
-          @if (loading()) {
-            @for (i of [1,2,3,4,5]; track i) {
-              <tr><td colspan="9" class="nas-table__skeleton"></td></tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
+        </div>
+        @if (row.updated_at) {
+          <span class="course-cell__date">
+            {{ 'courses_list.updated_at' | translate }} {{ row.updated_at | date:'dd MMM yyyy' }}
+          </span>
+        }
+      </div>
+    </ng-template>
+
+    <!-- Category -->
+    <ng-template nasCellTpl="category" let-row>
+      <span class="course-cell__plain">{{ row.category?.name ?? '—' }}</span>
+    </ng-template>
+
+    <!-- Instructor -->
+    <ng-template nasCellTpl="instructor" let-row>
+      <span class="course-cell__plain">{{ row.instructor?.name ?? '—' }}</span>
+    </ng-template>
+
+    <!-- Cohorts -->
+    <ng-template nasCellTpl="cohorts" let-row>
+      <span class="course-cell__plain">{{ row.cohorts_count ?? 0 }}</span>
+    </ng-template>
+
+    <!-- Enrolled -->
+    <ng-template nasCellTpl="enrolled" let-row>
+      <span class="course-cell__plain">{{ row.users_count ?? 0 }}</span>
+    </ng-template>
+
+    <!-- Completion -->
+    <ng-template nasCellTpl="completion" let-row>
+      <nas-progress [value]="row.completion_percent ?? 0" />
+    </ng-template>
+
+    <!-- Rating -->
+    <ng-template nasCellTpl="rating" let-row>
+      @if (row.rating != null && row.rating > 0) {
+        <span class="rating-cell">
+          <i class="pi pi-star-fill"></i>
+          <span>{{ row.rating | number:'1.1-1' }}</span>
+        </span>
+      } @else {
+        <span class="rating-cell rating-cell--empty">—</span>
+      }
+    </ng-template>
+
+    <!-- Status -->
+    <ng-template nasCellTpl="status" let-row>
+      <nas-status-badge [tone]="statusTone(row.status)">
+        {{ row.status === 'upcoming' ? 'Up Coming' : (row.status | titlecase) }}
+      </nas-status-badge>
+    </ng-template>
+
+    <!-- Actions -->
+    <ng-template nasCellTpl="actions" let-row>
+      <button type="button" class="row-action-btn"
+              (click)="openRowMenu($event, row); $event.stopPropagation()">
+        <i class="pi pi-ellipsis-h"></i>
+      </button>
+    </ng-template>
+  </nas-data-table>
 </div>
 
 <!-- ── Row actions menu ──────────────────────────────────────────────── -->
@@ -120,7 +137,8 @@
       formControlName="title"
       [label]="'add_course.course_title' | translate"
       [required]="true"
-      placeholderEn="{{ 'add_course.course_title_placeholder' | translate }}"
+      [placeholderEn]="'add_course.course_title_placeholder' | translate"
+      [placeholderAr]="'add_course.course_title_placeholder' | translate"
     />
 
     <div class="nas-form__row">
@@ -173,7 +191,9 @@
       formControlName="description"
       [label]="'add_course.description' | translate"
       [required]="true"
-      placeholderEn="{{ 'add_course.description_placeholder' | translate }}"
+      [multiline]="true"
+      [placeholderEn]="'add_course.description_placeholder' | translate"
+      [placeholderAr]="'add_course.description_placeholder' | translate"
     />
 
     <div class="nas-form__field">
@@ -194,7 +214,7 @@
     </div>
 
     <div class="nas-form__field">
-      <label>{{ 'add_course.qualifications_earned' | translate }}</label>
+      <label>{{ 'add_course.qualifications_earned' | translate }} <span class="nas-form__field-opt">(optional)</span></label>
       <p class="nas-form__hint">{{ 'add_course.qualifications_hint' | translate }}</p>
       <div class="nas-checklist">
         @for (q of qualOptions(); track q.id) {

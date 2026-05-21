@@ -12,71 +12,176 @@
   font-size: var(--nas-size-2xs);
   font-weight: var(--nas-weight-medium);
   cursor: pointer;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.12),
+    0 2px 5px rgba(140, 140, 140, 0.08);
   &:hover { background: var(--nas-teal-900); }
   i { font-size: 14px; }
 }
 
-/* ── Inbox list ──────────────────────────────────────────────────── */
-.inbox-list { display: flex; flex-direction: column; padding: 0; }
+/* ── Inbox card ──────────────────────────────────────────────────── */
+.inbox-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .inbox-item {
   display: grid;
-  grid-template-columns: 40px 1fr auto;
-  gap: var(--nas-space-3);
-  padding: var(--nas-space-4) var(--nas-space-5);
-  border-bottom: 1px solid var(--nas-color-border);
+  grid-template-columns: 40px 1fr;
+  gap: var(--nas-space-4);
+  padding: 16px 20px;
+  border-top: 1px solid var(--nas-color-border);
   cursor: pointer;
   transition: background var(--transition-speed);
-  &:last-child { border-bottom: none; }
-  &:hover { background: var(--nas-neutral-200); }
 
+  &:first-child { border-top: none; }
+  &:hover { background: #fafafa; }
+
+  /* Unread / highlighted state — soft sky background from Figma */
   &--unread {
-    background: var(--nas-sky-200);
-    &:hover { background: var(--nas-sky-300); }
+    background: #f1fcff;
+    &:hover { background: #e6f7fc; }
   }
 
+  /* ── Envelope icon container (teal-tinted) ──────────────────────── */
   &__icon {
-    width: 36px; height: 36px;
-    border-radius: var(--nas-radius-sm);
-    background: var(--nas-neutral-300);
-    color: var(--nas-color-text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f2fbfa;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    i { font-size: 14px; }
+    color: var(--nas-teal-800);
+    align-self: flex-start;
+
+    i { font-size: 16px; }
+
+    &--skeleton {
+      background-color: #e6e7e8;
+      background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.65) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      background-size: 200% 100%;
+      background-repeat: no-repeat;
+      background-position: -150% 0;
+      animation: nas-shimmer-pulse 1.4s ease-in-out infinite;
+      color: transparent;
+    }
   }
-  &__body { min-width: 0; }
+
+  &__body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Subject + date row */
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--nas-space-3);
+  }
+
   &__subject {
-    margin: 0 0 4px;
-    font-size: var(--nas-size-2xs);
-    font-weight: var(--nas-weight-semibold);
+    margin: 0;
+    font-size: 14px;
+    font-weight: var(--nas-weight-bold);
     color: var(--nas-color-text-strong);
+    line-height: 21px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
   }
-  &__preview {
-    margin: 0 0 6px;
-    font-size: var(--nas-size-2xs);
+
+  &__time {
+    font-size: 12px;
     color: var(--nas-color-text-muted);
+    line-height: 18px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__preview {
+    margin: 0;
+    font-size: 12px;
+    color: var(--nas-color-text-muted);
+    line-height: 18px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  /* Meta row: people icon + name list + role pills */
   &__meta {
     display: inline-flex;
     align-items: center;
+    gap: var(--nas-space-4);
+    flex-wrap: wrap;
+  }
+
+  &__recipients {
+    display: inline-flex;
+    align-items: center;
     gap: 6px;
-    font-size: var(--nas-size-3xs);
+    font-size: 12px;
     color: var(--nas-color-text-muted);
+    line-height: 18px;
     i { font-size: 11px; }
   }
-  &__time {
-    font-size: var(--nas-size-3xs);
-    color: var(--nas-color-text-muted);
-    white-space: nowrap;
-    align-self: flex-start;
+
+  &__pills {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* White rounded pill used inside the meta row (Learners / Instructors) */
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: var(--nas-color-bg-surface);
+    color: #595959;
+    font-size: 12px;
+    line-height: 14.4px;
+    font-weight: var(--nas-weight-medium);
+  }
+
+  &--skeleton {
+    cursor: default;
+    &:hover { background: var(--nas-color-bg-surface); }
+  }
+
+  &__pillrow {
+    display: inline-flex;
+    gap: var(--nas-space-2);
+    margin-top: 2px;
   }
 }
 
-.nas-table__empty {
+/* RTL: people icon mirror */
+[dir="rtl"] .inbox-item__recipients i { transform: scaleX(-1); }
+
+/* Match shared shimmer animation */
+@keyframes nas-shimmer-pulse {
+  0%   { background-position: -150% 0; }
+  100% { background-position:  150% 0; }
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
+.inbox-empty {
   padding: var(--nas-space-12);
   text-align: center;
   color: var(--nas-color-text-muted);
@@ -84,7 +189,7 @@
   p { margin: var(--nas-space-3) 0 0; font-size: var(--nas-size-2xs); }
 }
 
-/* ── Form ────────────────────────────────────────────────────────── */
+/* ── Compose form ────────────────────────────────────────────────── */
 .nas-form { display: flex; flex-direction: column; gap: var(--nas-space-4); }
 .nas-form__field { display: flex; flex-direction: column; gap: 6px; }
 .nas-form__field > label {
@@ -134,7 +239,11 @@
     font-size: var(--nas-size-2xs);
     color: var(--nas-color-text-muted);
     cursor: pointer;
-    &.active { background: var(--nas-color-bg-surface); color: var(--nas-color-text-strong); box-shadow: var(--nas-shadow-xs); }
+    &.active {
+      background: var(--nas-color-bg-surface);
+      color: var(--nas-color-text-strong);
+      box-shadow: var(--nas-shadow-xs);
+    }
   }
 }
 
@@ -169,7 +278,13 @@
 .settings-list { display: flex; flex-direction: column; gap: var(--nas-space-3); margin: 0; padding: 0; }
 .settings-list > div { display: flex; justify-content: space-between; align-items: center; gap: var(--nas-space-3); }
 .settings-list dt { font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted); margin: 0; }
-.settings-list dd { font-size: var(--nas-size-2xs); color: var(--nas-color-text-strong); font-weight: var(--nas-weight-medium); margin: 0; text-align: end; }
+.settings-list dd {
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-strong);
+  font-weight: var(--nas-weight-medium);
+  margin: 0;
+  text-align: end;
+}
 
 .nas-form__footer {
   display: flex;
@@ -190,10 +305,24 @@
   font-weight: var(--nas-weight-medium);
   cursor: pointer;
   border: 1px solid transparent;
-  &--primary { background: var(--nas-essential-cta); color: var(--nas-color-text-onDark); &:hover { background: var(--nas-teal-900); } }
-  &--ghost   { background: transparent; color: var(--nas-color-text-body); border-color: var(--nas-color-border); &:hover { background: var(--nas-neutral-200); } }
+  &--primary {
+    background: var(--nas-essential-cta);
+    color: var(--nas-color-text-onDark);
+    &:hover { background: var(--nas-teal-900); }
+  }
+  &--ghost {
+    background: transparent;
+    color: var(--nas-color-text-body);
+    border-color: var(--nas-color-border);
+    &:hover { background: var(--nas-neutral-200); }
+  }
   &[disabled] { opacity: .6; cursor: not-allowed; }
 }
 
-:host ::ng-deep .nas-dialog .p-dialog-header  { padding: var(--nas-space-4) var(--nas-space-5); border-bottom: 1px solid var(--nas-color-border); font-size: var(--nas-size-m); font-weight: var(--nas-weight-semibold); }
+:host ::ng-deep .nas-dialog .p-dialog-header {
+  padding: var(--nas-space-4) var(--nas-space-5);
+  border-bottom: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-m);
+  font-weight: var(--nas-weight-semibold);
+}
 :host ::ng-deep .nas-dialog .p-dialog-content { padding: var(--nas-space-5); }

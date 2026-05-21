@@ -6,3 +6,8 @@ export * from './nas-pill-tabs.component';
 export * from './nas-tabs.component';
 export * from './nas-avatar.component';
 export * from './nas-locale-input.component';
+export * from './nas-shimmer.component';
+export * from './nas-data-table.component';
+export * from './nas-icon.component';
+export * from './nas-rich-text.component';
+export * from './nas-photo-upload.component';

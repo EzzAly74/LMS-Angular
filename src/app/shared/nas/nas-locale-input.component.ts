@@ -25,10 +25,11 @@ const EMPTY: LocalizedText = { en: '', ar: '' };
 })
 export class NasLocaleInputComponent implements ControlValueAccessor {
   @Input() label = '';
-  @Input() placeholderEn = 'English';
-  @Input() placeholderAr = 'العربية';
+  @Input() placeholderEn = '';
+  @Input() placeholderAr = '';
   @Input({ transform: booleanAttribute }) required = false;
   @Input({ transform: booleanAttribute }) disabled = false;
+  @Input({ transform: booleanAttribute }) multiline = false;
   @Input() inputId = `nas-locale-${Math.random().toString(36).slice(2, 9)}`;
 
   protected readonly value = signal<LocalizedText>({ ...EMPTY });
@@ -38,7 +39,7 @@ export class NasLocaleInputComponent implements ControlValueAccessor {
   private onTouched: () => void = () => {};
 
   protected showError(): boolean {
-    return this.touched() && this.required && !this.value().en.trim();
+    return this.touched() && this.required && !(this.value().en ?? '').trim();
   }
 
   protected onInput(lang: 'en' | 'ar', ev: Event): void {

@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
-import { TabViewModule } from 'primeng/tabview';
-import { CardModule } from 'primeng/card';
 import { HttpClient } from '@angular/common/http';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { API } from '../../../../core/constants/api.constants';
 
 interface ReportType {
@@ -17,9 +15,10 @@ interface ReportType {
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ButtonModule, TabViewModule, CardModule],
+  imports: [CommonModule, TranslateModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reports.component.html',
+  styleUrl: './reports.component.scss',
 })
 export class ReportsComponent {
   private http = inject(HttpClient);

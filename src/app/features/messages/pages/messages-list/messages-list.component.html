@@ -16,23 +16,58 @@
     (activeIdChange)="setTab($event)" />
 
   <!-- ── Inbox list ──────────────────────────────────────────────────── -->
-  <div class="nas-card inbox-list">
-    @for (m of items(); track m.id) {
-      <article class="inbox-item" [class.inbox-item--unread]="!m.is_read">
-        <div class="inbox-item__icon"><i class="pi pi-envelope"></i></div>
-        <div class="inbox-item__body">
-          <h3 class="inbox-item__subject">{{ m.subject }}</h3>
-          <p class="inbox-item__preview">{{ m.preview }}</p>
-          <div class="inbox-item__meta">
-            <i class="pi pi-users"></i>
-            <span>{{ m.recipients_text }}</span>
+  <div class="nas-card inbox-card">
+    @if (loading()) {
+      @for (i of skeletonRows; track i) {
+        <article class="inbox-item inbox-item--skeleton">
+          <div class="inbox-item__icon inbox-item__icon--skeleton"></div>
+          <div class="inbox-item__body">
+            <div class="inbox-item__row">
+              <nas-shimmer width="240px" height="14px" />
+              <nas-shimmer width="120px" height="12px" />
+            </div>
+            <nas-shimmer width="85%" height="12px" />
+            <div class="inbox-item__pillrow">
+              <nas-shimmer width="120px" height="14px" borderRadius="10px" />
+              <nas-shimmer width="60px"  height="14px" borderRadius="10px" />
+            </div>
           </div>
-        </div>
-        <div class="inbox-item__time">{{ m.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
-      </article>
-    }
-    @if (!items().length && !loading()) {
-      <div class="nas-table__empty">
+        </article>
+      }
+    } @else if (items().length) {
+      @for (m of items(); track m.id) {
+        <article class="inbox-item"
+                 [class.inbox-item--unread]="!m.is_read"
+                 (click)="openMessage(m)">
+          <div class="inbox-item__icon">
+            <i class="pi pi-envelope"></i>
+          </div>
+
+          <div class="inbox-item__body">
+            <div class="inbox-item__row">
+              <h3 class="inbox-item__subject">{{ m.subject }}</h3>
+              <span class="inbox-item__time">{{ m.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            </div>
+
+            <p class="inbox-item__preview">{{ m.preview }}</p>
+
+            <div class="inbox-item__meta">
+              <span class="inbox-item__recipients">
+                <i class="pi pi-users"></i>
+                <span>{{ m.recipients_text }}</span>
+              </span>
+
+              <span class="inbox-item__pills">
+                @for (tag of m.recipient_tags; track tag) {
+                  <span class="inbox-item__pill">{{ tag }}</span>
+                }
+              </span>
+            </div>
+          </div>
+        </article>
+      }
+    } @else {
+      <div class="inbox-empty">
         <i class="pi pi-inbox"></i>
         <p>No messages yet</p>
       </div>

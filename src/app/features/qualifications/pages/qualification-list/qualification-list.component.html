@@ -1,77 +1,137 @@
 <p-confirmDialog />
 
-<!-- Create / Edit Dialog -->
+<!-- ── Create / Edit Dialog ──────────────────────────────────────────── -->
 <p-dialog
   [(visible)]="dialogVisible"
   [header]="editingId ? 'Edit Qualification' : 'New Qualification'"
   [modal]="true"
-  [style]="{ width: '460px' }"
->
-  <div class="flex flex-column gap-3 pt-2">
-    <div class="flex flex-column gap-1">
-      <label class="font-medium text-sm">Name (English) <span class="text-red-500">*</span></label>
-      <input pInputText [(ngModel)]="form.name_en" placeholder="Enter English name" class="w-full" />
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [closeOnEscape]="true"
+  styleClass="nas-dialog"
+  [style]="{ width: '480px' }">
+
+  <form class="nas-form" (ngSubmit)="save()">
+    <div class="nas-form__field">
+      <label>Name (English) <span class="nas-form__required">*</span></label>
+      <input
+        class="nas-input"
+        type="text"
+        [(ngModel)]="form.name_en"
+        name="name_en"
+        placeholder="e.g. Fire Safety Level 2"
+        autocomplete="off"
+      />
     </div>
-    <div class="flex flex-column gap-1">
-      <label class="font-medium text-sm">Name (Arabic) <span class="text-red-500">*</span></label>
-      <input pInputText [(ngModel)]="form.name_ar" placeholder="Enter Arabic name" dir="rtl" class="w-full" />
+    <div class="nas-form__field">
+      <label>Name (Arabic)</label>
+      <input
+        class="nas-input"
+        type="text"
+        [(ngModel)]="form.name_ar"
+        name="name_ar"
+        dir="rtl"
+        placeholder="اسم المؤهل بالعربية"
+        autocomplete="off"
+      />
     </div>
-  </div>
+  </form>
+
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" size="small" (onClick)="closeDialog()" />
-    <p-button [label]="editingId ? 'Update' : 'Create'" size="small" [loading]="saving()" (onClick)="save()" />
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">Cancel</button>
+    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="save()">
+      <i class="pi pi-check"></i>
+      {{ editingId ? 'Update' : 'Create' }}
+    </button>
   </ng-template>
 </p-dialog>
 
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">Qualifications</h2>
-    <p-button icon="pi pi-plus" label="Add Qualification" size="small" (onClick)="openCreate()" />
-  </div>
+<!-- ── Page ──────────────────────────────────────────────────────────── -->
+<div class="nas-page-container" (click)="closeAllMenus()">
 
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <div class="p-3 border-bottom-1 surface-border">
-      <span class="p-input-icon-left w-full md:w-20rem">
-        <i class="pi pi-search"></i>
-        <input pInputText placeholder="Search qualifications..." (input)="onSearch($event)" class="w-full" />
-      </span>
+  <nas-page-header
+    title="Qualifications"
+    subtitle="Manage the qualification framework and linked courses">
+    <button type="button" class="nas-cta-btn" (click)="openCreate(); $event.stopPropagation()">
+      <i class="pi pi-plus-circle"></i>
+      New Qualification
+    </button>
+  </nas-page-header>
+
+  <div class="nas-card qual-table-card">
+    <!-- Search toolbar -->
+    <div class="qual-toolbar">
+      <div class="qual-search">
+        <i class="pi pi-search qual-search__icon"></i>
+        <input
+          type="text"
+          class="qual-search__input"
+          placeholder="Search qualifications..."
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
     </div>
 
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Name (EN)</th>
-          <th>Name (AR)</th>
-          <th>Courses</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-medium">{{ item.name_en ?? item.name }}</td>
-          <td dir="rtl">{{ item.name_ar ?? item.name }}</td>
-          <td>{{ item.courses_count ?? 0 }}</td>
-          <td>
-            <div class="flex gap-2">
-              <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" (onClick)="openEdit(item)" />
-              <p-button icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="confirmDelete(item)" />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="4" class="text-center p-4 text-color-secondary">No qualifications found.</td></tr>
-      </ng-template>
-    </p-table>
+    <!-- Table -->
+    <div class="qual-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>Qualification</th>
+            <th>Linked Courses</th>
+            <th>Enrolled</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>
+                @for (c of [1,2,3,4]; track c) {
+                  <td><p-skeleton height="20px" /></td>
+                }
+              </tr>
+            }
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td class="nas-table__primary">{{ qualName(item) }}</td>
+                <td>
+                  <span class="qual-courses-badge">
+                    {{ item.courses_count ?? 0 }}
+                    {{ (item.courses_count ?? 0) === 1 ? 'Course' : 'Courses' }}
+                  </span>
+                </td>
+                <td>{{ item.enrolled_count ?? 0 }}</td>
+                <td class="nas-table__action" (click)="$event.stopPropagation()">
+                  <div class="row-action-wrap">
+                    <button type="button" class="row-action-btn" (click)="toggleRowMenu(item, $event)">
+                      <i class="pi pi-ellipsis-h"></i>
+                    </button>
+                    @if (activeRow()?.id === item.id) {
+                      <div class="row-menu">
+                        <button type="button" class="row-menu__item" (click)="openEdit(item)">
+                          <i class="pi pi-pencil"></i> Edit
+                        </button>
+                        <button type="button" class="row-menu__item row-menu__item--danger" (click)="confirmDelete(item)">
+                          <i class="pi pi-trash"></i> Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="4" class="nas-table__empty">No qualifications found.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
+
 </div>

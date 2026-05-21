@@ -23,7 +23,7 @@
   } @else {
   <!-- ── KPI Row ─────────────────────────────────────────────────── -->
   <section class="kpi-row">
-    <nas-stat-card icon="pi pi-users" iconTone="teal" [label]="'dashboard.active_learners' | translate"
+    <nas-stat-card icon="pi pi-users" iconTone="purple" [label]="'dashboard.active_learners' | translate"
       [value]="data()?.statistics?.active_learners ?? 0" [trend]="'+12% vs last month'" trendDirection="up">
       <div subline class="kpi-subline">
         <span class="kpi-pill kpi-pill--online">
@@ -45,7 +45,7 @@
       [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'" trend="-3% vs last month" trendDirection="down">
     </nas-stat-card>
 
-    <nas-stat-card icon="pi pi-users" iconTone="sky" [label]="'dashboard.instructors' | translate"
+    <nas-stat-card icon="pi pi-users" iconTone="navy" [label]="'dashboard.instructors' | translate"
       [value]="data()?.statistics?.instructors ?? 0">
     </nas-stat-card>
   </section>
@@ -62,20 +62,13 @@
               <i class="pi pi-arrow-up"></i> +5%
             </span>
           </div>
-          <p class="chart-card__sub">82 {{ 'dashboard.enrollments' | translate }}</p>
+          <p class="chart-card__sub">{{ trendTotalEnrollments() }} {{ 'dashboard.enrollments' | translate }}</p>
         </div>
         <nas-pill-tabs [tabs]="rangeTabs" [activeId]="trendRange()" (activeIdChange)="trendRange.set($any($event))" />
       </header>
 
       <div class="chart-card__chart">
-        @if (chartData()) {
-        <p-chart type="line" [data]="chartData()!" [options]="chartOptions" height="280px" />
-        } @else {
-        <div class="chart-card__empty">
-          <i class="pi pi-chart-line"></i>
-          <p>No trend data yet</p>
-        </div>
-        }
+        <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="280px" />
       </div>
     </article>
 
@@ -89,14 +82,19 @@
       </header>
       <ul class="notif-list">
         @for (note of data()?.notifications ?? []; track $index) {
-        <li class="notif-item">
+        <li class="notif-item" [class.notif-item--unread]="$index < 2">
           <span class="notif-item__dot" [class.notif-item__dot--unread]="$index < 2"></span>
           <div class="notif-item__body">
-            <div class="notif-item__title">{{ note.title || note.message }}</div>
-            <div class="notif-item__detail">{{ note.detail || note.meta }}</div>
+            <div class="notif-item__title">{{ notificationTitle(note) }}</div>
+            <div class="notif-item__detail">{{ notificationDetail(note) }}</div>
           </div>
-          <div class="notif-item__time">{{ note.time }}</div>
+          @if (note.time) {
+            <div class="notif-item__time">{{ note.time }}</div>
+          }
         </li>
+        }
+        @if (!(data()?.notifications?.length)) {
+          <li class="notif-item notif-item--empty">{{ 'dashboard.no_notifications' | translate }}</li>
         }
       </ul>
     </article>
@@ -127,19 +125,21 @@
         <tbody>
           @for (c of data()?.top_courses ?? []; track c.id) {
           <tr class="nas-table__row" [routerLink]="['/admin/courses', c.id]">
-            <td class="nas-table__primary">{{ c.title }}</td>
-            <td>{{ c.instructor ?? '—' }}</td>
-            <td>{{ c.users_count }}</td>
+            <td class="nas-table__primary">{{ topCourseTitle(c) }}</td>
+            <td>{{ topCourseInstructor(c) }}</td>
+            <td>{{ c.users_count ?? 0 }}</td>
             <td style="min-width: 180px;">
               <nas-progress [value]="c.completion_percent ?? 0" />
             </td>
             <td>
               <nas-status-badge [tone]="statusTone(c.status)" [dot]="true">
-                {{ c.status ?? 'active' | titlecase }}
+                {{ (c.status ?? 'active') | titlecase }}
               </nas-status-badge>
             </td>
             <td class="nas-table__action">
-              <i class="pi pi-chevron-right"></i>
+              <button class="nas-view-btn" type="button" [title]="'View' | translate">
+                <i class="pi pi-eye"></i>
+              </button>
             </td>
           </tr>
           }

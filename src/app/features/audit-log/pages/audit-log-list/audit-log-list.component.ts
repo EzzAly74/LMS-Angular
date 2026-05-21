@@ -1,19 +1,20 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 
 interface AuditEntry {
   id: number;
   user_name: string;
-  user_email?: string;
+  user_type?: string;
   action: string;
+  model_type?: string;
+  model_id?: number;
   description: string;
   ip_address?: string;
   created_at: string;
@@ -22,9 +23,10 @@ interface AuditEntry {
 @Component({
   selector: 'app-audit-log-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TableModule, ButtonModule, SkeletonModule, CalendarModule, FormsModule],
+  imports: [CommonModule, TranslateModule, SkeletonModule, CalendarModule, FormsModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-log-list.component.html',
+  styleUrl: './audit-log-list.component.scss',
 })
 export class AuditLogListComponent implements OnInit {
   private api = inject(ApiService);
@@ -37,6 +39,9 @@ export class AuditLogListComponent implements OnInit {
   page     = 1;
   dateFrom: Date | null = null;
   dateTo:   Date | null = null;
+
+  readonly skeletons = [1, 2, 3, 4, 5];
+  readonly min = Math.min;
 
   ngOnInit(): void { this.load(); }
 
@@ -55,8 +60,8 @@ export class AuditLogListComponent implements OnInit {
     });
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+  onPage(p: number): void {
+    this.page = p;
     this.load();
   }
 

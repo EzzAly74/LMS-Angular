@@ -1,42 +1,25 @@
-<div class="p-4" style="max-width:1200px; margin:0 auto;">
-      <div class="flex align-items-center justify-content-between mb-4">
-        <h2 class="text-2xl font-semibold text-900 m-0">Reports</h2>
+<div class="nas-page-container">
+  <nas-page-header title="Reports" subtitle="Generate and export data reports as CSV">
+  </nas-page-header>
+  <div class="reports-grid">
+    @for (report of reportTypes; track report.key) {
+      <div class="report-card">
+        <div class="report-card__icon-wrap">
+          <i [class]="report.icon"></i>
+        </div>
+        <div>
+          <div class="report-card__title">{{ report.label }}</div>
+          <div class="report-card__desc">{{ report.description }}</div>
+        </div>
+        <button type="button" class="report-card__btn" (click)="exportCsv(report.key)" [disabled]="downloading()[report.key] ?? false">
+          @if (downloading()[report.key]) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else {
+            <i class="pi pi-download"></i>
+          }
+          Generate &amp; Export CSV
+        </button>
       </div>
-
-      <p-tabView>
-        @for (report of reportTypes; track report.key) {
-          <p-tabPanel [header]="report.label">
-            <ng-template pTemplate="header">
-              <span><i [class]="report.icon + ' mr-2'"></i>{{ report.label }}</span>
-            </ng-template>
-
-            <div class="surface-card border-round-xl shadow-1 p-5 mt-3">
-              <div class="flex align-items-start justify-content-between">
-                <div>
-                  <div class="flex align-items-center gap-3 mb-2">
-                    <span class="flex align-items-center justify-content-center border-circle w-3rem h-3rem"
-                          style="background:var(--primary-50)">
-                      <i [class]="report.icon" style="color:var(--primary-color)"></i>
-                    </span>
-                    <h3 class="text-xl font-semibold m-0">{{ report.label }}</h3>
-                  </div>
-                  <p class="text-color-secondary text-sm mt-1 mb-0">{{ report.description }}</p>
-                </div>
-                <p-button
-                  icon="pi pi-download"
-                  label="Generate &amp; Export CSV"
-                  size="small"
-                  [loading]="downloading()[report.key] ?? false"
-                  (onClick)="exportCsv(report.key)"
-                />
-              </div>
-
-              <div class="mt-4 surface-ground border-round p-4 text-center text-color-secondary text-sm">
-                <i class="pi pi-info-circle mr-2"></i>
-                Click "Generate &amp; Export CSV" to download the latest {{ report.label | lowercase }} report.
-              </div>
-            </div>
-          </p-tabPanel>
-        }
-      </p-tabView>
-    </div>
+    }
+  </div>
+</div>

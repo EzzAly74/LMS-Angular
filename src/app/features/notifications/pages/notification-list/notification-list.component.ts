@@ -1,20 +1,22 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
+import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { pickLocalized, type MaybeLocalized } from '../../../../core/utils/localized';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface Notification {
   id: number;
-  title: string;
-  body: string;
+  title: MaybeLocalized;
+  body: MaybeLocalized;
   for_public: boolean;
   created_at: string;
 }
@@ -22,21 +24,40 @@ interface Notification {
 @Component({
   selector: 'app-notification-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TableModule, ButtonModule, InputTextModule, TagModule, ConfirmDialogModule],
+  imports: [
+    CommonModule, FormsModule, DialogModule, SkeletonModule,
+    ConfirmDialogModule, NasPageHeaderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notification-list.component.html',
+  styleUrl: './notification-list.component.scss',
 })
 export class NotificationListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private localeService  = inject(LocaleService);
+
+  constructor() { withLocaleReload(() => this.load()); }
+
+  /** Defensive: handle Spatie translation objects if they leak into responses. */
+  display(value: MaybeLocalized): string {
+    const locale = this.localeService.locale() === 'ar' ? 'ar' : 'en';
+    return pickLocalized(value, locale, '—') || '—';
+  }
 
   items   = signal<Notification[]>([]);
   total   = signal(0);
   loading = signal(true);
-  perPage = 20;
-  page    = 1;
-  search  = '';
+  saving  = signal(false);
+
+  readonly perPage  = 20;
+  page              = 1;
+  search            = '';
+  dialogVisible     = false;
+  form = { title: '', body: '', for_public: false };
+
+  readonly skeletons = [1, 2, 3, 4, 5];
 
   private search$ = new Subject<string>();
 
@@ -48,28 +69,64 @@ export class NotificationListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.api.getPaginated<Notification>(API.NOTIFICATIONS, { page: this.page, per_page: this.perPage, search: this.search || undefined })
-      .subscribe({
-        next:  res => { this.items.set(res.result.data); this.total.set(res.result.total); this.loading.set(false); },
-        error: ()  => this.loading.set(false),
-      });
+    this.api.getPaginated<Notification>(API.NOTIFICATIONS, {
+      page: this.page, per_page: this.perPage, search: this.search || undefined,
+    }).subscribe({
+      next:  res => { this.items.set(res.result.data); this.total.set(res.result.total); this.loading.set(false); },
+      error: ()  => this.loading.set(false),
+    });
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
-    this.load();
+  onSearch(term: string): void { this.search$.next(term); }
+
+  openCreate(): void {
+    this.form = { title: '', body: '', for_public: false };
+    this.dialogVisible = true;
   }
 
-  onSearch(e: Event): void {
-    this.search$.next((e.target as HTMLInputElement).value);
+  closeDialog(): void {
+    this.dialogVisible = false;
+    this.form = { title: '', body: '', for_public: false };
+  }
+
+  save(): void {
+    const title = this.form.title.trim();
+    const body  = this.form.body.trim();
+    if (!title || !body) return;
+    this.saving.set(true);
+    /**
+     * Laravel `Notification` model uses spatie/laravel-translatable on
+     * `title` and `body`, so we must send the value for every supported
+     * locale. We use the same input for both languages — admins can edit
+     * the translation later if needed.
+     */
+    const payload = {
+      title:      { en: title, ar: title },
+      body:       { en: body,  ar: body  },
+      for_public: this.form.for_public,
+    };
+    this.api.post(API.NOTIFICATIONS, payload).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.closeDialog();
+        this.load();
+        this.messageService.add({ severity: 'success', summary: 'Sent', detail: 'Notification sent.' });
+      },
+      error: () => this.saving.set(false),
+    });
   }
 
   confirmDelete(item: Notification): void {
     this.confirmService.confirm({
-      message: `Delete "${item.title}"?`,
+      message: `Delete "${this.display(item.title)}"?`,
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.NOTIFICATIONS}/${item.id}`).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'Deleted.' }); this.load(); },
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Notification deleted.' });
+            this.load();
+          },
         });
       },
     });

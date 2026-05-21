@@ -1,13 +1,23 @@
 <div class="nas-locale-input" [class.nas-locale-input--error]="showError()">
-  <label class="nas-locale-input__label" [attr.for]="inputId + '-en'">
-    {{ label }}
-    @if (required) { <span class="nas-locale-input__req">*</span> }
-  </label>
-  <div class="nas-locale-input__grid">
-    <div class="nas-locale-input__cell">
-      <span class="nas-locale-input__lang">EN</span>
+
+  <div class="nas-locale-input__group">
+    <label class="nas-locale-input__label" [attr.for]="inputId + '-en'">
+      {{ label }} (English)
+      @if (required) { <span class="nas-locale-input__req">*</span> }
+    </label>
+    @if (multiline) {
+      <textarea
+        class="nas-input nas-input--area"
+        [id]="inputId + '-en'"
+        [placeholder]="placeholderEn"
+        [value]="value().en"
+        (input)="onInput('en', $event)"
+        [disabled]="disabled"
+        rows="3"
+      ></textarea>
+    } @else {
       <input
-        class="nas-locale-input__field"
+        class="nas-input"
         [id]="inputId + '-en'"
         type="text"
         [placeholder]="placeholderEn"
@@ -15,11 +25,28 @@
         (input)="onInput('en', $event)"
         [disabled]="disabled"
       />
-    </div>
-    <div class="nas-locale-input__cell">
-      <span class="nas-locale-input__lang">AR</span>
+    }
+  </div>
+
+  <div class="nas-locale-input__group">
+    <label class="nas-locale-input__label" [attr.for]="inputId + '-ar'">
+      {{ label }} (Arabic)
+      @if (required) { <span class="nas-locale-input__req">*</span> }
+    </label>
+    @if (multiline) {
+      <textarea
+        class="nas-input nas-input--area"
+        [id]="inputId + '-ar'"
+        dir="rtl"
+        [placeholder]="placeholderAr"
+        [value]="value().ar"
+        (input)="onInput('ar', $event)"
+        [disabled]="disabled"
+        rows="3"
+      ></textarea>
+    } @else {
       <input
-        class="nas-locale-input__field"
+        class="nas-input"
         [id]="inputId + '-ar'"
         type="text"
         dir="rtl"
@@ -28,6 +55,7 @@
         (input)="onInput('ar', $event)"
         [disabled]="disabled"
       />
-    </div>
+    }
   </div>
+
 </div>

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type NasTrendDirection = 'up' | 'down' | 'flat';
-export type NasStatTone = 'teal' | 'amber' | 'green' | 'sky' | 'neutral';
+export type NasStatTone = 'teal' | 'amber' | 'green' | 'sky' | 'purple' | 'navy' | 'neutral';
 
 @Component({
   selector: 'nas-stat-card',

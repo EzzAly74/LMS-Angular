@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
+import { NasStatusBadgeComponent } from '../../../../shared/nas/nas-status-badge.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface QuizAttemptRaw {
   id: number;
@@ -39,12 +39,20 @@ interface CourseOption {
 @Component({
   selector: 'app-quizzes-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TableModule, ButtonModule, TagModule, DropdownModule, SkeletonModule, FormsModule],
+  imports: [CommonModule, TranslateModule, DropdownModule, SkeletonModule, FormsModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './quizzes-list.component.html',
+  styleUrl: './quizzes-list.component.scss',
 })
 export class QuizzesListComponent implements OnInit {
   private api = inject(ApiService);
+
+  constructor() {
+    withLocaleReload(() => {
+      this.load();
+      this.loadCourseOptions();
+    });
+  }
 
   items         = signal<QuizAttempt[]>([]);
   total         = signal(0);
@@ -55,6 +63,9 @@ export class QuizzesListComponent implements OnInit {
   page             = 1;
   search           = '';
   selectedCourseId: number | null = null;
+
+  readonly skeletons = [1, 2, 3, 4, 5];
+  readonly min = Math.min;
 
   private search$ = new Subject<string>();
 
@@ -99,13 +110,13 @@ export class QuizzesListComponent implements OnInit {
       .subscribe({ next: res => this.courseOptions.set(res.result.data) });
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+  onPage(p: number): void {
+    this.page = p;
     this.load();
   }
 
-  onSearch(e: Event): void {
-    this.search$.next((e.target as HTMLInputElement).value);
+  onSearch(term: string): void {
+    this.search$.next(term);
   }
 
   onFilterChange(): void {

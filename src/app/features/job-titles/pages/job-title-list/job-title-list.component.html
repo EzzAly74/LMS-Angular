@@ -1,76 +1,115 @@
-<!-- Assign Qualifications Dialog -->
-<p-dialog
-  [(visible)]="dialogVisible"
-  [header]="'Assign Qualifications — ' + (selectedJobTitle()?.name ?? '')"
-  [modal]="true"
-  [style]="{ width: '500px' }"
-  [closable]="true"
->
-  <div class="flex flex-column gap-3 pt-2">
-    <label class="font-medium text-sm">Select Qualifications</label>
-    <p-multiSelect
-      [options]="allQualifications()"
-      [(ngModel)]="selectedQualIds"
-      optionLabel="name"
-      optionValue="id"
-      placeholder="Choose qualifications..."
-      [filter]="true"
-      class="w-full"
-    />
-  </div>
-  <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" size="small" (onClick)="closeDialog()" />
-    <p-button label="Save" size="small" [loading]="saving()" (onClick)="saveQualifications()" />
-  </ng-template>
-</p-dialog>
+<div class="nas-page-container">
 
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">Job Titles</h2>
+  <nas-page-header
+    title="Job Titles"
+    subtitle="Assign qualification requirements to each job title">
+  </nas-page-header>
+
+  <!-- Card grid -->
+  <div class="job-title-grid">
+    @if (loading()) {
+      @for (s of skeletons; track s) {
+        <div class="job-title-card job-title-card--skeleton">
+          <p-skeleton height="32px" width="60%" borderRadius="6px" />
+          <p-skeleton height="20px" width="80%" borderRadius="6px" />
+          <p-skeleton height="40px" borderRadius="6px" />
+          <p-skeleton height="6px" borderRadius="9999px" />
+          <p-skeleton height="40px" borderRadius="12px" />
+        </div>
+      }
+    } @else {
+      @for (item of items(); track item.id) {
+        <article class="job-title-card">
+
+          <!-- Header: name + employee badge -->
+          <div class="job-title-card__header">
+            <span class="job-title-card__name">{{ item.name }}</span>
+            <span class="job-title-card__employee-badge">
+              {{ item.employees_count ?? 0 }} Employee
+            </span>
+          </div>
+
+          <!-- Stats: employees + learners + qualifications -->
+          <div class="job-title-card__stats">
+            <div class="job-title-card__stat">
+              <div class="job-title-card__stat-value">{{ item.learners_count ?? 0 }}</div>
+              <div class="job-title-card__stat-label">Learners</div>
+            </div>
+            <div class="job-title-card__stat">
+              <div class="job-title-card__stat-value">{{ item.qualifications_count ?? 0 }}</div>
+              <div class="job-title-card__stat-label">Qualifications</div>
+            </div>
+          </div>
+
+          <!-- CTA button -->
+          <button class="job-title-card__assign-btn" type="button" (click)="openDialog(item)">
+            <i class="pi pi-plus-circle"></i>
+            Assign Qualification
+          </button>
+
+        </article>
+      }
+
+      @if (!items().length) {
+        <div class="job-title-empty">No job titles found.</div>
+      }
+    }
   </div>
 
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>#</th>
-          <th>Job Title</th>
-          <th>Qualifications</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
-        <tr>
-          <td class="text-color-secondary">{{ rowIndex + 1 }}</td>
-          <td class="font-medium">{{ item.name }}</td>
-          <td>
-            <span class="text-color-secondary text-sm">{{ item.qualifications_count ?? item.qualifications?.length ?? 0 }} assigned</span>
-          </td>
-          <td>
-            <p-button
-              icon="pi pi-link"
-              label="Assign Qualifications"
-              size="small"
-              severity="secondary"
-              [text]="true"
-              (onClick)="openDialog(item)"
-            />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="4" class="text-center p-4 text-color-secondary">No job titles found.</td></tr>
-      </ng-template>
-    </p-table>
-  </div>
 </div>
+
+<!-- ── Assign Qualification modal ─────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  styleClass="nas-dialog"
+  [style]="{ width: '520px' }"
+  header="Assign Qualification">
+
+  <div class="assign-modal">
+    <div class="assign-modal__for">For {{ selectedJobTitle()?.name }}</div>
+
+    <div class="assign-modal__search-wrap">
+      <i class="pi pi-search assign-modal__search-icon"></i>
+      <input
+        type="text"
+        class="assign-modal__search-input"
+        placeholder="Quick search..."
+        [ngModel]="modalSearch()"
+        (ngModelChange)="onModalSearch($event)"
+      />
+    </div>
+
+    <ul class="assign-modal__list">
+      @for (q of filteredQuals(); track q.id) {
+        <li class="assign-modal__item" (click)="toggleQual(q.id)">
+          <span class="assign-modal__checkbox" [class.checked]="isSelected(q.id)">
+            @if (isSelected(q.id)) {
+              <i class="pi pi-check"></i>
+            }
+          </span>
+          <span class="assign-modal__item-label">{{ q.name }}</span>
+        </li>
+      }
+      @if (!filteredQuals().length) {
+        <li class="assign-modal__empty">No qualifications found</li>
+      }
+    </ul>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">
+      Cancel
+    </button>
+    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="saveQualifications()">
+      <i class="pi pi-save"></i>
+      Save Assignments
+    </button>
+  </ng-template>
+
+</p-dialog>

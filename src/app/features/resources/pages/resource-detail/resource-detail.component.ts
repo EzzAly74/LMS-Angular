@@ -17,8 +17,13 @@ interface LmsResource {
   type: 'article' | 'link' | 'file';
   content?: string;
   url?: string;
+  /** Public URL Laravel exposes as `file_path` from `LmsResourceResource`. */
+  file_path?: string;
+  /** Backwards-compat alias (older responses used `file_url`). */
   file_url?: string;
-  qualification?: string;
+  file_name?: string;
+  file_size?: number;
+  qualification?: { id: number; name: string } | null;
   qualification_skill_id?: number;
   created_at: string;
   updated_at?: string;

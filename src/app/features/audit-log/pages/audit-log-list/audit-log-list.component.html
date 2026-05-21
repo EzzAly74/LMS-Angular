@@ -1,77 +1,72 @@
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">Audit Log</h2>
-  </div>
-
-  <!-- Date Range Filters -->
-  <div class="surface-card border-round-xl shadow-1 p-3 mb-3 flex gap-3 flex-wrap align-items-center">
-    <div class="flex align-items-center gap-2">
-      <label class="text-sm text-color-secondary">From:</label>
-      <p-calendar
-        [(ngModel)]="dateFrom"
-        [showIcon]="true"
-        dateFormat="yy-mm-dd"
-        placeholder="Start date"
-        (onSelect)="onDateChange()"
-        [style]="{ width: '180px' }"
-      />
+<div class="nas-page-container">
+  <nas-page-header title="Audit Log" subtitle="Track all admin actions and system events">
+  </nas-page-header>
+  <div class="nas-card audit-table-card">
+    <div class="audit-toolbar">
+      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">From</label>
+      <p-calendar [(ngModel)]="dateFrom" [showIcon]="true" dateFormat="yy-mm-dd" placeholder="Start date"
+        (onSelect)="onDateChange()" [style]="{'width':'180px'}" styleClass="nas-calendar" />
+      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">To</label>
+      <p-calendar [(ngModel)]="dateTo" [showIcon]="true" dateFormat="yy-mm-dd" placeholder="End date"
+        (onSelect)="onDateChange()" [style]="{'width':'180px'}" styleClass="nas-calendar" />
+      @if (dateFrom || dateTo) {
+        <button type="button" class="clear-filter-btn" (click)="clearDates()">
+          <i class="pi pi-times"></i>Clear
+        </button>
+      }
     </div>
-    <div class="flex align-items-center gap-2">
-      <label class="text-sm text-color-secondary">To:</label>
-      <p-calendar
-        [(ngModel)]="dateTo"
-        [showIcon]="true"
-        dateFormat="yy-mm-dd"
-        placeholder="End date"
-        (onSelect)="onDateChange()"
-        [style]="{ width: '180px' }"
-      />
-    </div>
-    @if (dateFrom || dateTo) {
-      <p-button icon="pi pi-times" label="Clear" severity="secondary" size="small" [text]="true" (onClick)="clearDates()" />
-    }
-  </div>
-
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>User</th>
-          <th>Action</th>
-          <th>Description</th>
-          <th>IP Address</th>
-          <th>Date</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td>
-            <div class="font-medium text-sm">{{ item.user_name }}</div>
-            @if (item.user_email) {
-              <div class="text-color-secondary text-xs">{{ item.user_email }}</div>
+    <div class="audit-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Action</th>
+            <th>Description</th>
+            <th>IP Address</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>
+                @for (c of [1,2,3,4,5]; track c) {
+                  <td><p-skeleton height="20px" /></td>
+                }
+              </tr>
             }
-          </td>
-          <td>
-            <span class="font-mono text-sm surface-ground border-round px-2 py-1">{{ item.action }}</span>
-          </td>
-          <td class="text-sm" style="max-width:350px">{{ item.description }}</td>
-          <td class="text-color-secondary text-sm font-mono">{{ item.ip_address ?? '—' }}</td>
-          <td class="text-color-secondary text-sm">{{ item.created_at | date:'medium' }}</td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="5" class="text-center p-4 text-color-secondary">No audit log entries found.</td></tr>
-      </ng-template>
-    </p-table>
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td>
+                  <div class="nas-table__primary">{{ item.user_name || '—' }}</div>
+                  @if (item.user_type) {
+                    <div class="nas-table__muted">{{ item.user_type | titlecase }}</div>
+                  }
+                </td>
+                <td><span class="audit-tag">{{ item.action }}</span></td>
+                <td style="max-width:350px;white-space:normal;">{{ item.description || '—' }}</td>
+                <td class="nas-table__muted" style="font-family:monospace;">{{ item.ip_address ?? '—' }}</td>
+                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy, HH:mm' }}</td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="5" class="nas-table__empty">No audit log entries found.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (total() > perPage) {
+      <div class="nas-table-pagination">
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <div class="nas-table-pagination__nav">
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+        </div>
+      </div>
+    }
   </div>
 </div>

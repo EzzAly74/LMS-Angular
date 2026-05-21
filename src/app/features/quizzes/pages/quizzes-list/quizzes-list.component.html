@@ -1,71 +1,72 @@
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">Quiz Attempts</h2>
-  </div>
-
-  <!-- Filters -->
-  <div class="surface-card border-round-xl shadow-1 p-3 mb-3 flex gap-3 flex-wrap align-items-center">
-    <p-dropdown
-      [options]="courseOptions()"
-      [(ngModel)]="selectedCourseId"
-      optionLabel="title"
-      optionValue="id"
-      placeholder="Filter by course"
-      [showClear]="true"
-      (onChange)="onFilterChange()"
-      [style]="{ 'min-width': '220px' }"
-    />
-    <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input
-        class="p-inputtext p-component p-element"
-        placeholder="Search learner..."
-        (input)="onSearch($event)"
-      />
-    </span>
-  </div>
-
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Learner</th>
-          <th>Course</th>
-          <th>Score</th>
-          <th>Status</th>
-          <th>Date</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-medium">{{ item.user_name }}</td>
-          <td>{{ item.course_title }}</td>
-          <td>
-            <span class="font-medium">{{ item.score }}</span>
-            @if (item.max_score) {
-              <span class="text-color-secondary text-sm"> / {{ item.max_score }}</span>
+<div class="nas-page-container">
+  <nas-page-header title="Quiz Attempts" subtitle="Review learner quiz performance">
+  </nas-page-header>
+  <div class="nas-card quiz-table-card">
+    <div class="quiz-toolbar">
+      <p-dropdown [options]="courseOptions()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
+        placeholder="Filter by course" [showClear]="true" styleClass="nas-dropdown"
+        (onChange)="onFilterChange()" [style]="{'min-width':'220px','height':'36px'}" />
+      <div class="nas-search">
+        <i class="nas-search__icon pi pi-search"></i>
+        <input class="nas-search__input" placeholder="Search learner..." (input)="onSearch($any($event.target).value)" />
+      </div>
+    </div>
+    <div class="quiz-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>Learner</th>
+            <th>Course</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>
+                @for (c of [1,2,3,4,5]; track c) {
+                  <td><p-skeleton height="20px" /></td>
+                }
+              </tr>
             }
-          </td>
-          <td>
-            <p-tag [value]="item.status | titlecase"
-                   [severity]="item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'warning'" />
-          </td>
-          <td class="text-color-secondary text-sm">{{ item.created_at | date:'mediumDate' }}</td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="5" class="text-center p-4 text-color-secondary">No quiz attempts found.</td></tr>
-      </ng-template>
-    </p-table>
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td class="nas-table__primary">{{ item.user_name }}</td>
+                <td>{{ item.course_title }}</td>
+                <td>
+                  <span class="nas-table__primary">{{ item.score }}</span>
+                  @if (item.max_score) {
+                    <span class="nas-table__muted"> / {{ item.max_score }}</span>
+                  }
+                </td>
+                <td>
+                  <nas-status-badge [tone]="item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'warning'">
+                    {{ item.status | titlecase }}
+                  </nas-status-badge>
+                </td>
+                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="5" class="nas-table__empty">No quiz attempts found.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (total() > perPage) {
+      <div class="nas-table-pagination">
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <div class="nas-table-pagination__nav">
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+        </div>
+      </div>
+    }
   </div>
 </div>

@@ -1,0 +1,92 @@
+:host { display: block; }
+
+.ndt-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ndt-wrap {
+  overflow-x: auto;
+}
+
+/* ── NAS table (matches users-table styling) ──────────────────────── */
+.nas-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--nas-size-xs);
+
+  thead th {
+    text-align: start;
+    font-size: var(--nas-size-2xs);
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-muted);
+    background: var(--nas-neutral-200);
+    border-bottom: 1px solid var(--nas-color-border);
+    padding: var(--nas-space-3) var(--nas-space-5);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: var(--nas-space-4) var(--nas-space-5);
+    border-bottom: 1px solid var(--nas-color-border);
+    color: var(--nas-color-text-body);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  &__row {
+    transition: background var(--transition-speed);
+
+    &--clickable {
+      cursor: pointer;
+      &:hover { background: var(--nas-neutral-100); }
+    }
+
+    &--skeleton td { padding: var(--nas-space-3) var(--nas-space-5); }
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--nas-space-10) var(--nas-space-5);
+    color: var(--nas-color-text-muted);
+
+    i { font-size: 28px; display: block; margin-bottom: var(--nas-space-3); }
+    p { margin: 0; font-size: var(--nas-size-2xs); }
+  }
+}
+
+/* ── Slim prev/next pagination ────────────────────────────────────── */
+.nas-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--nas-space-3) var(--nas-space-5);
+  border-top: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-muted);
+
+  &__nav { display: flex; gap: var(--nas-space-2); }
+
+  &__btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--nas-color-border);
+    border-radius: var(--nas-radius-sm);
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--nas-color-text-muted);
+    transition: background var(--transition-speed);
+
+    i { font-size: 12px; }
+    &:hover:not([disabled]) { background: var(--nas-neutral-300); color: var(--nas-color-text-strong); }
+    &[disabled]             { opacity: 0.4; cursor: not-allowed; }
+  }
+}
+
+/* ── RTL-aware chevrons ───────────────────────────────────────────── */
+:host-context([dir="rtl"]) .nas-table-pagination__btn i { transform: scaleX(-1); }

@@ -1,58 +1,68 @@
-<p-confirmDialog />
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">{{ 'attendance.title' | translate }}</h2>
-  </div>
-
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <div class="p-3 border-bottom-1 surface-border">
-      <span class="p-input-icon-left w-full md:w-20rem">
-        <i class="pi pi-search"></i>
-        <input pInputText [placeholder]="'common.search' | translate" (input)="onSearch($event)" class="w-full" />
-      </span>
+<div class="nas-page-container">
+  <nas-page-header title="Attendance" subtitle="View learner attendance records">
+  </nas-page-header>
+  <div class="nas-card attend-table-card">
+    <div class="attend-toolbar">
+      <div class="nas-search">
+        <i class="nas-search__icon pi pi-search"></i>
+        <input class="nas-search__input" placeholder="Search..." (input)="onSearch($event)" />
+      </div>
     </div>
-
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>{{ 'users.machine_code' | translate }}</th>
-          <th>{{ 'users.department' | translate }}</th>
-          <th>{{ 'courses.title' | translate }}</th>
-          <th>{{ 'categories.title' | translate }}</th>
-          <th>{{ 'attendance.hours' | translate }}</th>
-          <th>{{ 'attendance.is_manual' | translate }}</th>
-          <th>{{ 'common.created_at' | translate }}</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-medium">{{ item.user_machine_code }}</td>
-          <td>{{ item.user_department }}</td>
-          <td>{{ item.course_name }}</td>
-          <td>{{ item.course_category_name }}</td>
-          <td>{{ item.attendance_hours }}</td>
-          <td>
-            <p-tag
-              [value]="item.is_manual ? ('attendance.manual' | translate) : ('attendance.auto' | translate)"
-              [severity]="item.is_manual ? 'warning' : 'info'"
-            />
-          </td>
-          <td>{{ item.created_at }}</td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="7" class="text-center p-4">{{ 'common.no_data' | translate }}</td></tr>
-      </ng-template>
-    </p-table>
+    <div class="attend-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>Machine Code</th>
+            <th>Department</th>
+            <th>Course</th>
+            <th>Category</th>
+            <th>Hours</th>
+            <th>Type</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>
+                @for (c of [1,2,3,4,5,6,7]; track c) {
+                  <td><p-skeleton height="20px" /></td>
+                }
+              </tr>
+            }
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td class="nas-table__primary">{{ item.user_machine_code }}</td>
+                <td>{{ item.user_department }}</td>
+                <td>{{ item.course_name }}</td>
+                <td>{{ item.course_category_name }}</td>
+                <td>{{ item.attendance_hours }}</td>
+                <td>
+                  <nas-status-badge [tone]="item.is_manual ? 'warning' : 'info'">
+                    {{ item.is_manual ? 'Manual' : 'Auto' }}
+                  </nas-status-badge>
+                </td>
+                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="7" class="nas-table__empty">No attendance records found.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (total() > perPage) {
+      <div class="nas-table-pagination">
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <div class="nas-table-pagination__nav">
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+        </div>
+      </div>
+    }
   </div>
 </div>

@@ -3,13 +3,13 @@
 .nas-progress {
   display: flex;
   align-items: center;
-  gap: var(--nas-space-3);
+  gap: var(--nas-space-2);
 }
 
 .nas-progress__track {
   flex: 1;
-  height: 8px;
-  background: var(--nas-neutral-300);
+  height: 6px;
+  background: #f5f5f5;
   border-radius: var(--nas-radius-full);
   overflow: hidden;
 }
@@ -19,16 +19,16 @@
   border-radius: var(--nas-radius-full);
   transition: width 0.3s ease;
 
-  &[data-tone="success"] { background: var(--nas-status-green-500); }
-  &[data-tone="warning"] { background: var(--nas-status-amber-500); }
-  &[data-tone="danger"]  { background: var(--nas-status-red-500); }
-  &[data-tone="info"]    { background: var(--nas-sky-700); }
+  &[data-tone="success"] { background: #0fb86a; }
+  &[data-tone="warning"] { background: #f79008; }
+  &[data-tone="danger"]  { background: #f14437; }
+  &[data-tone="info"]    { background: #496e91; }
 }
 
 .nas-progress__value {
-  font-size:   var(--nas-size-2xs);
-  font-weight: var(--nas-weight-medium);
-  color:       var(--nas-color-text-strong);
-  min-width: 36px;
+  font-size: 12px;
+  font-weight: var(--nas-weight-regular);
+  color: var(--nas-color-text-muted);
+  min-width: 28px;
   text-align: end;
 }

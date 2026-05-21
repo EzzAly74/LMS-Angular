@@ -32,9 +32,13 @@ export interface DashboardData {
   statistics: DashboardStatistics;
   top_courses: Array<{
     id: number;
-    title: string;
-    instructor?: string;
-    users_count: number;
+    title: string | { en?: string; ar?: string } | null;
+    /**
+     * Either a flat name (current backend) or a relation object — kept loose
+     * so a future contract change doesn't break the dashboard.
+     */
+    instructor?: string | { id?: number; name?: string | { en?: string; ar?: string } } | null;
+    users_count?: number;
     completion_percent?: number;
     status?: string;
   }>;

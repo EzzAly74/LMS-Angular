@@ -9,10 +9,11 @@
 .nas-pill-tab {
   border: 1px solid var(--nas-color-border);
   background: var(--nas-color-bg-surface);
-  color: var(--nas-color-text-muted);
-  padding: var(--nas-space-2) 14px;
+  color: var(--nas-neutral-700);
+  padding: 4px var(--nas-space-4);
+  height: 32px;
   border-radius: var(--nas-radius-full);
-  font-size: var(--nas-size-2xs);
+  font-size: var(--nas-size-xs);
   font-weight: var(--nas-weight-medium);
   cursor: pointer;
   display: inline-flex;
@@ -28,21 +29,24 @@
   }
 
   &.active {
-    background:   var(--nas-essential-cta);
-    color:        var(--nas-color-text-onDark);
-    border-color: var(--nas-essential-cta);
+    background:    var(--nas-teal-100);
+    color:         var(--nas-essential-cta);
+    border-color:  var(--nas-essential-cta);
+    border-width:  0.7px;
   }
 
   &__count {
-    background: var(--nas-neutral-300);
+    background: var(--nas-teal-100);
     color:      var(--nas-color-text-muted);
     font-size:  var(--nas-size-3xs);
     padding: 1px var(--nas-space-2);
     border-radius: var(--nas-radius-full);
+    min-width: 20px;
+    text-align: center;
   }
 
   &.active .nas-pill-tab__count {
-    background: var(--nas-color-onDark-soft);
-    color:      var(--nas-color-text-onDark);
+    background: var(--nas-color-bg-surface);
+    color:      var(--nas-essential-cta);
   }
 }

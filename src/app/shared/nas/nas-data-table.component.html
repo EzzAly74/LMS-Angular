@@ -1,0 +1,85 @@
+<div class="nas-card ndt-card" [class]="cardClass">
+  <!-- Optional toolbar slot (search, filters, etc.) -->
+  <ng-content select="[ndtToolbar]" />
+
+  <div class="ndt-wrap">
+    <table class="nas-table">
+      <thead>
+        <tr>
+          @for (col of columns; track col.field) {
+            <th [style.width]="col.width"
+                [style.min-width]="col.minWidth"
+                [style.text-align]="col.align ?? 'start'">
+              @if (!col.headerless) { {{ col.header }} }
+            </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        @if (loading) {
+          @for (i of skeletonArray; track i) {
+            <tr class="nas-table__row nas-table__row--skeleton">
+              @for (col of columns; track col.field) {
+                <td [style.text-align]="col.align ?? 'start'"
+                    [style.width]="col.width"
+                    [style.min-width]="col.minWidth ?? (col.headerless ? '40px' : '90px')">
+                  <nas-shimmer
+                    [width]="col.headerless ? '20px' : '70%'"
+                    height="14px"
+                    borderRadius="6px" />
+                </td>
+              }
+            </tr>
+          }
+        } @else if (items && items.length) {
+          @for (row of items; track trackBy($index, row); let i = $index) {
+            <tr class="nas-table__row"
+                [class.nas-table__row--clickable]="rowClickable"
+                (click)="onRowClick(row)">
+              @for (col of columns; track col.field) {
+                <td [style.text-align]="col.align ?? 'start'"
+                    [style.min-width]="col.minWidth">
+                  @if (tplMap()[col.field]; as tpl) {
+                    <ng-container *ngTemplateOutlet="tpl; context: { $implicit: row, index: i }" />
+                  } @else {
+                    {{ cellValue(row, col.field) }}
+                  }
+                </td>
+              }
+            </tr>
+          }
+        } @else {
+          <tr>
+            <td [attr.colspan]="columns.length" class="nas-table__empty">
+              <i [class]="emptyIcon"></i>
+              <p>{{ emptyText }}</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (paginated && !loading && total > perPage) {
+    <div class="nas-table-pagination">
+      <span class="nas-table-pagination__info">
+        {{ from }}–{{ to }} of {{ total }}
+      </span>
+      <div class="nas-table-pagination__nav">
+        <button type="button"
+                class="nas-table-pagination__btn"
+                [disabled]="page === 1"
+                (click)="goTo(page - 1)">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <button type="button"
+                class="nas-table-pagination__btn"
+                [disabled]="page >= lastPage"
+                (click)="goTo(page + 1)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

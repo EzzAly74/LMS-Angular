@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API, courseUrl } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface CourseOption { id: number; title: string; }
 interface Assignment {
@@ -22,14 +22,21 @@ interface Assignment {
 @Component({
   selector: 'app-assignment-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, TableModule, ButtonModule, InputTextModule, DropdownModule, ConfirmDialogModule],
+  imports: [CommonModule, FormsModule, TranslateModule, DropdownModule, ConfirmDialogModule, SkeletonModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './assignment-list.component.html',
+  styleUrl: './assignment-list.component.scss',
 })
 export class AssignmentListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+
+  constructor() {
+    withLocaleReload(() => {
+      if (this.selectedCourseId) this.load();
+    });
+  }
 
   courses        = signal<CourseOption[]>([]);
   coursesLoading = signal(true);
@@ -39,6 +46,9 @@ export class AssignmentListComponent implements OnInit {
   perPage        = 20;
   page           = 1;
   selectedCourseId: number | null = null;
+
+  readonly skeletons = [1, 2, 3, 4, 5];
+  readonly min = Math.min;
 
   ngOnInit(): void {
     this.api.getPaginated<CourseOption>(API.COURSES, { per_page: 200 }).subscribe({
@@ -64,8 +74,8 @@ export class AssignmentListComponent implements OnInit {
       });
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+  onPage(p: number): void {
+    this.page = p;
     this.load();
   }
 

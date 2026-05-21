@@ -2,10 +2,10 @@ import {
   ChangeDetectionStrategy, Component, OnInit, ViewChild,
   computed, inject, signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -17,13 +17,18 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
   NasPageHeaderComponent,
   NasPillTabsComponent,
   NasPillTab,
   NasStatusBadgeComponent,
+  NasStatusTone,
   NasProgressComponent,
   NasLocaleInputComponent,
+  NasDataTableComponent,
+  NasCellTplDirective,
+  NasTableColumn,
 } from '../../../../shared/nas';
 import { CoursesApiService } from '../../services/courses-api.service';
 import type { LocalizedText } from '../../../../core/models/localized.types';
@@ -37,11 +42,11 @@ type ActiveTab = 'all' | 'pending' | 'active' | 'upcoming' | 'inactive';
   selector: 'app-course-list',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, FormsModule, ReactiveFormsModule, DatePipe, TranslateModule,
+    CommonModule, FormsModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslateModule,
     OverlayPanelModule, ConfirmDialogModule, DialogModule,
     DropdownModule, CalendarModule, InputNumberModule, CheckboxModule,
     NasPageHeaderComponent, NasPillTabsComponent, NasStatusBadgeComponent, NasProgressComponent,
-    NasLocaleInputComponent,
+    NasLocaleInputComponent, NasDataTableComponent, NasCellTplDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-list.component.html',
@@ -56,6 +61,22 @@ export class CourseListComponent implements OnInit {
   private router         = inject(Router);
   private confirmService = inject(ConfirmationService);
   private toast          = inject(MessageService);
+
+  /** True once the Add-Course modal lookups have been fetched at least once. */
+  private selectOptionsLoaded = false;
+
+  constructor() {
+    withLocaleReload(() => {
+      this.load();
+      this.loadTabCounts();
+      // Only re-fetch the modal lookups if they were already consumed —
+      // avoids 3 extra network calls every time the locale changes for
+      // pages where the user never opens the Add-Course dialog.
+      if (this.selectOptionsLoaded) {
+        this.loadSelectOptions();
+      }
+    });
+  }
 
   items     = signal<Course[]>([]);
   total     = signal(0);
@@ -87,12 +108,24 @@ export class CourseListComponent implements OnInit {
   ];
 
   tabs = computed<NasPillTab[]>(() => [
-    { id: 'all',      label: 'All',      count: this.total() ?? null },
-    { id: 'pending',  label: 'Pending',  count: this.tabCounts()['pending'] ?? null },
-    { id: 'active',   label: 'Active',   count: this.tabCounts()['active'] ?? null },
-    { id: 'upcoming', label: 'Up coming',count: this.tabCounts()['upcoming'] ?? null },
-    { id: 'inactive', label: 'Inactive', count: this.tabCounts()['inactive'] ?? null },
+    { id: 'all',      label: 'All',       count: this.tabCounts()['all']      ?? null },
+    { id: 'pending',  label: 'Pending',   count: this.tabCounts()['pending']  ?? null },
+    { id: 'active',   label: 'Active',    count: this.tabCounts()['active']   ?? null },
+    { id: 'upcoming', label: 'Up coming', count: this.tabCounts()['upcoming'] ?? null },
+    { id: 'inactive', label: 'Inactive',  count: this.tabCounts()['inactive'] ?? null },
   ]);
+
+  readonly columns: NasTableColumn[] = [
+    { field: 'course',     header: 'Course',     minWidth: '240px' },
+    { field: 'category',   header: 'Category' },
+    { field: 'instructor', header: 'Instructor' },
+    { field: 'cohorts',    header: 'Cohorts',    align: 'start' },
+    { field: 'enrolled',   header: 'Enrolled',   align: 'start' },
+    { field: 'completion', header: 'Completion', minWidth: '140px' },
+    { field: 'rating',     header: 'Rating' },
+    { field: 'status',     header: 'Status' },
+    { field: 'actions',    header: '',           headerless: true, width: '60px', align: 'end' },
+  ];
 
   form = this.fb.group({
     title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
@@ -114,9 +147,11 @@ export class CourseListComponent implements OnInit {
     this.search$.pipe(debounceTime(350), distinctUntilChanged())
       .subscribe(q => { this.search = q; this.page = 1; this.load(); });
 
+    // Fire the two cheap-and-required calls in parallel. Modal lookups
+    // (categories / instructors / qualifications) are deferred until the
+    // user actually clicks "Add Course".
     this.load();
     this.loadTabCounts();
-    this.loadSelectOptions();
   }
 
   /* ── Data ─────────────────────────────────────────────────────────── */
@@ -137,20 +172,24 @@ export class CourseListComponent implements OnInit {
   }
 
   loadTabCounts(): void {
-    const statuses: Exclude<ActiveTab, 'all'>[] = ['pending', 'active', 'upcoming', 'inactive'];
-    const reqs = statuses.map(s =>
-      this.api.getPaginated<Course>(API.COURSES, { per_page: 1, page: 1, status: s })
-    );
-    forkJoin(reqs).subscribe({
-      next: results => {
-        const counts: Partial<Record<ActiveTab, number>> = {};
-        statuses.forEach((s, i) => { counts[s] = results[i].result.total; });
-        this.tabCounts.set(counts);
+    // One backend round-trip computes every tab count via an aggregate
+    // query — replaces what used to be four parallel paginated fetches.
+    this.coursesApi.getTabCounts().subscribe({
+      next: res => {
+        const r = res.result;
+        this.tabCounts.set({
+          all:      r.all,
+          active:   r.active,
+          inactive: r.inactive,
+          pending:  r.pending,
+          upcoming: r.upcoming,
+        });
       },
     });
   }
 
   loadSelectOptions(): void {
+    this.selectOptionsLoaded = true;
     this.api.get<Array<{ id: number; name: string }>>(API.CATEGORIES_ACTIVE).subscribe({
       next: r => this.catOptions.set(Array.isArray(r.result) ? r.result : []),
     });
@@ -196,6 +235,12 @@ export class CourseListComponent implements OnInit {
       certificate: true, require_instructor: true, description: { en: '', ar: '' },
       hours: 1, max_learners: 30, cohort_start: null, cohort_end: null, qualification_ids: [], image: null,
     });
+    // Fetch dropdown lookups lazily — keeps the initial page load
+    // request count low (this is invoked only when an admin actually
+    // wants to create a course).
+    if (!this.selectOptionsLoaded) {
+      this.loadSelectOptions();
+    }
     this.showAddCourse.set(true);
   }
 
@@ -204,13 +249,18 @@ export class CourseListComponent implements OnInit {
     this.saving.set(true);
     const v = this.form.getRawValue();
     const fd = new FormData();
-    const title = v.title as LocalizedText;
-    const desc  = v.description as LocalizedText;
-    fd.append('title[en]', title.en);
-    fd.append('title[ar]', title.ar || title.en);
-    fd.append('description[en]', desc.en);
-    fd.append('description[ar]', desc.ar || desc.en);
-    fd.append('course_type', v.type === 'online' ? 'online' : 'offline');
+    const title = (v.title ?? {}) as LocalizedText;
+    const desc  = (v.description ?? {}) as LocalizedText;
+    const titleEn = (title.en ?? '').trim();
+    const titleAr = (title.ar ?? '').trim();
+    const descEn  = (desc.en ?? '').trim();
+    const descAr  = (desc.ar ?? '').trim();
+    fd.append('title[en]', titleEn || titleAr);
+    fd.append('title[ar]', titleAr || titleEn);
+    fd.append('description[en]', descEn || descAr);
+    fd.append('description[ar]', descAr || descEn);
+    const courseType = (v.type as 'online' | 'offline' | 'hybrid' | 'external_link') ?? 'offline';
+    fd.append('course_type', courseType);
     fd.append('category_id', String(v.category_id!));
     fd.append('hours', String(v.hours ?? 1));
     fd.append('certificate', v.certificate ? '1' : '0');
@@ -233,18 +283,21 @@ export class CourseListComponent implements OnInit {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
   }
 
+  /* ── Pagination ───────────────────────────────────────────────────── */
+  onPage(p: number): void { this.page = p; this.load(); }
+
   /* ── Helpers ──────────────────────────────────────────────────────── */
-  statusTone(status: CourseStatus | undefined): 'success' | 'warning' | 'info' | 'danger' | 'neutral' {
+  statusTone(status: CourseStatus | undefined): NasStatusTone {
     switch (status) {
       case 'active':   return 'success';
-      case 'pending':  return 'warning';
-      case 'upcoming': return 'info';
+      case 'pending':  return 'info';
+      case 'upcoming': return 'warning';
       case 'inactive': return 'danger';
       default:         return 'neutral';
     }
   }
 
-  typeTone(type: CourseType | undefined): 'teal' | 'neutral' | 'success' | 'sky' {
+  typeTone(type: CourseType | undefined): NasStatusTone {
     switch (type) {
       case 'online':        return 'teal';
       case 'offline':       return 'neutral';

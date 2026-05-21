@@ -35,6 +35,7 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
       { path: 'job-titles',     loadChildren: () => import('../../features/job-titles/job-titles.routes').then(m => m.JOB_TITLES_ROUTES) },
       { path: 'qualifications', loadChildren: () => import('../../features/qualifications/qualifications.routes').then(m => m.QUALIFICATIONS_ROUTES) },
       { path: 'roles',          loadChildren: () => import('../../features/roles/roles.routes').then(m => m.ROLES_ROUTES) },
+      { path: 'controllers',    loadChildren: () => import('../../features/controllers/controllers.routes').then(m => m.CONTROLLERS_ROUTES) },
 
       // ── Communication ─────────────────────────────────────────────
       { path: 'messages',       loadChildren: () => import('../../features/messages/messages.routes').then(m => m.MESSAGES_ROUTES) },

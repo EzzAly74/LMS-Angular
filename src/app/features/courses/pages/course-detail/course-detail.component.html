@@ -22,16 +22,21 @@
         </div>
         <h1 class="detail-header__title">{{ c.title }}</h1>
         <div class="detail-header__meta">
-          @if (c.instructor) {
-            <span class="detail-header__meta-item"><i class="pi pi-user"></i> {{ c.instructor.name }}</span>
+          @if (c.instructor?.name) {
+            <span class="detail-header__meta-item"><i class="pi pi-user"></i> {{ c.instructor!.name }}</span>
           }
-          <span class="detail-header__meta-item"><i class="pi pi-shield"></i> Safety</span>
+          @if (c.category?.name) {
+            <span class="detail-header__meta-item"><i class="pi pi-shield"></i> {{ c.category!.name }}</span>
+          }
           @if (c.updated_at) {
             <span class="detail-header__meta-item">Updated {{ c.updated_at | date:'dd MMM yyyy' }}</span>
           }
         </div>
       </div>
-      <button class="nas-edit-btn"><i class="pi pi-pencil"></i> {{ 'course_detail.edit' | translate }}</button>
+      <button type="button" class="nas-edit-btn" (click)="openEditCourse()">
+        <i class="pi pi-pencil"></i>
+        <span>{{ 'course_detail.edit' | translate }}</span>
+      </button>
     </header>
 
     <!-- ── KPI strip ──────────────────────────────────────────────────── -->
@@ -47,11 +52,11 @@
 
       <nas-stat-card icon="pi pi-check-circle" iconTone="green"
                      [label]="'course_detail.average_completion' | translate"
-                     [value]="(c.completion_percent ?? 0) + '%'"></nas-stat-card>
+                     [value]="completionLabel()"></nas-stat-card>
 
       <nas-stat-card icon="pi pi-star-fill" iconTone="sky"
                      [label]="ratingLabel()"
-                     [value]="(c.rating ?? 0) | number:'1.1-1'"></nas-stat-card>
+                     [value]="ratingValue()"></nas-stat-card>
     </section>
 
     <!-- ── Tabs ──────────────────────────────────────────────────────── -->
@@ -63,50 +68,63 @@
       <!-- OVERVIEW -->
       @case ('overview') {
         <section class="overview-grid">
-          <article class="nas-card overview-about">
-            <h3 class="nas-section-title">{{ 'course_detail.about_this_course' | translate }}</h3>
-            <p>{{ c.description }}</p>
+          <div class="overview-grid__left">
+            <article class="nas-card overview-about">
+              <h3 class="nas-section-title">{{ 'course_detail.about_this_course' | translate }}</h3>
+              @if (c.description) {
+                <p>{{ c.description }}</p>
+              } @else {
+                <p class="empty-text">{{ 'course_detail.no_description' | translate }}</p>
+              }
+            </article>
 
-            <h3 class="nas-section-title nas-section-title--gap">{{ 'course_detail.learner_ratings' | translate }}</h3>
-            <div class="rating-summary">
-              <div class="rating-summary__score">
-                <div class="rating-summary__value">{{ c.rating | number:'1.1-1' }}</div>
-                <div class="rating-summary__meta">
-                  {{ 'course_detail.out_of' | translate }} • {{ c.rating_count }} {{ 'course_detail.reviews' | translate }}
+            <article class="nas-card overview-ratings">
+              <h3 class="nas-section-title">{{ 'course_detail.learner_ratings' | translate }}</h3>
+              <div class="rating-summary">
+                <div class="rating-summary__score">
+                  <div class="rating-summary__value">{{ ratingValue() }}</div>
+                  <div class="rating-summary__meta">
+                    {{ 'course_detail.out_of' | translate }} 5 • {{ c.rating_count ?? 0 }} {{ 'course_detail.reviews' | translate }}
+                  </div>
                 </div>
+                <ul class="rating-bars">
+                  @for (row of ratingDistributionRows(); track row.star) {
+                    <li class="rating-bars__row">
+                      <span class="rating-bars__star">{{ row.star }}</span>
+                      <div class="rating-bars__track">
+                        <div class="rating-bars__fill" [style.width.%]="row.pct"></div>
+                      </div>
+                      <span class="rating-bars__count">{{ row.value }}</span>
+                    </li>
+                  }
+                </ul>
               </div>
-              <ul class="rating-bars">
-                @for (row of ratingDistributionRows(); track row.star) {
-                  <li class="rating-bars__row">
-                    <span class="rating-bars__star">{{ row.star }}</span>
-                    <div class="rating-bars__track">
-                      <div class="rating-bars__fill" [style.width.%]="row.pct"></div>
-                    </div>
-                    <span class="rating-bars__count">{{ row.value }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
-          </article>
+            </article>
+          </div>
 
           <aside class="nas-card overview-settings">
             <h3 class="nas-section-title">{{ 'course_detail.course_settings' | translate }}</h3>
             <dl class="settings-list">
               <div>
                 <dt>{{ 'course_detail.delivery_type' | translate }}</dt>
-                <dd>{{ c.delivery_type }}</dd>
+                <dd>{{ deliveryLabel() }}</dd>
               </div>
               <div>
                 <dt>{{ 'course_detail.certificate' | translate }}</dt>
-                <dd>{{ c.certificate ? 'Yes' : 'No' }} — min {{ c.certificate_pass_percent }}%</dd>
+                <dd>
+                  {{ c.certificate ? ('common.yes' | translate) : ('common.no' | translate) }}
+                  @if (c.certificate && c.certificate_pass_percent) {
+                    — min {{ c.certificate_pass_percent }}%
+                  }
+                </dd>
               </div>
               <div>
                 <dt>{{ 'course_detail.created_on' | translate }}</dt>
-                <dd>{{ c.created_at | date:'dd MMM, yyyy' }}</dd>
+                <dd>{{ c.created_at ? (c.created_at | date:'dd MMM, yyyy') : '—' }}</dd>
               </div>
               <div>
                 <dt>{{ 'course_detail.max_learners_per_cohort' | translate }}</dt>
-                <dd>{{ c.max_learners }} learners</dd>
+                <dd>{{ c.max_learners ? (c.max_learners + ' ' + ('course_detail.learners' | translate)) : '—' }}</dd>
               </div>
             </dl>
           </aside>
@@ -138,10 +156,16 @@
               <tbody>
                 @for (cohort of c.cohorts ?? []; track cohort.id) {
                   <tr>
-                    <td class="nas-table__primary">{{ cohort.name }}</td>
-                    <td>{{ cohort.start_date | date:'dd MMM yyyy' }}</td>
-                    <td>{{ cohort.end_date   | date:'dd MMM yyyy' }}</td>
-                    <td>{{ cohort.enrolled }} / {{ cohort.capacity }}</td>
+                    <td class="nas-table__primary">{{ cohort.name || '—' }}</td>
+                    <td>{{ cohort.start_date ? (cohort.start_date | date:'dd MMM yyyy') : '—' }}</td>
+                    <td>{{ cohort.end_date ? (cohort.end_date | date:'dd MMM yyyy') : '—' }}</td>
+                    <td>
+                      @if (cohort.capacity > 0) {
+                        {{ cohort.enrolled }} / {{ cohort.capacity }}
+                      } @else {
+                        {{ cohort.enrolled }}
+                      }
+                    </td>
                     <td><nas-status-badge [tone]="statusTone(cohort.status)" dot>{{ cohortStatusLabel(cohort.status) }}</nas-status-badge></td>
                     <td class="nas-table__action">
                       <button class="row-action-btn" (click)="openCohortMenu($event, cohort, cohortMenu)">
@@ -199,10 +223,97 @@
 
       <!-- CONTENT TAB -->
       @case ('content') {
-        <section class="nas-card placeholder-tab">
-          <i class="pi pi-folder-open"></i>
-          <h3>Course content sections will appear here.</h3>
-          <p>Add sections, lectures, and resources to structure the curriculum.</p>
+        <section class="modules-tab">
+
+          <!-- Header: count line + Module CTA -->
+          <header class="modules-tab__head">
+            <span class="modules-tab__count">{{ modulesHeader() }}</span>
+            <button type="button" class="nas-modules-cta" (click)="openAddModule()">
+              <i class="pi pi-plus-circle"></i> Module
+            </button>
+          </header>
+
+          <!-- Filter chips -->
+          <div class="modules-filters">
+            <label class="modules-filter">
+              <p-checkbox [binary]="true"
+                          [ngModel]="isFilterActive('all')"
+                          (onChange)="toggleModuleFilter('all')" />
+              <span>All</span>
+            </label>
+            <label class="modules-filter">
+              <p-checkbox [binary]="true"
+                          [ngModel]="isFilterActive('video')"
+                          (onChange)="toggleModuleFilter('video')" />
+              <span>Videos</span>
+            </label>
+            <label class="modules-filter">
+              <p-checkbox [binary]="true"
+                          [ngModel]="isFilterActive('document')"
+                          (onChange)="toggleModuleFilter('document')" />
+              <span>Document</span>
+            </label>
+            <label class="modules-filter">
+              <p-checkbox [binary]="true"
+                          [ngModel]="isFilterActive('article')"
+                          (onChange)="toggleModuleFilter('article')" />
+              <span>Articles</span>
+            </label>
+            <label class="modules-filter">
+              <p-checkbox [binary]="true"
+                          [ngModel]="isFilterActive('link')"
+                          (onChange)="toggleModuleFilter('link')" />
+              <span>Links</span>
+            </label>
+          </div>
+
+          <!-- List -->
+          @if (modulesLoading()) {
+            <div class="modules-list">
+              @for (s of [1,2,3,4,5]; track s) {
+                <article class="module-row module-row--skeleton">
+                  <span class="module-row__index"></span>
+                  <div class="module-row__body">
+                    <div class="skeleton-line skeleton-line--lg"></div>
+                    <div class="skeleton-line skeleton-line--sm"></div>
+                  </div>
+                </article>
+              }
+            </div>
+          } @else if (!filteredModules().length) {
+            <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
+              <i class="pi pi-folder-open"></i>
+              <h3>No modules yet</h3>
+              <p>Click <strong>+ Module</strong> to add the first content module to this course.</p>
+            </article>
+          } @else {
+            <div class="modules-list">
+              @for (m of filteredModules(); track m.id; let idx = $index) {
+                <article class="module-row">
+                  <span class="module-row__index">{{ idx + 1 }}</span>
+                  <div class="module-row__body">
+                    <div class="module-row__title-line">
+                      <span class="module-row__title">{{ moduleTitle(m) }}</span>
+                      <nas-status-badge [tone]="moduleChipTone(m.content_type)">
+                        {{ m.content_type | titlecase }}
+                      </nas-status-badge>
+                    </div>
+                    <span class="module-row__sub">{{ moduleSubline(m) }}</span>
+                  </div>
+                  <div class="module-row__actions">
+                    <button type="button" class="row-action-btn" title="Edit"
+                            (click)="openEditModule(m)">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button type="button" class="row-action-btn" title="More"
+                            (click)="openModuleMenu($event, m, moduleMenu)">
+                      <i class="pi pi-ellipsis-h"></i>
+                    </button>
+                  </div>
+                </article>
+              }
+            </div>
+          }
         </section>
       }
 
@@ -268,6 +379,22 @@
 
     }
   </div>
+
+  <p-confirmDialog />
+
+  <!-- ── Module row menu (Edit / Delete) ─────────────────────────────── -->
+  <p-overlayPanel #moduleMenu>
+    @if (activeModule(); as m) {
+      <div class="row-menu">
+        <button class="row-menu__item" (click)="moduleMenu.hide(); openEditModule(m)">
+          <i class="pi pi-pencil"></i> Edit module
+        </button>
+        <button class="row-menu__item" (click)="confirmDeleteModule(m, moduleMenu)">
+          <i class="pi pi-trash"></i> Delete module
+        </button>
+      </div>
+    }
+  </p-overlayPanel>
 
   <!-- ── Cohort row menu ─────────────────────────────────────────────── -->
   <p-overlayPanel #cohortMenu>
@@ -339,6 +466,262 @@
         <button type="submit" class="nas-btn nas-btn--primary" [disabled]="saving()">
           <i class="pi pi-pencil"></i>
           {{ cohortEditMode() ? ('course_detail.edit_cohort' | translate) : ('course_detail.add_cohort' | translate) }}
+        </button>
+      </footer>
+    </form>
+  </p-dialog>
+
+  <!-- ── Module modal (Add / Edit) ───────────────────────────────────── -->
+  <p-dialog
+    [visible]="showModule()"
+    (visibleChange)="showModule.set($event)"
+    [modal]="true"
+    [closable]="!moduleSaving()"
+    [draggable]="false"
+    [resizable]="false"
+    [closeOnEscape]="!moduleSaving()"
+    styleClass="nas-dialog module-dialog"
+    [style]="{ width: '480px', maxWidth: '95vw' }"
+    [header]="moduleEditMode() ? 'Edit Module' : 'New Module'">
+
+    <form [formGroup]="moduleForm" (ngSubmit)="submitModule()" class="nas-form module-form">
+
+      <div class="nas-form__field">
+        <label>Module Title (English) <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="title_en" placeholder="Module title in English" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>Module Title (Arabic) <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="title_ar" placeholder="عنوان الوحدة بالعربية" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>Content Type <span class="required">*</span></label>
+        <p-dropdown [options]="moduleContentTypeOpts" optionLabel="name" optionValue="id"
+                    formControlName="content_type" styleClass="w-full" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>Learner scope <span class="required">*</span></label>
+        <p-dropdown [options]="learnerScopeOpts" optionLabel="name" optionValue="id"
+                    formControlName="learner_scope" styleClass="w-full" />
+      </div>
+
+      @if (moduleForm.value.learner_scope === 'cohort') {
+        <div class="nas-form__field">
+          <label>Cohort <span class="required">*</span></label>
+          @if (cohortDropdownOpts().length) {
+            <p-dropdown [options]="cohortDropdownOpts()" optionLabel="name" optionValue="id"
+                        formControlName="session_id" placeholder="Select cohort" styleClass="w-full" />
+          } @else {
+            <div class="module-form__hint module-form__hint--warn">
+              No cohorts yet for this course. Add a cohort first to scope a module to it.
+            </div>
+          }
+        </div>
+      }
+
+      <div class="nas-form__field">
+        <label>Approximate Duration <span class="required">*</span></label>
+        <div class="duration-input">
+          <input type="number" class="duration-input__field"
+                 formControlName="duration_minutes"
+                 min="0" max="1000" placeholder="30" />
+          <span class="duration-input__suffix">minutes</span>
+          <div class="duration-input__steppers">
+            <button type="button" class="duration-input__step"
+                    aria-label="Increase duration"
+                    (click)="adjustDuration(1)">
+              <i class="pi pi-chevron-up"></i>
+            </button>
+            <button type="button" class="duration-input__step"
+                    aria-label="Decrease duration"
+                    (click)="adjustDuration(-1)">
+              <i class="pi pi-chevron-down"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (moduleForm.value.content_type === 'document') {
+        <div class="nas-form__field">
+          <label>Document <span class="required">*</span></label>
+          @if (moduleFile(); as f) {
+            <div class="module-form__file">
+              <i class="pi pi-file-pdf module-form__file-icon"></i>
+              <div class="module-form__file-meta">
+                <span class="module-form__file-name">{{ f.name }}</span>
+                <span class="module-form__file-sub">{{ fileSizeLabel(f) }}</span>
+              </div>
+              <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          } @else if (moduleForm.value.video) {
+            <div class="module-form__file">
+              <i class="pi pi-file-pdf module-form__file-icon"></i>
+              <div class="module-form__file-meta">
+                <span class="module-form__file-name">{{ moduleForm.value.video }}</span>
+                <span class="module-form__file-sub">Existing file</span>
+              </div>
+              <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          } @else {
+            <label class="module-form__upload">
+              <input type="file" hidden (change)="onModuleFileSelected($event)"
+                     accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" />
+              <i class="pi pi-cloud-upload"></i>
+              <span>Upload File</span>
+            </label>
+          }
+        </div>
+      } @else {
+        <div class="nas-form__field">
+          <label>Content Link <span class="required">*</span></label>
+          <input class="nas-input" type="url" formControlName="video" placeholder="https://example.com" />
+          <p class="module-form__hint">Use a video URL, article URL, policy document, or trusted external learning resource.</p>
+        </div>
+      }
+
+      <div class="nas-form__field">
+        <label>Instructions (English)</label>
+        <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_en"
+                  placeholder="Short instruction learners will see before opening the content."></textarea>
+      </div>
+
+      <div class="nas-form__field">
+        <label>Instructions (Arabic)</label>
+        <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_ar"
+                  placeholder="Short instruction learners will see before opening the content."></textarea>
+      </div>
+
+      <label class="module-form__require">
+        <p-checkbox [binary]="true" formControlName="require_completion" />
+        <span>Require completion of this module to continue</span>
+      </label>
+
+      <footer class="nas-form__footer">
+        <button type="button" class="nas-btn nas-btn--ghost" (click)="showModule.set(false)" [disabled]="moduleSaving()">
+          Cancel
+        </button>
+        <button type="submit" class="nas-btn nas-btn--primary" [disabled]="moduleSaving()">
+          @if (moduleSaving()) { <i class="pi pi-spin pi-spinner"></i> }
+          @else if (moduleEditMode()) { <i class="pi pi-pencil"></i> }
+          @else { <i class="pi pi-plus-circle"></i> }
+          <span>{{ moduleEditMode() ? 'Save Changes' : 'Create Module' }}</span>
+        </button>
+      </footer>
+    </form>
+  </p-dialog>
+
+  <!-- ── Edit Course dialog ──────────────────────────────────────────── -->
+  <p-dialog
+    [visible]="showEdit()"
+    (visibleChange)="showEdit.set($event)"
+    [modal]="true"
+    [closable]="!editSaving()"
+    [draggable]="false"
+    [resizable]="false"
+    [closeOnEscape]="!editSaving()"
+    styleClass="nas-dialog course-edit-dialog"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
+    [header]="'course_detail.edit_course' | translate">
+
+    <form [formGroup]="editForm" (ngSubmit)="submitEditCourse()" class="nas-form">
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.course_title_en' | translate }} <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="title_en"
+               [placeholder]="'course_detail.course_title_en' | translate" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.course_title_ar' | translate }}</label>
+        <input class="nas-input" type="text" formControlName="title_ar"
+               [placeholder]="'course_detail.course_title_ar' | translate" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.description' | translate }} <span class="required">*</span></label>
+        <textarea class="nas-input nas-textarea" rows="3" formControlName="description_en"
+                  [placeholder]="'course_detail.description' | translate"></textarea>
+      </div>
+
+      <div class="nas-form__row">
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.delivery_type' | translate }} <span class="required">*</span></label>
+          <p-dropdown [options]="courseTypeOpts" optionLabel="name" optionValue="id"
+                      formControlName="type" styleClass="w-full" />
+        </div>
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.category' | translate }} <span class="required">*</span></label>
+          <p-dropdown [options]="categoryOpts()" optionLabel="name" optionValue="id"
+                      formControlName="category_id" styleClass="w-full"
+                      [placeholder]="'course_detail.select_category' | translate" />
+        </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.instructor' | translate }} <span class="required">*</span></label>
+        <p-dropdown [options]="instructorOpts()" optionLabel="name" optionValue="id"
+                    formControlName="instructor_id" styleClass="w-full"
+                    [placeholder]="'course_detail.select_instructor' | translate" />
+      </div>
+
+      <div class="nas-form__row">
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.hours' | translate }} <span class="required">*</span></label>
+          <div class="duration-input">
+            <input type="number" class="duration-input__field"
+                   formControlName="hours" min="1" max="10000" placeholder="1" />
+            <span class="duration-input__suffix">{{ 'course_detail.hours_suffix' | translate }}</span>
+            <div class="duration-input__steppers">
+              <button type="button" class="duration-input__step" aria-label="Increase hours" (click)="adjustHours(1)">
+                <i class="pi pi-chevron-up"></i>
+              </button>
+              <button type="button" class="duration-input__step" aria-label="Decrease hours" (click)="adjustHours(-1)">
+                <i class="pi pi-chevron-down"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.max_learners_per_cohort' | translate }} <span class="required">*</span></label>
+          <div class="duration-input">
+            <input type="number" class="duration-input__field"
+                   formControlName="max_learners" min="1" max="10000" placeholder="30" />
+            <span class="duration-input__suffix">{{ 'course_detail.learners' | translate }}</span>
+            <div class="duration-input__steppers">
+              <button type="button" class="duration-input__step" aria-label="Increase capacity" (click)="adjustMaxLearners(1)">
+                <i class="pi pi-chevron-up"></i>
+              </button>
+              <button type="button" class="duration-input__step" aria-label="Decrease capacity" (click)="adjustMaxLearners(-1)">
+                <i class="pi pi-chevron-down"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <label class="module-form__require">
+        <p-checkbox [binary]="true" formControlName="certificate" />
+        <span>{{ 'course_detail.issue_certificate' | translate }}</span>
+      </label>
+      <label class="module-form__require">
+        <p-checkbox [binary]="true" formControlName="active" />
+        <span>{{ 'course_detail.active' | translate }}</span>
+      </label>
+
+      <footer class="nas-form__footer">
+        <button type="button" class="nas-btn nas-btn--ghost" (click)="showEdit.set(false)" [disabled]="editSaving()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="submit" class="nas-btn nas-btn--primary" [disabled]="editSaving()">
+          @if (editSaving()) { <i class="pi pi-spin pi-spinner"></i> } @else { <i class="pi pi-pencil"></i> }
+          <span>{{ 'course_detail.save_changes' | translate }}</span>
         </button>
       </footer>
     </form>

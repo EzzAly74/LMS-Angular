@@ -1,76 +1,69 @@
 <p-confirmDialog />
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">{{ 'assignments.title' | translate }}</h2>
-    <p-button icon="pi pi-plus" [label]="'assignments.create' | translate" size="small" [disabled]="!selectedCourseId" />
-  </div>
-
-  <!-- Course selector -->
-  <div class="surface-card border-round-xl shadow-1 p-3 mb-3">
-    <div class="flex align-items-center gap-3">
-      <label class="font-medium text-color-secondary white-space-nowrap">{{ 'assignments.select_course' | translate }}:</label>
-      <p-dropdown
-        [options]="courses()"
-        [(ngModel)]="selectedCourseId"
-        optionLabel="title"
-        optionValue="id"
-        [placeholder]="'assignments.select_course' | translate"
-        [loading]="coursesLoading()"
-        [showClear]="true"
-        styleClass="w-full md:w-20rem"
-        (onChange)="onCourseChange()"
-      />
+<div class="nas-page-container">
+  <nas-page-header title="Assignments" subtitle="Manage assignments by course">
+  </nas-page-header>
+  <div class="nas-card assign-table-card">
+    <div class="assign-toolbar">
+      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">Filter by course</label>
+      <p-dropdown [options]="courses()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
+        placeholder="Select a course" [loading]="coursesLoading()" [showClear]="true"
+        styleClass="nas-dropdown" (onChange)="onCourseChange()" [style]="{'min-width':'240px','height':'36px'}" />
     </div>
-  </div>
-
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>{{ 'common.title' | translate }}</th>
-          <th>{{ 'common.file' | translate }}</th>
-          <th>{{ 'common.created_at' | translate }}</th>
-          <th>{{ 'common.actions' | translate }}</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-medium">{{ item.title }}</td>
-          <td>
-            @if (item.file_url) {
-              <a [href]="item.file_url" target="_blank" class="text-primary">
-                <i class="pi pi-download mr-1"></i>Download
-              </a>
-            } @else {
-              <span class="text-color-secondary">—</span>
+    <div class="assign-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>File</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>
+                @for (c of [1,2,3,4]; track c) {
+                  <td><p-skeleton height="20px" /></td>
+                }
+              </tr>
             }
-          </td>
-          <td>{{ item.created_at }}</td>
-          <td>
-            <div class="flex gap-2">
-              <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" />
-              <p-button icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="confirmDelete(item)" />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="4" class="text-center p-4">
-            {{ selectedCourseId ? ('common.no_data' | translate) : ('assignments.select_course_hint' | translate) }}
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td class="nas-table__primary">{{ item.title }}</td>
+                <td>
+                  @if (item.file_url) {
+                    <a [href]="item.file_url" target="_blank" class="file-link">
+                      <i class="pi pi-download"></i>Download
+                    </a>
+                  } @else {
+                    <span class="nas-table__muted">—</span>
+                  }
+                </td>
+                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
+                <td class="nas-table__action">
+                  <button type="button" class="row-action-btn" (click)="confirmDelete(item)"><i class="pi pi-trash"></i></button>
+                </td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="4" class="nas-table__empty">{{ selectedCourseId ? 'No assignments found.' : 'Select a course to view its assignments.' }}</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (total() > perPage) {
+      <div class="nas-table-pagination">
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <div class="nas-table-pagination__nav">
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
+          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+        </div>
+      </div>
+    }
   </div>
 </div>

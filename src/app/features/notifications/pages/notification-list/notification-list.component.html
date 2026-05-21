@@ -1,60 +1,131 @@
 <p-confirmDialog />
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="text-2xl font-semibold text-900 m-0">{{ 'notifications.title' | translate }}</h2>
-    <p-button icon="pi pi-plus" [label]="'notifications.create' | translate" size="small" />
-  </div>
 
-  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-    <div class="p-3 border-bottom-1 surface-border">
-      <span class="p-input-icon-left w-full md:w-20rem">
-        <i class="pi pi-search"></i>
-        <input pInputText [placeholder]="'common.search' | translate" (input)="onSearch($event)" class="w-full" />
-      </span>
+<!-- ── Create Dialog ─────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  header="New Notification"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [closeOnEscape]="true"
+  styleClass="nas-dialog"
+  [style]="{ width: '480px' }">
+
+  <form class="nas-form" (ngSubmit)="save()">
+    <div class="nas-form__field">
+      <label>Title <span class="nas-form__required">*</span></label>
+      <input
+        class="nas-input"
+        type="text"
+        [(ngModel)]="form.title"
+        name="title"
+        placeholder="Notification title"
+        autocomplete="off"
+      />
+    </div>
+    <div class="nas-form__field">
+      <label>Body <span class="nas-form__required">*</span></label>
+      <textarea
+        class="nas-textarea"
+        [(ngModel)]="form.body"
+        name="body"
+        placeholder="Notification message..."
+      ></textarea>
+    </div>
+    <div class="nas-form__field">
+      <label class="nas-form__checkbox">
+        <input type="checkbox" [(ngModel)]="form.for_public" name="for_public" />
+        Send to all users (public)
+      </label>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">Cancel</button>
+    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="save()">
+      <i class="pi pi-send"></i>
+      Send
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Page ──────────────────────────────────────────────────────────── -->
+<div class="nas-page-container">
+
+  <nas-page-header
+    title="Notifications"
+    subtitle="Send and manage push notifications to learners">
+    <button type="button" class="nas-cta-btn" (click)="openCreate(); $event.stopPropagation()">
+      <i class="pi pi-plus-circle"></i>
+      New Notification
+    </button>
+  </nas-page-header>
+
+  <div class="nas-card notif-table-card">
+    <!-- Search toolbar -->
+    <div class="notif-toolbar">
+      <div class="notif-search">
+        <i class="pi pi-search notif-search__icon"></i>
+        <input
+          type="text"
+          class="notif-search__input"
+          placeholder="Search notifications..."
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
     </div>
 
-    <p-table
-      [value]="items()"
-      [loading]="loading()"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="perPage"
-      [totalRecords]="total()"
-      (onLazyLoad)="onPage($event)"
-      [rowHover]="true"
-      styleClass="p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>{{ 'common.title' | translate }}</th>
-          <th>{{ 'notifications.body' | translate }}</th>
-          <th>{{ 'notifications.for_public' | translate }}</th>
-          <th>{{ 'common.created_at' | translate }}</th>
-          <th>{{ 'common.actions' | translate }}</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td class="font-medium">{{ item.title }}</td>
-          <td class="text-color-secondary" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ item.body }}</td>
-          <td>
-            <p-tag
-              [value]="item.for_public ? ('notifications.for_public' | translate) : ('notifications.targeted' | translate)"
-              [severity]="item.for_public ? 'info' : 'warning'"
-            />
-          </td>
-          <td>{{ item.created_at }}</td>
-          <td>
-            <div class="flex gap-2">
-              <p-button icon="pi pi-pencil" size="small" severity="secondary" [text]="true" />
-              <p-button icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="confirmDelete(item)" />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="5" class="text-center p-4">{{ 'common.no_data' | translate }}</td></tr>
-      </ng-template>
-    </p-table>
+    <!-- Table -->
+    <div class="notif-table-wrap">
+      <table class="nas-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Body</th>
+            <th>Audience</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track s) {
+              <tr>
+                @for (c of [1,2,3,4,5]; track c) {
+                  <td><p-skeleton height="20px" /></td>
+                }
+              </tr>
+            }
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="nas-table__row">
+                <td class="nas-table__primary">{{ display(item.title) }}</td>
+                <td class="nas-table__body">{{ display(item.body) }}</td>
+                <td>
+                  <span class="notif-audience-badge" [class.notif-audience-badge--public]="item.for_public" [class.notif-audience-badge--targeted]="!item.for_public">
+                    {{ item.for_public ? 'All Users' : 'Targeted' }}
+                  </span>
+                </td>
+                <td>{{ item.created_at | date:'dd MMM yyyy' }}</td>
+                <td class="nas-table__action">
+                  <div class="row-actions">
+                    <button type="button" class="row-action-btn row-action-btn--danger" title="Delete" (click)="confirmDelete(item)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="5" class="nas-table__empty">No notifications found.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
+
 </div>

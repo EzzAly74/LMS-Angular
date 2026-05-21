@@ -2,7 +2,9 @@
 // All colours, fonts and spacing reference NAS design tokens.
 // No hardcoded hex / rgba values allowed.
 
-:host { display: block; }
+:host {
+  display: block;
+}
 
 // ── Page layout ────────────────────────────────────────────────────────────
 .login-page {
@@ -12,8 +14,13 @@
   &.is-rtl {
     flex-direction: row-reverse;
 
-    .form-wrapper   { direction: rtl; }
-    .brand-content  { align-items: flex-end; text-align: end; }
+    .form-wrapper {
+      direction: rtl;
+    }
+    .brand-content {
+      align-items: flex-end;
+      text-align: end;
+    }
   }
 }
 
@@ -39,10 +46,10 @@
 // Title / subtitle
 .form-title {
   font-family: var(--nas-font-en);
-  font-size:   var(--nas-size-2xl);
+  font-size: var(--nas-size-2xl);
   line-height: var(--nas-height-2xl);
   font-weight: var(--nas-weight-medium);
-  color:       var(--nas-color-text-strong);
+  color: var(--nas-color-text-strong);
   margin: 0 0 var(--nas-space-2);
   white-space: nowrap;
 
@@ -54,10 +61,10 @@
 
 .form-subtitle {
   font-family: var(--nas-font-en);
-  font-size:   var(--nas-size-xs);
+  font-size: var(--nas-size-xs);
   line-height: var(--nas-height-xs);
   font-weight: var(--nas-weight-regular);
-  color:       var(--nas-color-text-subtle);
+  color: var(--nas-color-text-subtle);
   margin: 0 0 var(--nas-space-8);
   white-space: nowrap;
 
@@ -73,13 +80,13 @@
   gap: var(--nas-space-2);
   padding: var(--nas-space-3) var(--nas-space-4);
   margin-bottom: var(--nas-space-5);
-  background:   var(--nas-status-red-500-08);
+  background: var(--nas-status-red-500-08);
   border: 1px solid var(--nas-status-red-500);
   border-radius: var(--nas-radius-md);
-  color:        var(--nas-status-red-500);
-  font-family:  var(--nas-font-en);
-  font-size:    var(--nas-size-xs);
-  line-height:  var(--nas-height-xs);
+  color: var(--nas-status-red-500);
+  font-family: var(--nas-font-en);
+  font-size: var(--nas-size-xs);
+  line-height: var(--nas-height-xs);
 
   :host-context([dir="rtl"]) & {
     font-family: var(--nas-font-ar);
@@ -92,7 +99,10 @@
 }
 
 // ── Fields ─────────────────────────────────────────────────────────────────
-form { display: flex; flex-direction: column; }
+form {
+  display: flex;
+  flex-direction: column;
+}
 
 .field {
   display: flex;
@@ -100,14 +110,16 @@ form { display: flex; flex-direction: column; }
   gap: var(--nas-space-1);
   margin-bottom: var(--nas-space-5);
 
-  &:last-of-type { margin-bottom: 0; }
+  &:last-of-type {
+    margin-bottom: 0;
+  }
 
   &__label {
     font-family: var(--nas-font-en);
-    font-size:   var(--nas-size-m);
+    font-size: var(--nas-size-m);
     line-height: var(--nas-height-m);
     font-weight: var(--nas-weight-medium);
-    color:       var(--nas-color-text-strong);
+    color: var(--nas-color-text-strong);
 
     :host-context([dir="rtl"]) & {
       font-family: var(--nas-font-ar);
@@ -119,11 +131,11 @@ form { display: flex; flex-direction: column; }
     width: 100%;
     padding: var(--nas-space-3) var(--nas-space-4);
     font-family: var(--nas-font-en);
-    font-size:   var(--nas-size-s);
+    font-size: var(--nas-size-s);
     line-height: var(--nas-height-s);
     font-weight: var(--nas-weight-regular);
-    color:        var(--nas-color-text-subtle);
-    background:   transparent;
+    color: var(--nas-color-text-subtle);
+    background: transparent;
     border: 1px solid var(--nas-color-border);
     border-radius: var(--nas-radius-md);
     outline: none;
@@ -146,7 +158,7 @@ form { display: flex; flex-direction: column; }
 
     &:focus {
       border-color: var(--nas-essential-cta);
-      color:        var(--nas-color-text-strong);
+      color: var(--nas-color-text-strong);
     }
 
     &--icon {
@@ -175,7 +187,9 @@ form { display: flex; flex-direction: column; }
     color: var(--nas-color-text-subtle);
     line-height: 0;
 
-    &:hover { color: var(--nas-color-text-strong); }
+    &:hover {
+      color: var(--nas-color-text-strong);
+    }
   }
 
   &__error {
@@ -183,27 +197,31 @@ form { display: flex; flex-direction: column; }
     align-items: center;
     gap: var(--nas-space-2);
     font-family: var(--nas-font-en);
-    font-size:   var(--nas-size-xs);
+    font-size: var(--nas-size-xs);
     line-height: var(--nas-height-xs);
     font-weight: var(--nas-weight-regular);
-    color:       var(--nas-status-red-500);
+    color: var(--nas-status-red-500);
     margin-top: var(--nas-space-1);
 
     :host-context([dir="rtl"]) & {
       font-family: var(--nas-font-ar);
     }
 
-    svg { flex-shrink: 0; }
+    svg {
+      flex-shrink: 0;
+    }
   }
 
   // Error state
   &--error {
     .field__input {
       border-color: var(--nas-status-red-500);
-      background:   var(--nas-color-bg-app);
-      color:        var(--nas-status-red-500);
+      background: var(--nas-color-bg-app);
+      color: var(--nas-status-red-500);
 
-      &::placeholder { color: var(--nas-status-red-500); }
+      &::placeholder {
+        color: var(--nas-status-red-500);
+      }
     }
   }
 }
@@ -218,18 +236,18 @@ form { display: flex; flex-direction: column; }
   padding: var(--nas-space-3) var(--nas-space-4);
   margin-top: 36px;
   font-family: var(--nas-font-en);
-  font-size:   var(--nas-size-s);
+  font-size: var(--nas-size-s);
   line-height: var(--nas-height-s);
   font-weight: var(--nas-weight-medium);
-  color:        var(--nas-color-text-onDark);
-  background:   var(--nas-essential-cta);
+  color: var(--nas-color-text-onDark);
+  background: var(--nas-essential-cta);
   border: none;
   border-radius: var(--nas-radius-md);
   cursor: pointer;
   transition: opacity var(--transition-speed) ease;
   box-shadow:
     0 2px 5px 0 var(--nas-neutral-750-08),
-    0 0   0 0 var(--nas-neutral-750-16),
+    0 0 0 0 var(--nas-neutral-750-16),
     0 1px 1px 0 var(--nas-neutral-2000-12);
 
   :host-context([dir="rtl"]) & {
@@ -237,33 +255,45 @@ form { display: flex; flex-direction: column; }
     font-weight: var(--nas-weight-bold);
   }
 
-  &:hover:not(:disabled) { opacity: 0.92; }
-  &:disabled             { opacity: 0.6; cursor: not-allowed; }
+  &:hover:not(:disabled) {
+    opacity: 0.92;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   &__spinner {
     display: inline-block;
     width: 16px;
     height: 16px;
-    border: 2px solid var(--nas-color-onDark-translucent, rgba(255, 255, 255, 0.3));
+    border: 2px solid
+      var(--nas-color-onDark-translucent, rgba(255, 255, 255, 0.3));
     border-top-color: var(--nas-color-text-onDark);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 // ── Footer text ────────────────────────────────────────────────────────────
 .form-footer {
   margin: var(--nas-space-6) 0 0;
   font-family: var(--nas-font-en);
-  font-size:   var(--nas-size-xs);
+  font-size: var(--nas-size-xs);
   line-height: var(--nas-height-xs);
   font-weight: var(--nas-weight-regular);
-  color:       var(--nas-color-text-subtle);
+  color: var(--nas-color-text-subtle);
   text-align: center;
 
-  :host-context([dir="rtl"]) & { font-family: var(--nas-font-ar); }
+  :host-context([dir="rtl"]) & {
+    font-family: var(--nas-font-ar);
+  }
 }
 
 // ── Brand panel (40 %) ─────────────────────────────────────────────────────
@@ -285,12 +315,36 @@ form { display: flex; flex-direction: column; }
   border-radius: 50%;
   pointer-events: none;
 
-  img { display: block; width: 100%; height: 100%; }
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 
-  &--1 { width: 440px; height: 440px; top: -100px; left: 140px; }
-  &--2 { width: 340px; height: 340px; top:  580px; left:  -90px; }
-  &--3 { width: 160px; height: 160px; top:  350px; left:  360px; }
-  &--4 { width:  90px; height:  90px; top:  760px; left:   60px; }
+  &--1 {
+    width: 440px;
+    height: 440px;
+    top: -100px;
+    left: 140px;
+  }
+  &--2 {
+    width: 340px;
+    height: 340px;
+    top: 580px;
+    left: -90px;
+  }
+  &--3 {
+    width: 160px;
+    height: 160px;
+    top: 350px;
+    left: 360px;
+  }
+  &--4 {
+    width: 90px;
+    height: 90px;
+    top: 760px;
+    left: 60px;
+  }
 }
 
 // Dot grid
@@ -326,7 +380,7 @@ form { display: flex; flex-direction: column; }
 // NAS Logo (123.347 × 40 px container from Figma)
 .brand-logo {
   position: relative;
-  width:  123.347px;
+  width: 123.347px;
   height: 40px;
   flex-shrink: 0;
   overflow: hidden;
@@ -334,10 +388,10 @@ form { display: flex; flex-direction: column; }
 
 .logo-mark {
   position: absolute;
-  top:    -1.71%;
-  right:  67%;
+  top: -1.71%;
+  right: 67%;
   bottom: -1.74%;
-  left:   -0.57%;
+  left: -0.57%;
 
   .radial {
     position: absolute;
@@ -346,37 +400,41 @@ form { display: flex; flex-direction: column; }
     height: 100%;
     max-width: none;
 
-    &.r0 { inset: 60.02% 79.74% -1.74% 12.45%; }
-    &.r1 { inset: 49.47% 86.65% 17.51%  3.03%; }
-    &.r2 { inset: 38.40% 87.02% 37.50% -0.57%; }
-    &.r3 { inset:  9.35% 83.61% 58.85%  5.70%; }
-    &.r4 { inset: -1.71% 80.00% 60.02% 12.18%; }
-    &.r5 { inset: 17.56% 70.59% 49.43% 19.09%; }
-    &.r6 { inset: 37.57% 67.00% 38.32% 19.48%; }
-    &.r7 { inset: 58.83% 73.25%  9.30% 16.04%; }
+    &.r0 {
+      inset: 60.02% 79.74% -1.74% 12.45%;
+    }
+    &.r1 {
+      inset: 49.47% 86.65% 17.51% 3.03%;
+    }
+    &.r2 {
+      inset: 38.4% 87.02% 37.5% -0.57%;
+    }
+    &.r3 {
+      inset: 9.35% 83.61% 58.85% 5.7%;
+    }
+    &.r4 {
+      inset: -1.71% 80% 60.02% 12.18%;
+    }
+    &.r5 {
+      inset: 17.56% 70.59% 49.43% 19.09%;
+    }
+    &.r6 {
+      inset: 37.57% 67% 38.32% 19.48%;
+    }
+    &.r7 {
+      inset: 58.83% 73.25% 9.3% 16.04%;
+    }
   }
-}
-
-.logo-wordmark {
-  position: absolute;
-  top:    13.17%;
-  right:  0;
-  bottom: 13.38%;
-  left:   39.05%;
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
 }
 
 // Brand tagline
 .brand-tagline {
   margin: var(--nas-space-10) 0 0;
   font-family: var(--nas-font-en);
-  font-size:   var(--nas-size-xl);
+  font-size: var(--nas-size-xl);
   line-height: var(--nas-height-xl);
   font-weight: var(--nas-weight-medium);
-  color:       var(--nas-neutral-50);
+  color: var(--nas-neutral-50);
   white-space: nowrap;
 
   :host-context([dir="rtl"]) & {
@@ -384,28 +442,38 @@ form { display: flex; flex-direction: column; }
     font-weight: var(--nas-weight-bold);
   }
 
-  p { margin: 0; line-height: var(--nas-height-xl); }
+  p {
+    margin: 0;
+    line-height: var(--nas-height-xl);
+  }
 }
 
 .brand-subtitle {
   margin: 14px 0 0;
   font-family: var(--nas-font-en);
-  font-size:   var(--nas-size-xs);
+  font-size: var(--nas-size-xs);
   line-height: var(--nas-height-xs);
   font-weight: var(--nas-weight-regular);
-  color:       var(--nas-neutral-400);
+  color: var(--nas-neutral-400);
   white-space: nowrap;
 
-  :host-context([dir="rtl"]) & { font-family: var(--nas-font-ar); }
+  :host-context([dir="rtl"]) & {
+    font-family: var(--nas-font-ar);
+  }
 }
 
 // ── Responsive ─────────────────────────────────────────────────────────────
 @media (max-width: 1024px) {
-  .ring--3, .ring--4 { display: none; }
+  .ring--3,
+  .ring--4 {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
-  .login-page { flex-direction: column !important; }
+  .login-page {
+    flex-direction: column !important;
+  }
 
   .brand-panel {
     width: 100%;
@@ -415,7 +483,9 @@ form { display: flex; flex-direction: column; }
     .dot-grid,
     .ring--2,
     .ring--3,
-    .ring--4 { display: none; }
+    .ring--4 {
+      display: none;
+    }
 
     .ring--1 {
       width: 280px;
@@ -426,7 +496,10 @@ form { display: flex; flex-direction: column; }
     }
   }
 
-  .brand-content { align-items: center; text-align: center; }
+  .brand-content {
+    align-items: center;
+    text-align: center;
+  }
 
   .form-panel {
     width: 100%;

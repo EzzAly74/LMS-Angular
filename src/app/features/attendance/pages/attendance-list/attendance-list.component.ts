@@ -1,15 +1,13 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { SkeletonModule } from 'primeng/skeleton';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
+import { NasStatusBadgeComponent } from '../../../../shared/nas/nas-status-badge.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface Attendance {
   id: number;
@@ -25,12 +23,15 @@ interface Attendance {
 @Component({
   selector: 'app-attendance-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TableModule, ButtonModule, InputTextModule, TagModule, ConfirmDialogModule],
+  imports: [CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './attendance-list.component.html',
+  styleUrl: './attendance-list.component.scss',
 })
 export class AttendanceListComponent implements OnInit {
   private api = inject(ApiService);
+
+  constructor() { withLocaleReload(() => this.load()); }
 
   items   = signal<Attendance[]>([]);
   total   = signal(0);
@@ -38,6 +39,9 @@ export class AttendanceListComponent implements OnInit {
   perPage = 20;
   page    = 1;
   search  = '';
+
+  readonly skeletons = [1, 2, 3, 4, 5];
+  readonly min = Math.min;
 
   private search$ = new Subject<string>();
 
@@ -56,8 +60,8 @@ export class AttendanceListComponent implements OnInit {
       });
   }
 
-  onPage(event: TableLazyLoadEvent): void {
-    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+  onPage(p: number): void {
+    this.page = p;
     this.load();
   }
 

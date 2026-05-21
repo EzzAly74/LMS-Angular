@@ -1,23 +1,286 @@
-<div class="page-container">
-      <div class="page-header">
-        <h2 class="page-title">{{ 'nav.settings' | translate }}</h2>
-        <p-button [label]="'common.save' | translate" icon="pi pi-save" [loading]="saving()" (onClick)="save()" />
-      </div>
+<div class="nas-page-container platform-settings">
 
-      @if (loading()) {
-        <div class="flex flex-column gap-3">
-          @for (i of [1,2,3,4,5]; track i) {
-            <p-skeleton height="3rem" borderRadius="6px" />
-          }
-        </div>
-      } @else {
-        <form [formGroup]="form" class="settings-form">
-          @for (setting of settings(); track setting.key) {
-            <div class="setting-row">
-              <label [for]="setting.key">{{ setting.label }}</label>
-              <input pInputText [id]="setting.key" [formControlName]="setting.key" class="setting-input" />
-            </div>
-          }
-        </form>
+  <!-- ── Header row ─────────────────────────────────────────────── -->
+  <header class="platform-settings__header">
+    <div>
+      <h1 class="platform-settings__title">
+        {{ 'platform_settings.title' | translate }}
+      </h1>
+      <p class="platform-settings__subtitle">
+        {{ 'platform_settings.subtitle' | translate }}
+      </p>
+    </div>
+    <button type="button"
+            class="platform-settings__save"
+            [disabled]="saving() || loading()"
+            (click)="save()">
+      @if (saving()) {
+        <span class="platform-settings__spinner"></span>
+      }
+      {{ 'platform_settings.save_changes' | translate }}
+    </button>
+  </header>
+
+  @if (loading()) {
+    <div class="platform-settings__skeletons">
+      @for (i of [1,2,3,4,5]; track i) {
+        <p-skeleton height="160px" borderRadius="12px" />
       }
     </div>
+  } @else {
+    <form [formGroup]="form" class="platform-settings__form" (ngSubmit)="save()">
+
+      <!-- ─────────────── 1. General ─────────────── -->
+      <section class="nas-card ps-card">
+        <header class="ps-card__head">
+          <h2 class="ps-card__title">{{ 'platform_settings.general' | translate }}</h2>
+        </header>
+        <div class="ps-card__body">
+          <div class="ps-grid ps-grid--2">
+            <div class="ps-field">
+              <label for="platform_name">{{ 'platform_settings.platform_name' | translate }}</label>
+              <input id="platform_name" type="text" class="ps-input"
+                     formControlName="platform_name"
+                     [placeholder]="'platform_settings.platform_name_placeholder' | translate" />
+            </div>
+            <div class="ps-field">
+              <label for="default_language">{{ 'platform_settings.default_language' | translate }}</label>
+              <p-dropdown id="default_language"
+                          [options]="languageOptions"
+                          formControlName="default_language"
+                          optionLabel="label"
+                          optionValue="value"
+                          styleClass="ps-dropdown"
+                          panelStyleClass="ps-dropdown-panel" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────── 2. Enrolment & Learning ─────────────── -->
+      <section class="nas-card ps-card">
+        <header class="ps-card__head">
+          <h2 class="ps-card__title">{{ 'platform_settings.enrolment_learning' | translate }}</h2>
+        </header>
+        <div class="ps-card__body">
+          <div class="ps-grid ps-grid--2">
+            <div class="ps-field">
+              <label for="default_cohort_size">{{ 'platform_settings.default_cohort_size' | translate }}</label>
+              <div class="ps-number">
+                <input id="default_cohort_size" type="number" min="0" inputmode="numeric"
+                       class="ps-input ps-input--number"
+                       formControlName="default_cohort_size" />
+                <div class="ps-number__steppers">
+                  <button type="button" class="ps-number__step"
+                          (click)="adjust('default_cohort_size', +1)"
+                          tabindex="-1">
+                    <nas-icon name="caret-up" [size]="12" />
+                  </button>
+                  <button type="button" class="ps-number__step"
+                          (click)="adjust('default_cohort_size', -1)"
+                          tabindex="-1">
+                    <nas-icon name="caret-down" [size]="12" />
+                  </button>
+                </div>
+              </div>
+              <p class="ps-help">{{ 'platform_settings.default_cohort_size_help' | translate }}</p>
+            </div>
+            <div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────── 3. Grading & Certificates ─────────────── -->
+      <section class="nas-card ps-card">
+        <header class="ps-card__head">
+          <h2 class="ps-card__title">{{ 'platform_settings.grading_certs' | translate }}</h2>
+        </header>
+        <div class="ps-card__body ps-card__body--stack">
+
+          <!-- Course Ratings toggle row -->
+          <div class="ps-row ps-row--between">
+            <div>
+              <div class="ps-row__title">{{ 'platform_settings.course_ratings' | translate }}</div>
+              <div class="ps-row__sub">{{ 'platform_settings.course_ratings_sub' | translate }}</div>
+            </div>
+            <p-inputSwitch formControlName="course_ratings_enabled" styleClass="ps-switch" />
+          </div>
+
+          <div class="ps-divider"></div>
+
+          <!-- Abnormal Rating Threshold -->
+          <div class="ps-field ps-field--half">
+            <label for="abnormal_rating_threshold">{{ 'platform_settings.abnormal_rating' | translate }}</label>
+            <div class="ps-number">
+              <input id="abnormal_rating_threshold" type="number" min="0" inputmode="numeric"
+                     class="ps-input ps-input--number"
+                     formControlName="abnormal_rating_threshold" />
+              <div class="ps-number__steppers">
+                <button type="button" class="ps-number__step"
+                        (click)="adjust('abnormal_rating_threshold', +1)"
+                        tabindex="-1">
+                  <nas-icon name="caret-up" [size]="12" />
+                </button>
+                <button type="button" class="ps-number__step"
+                        (click)="adjust('abnormal_rating_threshold', -1)"
+                        tabindex="-1">
+                  <nas-icon name="caret-down" [size]="12" />
+                </button>
+              </div>
+            </div>
+            <p class="ps-help">{{ 'platform_settings.abnormal_rating_help' | translate }}</p>
+          </div>
+
+          <div class="ps-divider"></div>
+
+          <!-- Certificate Awarded Based On -->
+          <div class="ps-field">
+            <label class="ps-field__label-required">
+              {{ 'platform_settings.cert_basis' | translate }} <span class="ps-asterisk">*</span>
+            </label>
+            <div class="ps-radio-list">
+              @for (opt of certificateOptions; track opt.id) {
+                <label class="ps-radio"
+                       [class.ps-radio--active]="basisSig() === opt.id">
+                  <input type="radio" name="cert_basis"
+                         [value]="opt.id"
+                         [checked]="basisSig() === opt.id"
+                         (change)="setBasis(opt.id)" />
+                  <span class="ps-radio__indicator">
+                    @if (basisSig() === opt.id) {
+                      <nas-icon name="check" [size]="10" />
+                    }
+                  </span>
+                  <span class="ps-radio__copy">
+                    <span class="ps-radio__title">{{ opt.label | translate }}</span>
+                    <span class="ps-radio__desc">{{ opt.desc | translate }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          </div>
+
+          @if (showMinScore()) {
+            <div class="ps-field ps-field--half">
+              <label for="min_passing_score">
+                {{ 'platform_settings.min_passing_score' | translate }} <span class="ps-asterisk">*</span>
+              </label>
+              <div class="ps-number">
+                <input id="min_passing_score" type="number" min="0" max="100" inputmode="numeric"
+                       class="ps-input ps-input--number"
+                       formControlName="min_passing_score" />
+                <div class="ps-number__steppers">
+                  <button type="button" class="ps-number__step"
+                          (click)="adjust('min_passing_score', +1)"
+                          tabindex="-1">
+                    <nas-icon name="caret-up" [size]="12" />
+                  </button>
+                  <button type="button" class="ps-number__step"
+                          (click)="adjust('min_passing_score', -1)"
+                          tabindex="-1">
+                    <nas-icon name="caret-down" [size]="12" />
+                  </button>
+                </div>
+              </div>
+              <p class="ps-help">{{ 'platform_settings.min_passing_score_help' | translate }}</p>
+            </div>
+          }
+
+        </div>
+      </section>
+
+      <!-- ─────────────── 4. About Us (Website View) ─────────────── -->
+      <section class="nas-card ps-card">
+        <header class="ps-card__head">
+          <h2 class="ps-card__title">{{ 'platform_settings.about_us' | translate }}</h2>
+          <span class="ps-pill">{{ 'platform_settings.website_view' | translate }}</span>
+        </header>
+        <div class="ps-card__body ps-card__body--stack">
+          <div class="ps-grid ps-grid--2">
+            <div class="ps-field">
+              <label>{{ 'platform_settings.description' | translate }}</label>
+              <nas-rich-text formControlName="about_description"
+                             [placeholder]="'platform_settings.description_placeholder' | translate" />
+            </div>
+            <div class="ps-field">
+              <label>{{ 'platform_settings.our_values' | translate }}</label>
+              <nas-rich-text formControlName="about_values"
+                             [placeholder]="'platform_settings.our_values_placeholder' | translate" />
+            </div>
+          </div>
+          <div class="ps-grid ps-grid--2">
+            <div class="ps-field">
+              <label>{{ 'platform_settings.our_mission' | translate }}</label>
+              <nas-rich-text formControlName="about_mission"
+                             [placeholder]="'platform_settings.our_mission_placeholder' | translate" />
+            </div>
+            <div class="ps-field">
+              <label>{{ 'platform_settings.our_vision' | translate }}</label>
+              <nas-rich-text formControlName="about_vision"
+                             [placeholder]="'platform_settings.our_vision_placeholder' | translate" />
+            </div>
+          </div>
+          <div class="ps-field">
+            <label>{{ 'platform_settings.image' | translate }}</label>
+            <nas-photo-upload
+              [value]="filePreviews()['about_image']"
+              maxLabel="Max, file size: 2MB"
+              (fileSelected)="onFilePicked('about_image', $event)"
+              (cleared)="onFileCleared('about_image')" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────── 5. Settings (Website View) ─────────────── -->
+      <section class="nas-card ps-card">
+        <header class="ps-card__head">
+          <h2 class="ps-card__title">{{ 'platform_settings.settings' | translate }}</h2>
+          <span class="ps-pill">{{ 'platform_settings.website_view' | translate }}</span>
+        </header>
+        <div class="ps-card__body ps-card__body--stack">
+
+          <div class="ps-field">
+            <label>{{ 'platform_settings.header_logo' | translate }}</label>
+            <nas-photo-upload
+              [value]="filePreviews()['header_logo']"
+              ratio="100x45"
+              (fileSelected)="onFilePicked('header_logo', $event)"
+              (cleared)="onFileCleared('header_logo')" />
+          </div>
+
+          <div class="ps-field">
+            <label>{{ 'platform_settings.banner_image' | translate }}</label>
+            <nas-photo-upload
+              [value]="filePreviews()['banner_background']"
+              ratio="1366x650"
+              (fileSelected)="onFilePicked('banner_background', $event)"
+              (cleared)="onFileCleared('banner_background')" />
+          </div>
+
+          <div class="ps-field">
+            <label>{{ 'platform_settings.banner_description' | translate }}</label>
+            <nas-rich-text formControlName="banner_description"
+                           [placeholder]="'platform_settings.banner_description_placeholder' | translate" />
+          </div>
+
+          <div class="ps-field">
+            <label>{{ 'platform_settings.why_choose_us' | translate }}</label>
+            <nas-rich-text formControlName="why_us"
+                           [placeholder]="'platform_settings.why_choose_us_placeholder' | translate" />
+          </div>
+
+          <div class="ps-field">
+            <label>{{ 'platform_settings.footer_logo' | translate }}</label>
+            <nas-photo-upload
+              [value]="filePreviews()['footer_logo']"
+              ratio="100x45"
+              (fileSelected)="onFilePicked('footer_logo', $event)"
+              (cleared)="onFileCleared('footer_logo')" />
+          </div>
+
+        </div>
+      </section>
+
+    </form>
+  }
+</div>
