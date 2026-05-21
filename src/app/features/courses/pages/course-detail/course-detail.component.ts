@@ -128,10 +128,14 @@ export class CourseDetailComponent implements OnInit {
     return `Rating (${c?.rating_count ?? 0} reviews)`;
   });
 
-  /** Rating as fixed-1 string, or '—' when no rating yet. */
+  /**
+   * Rating as a fixed-1 string. We always render a numeric placeholder
+   * ("0.0") instead of an em-dash so the score column keeps the visual
+   * weight Figma calls for even before any reviews have come in.
+   */
   ratingValue = computed(() => {
     const r = this.course()?.rating;
-    return r && r > 0 ? r.toFixed(1) : '—';
+    return (r && r > 0 ? r : 0).toFixed(1);
   });
 
   /** Completion percent display, falls back to '—' when null. */

@@ -124,22 +124,56 @@
 }
 .overview-about .empty-text { color: var(--nas-color-text-muted, #8c8c8c); font-style: italic; }
 
+/* Course description is stored as HTML by the rich-text editor — render it
+   with normalized spacing so headings/paragraphs/lists from the editor look
+   native inside the card. */
+.rich-content {
+  font-size: 14px;
+  color: var(--nas-color-text-body, #676e76);
+  line-height: 21px;
+
+  > :first-child { margin-top: 0; }
+  > :last-child  { margin-bottom: 0; }
+
+  p, ul, ol { margin: 0 0 8px; }
+  ul, ol    { padding-inline-start: 20px; }
+  h1, h2, h3, h4 {
+    margin: 12px 0 6px;
+    color: var(--nas-color-text-strong, #171819);
+    font-weight: 600;
+  }
+  a { color: var(--nas-color-primary, #0c7e7a); text-decoration: underline; }
+  code {
+    background: var(--nas-neutral-200, #f5f5f5);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+}
+
 /* ── Learner ratings ─────────────────────────────────────────────── */
 .rating-summary {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 120px minmax(0, 1fr);
   gap: 24px;
   align-items: center;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
 }
 .rating-summary__score {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 96px;
+  justify-content: center;
+  /* Reserve the visual height of a real big number so an em-dash
+     "no rating" placeholder doesn't collapse the column. */
+  min-height: 60px;
 }
 .rating-summary__value {
   font-size: 40px;
-  line-height: 1;
+  line-height: 1.1;
   font-weight: 700;
   color: var(--nas-color-text-strong, #171819);
 }
@@ -164,19 +198,23 @@
   align-items: center;
   font-size: 12px;
   color: var(--nas-color-text-muted, #676e76);
-
-  &__track {
-    height: 8px;
-    background: var(--nas-neutral-300, #e6e7e8);
-    border-radius: 9999px;
-    overflow: hidden;
-  }
-  &__fill {
-    height: 100%;
-    background: var(--nas-status-green-500, #11b67d);
-    border-radius: 9999px;
-    transition: width 0.4s ease;
-  }
+}
+/* IMPORTANT: keep these flat — nesting them under `.rating-bars__row`
+   would compile to `.rating-bars__row__track`, which the HTML doesn't use. */
+.rating-bars__track {
+  height: 8px;
+  /* A literal mid-gray rather than the lightest neutral token so the
+     empty track is still clearly visible on the white card. */
+  background: #d9dbde;
+  border-radius: 9999px;
+  overflow: hidden;
+  min-width: 0;
+}
+.rating-bars__fill {
+  height: 100%;
+  background: var(--nas-status-green-500, #11b67d);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
 }
 .rating-bars__star  { font-weight: 500; color: var(--nas-color-text-strong, #171819); }
 .rating-bars__count { text-align: end; color: var(--nas-color-text-strong, #171819); font-weight: 500; }

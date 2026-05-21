@@ -72,7 +72,7 @@
             <article class="nas-card overview-about">
               <h3 class="nas-section-title">{{ 'course_detail.about_this_course' | translate }}</h3>
               @if (c.description) {
-                <p>{{ c.description }}</p>
+                <div class="rich-content" [innerHTML]="c.description"></div>
               } @else {
                 <p class="empty-text">{{ 'course_detail.no_description' | translate }}</p>
               }
@@ -84,7 +84,7 @@
                 <div class="rating-summary__score">
                   <div class="rating-summary__value">{{ ratingValue() }}</div>
                   <div class="rating-summary__meta">
-                    {{ 'course_detail.out_of' | translate }} 5 • {{ c.rating_count ?? 0 }} {{ 'course_detail.reviews' | translate }}
+                    {{ 'course_detail.out_of' | translate }} • {{ c.rating_count ?? 0 }} {{ 'course_detail.reviews' | translate }}
                   </div>
                 </div>
                 <ul class="rating-bars">
