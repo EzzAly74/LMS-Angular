@@ -3,6 +3,18 @@ export interface NavItem {
   route?:   string;
   icon:     string;
   children?: NavItem[];
+
+  /**
+   * `view-*` permission key required to see this item. Items without a
+   * key are treated as un-gated and remain visible to any authenticated
+   * admin (legacy sub-features outside the 2026 Roles matrix).
+   *
+   * Parent items with `children` may either:
+   *   - set their own `viewKey` (group-level gate), or
+   *   - leave it undefined and rely on per-child gating (parent stays
+   *     visible iff at least one child is visible).
+   */
+  viewKey?: string;
 }
 
 export interface NavGroup {
@@ -16,8 +28,8 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
   {
     label: 'nav.group.main',
     items: [
-      { label: 'nav.dashboard', route: '/admin/dashboard', icon: `${NAV_ICONS}/icon-dashboard.svg` },
-      { label: 'nav.inbox',     route: '/admin/messages',  icon: `${NAV_ICONS}/icon-inbox.svg` },
+      { label: 'nav.dashboard', route: '/admin/dashboard', icon: `${NAV_ICONS}/icon-dashboard.svg`, viewKey: 'view-dashboard' },
+      { label: 'nav.inbox',     route: '/admin/messages',  icon: `${NAV_ICONS}/icon-inbox.svg`,     viewKey: 'view-inbox' },
     ],
   },
   {
@@ -27,33 +39,33 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
         label: 'nav.learning',
         icon:  `${NAV_ICONS}/icon-learning.svg`,
         children: [
-          { label: 'nav.courses',     route: '/admin/courses',     icon: '' },
-          { label: 'nav.assignments', route: '/admin/assignments', icon: '' },
-          { label: 'nav.quizzes',     route: '/admin/quizzes',     icon: '' },
-          { label: 'nav.ratings',     route: '/admin/ratings',     icon: '' },
+          { label: 'nav.courses',     route: '/admin/courses',     icon: '', viewKey: 'view-courses' },
+          { label: 'nav.assignments', route: '/admin/assignments', icon: '', viewKey: 'view-assignments' },
+          { label: 'nav.quizzes',     route: '/admin/quizzes',     icon: '', viewKey: 'view-quizzes' },
+          { label: 'nav.ratings',     route: '/admin/ratings',     icon: '', viewKey: 'view-ratings' },
         ],
       },
-      { label: 'nav.resources', route: '/admin/resources', icon: `${NAV_ICONS}/icon-resources.svg` },
+      { label: 'nav.resources', route: '/admin/resources', icon: `${NAV_ICONS}/icon-resources.svg`, viewKey: 'view-resources' },
     ],
   },
   {
     label: 'nav.group.competency',
     items: [
-      { label: 'nav.job_titles',     route: '/admin/job-titles',     icon: `${NAV_ICONS}/icon-job-titles.svg` },
-      { label: 'nav.qualifications', route: '/admin/qualifications', icon: `${NAV_ICONS}/icon-qualifications.svg` },
-      { label: 'nav.certificates',   route: '/admin/certificates',   icon: `${NAV_ICONS}/icon-certificates.svg` },
-      { label: 'nav.categories',     route: '/admin/categories',     icon: `${NAV_ICONS}/icon-categories.svg` },
-      { label: 'nav.reports',        route: '/admin/reports',        icon: `${NAV_ICONS}/icon-reports.svg` },
+      { label: 'nav.job_titles',     route: '/admin/job-titles',     icon: `${NAV_ICONS}/icon-job-titles.svg`,     viewKey: 'view-job-titles' },
+      { label: 'nav.qualifications', route: '/admin/qualifications', icon: `${NAV_ICONS}/icon-qualifications.svg`, viewKey: 'view-qualifications' },
+      { label: 'nav.certificates',   route: '/admin/certificates',   icon: `${NAV_ICONS}/icon-certificates.svg`,   viewKey: 'view-certificates' },
+      { label: 'nav.categories',     route: '/admin/categories',     icon: `${NAV_ICONS}/icon-categories.svg`,     viewKey: 'view-categories' },
+      { label: 'nav.reports',        route: '/admin/reports',        icon: `${NAV_ICONS}/icon-reports.svg`,        viewKey: 'view-reports' },
     ],
   },
   {
     label: 'nav.group.system',
     items: [
-      { label: 'nav.users',          route: '/admin/users',       icon: `${NAV_ICONS}/icon-users.svg` },
-      { label: 'nav.controllers',    route: '/admin/controllers', icon: `${NAV_ICONS}/icon-controllers.svg` },
-      { label: 'nav.roles',          route: '/admin/roles',       icon: `${NAV_ICONS}/icon-roles.svg` },
-      { label: 'nav.platform_config',route: '/admin/settings',    icon: `${NAV_ICONS}/icon-settings.svg` },
-      { label: 'nav.audit_log',      route: '/admin/audit-log',   icon: `${NAV_ICONS}/icon-audit-log.svg` },
+      { label: 'nav.users',           route: '/admin/users',       icon: `${NAV_ICONS}/icon-users.svg`,       viewKey: 'view-users' },
+      { label: 'nav.controllers',     route: '/admin/controllers', icon: `${NAV_ICONS}/icon-controllers.svg`, viewKey: 'view-controllers' },
+      { label: 'nav.roles',           route: '/admin/roles',       icon: `${NAV_ICONS}/icon-roles.svg`,       viewKey: 'view-roles' },
+      { label: 'nav.platform_config', route: '/admin/settings',    icon: `${NAV_ICONS}/icon-settings.svg`,    viewKey: 'view-platform-config' },
+      { label: 'nav.audit_log',       route: '/admin/audit-log',   icon: `${NAV_ICONS}/icon-audit-log.svg`,   viewKey: 'view-audit-log' },
     ],
   },
 ];

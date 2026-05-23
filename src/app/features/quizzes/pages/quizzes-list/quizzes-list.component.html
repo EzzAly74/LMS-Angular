@@ -1,70 +1,351 @@
+<p-confirmDialog />
+<p-toast position="bottom-right" />
+
+<!-- ═══════════════════════════════════════════════════════════════
+     "VIEW ALL" CREATED QUIZZES MODAL
+════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="All created quizzes"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{'width':'420px'}"
+  [visible]="viewAllOpen()"
+  (visibleChange)="viewAllOpen.set($event)"
+  styleClass="nas-dialog ql-all-dialog">
+
+  <div class="ql-modal-search">
+    <i class="pi pi-search ql-modal-search__icon"></i>
+    <input
+      type="text"
+      class="ql-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="viewAllSearch"
+      (ngModelChange)="onViewAllSearchChange($event)" />
+  </div>
+
+  <div class="ql-modal-list">
+    @if (viewAllLoading()) {
+      @for (s of skeletons; track s) {
+        <p-skeleton height="32px" styleClass="ql-modal-row-sk" />
+      }
+    } @else if (!viewAllItems().length) {
+      <p class="ql-modal-empty">No quizzes found.</p>
+    } @else {
+      @for (item of viewAllItems(); track item.id) {
+        <label class="ql-modal-row" [class.ql-modal-row--selected]="viewAllSelected() === item.id">
+          <input
+            type="checkbox"
+            [checked]="viewAllSelected() === item.id"
+            (change)="selectViewAllItem(item)" />
+          <span class="ql-modal-row__title">{{ item.title }}</span>
+          @if (item.course_title) {
+            <span class="ql-modal-row__course">{{ item.course_title }}</span>
+          }
+        </label>
+      }
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">Cancel</button>
+    <button
+      type="button"
+      class="nas-btn nas-btn--primary"
+      [disabled]="!viewAllSelected()"
+      (click)="confirmViewAll()">
+      <i class="pi pi-eye"></i> View Quiz
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FILTER MODAL (Instructors / Learners / Courses)
+════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="Filter your results"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{'width':'420px'}"
+  [visible]="filter().open"
+  (visibleChange)="closeFilter()"
+  styleClass="nas-dialog ql-all-dialog">
+
+  <div class="ql-modal-section-label">
+    @switch (filter().kind) {
+      @case ('instructors') { Instructors }
+      @case ('learners')    { Learners }
+      @case ('courses')     { Courses }
+    }
+  </div>
+
+  <div class="ql-modal-search">
+    <i class="pi pi-search ql-modal-search__icon"></i>
+    <input
+      type="text"
+      class="ql-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="filter().query"
+      (ngModelChange)="onFilterQuery($event)" />
+  </div>
+
+  <div class="ql-modal-list">
+    @for (item of filterItems(); track item.id) {
+      <label class="ql-modal-row" [class.ql-modal-row--selected]="isFilterSelected(item.id)">
+        <input type="checkbox" [checked]="isFilterSelected(item.id)" (change)="toggleFilterItem(item.id)" />
+        <span class="ql-modal-row__title">{{ item.name }}</span>
+      </label>
+    }
+    @if (!filterItems().length) {
+      <p class="ql-modal-empty">No results.</p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">Clear</button>
+    <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
+      <i class="pi pi-filter"></i> Filter
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE
+════════════════════════════════════════════════════════════════ -->
 <div class="nas-page-container">
-  <nas-page-header title="Quiz Attempts" subtitle="Review learner quiz performance">
+
+  <nas-page-header
+    title="Quizzes"
+    subtitle="Generate learner quizzes, define answer keys, and monitor submissions.">
+    <a routerLink="/admin/quizzes/new" class="nas-cta-btn">
+      <i class="pi pi-plus-circle"></i> Create Quiz
+    </a>
   </nas-page-header>
-  <div class="nas-card quiz-table-card">
-    <div class="quiz-toolbar">
-      <p-dropdown [options]="courseOptions()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
-        placeholder="Filter by course" [showClear]="true" styleClass="nas-dropdown"
-        (onChange)="onFilterChange()" [style]="{'min-width':'220px','height':'36px'}" />
-      <div class="nas-search">
-        <i class="nas-search__icon pi pi-search"></i>
-        <input class="nas-search__input" placeholder="Search learner..." (input)="onSearch($any($event.target).value)" />
+
+  <!-- ── Mini-table (Created Quizzes) ────────────────────────────── -->
+  <div class="ql-mini-section">
+    <div class="ql-mini-head">
+      <p class="ql-mini-head__text">
+        <strong>{{ summary().quizzes }}</strong> created quizzes
+        <span class="ql-mini-head__sep">·</span>
+        for <strong>{{ summary().courses }}</strong> courses
+      </p>
+      <button type="button" class="ql-view-all-btn" (click)="openViewAll()">View All</button>
+    </div>
+
+    <div class="nas-card ql-section-card">
+      <div class="ql-table-wrap">
+        <table class="ql-table">
+          <thead>
+            <tr>
+              <th>Quiz</th>
+              <th>Course</th>
+              <th>Cohort scope</th>
+              <th>Questions</th>
+              <th>Total score</th>
+              <th>Due</th>
+              <th class="ql-table__actions-col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (miniLoading()) {
+              @for (s of [1,2,3]; track s) {
+                <tr>
+                  @for (c of [1,2,3,4,5,6,7]; track c) {
+                    <td><p-skeleton height="16px" /></td>
+                  }
+                </tr>
+              }
+            } @else if (!miniRows().length) {
+              <tr><td colspan="7" class="ql-table__empty">No quizzes yet. Create your first one.</td></tr>
+            } @else {
+              @for (item of miniRows(); track item.id) {
+                <tr class="ql-table__row" (click)="editQuiz(item)">
+                  <td class="ql-table__primary">{{ item.title }}</td>
+                  <td class="ql-table__muted">{{ item.course_title ?? '—' }}</td>
+                  <td>
+                    <nas-status-badge [tone]="cohortPillTone(item.cohort_scope)">
+                      {{ cohortPillLabel(item) }}
+                    </nas-status-badge>
+                  </td>
+                  <td>{{ item.questions_count }}</td>
+                  <td class="ql-table__primary">{{ item.total_score }}</td>
+                  <td class="ql-table__muted">{{ item.due_date ? (item.due_date | date:'dd MMM yyyy') : '—' }}</td>
+                  <td class="ql-table__actions">
+                    <button
+                      type="button"
+                      class="ql-row-btn"
+                      title="Edit"
+                      (click)="editQuiz(item, $event)">
+                      <i class="pi pi-pen-to-square"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="ql-row-btn ql-row-btn--danger"
+                      title="Delete"
+                      (click)="confirmDelete(item, $event)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="quiz-table-wrap">
-      <table class="nas-table">
+  </div>
+
+  <!-- ── Submissions ───────────────────────────────────────────── -->
+  <div class="nas-card ql-section-card">
+    <div class="ql-toolbar ql-toolbar--stacked">
+      <div class="ql-search">
+        <i class="pi pi-search ql-search__icon"></i>
+        <input
+          type="text"
+          class="ql-search__input"
+          placeholder="Quick search..."
+          [ngModel]="subSearch"
+          (ngModelChange)="onSubmissionSearch($event)" />
+      </div>
+
+      <div class="ql-filter-row">
+        <button
+          type="button"
+          class="ql-pill-btn"
+          [class.ql-pill-btn--active]="subInstructorIds.length === 0 && subLearnerIds.length === 0 && subCourseIds.length === 0"
+          (click)="clearAllFilters()">
+          All
+        </button>
+
+        <button type="button" class="ql-pill-btn" (click)="openFilter('instructors')">
+          Instructors
+          @if (filterPillCounts().instructors) {
+            <span class="ql-pill-btn__count">{{ filterPillCounts().instructors }}</span>
+          }
+          <i class="pi pi-chevron-down"></i>
+        </button>
+
+        <button type="button" class="ql-pill-btn" (click)="openFilter('learners')">
+          Learners
+          @if (filterPillCounts().learners) {
+            <span class="ql-pill-btn__count">{{ filterPillCounts().learners }}</span>
+          }
+          <i class="pi pi-chevron-down"></i>
+        </button>
+
+        <button type="button" class="ql-pill-btn" (click)="openFilter('courses')">
+          Courses
+          @if (filterPillCounts().courses) {
+            <span class="ql-pill-btn__count">{{ filterPillCounts().courses }}</span>
+          }
+          <i class="pi pi-chevron-down"></i>
+        </button>
+
+        <div class="ql-status-checks">
+          <label class="ql-check">
+            <input type="checkbox" [checked]="subStatus === 'all'" (change)="onStatus('all')" />
+            <span>All</span>
+          </label>
+          <label class="ql-check">
+            <input type="checkbox" [checked]="subStatus === 'pending'" (change)="onStatus(subStatus === 'pending' ? 'all' : 'pending')" />
+            <span>Pending</span>
+          </label>
+          <label class="ql-check">
+            <input type="checkbox" [checked]="subStatus === 'graded'" (change)="onStatus(subStatus === 'graded' ? 'all' : 'graded')" />
+            <span>Graded</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="ql-table-wrap">
+      <table class="ql-table">
         <thead>
           <tr>
             <th>Learner</th>
             <th>Course</th>
+            <th>Instructor</th>
+            <th>Quiz</th>
+            <th>Cohort</th>
+            <th>Submitted</th>
             <th>Score</th>
             <th>Status</th>
-            <th>Date</th>
+            <th class="ql-table__actions-col"></th>
           </tr>
         </thead>
         <tbody>
-          @if (loading()) {
+          @if (submissionsLoading()) {
             @for (s of skeletons; track s) {
               <tr>
-                @for (c of [1,2,3,4,5]; track c) {
-                  <td><p-skeleton height="20px" /></td>
+                @for (c of [1,2,3,4,5,6,7,8,9]; track c) {
+                  <td><p-skeleton height="16px" /></td>
                 }
               </tr>
             }
+          } @else if (!submissions().length) {
+            <tr><td colspan="9" class="ql-table__empty">No submissions yet.</td></tr>
           } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.user_name }}</td>
-                <td>{{ item.course_title }}</td>
+            @for (sub of submissions(); track sub.id) {
+              <tr class="ql-table__row" (click)="openSubmission(sub)">
+                <td class="ql-table__primary">
+                  {{ sub.user?.name ?? '—' }}
+                  @if (sub.user?.machine_code) {
+                    <span class="ql-table__sub">{{ sub.user!.machine_code }}</span>
+                  }
+                </td>
+                <td class="ql-table__muted">{{ sub.course_title ?? '—' }}</td>
+                <td class="ql-table__muted">{{ sub.instructor_name ?? '—' }}</td>
+                <td class="ql-table__muted">{{ sub.quiz_title ?? '—' }}</td>
+                <td class="ql-table__muted">{{ sub.cohort_titles.length ? sub.cohort_titles.join(', ') : '—' }}</td>
+                <td class="ql-table__muted">{{ sub.submitted_at ? (sub.submitted_at | date:'dd MMM yyyy') : (sub.created_at | date:'dd MMM yyyy') }}</td>
                 <td>
-                  <span class="nas-table__primary">{{ item.score }}</span>
-                  @if (item.max_score) {
-                    <span class="nas-table__muted"> / {{ item.max_score }}</span>
+                  @if (sub.score_percent !== null) {
+                    <span
+                      class="ql-score"
+                      [class.ql-score--high]="sub.score_percent >= 75"
+                      [class.ql-score--mid]="sub.score_percent >= 50 && sub.score_percent < 75"
+                      [class.ql-score--low]="sub.score_percent < 50">
+                      {{ sub.score_percent }}%
+                    </span>
+                  } @else {
+                    <span class="ql-table__muted">—</span>
                   }
                 </td>
                 <td>
-                  <nas-status-badge [tone]="item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'warning'">
-                    {{ item.status | titlecase }}
+                  <nas-status-badge [tone]="statusTone(sub.status)" [dot]="true">
+                    {{ sub.status === 'graded' ? 'Graded' : 'Pending' }}
                   </nas-status-badge>
                 </td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr>
-                <td colspan="5" class="nas-table__empty">No quiz attempts found.</td>
+                <td class="ql-table__actions">
+                  <button
+                    type="button"
+                    class="ql-row-btn ql-row-btn--view"
+                    title="Review"
+                    (click)="openSubmission(sub); $event.stopPropagation()">
+                    <i class="pi pi-eye"></i>
+                  </button>
+                </td>
               </tr>
             }
           }
         </tbody>
       </table>
     </div>
-    @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+
+    @if (submissionsTotal() > subPerPage) {
+      <div class="ql-pagination">
+        <span class="ql-pagination__info">
+          {{ (subPage - 1) * subPerPage + 1 }}–{{ min(subPage * subPerPage, submissionsTotal()) }} of {{ submissionsTotal() }}
+        </span>
+        <div class="ql-pagination__nav">
+          <button type="button" class="ql-pagination__btn" [disabled]="subPage === 1" (click)="onSubPage(subPage - 1)">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+          <button type="button" class="ql-pagination__btn" [disabled]="subPage * subPerPage >= submissionsTotal()" (click)="onSubPage(subPage + 1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
         </div>
       </div>
     }

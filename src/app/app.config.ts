@@ -42,8 +42,19 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     ConfirmationService,
     {
+      // Materialise the auth session BEFORE Angular bootstraps the
+      // router. Returning a Promise makes the initializer awaited, so
+      // the permission guard can read `view_keys` from the very first
+      // navigation (no race on a hard refresh of /admin/anything).
       provide: APP_INITIALIZER,
-      useFactory: (auth: AuthService) => () => auth.bootstrapSession().subscribe(),
+      useFactory: (auth: AuthService) => () =>
+        new Promise<void>(resolve => {
+          auth.bootstrapSession().subscribe({
+            next:     () => resolve(),
+            error:    () => resolve(),
+            complete: () => resolve(),
+          });
+        }),
       deps: [AuthService],
       multi: true,
     },

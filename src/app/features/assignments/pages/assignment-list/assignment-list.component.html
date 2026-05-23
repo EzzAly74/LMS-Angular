@@ -1,67 +1,347 @@
 <p-confirmDialog />
+<p-toast position="bottom-right" />
+
+<!-- ═══════════════════════════════════════════════════════════════
+     "VIEW ALL" CREATED ASSIGNMENTS MODAL
+════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="All created assignments"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{'width':'420px'}"
+  [visible]="viewAllOpen()"
+  (visibleChange)="viewAllOpen.set($event)"
+  styleClass="nas-dialog al-all-dialog">
+
+  <div class="al-modal-search">
+    <i class="pi pi-search al-modal-search__icon"></i>
+    <input
+      type="text"
+      class="al-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="viewAllSearch"
+      (ngModelChange)="onViewAllSearchChange($event)" />
+  </div>
+
+  <div class="al-modal-list">
+    @if (viewAllLoading()) {
+      @for (s of skeletons; track s) {
+        <p-skeleton height="32px" styleClass="al-modal-row-sk" />
+      }
+    } @else if (!viewAllItems().length) {
+      <p class="al-modal-empty">No assignments found.</p>
+    } @else {
+      @for (item of viewAllItems(); track item.id) {
+        <label class="al-modal-row" [class.al-modal-row--selected]="viewAllSelected() === item.id">
+          <input
+            type="checkbox"
+            [checked]="viewAllSelected() === item.id"
+            (change)="selectViewAllItem(item)" />
+          <span class="al-modal-row__title">{{ item.title }}</span>
+          @if (item.course_title) {
+            <span class="al-modal-row__course">{{ item.course_title }}</span>
+          }
+        </label>
+      }
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">Cancel</button>
+    <button
+      type="button"
+      class="nas-btn nas-btn--primary"
+      [disabled]="!viewAllSelected()"
+      (click)="confirmViewAll()">
+      <i class="pi pi-eye"></i> View Assignment
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FILTER MODAL (Instructors / Learners / Courses)
+════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="Filter your results"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{'width':'420px'}"
+  [visible]="filter().open"
+  (visibleChange)="closeFilter()"
+  styleClass="nas-dialog al-all-dialog">
+
+  <div class="al-modal-section-label">
+    @switch (filter().kind) {
+      @case ('instructors') { Instructors }
+      @case ('learners')    { Learners }
+      @case ('courses')     { Courses }
+    }
+  </div>
+
+  <div class="al-modal-search">
+    <i class="pi pi-search al-modal-search__icon"></i>
+    <input
+      type="text"
+      class="al-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="filter().query"
+      (ngModelChange)="onFilterQuery($event)" />
+  </div>
+
+  <div class="al-modal-list">
+    @for (item of filterItems(); track item.id) {
+      <label class="al-modal-row" [class.al-modal-row--selected]="isFilterSelected(item.id)">
+        <input type="checkbox" [checked]="isFilterSelected(item.id)" (change)="toggleFilterItem(item.id)" />
+        <span class="al-modal-row__title">{{ item.name }}</span>
+      </label>
+    }
+    @if (!filterItems().length) {
+      <p class="al-modal-empty">No results.</p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">Clear</button>
+    <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
+      <i class="pi pi-filter"></i> Filter
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE
+════════════════════════════════════════════════════════════════ -->
 <div class="nas-page-container">
-  <nas-page-header title="Assignments" subtitle="Manage assignments by course">
+
+  <nas-page-header
+    title="Assignments"
+    subtitle="Generate learner assignments, define answer keys, and monitor submissions.">
+    <a routerLink="/admin/assignments/new" class="nas-cta-btn">
+      <i class="pi pi-plus-circle"></i> Create Assignment
+    </a>
   </nas-page-header>
-  <div class="nas-card assign-table-card">
-    <div class="assign-toolbar">
-      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">Filter by course</label>
-      <p-dropdown [options]="courses()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
-        placeholder="Select a course" [loading]="coursesLoading()" [showClear]="true"
-        styleClass="nas-dropdown" (onChange)="onCourseChange()" [style]="{'min-width':'240px','height':'36px'}" />
+
+  <!-- ── Mini-table (Created Assignments) ──────────────────────── -->
+  <div class="al-mini-section">
+    <div class="al-mini-head">
+      <p class="al-mini-head__text">
+        <strong>{{ summary().assignments }}</strong> created assignments
+        <span class="al-mini-head__sep">·</span>
+        for <strong>{{ summary().courses }}</strong> courses
+      </p>
+      <button type="button" class="al-view-all-btn" (click)="openViewAll()">View All</button>
     </div>
-    <div class="assign-table-wrap">
-      <table class="nas-table">
+
+    <div class="nas-card al-section-card">
+      <div class="al-table-wrap">
+        <table class="al-table">
+          <thead>
+            <tr>
+              <th>Assignment</th>
+              <th>Course</th>
+              <th>Cohort scope</th>
+              <th>Questions</th>
+              <th>Total score</th>
+              <th>Due</th>
+              <th class="al-table__actions-col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (miniLoading()) {
+              @for (s of [1,2,3]; track s) {
+                <tr>
+                  @for (c of [1,2,3,4,5,6,7]; track c) {
+                    <td><p-skeleton height="16px" /></td>
+                  }
+                </tr>
+              }
+            } @else if (!miniRows().length) {
+              <tr><td colspan="7" class="al-table__empty">No assignments yet. Create your first one.</td></tr>
+            } @else {
+              @for (item of miniRows(); track item.id) {
+                <tr class="al-table__row" (click)="editAssignment(item)">
+                  <td class="al-table__primary">{{ item.title }}</td>
+                  <td class="al-table__muted">{{ item.course_title ?? '—' }}</td>
+                  <td>
+                    <nas-status-badge [tone]="cohortPillTone(item.cohort_scope)">
+                      {{ cohortPillLabel(item) }}
+                    </nas-status-badge>
+                  </td>
+                  <td>{{ item.questions_count }}</td>
+                  <td class="al-table__primary">{{ item.total_score }}</td>
+                  <td class="al-table__muted">{{ item.due_date ? (item.due_date | date:'dd MMM yyyy') : '—' }}</td>
+                  <td class="al-table__actions">
+                    <button
+                      type="button"
+                      class="al-row-btn"
+                      title="Edit"
+                      (click)="editAssignment(item, $event)">
+                      <i class="pi pi-pen-to-square"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="al-row-btn al-row-btn--danger"
+                      title="Delete"
+                      (click)="confirmDelete(item, $event)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Submissions ───────────────────────────────────────────── -->
+  <div class="nas-card al-section-card">
+    <div class="al-toolbar al-toolbar--stacked">
+      <div class="al-search">
+        <i class="pi pi-search al-search__icon"></i>
+        <input
+          type="text"
+          class="al-search__input"
+          placeholder="Quick search..."
+          [ngModel]="subSearch"
+          (ngModelChange)="onSubmissionSearch($event)" />
+      </div>
+
+      <div class="al-filter-row">
+        <button
+          type="button"
+          class="al-pill-btn"
+          [class.al-pill-btn--active]="subInstructorIds.length === 0 && subLearnerIds.length === 0 && subCourseIds.length === 0"
+          (click)="clearAllFilters()">
+          All
+        </button>
+
+        <button type="button" class="al-pill-btn" (click)="openFilter('instructors')">
+          Instructors
+          @if (filterPillCounts().instructors) {
+            <span class="al-pill-btn__count">{{ filterPillCounts().instructors }}</span>
+          }
+          <i class="pi pi-chevron-down"></i>
+        </button>
+
+        <button type="button" class="al-pill-btn" (click)="openFilter('learners')">
+          Learners
+          @if (filterPillCounts().learners) {
+            <span class="al-pill-btn__count">{{ filterPillCounts().learners }}</span>
+          }
+          <i class="pi pi-chevron-down"></i>
+        </button>
+
+        <button type="button" class="al-pill-btn" (click)="openFilter('courses')">
+          Courses
+          @if (filterPillCounts().courses) {
+            <span class="al-pill-btn__count">{{ filterPillCounts().courses }}</span>
+          }
+          <i class="pi pi-chevron-down"></i>
+        </button>
+
+        <div class="al-status-checks">
+          <label class="al-check">
+            <input type="checkbox" [checked]="subStatus === 'all'" (change)="onStatus('all')" />
+            <span>All</span>
+          </label>
+          <label class="al-check">
+            <input type="checkbox" [checked]="subStatus === 'pending'" (change)="onStatus(subStatus === 'pending' ? 'all' : 'pending')" />
+            <span>Pending</span>
+          </label>
+          <label class="al-check">
+            <input type="checkbox" [checked]="subStatus === 'graded'" (change)="onStatus(subStatus === 'graded' ? 'all' : 'graded')" />
+            <span>Graded</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="al-table-wrap">
+      <table class="al-table">
         <thead>
           <tr>
-            <th>Title</th>
-            <th>File</th>
-            <th>Created</th>
-            <th></th>
+            <th>Learner</th>
+            <th>Course</th>
+            <th>Instructor</th>
+            <th>Assignment</th>
+            <th>Cohort</th>
+            <th>Submitted</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th class="al-table__actions-col"></th>
           </tr>
         </thead>
         <tbody>
-          @if (loading()) {
+          @if (submissionsLoading()) {
             @for (s of skeletons; track s) {
               <tr>
-                @for (c of [1,2,3,4]; track c) {
-                  <td><p-skeleton height="20px" /></td>
+                @for (c of [1,2,3,4,5,6,7,8,9]; track c) {
+                  <td><p-skeleton height="16px" /></td>
                 }
               </tr>
             }
+          } @else if (!submissions().length) {
+            <tr><td colspan="9" class="al-table__empty">No submissions yet.</td></tr>
           } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.title }}</td>
-                <td>
-                  @if (item.file_url) {
-                    <a [href]="item.file_url" target="_blank" class="file-link">
-                      <i class="pi pi-download"></i>Download
-                    </a>
-                  } @else {
-                    <span class="nas-table__muted">—</span>
+            @for (sub of submissions(); track sub.id) {
+              <tr class="al-table__row" (click)="openSubmission(sub)">
+                <td class="al-table__primary">
+                  {{ sub.user?.name ?? '—' }}
+                  @if (sub.user?.machine_code) {
+                    <span class="al-table__sub">{{ sub.user!.machine_code }}</span>
                   }
                 </td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
-                <td class="nas-table__action">
-                  <button type="button" class="row-action-btn" (click)="confirmDelete(item)"><i class="pi pi-trash"></i></button>
+                <td class="al-table__muted">{{ sub.course_title ?? '—' }}</td>
+                <td class="al-table__muted">{{ sub.instructor_name ?? '—' }}</td>
+                <td class="al-table__muted">{{ sub.assignment_title ?? '—' }}</td>
+                <td class="al-table__muted">{{ sub.cohort_titles.length ? sub.cohort_titles.join(', ') : '—' }}</td>
+                <td class="al-table__muted">{{ sub.submitted_at ? (sub.submitted_at | date:'dd MMM yyyy') : (sub.created_at | date:'dd MMM yyyy') }}</td>
+                <td>
+                  @if (sub.score_percent !== null) {
+                    <span class="al-score" [class.al-score--high]="sub.score_percent >= 75" [class.al-score--mid]="sub.score_percent >= 50 && sub.score_percent < 75" [class.al-score--low]="sub.score_percent < 50">
+                      {{ sub.score_percent }}%
+                    </span>
+                  } @else {
+                    <span class="al-table__muted">—</span>
+                  }
                 </td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr>
-                <td colspan="4" class="nas-table__empty">{{ selectedCourseId ? 'No assignments found.' : 'Select a course to view its assignments.' }}</td>
+                <td>
+                  <nas-status-badge [tone]="statusTone(sub.status)" [dot]="true">
+                    {{ sub.status === 'graded' ? 'Graded' : 'Pending' }}
+                  </nas-status-badge>
+                </td>
+                <td class="al-table__actions">
+                  <button
+                    type="button"
+                    class="al-row-btn al-row-btn--view"
+                    title="Review"
+                    (click)="openSubmission(sub); $event.stopPropagation()">
+                    <i class="pi pi-eye"></i>
+                  </button>
+                </td>
               </tr>
             }
           }
         </tbody>
       </table>
     </div>
-    @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+
+    @if (submissionsTotal() > subPerPage) {
+      <div class="al-pagination">
+        <span class="al-pagination__info">
+          {{ (subPage - 1) * subPerPage + 1 }}–{{ min(subPage * subPerPage, submissionsTotal()) }} of {{ submissionsTotal() }}
+        </span>
+        <div class="al-pagination__nav">
+          <button type="button" class="al-pagination__btn" [disabled]="subPage === 1" (click)="onSubPage(subPage - 1)">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+          <button type="button" class="al-pagination__btn" [disabled]="subPage * subPerPage >= submissionsTotal()" (click)="onSubPage(subPage + 1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
         </div>
       </div>
     }

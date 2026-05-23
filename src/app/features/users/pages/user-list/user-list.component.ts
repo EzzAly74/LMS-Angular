@@ -1,196 +1,433 @@
 import {
-  ChangeDetectionStrategy, Component, OnInit, inject, signal
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { SkeletonModule } from 'primeng/skeleton';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
-import { NasStatusBadgeComponent, NasStatusTone } from '../../../../shared/nas/nas-status-badge.component';
-import { NasDataTableComponent, NasCellTplDirective, NasTableColumn } from '../../../../shared/nas/nas-data-table.component';
-import { ApiService } from '../../../../core/services/api.service';
-import { API } from '../../../../core/constants/api.constants';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { TranslateModule } from '@ngx-translate/core';
+import { NasPageHeaderComponent } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { AdminUsersApiService } from '../../services/admin-users-api.service';
+import type {
+  AdminUserDetail,
+  AdminUserListItem,
+  AdminUserRole,
+  AdminUserRoleOption,
+  AdminUserSource,
+  AdminUserStatus,
+  AdminUserSummary,
+} from '../../models/user.types';
 
-type UserRole        = 'learner' | 'instructor';
-type LearnerType     = 'online' | 'offline' | 'hybrid';
-type ActiveTab       = 'all' | 'learner' | 'instructor';
-type LearnerSubFilter = 'all' | 'online' | 'offline' | 'hybrid';
+type RoleTab = 'all' | 'admin' | 'instructor';
 
-interface User {
-  id: number;
-  name: string;
-  email?: string;
-  phone?: string;
-  job_title?: string | null;
-  department_name?: string | null;
-  machine_code?: string | null;
-  learner_type?: LearnerType | null;
-  role?: UserRole;
-}
-
-interface EditForm {
-  name: string;
+interface UserFormState {
+  id: number | null;
+  source: AdminUserSource | null;
+  name_en: string;
+  name_ar: string;
   email: string;
+  role: AdminUserRole | '';
   job_title: string;
-  department_name: string;
-  learner_type: LearnerType | '';
 }
 
 @Component({
   selector: 'app-user-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
-    SkeletonModule, DialogModule, DropdownModule, ConfirmDialogModule,
-    NasPageHeaderComponent, NasStatusBadgeComponent,
-    NasDataTableComponent, NasCellTplDirective,
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    SkeletonModule,
+    ToastModule,
+    TranslateModule,
+    NasPageHeaderComponent,
   ],
+  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
 })
-export class UserListComponent implements OnInit {
-  private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+export class UserListComponent implements OnInit, OnDestroy {
+  private readonly api      = inject(AdminUsersApiService);
+  private readonly messages = inject(MessageService);
 
-  constructor() { withLocaleReload(() => this.load()); }
+  private readonly destroy$ = new Subject<void>();
+  private readonly search$  = new Subject<string>();
 
-  items            = signal<User[]>([]);
-  total            = signal(0);
-  loading          = signal(true);
-  saving           = signal(false);
-  activeTab        = signal<ActiveTab>('all');
-  learnerSubFilter = signal<LearnerSubFilter>('all');
-  profileUser      = signal<User | null>(null);
+  readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
+  readonly min = Math.min;
 
-  editVisible = false;
-  editUserId: number | null = null;
-  editForm: EditForm = { name: '', email: '', job_title: '', department_name: '', learner_type: '' };
+  constructor() {
+    withLocaleReload(() => this.refresh());
+  }
 
-  readonly perPage = 15;
-  page             = 1;
-  search           = '';
+  /* ── Data ────────────────────────────────────────────────────── */
+  readonly items   = signal<AdminUserListItem[]>([]);
+  readonly total   = signal(0);
+  readonly loading = signal(true);
+  readonly summary = signal<AdminUserSummary>({
+    total_users: 0,
+    instructors: 0,
+    admins:      0,
+    inactive:    0,
+  });
+  readonly summaryLoading = signal(true);
 
-  readonly columns: NasTableColumn[] = [
-    { field: 'user',            header: 'User',       minWidth: '220px' },
-    { field: 'job_title',       header: 'Job Title' },
-    { field: 'department_name', header: 'Department' },
-    { field: 'learner_type',    header: 'Type' },
-    { field: 'actions',         header: '',           headerless: true, width: '80px', align: 'end' },
-  ];
+  /* ── List state ──────────────────────────────────────────────── */
+  page        = 1;
+  perPage     = 15;
+  search      = '';
+  activeTab   = signal<RoleTab>('all');
+  instructorIds: number[] = [];
 
-  private search$ = new Subject<string>();
+  /* ── Lookups ─────────────────────────────────────────────────── */
+  readonly lookupInstructors = signal<Array<{ id: number; name: string; email: string | null }>>([]);
+  readonly lookupJobTitles   = signal<string[]>([]);
+  readonly roleOptions       = signal<AdminUserRoleOption[]>([]);
 
-  readonly tabs: { key: ActiveTab; label: string }[] = [
-    { key: 'all',        label: 'All' },
-    { key: 'learner',    label: 'Learners' },
-    { key: 'instructor', label: 'Instructors' },
-  ];
+  /* ── Row action menu (kebab) ─────────────────────────────────── */
+  readonly menuOpenKey = signal<string | null>(null);
 
-  readonly subFilters: { key: LearnerSubFilter; label: string }[] = [
-    { key: 'all',     label: 'All' },
-    { key: 'online',  label: 'Online' },
-    { key: 'offline', label: 'Offline' },
-    { key: 'hybrid',  label: 'Hybrid' },
-  ];
+  /* ── Profile drawer ──────────────────────────────────────────── */
+  readonly profile        = signal<AdminUserDetail | null>(null);
+  readonly profileLoading = signal(false);
 
-  readonly learnerTypeOptions = [
-    { label: 'Online',  value: 'online' },
-    { label: 'Offline', value: 'offline' },
-    { label: 'Hybrid',  value: 'hybrid' },
-  ];
+  /* ── Add / Edit modal ────────────────────────────────────────── */
+  readonly formOpen    = signal(false);
+  readonly formMode    = signal<'create' | 'edit'>('create');
+  readonly formSaving  = signal(false);
+  readonly form        = signal<UserFormState>(this.emptyForm());
 
+  /* ── Deactivate confirm dialog ───────────────────────────────── */
+  readonly deactivateTarget = signal<AdminUserListItem | null>(null);
+  readonly deactivating     = signal(false);
+
+  /* ── Instructors sub-filter modal ────────────────────────────── */
+  readonly instructorModal = signal<{ open: boolean; query: string }>({ open: false, query: '' });
+  readonly selectedInstructorSet = signal<Set<number>>(new Set());
+
+  /* ── Computed ────────────────────────────────────────────────── */
+  readonly formValid = computed(() => {
+    const f = this.form();
+    return f.name_en.trim().length > 0
+        && f.name_ar.trim().length > 0
+        && /^\S+@\S+\.\S+$/.test(f.email)
+        && !!f.role;
+  });
+
+  readonly visibleStatusKpi = computed(() =>
+    Math.max(0, this.summary().inactive),
+  );
+
+  /* ── Lifecycle ───────────────────────────────────────────────── */
   ngOnInit(): void {
-    this.search$.pipe(debounceTime(400), distinctUntilChanged())
-      .subscribe(q => { this.search = q; this.page = 1; this.load(); });
-    this.load();
+    this.search$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(v => {
+        this.search = v;
+        this.page   = 1;
+        this.loadList();
+      });
+
+    this.loadLookups();
+    this.refresh();
   }
 
-  load(): void {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /* ── Loaders ─────────────────────────────────────────────────── */
+  refresh(): void {
+    this.loadSummary();
+    this.loadList();
+  }
+
+  private loadSummary(): void {
+    this.summaryLoading.set(true);
+    this.api.summary().subscribe({
+      next: res => { this.summary.set(res.result); this.summaryLoading.set(false); },
+      error: ()  => this.summaryLoading.set(false),
+    });
+  }
+
+  private loadList(): void {
     this.loading.set(true);
-    const params: Record<string, string | number | boolean> = { page: this.page, per_page: this.perPage };
-    if (this.search) params['search'] = this.search;
-    if (this.activeTab() !== 'all') params['role'] = this.activeTab();
-    if (this.activeTab() === 'learner' && this.learnerSubFilter() !== 'all') {
-      params['learner_type'] = this.learnerSubFilter();
-    }
-
-    this.api.getPaginated<User>(API.USERS, params).subscribe({
-      next:  res => { this.items.set(res.result.data); this.total.set(res.result.total); this.loading.set(false); },
-      error: ()  => this.loading.set(false),
-    });
-  }
-
-  setTab(tab: ActiveTab): void {
-    this.activeTab.set(tab);
-    this.learnerSubFilter.set('all');
-    this.page = 1;
-    this.load();
-  }
-
-  setSubFilter(sf: LearnerSubFilter): void {
-    this.learnerSubFilter.set(sf);
-    this.page = 1;
-    this.load();
-  }
-
-  onPage(p: number): void { this.page = p; this.load(); }
-  onSearch(term: string): void { this.search$.next(term); }
-
-  learnerTone(t: LearnerType | undefined): NasStatusTone {
-    switch (t) {
-      case 'online':  return 'teal';
-      case 'offline': return 'neutral';
-      case 'hybrid':  return 'success';
-      default:        return 'neutral';
-    }
-  }
-
-  openProfile(user: User): void { this.profileUser.set(user); }
-  closeProfile(): void { this.profileUser.set(null); }
-
-  openEdit(user: User): void {
-    this.editUserId = user.id;
-    this.editForm = {
-      name:            user.name ?? '',
-      email:           user.email ?? '',
-      job_title:       user.job_title ?? '',
-      department_name: user.department_name ?? '',
-      learner_type:    user.learner_type ?? '',
-    };
-    this.editVisible = true;
-  }
-
-  saveEdit(): void {
-    if (!this.editUserId) return;
-    this.saving.set(true);
-    this.api.put(`${API.USERS}/${this.editUserId}`, this.editForm).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.editVisible = false;
-        this.messageService.add({ severity: 'success', detail: 'User updated.' });
-        this.load();
+    this.api.list({
+      page:     this.page,
+      per_page: this.perPage,
+      ...(this.search                       ? { search:         this.search }         : {}),
+      ...(this.activeTab() !== 'all'        ? { role:           this.activeTab() }    : {}),
+      ...(this.instructorIds.length         ? { instructor_ids: this.instructorIds }  : {}),
+    }).subscribe({
+      next: res => {
+        this.items.set(res.result.data ?? []);
+        this.total.set(res.result.total ?? 0);
+        this.loading.set(false);
       },
-      error: () => this.saving.set(false),
+      error: () => this.loading.set(false),
     });
   }
 
-  confirmDelete(user: User): void {
-    this.confirmService.confirm({
-      message: `Delete "${user.name}"?`,
-      header: 'Confirm Delete',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(`${API.USERS}/${user.id}`).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'User deleted.' }); this.load(); },
+  private loadLookups(): void {
+    this.api.filterOptions().subscribe({
+      next: res => {
+        this.lookupInstructors.set(res.result.instructors ?? []);
+        this.lookupJobTitles.set(res.result.job_titles   ?? []);
+        this.roleOptions.set(res.result.roles            ?? []);
+      },
+    });
+  }
+
+  /* ── Interactions ────────────────────────────────────────────── */
+  onSearch(v: string): void { this.search$.next(v); }
+
+  onPage(p: number): void {
+    if (p < 1) return;
+    this.page = p;
+    this.loadList();
+  }
+
+  setTab(tab: RoleTab): void {
+    if (tab === this.activeTab()) return;
+    this.activeTab.set(tab);
+    this.page = 1;
+    if (tab !== 'instructor') {
+      this.instructorIds = [];
+    }
+    this.loadList();
+  }
+
+  /* ── Row kebab menu ─────────────────────────────────────────── */
+  toggleMenu(key: string, ev: MouseEvent): void {
+    ev.stopPropagation();
+    this.menuOpenKey.set(this.menuOpenKey() === key ? null : key);
+  }
+
+  closeMenu(): void { this.menuOpenKey.set(null); }
+
+  /* ── Profile drawer ─────────────────────────────────────────── */
+  openProfile(user: AdminUserListItem): void {
+    this.closeMenu();
+    this.profileLoading.set(true);
+    this.profile.set(user as unknown as AdminUserDetail);
+    this.api.show(user.source, user.id).subscribe({
+      next: res => {
+        this.profile.set(res.result);
+        this.profileLoading.set(false);
+      },
+      error: () => this.profileLoading.set(false),
+    });
+  }
+
+  closeProfile(): void {
+    this.profile.set(null);
+    this.profileLoading.set(false);
+  }
+
+  editFromProfile(): void {
+    const p = this.profile();
+    if (!p) return;
+    this.openEditForm(p);
+    this.closeProfile();
+  }
+
+  /* ── Add / Edit user modal ──────────────────────────────────── */
+  openCreateForm(): void {
+    this.formMode.set('create');
+    this.form.set(this.emptyForm());
+    this.formOpen.set(true);
+  }
+
+  openEditForm(user: AdminUserListItem | AdminUserDetail): void {
+    this.closeMenu();
+    this.formMode.set('edit');
+    this.form.set({
+      id:        user.id,
+      source:    user.source,
+      name_en:   user.name_en ?? user.name ?? '',
+      name_ar:   user.name_ar ?? '',
+      email:     user.email ?? '',
+      role:      user.role_key ?? 'learner',
+      job_title: user.job_title ?? '',
+    });
+    this.formOpen.set(true);
+  }
+
+  closeForm(): void {
+    if (this.formSaving()) return;
+    this.formOpen.set(false);
+  }
+
+  updateForm<K extends keyof UserFormState>(field: K, value: UserFormState[K]): void {
+    this.form.update(f => ({ ...f, [field]: value }));
+  }
+
+  submitForm(): void {
+    if (!this.formValid() || this.formSaving()) return;
+    this.formSaving.set(true);
+
+    const f = this.form();
+    const payload = {
+      name_en:   f.name_en.trim(),
+      name_ar:   f.name_ar.trim(),
+      email:     f.email.trim(),
+      role:      f.role as AdminUserRole,
+      job_title: f.job_title.trim() || null,
+    };
+
+    const obs = this.formMode() === 'create'
+      ? this.api.create(payload)
+      : this.api.update(f.source ?? 'user', f.id ?? 0, payload);
+
+    obs.subscribe({
+      next: () => {
+        this.formSaving.set(false);
+        this.formOpen.set(false);
+        this.messages.add({
+          severity: 'success',
+          summary:  'Success',
+          detail:   this.formMode() === 'create' ? 'User created.' : 'User updated.',
+        });
+        this.refresh();
+      },
+      error: (err) => {
+        this.formSaving.set(false);
+        const msg = err?.error?.message ?? 'Save failed. Please retry.';
+        this.messages.add({ severity: 'error', summary: 'Error', detail: msg });
+      },
+    });
+  }
+
+  /* ── Deactivate user ────────────────────────────────────────── */
+  askDeactivate(user: AdminUserListItem): void {
+    this.closeMenu();
+    this.deactivateTarget.set(user);
+  }
+
+  cancelDeactivate(): void { this.deactivateTarget.set(null); }
+
+  confirmDeactivate(): void {
+    const target = this.deactivateTarget();
+    if (!target || this.deactivating()) return;
+    this.deactivating.set(true);
+
+    this.api.deactivate(target.source, target.id).subscribe({
+      next: () => {
+        this.deactivating.set(false);
+        this.deactivateTarget.set(null);
+        this.messages.add({
+          severity: 'success',
+          summary:  'Done',
+          detail:   `${target.name ?? 'User'} has been deactivated.`,
+        });
+        this.refresh();
+      },
+      error: () => {
+        this.deactivating.set(false);
+        this.messages.add({
+          severity: 'error',
+          summary:  'Error',
+          detail:   'Could not deactivate the user. Please retry.',
         });
       },
     });
+  }
+
+  /* ── Instructors sub-filter modal ───────────────────────────── */
+  openInstructorModal(): void {
+    if (this.activeTab() !== 'instructor') {
+      this.setTab('instructor');
+    }
+    this.selectedInstructorSet.set(new Set(this.instructorIds));
+    this.instructorModal.set({ open: true, query: '' });
+  }
+
+  closeInstructorModal(): void {
+    this.instructorModal.update(s => ({ ...s, open: false }));
+  }
+
+  onInstructorQuery(v: string): void {
+    this.instructorModal.update(s => ({ ...s, query: v }));
+  }
+
+  filteredInstructorOptions(): Array<{ id: number; name: string }> {
+    const q = this.instructorModal().query.trim().toLowerCase();
+    const src = this.lookupInstructors().map(i => ({ id: i.id, name: i.name }));
+    if (!q) return src;
+    return src.filter(i => i.name.toLowerCase().includes(q));
+  }
+
+  toggleInstructorSelection(id: number): void {
+    this.selectedInstructorSet.update(set => {
+      const next = new Set(set);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  isInstructorSelected(id: number): boolean {
+    return this.selectedInstructorSet().has(id);
+  }
+
+  clearInstructorSelection(): void {
+    this.selectedInstructorSet.set(new Set());
+  }
+
+  applyInstructorFilter(): void {
+    this.instructorIds = [...this.selectedInstructorSet()];
+    this.instructorModal.update(s => ({ ...s, open: false }));
+    this.page = 1;
+    this.loadList();
+  }
+
+  /* ── Visual helpers ─────────────────────────────────────────── */
+  statusTone(s: AdminUserStatus | null | undefined): string {
+    switch (s) {
+      case 'active':      return 'u-status--active';
+      case 'inactive':    return 'u-status--inactive';
+      case 'deactivated': return 'u-status--deactivated';
+      default:            return 'u-status--active';
+    }
+  }
+
+  statusLabel(s: AdminUserStatus | null | undefined): string {
+    switch (s) {
+      case 'inactive':    return 'Inactive';
+      case 'deactivated': return 'Deactivated';
+      default:            return 'Active';
+    }
+  }
+
+  complianceTone(pct: number | null): string {
+    if (pct === null || pct === undefined) return '';
+    if (pct >= 85) return 'u-pct--good';
+    if (pct >= 60) return 'u-pct--warn';
+    return 'u-pct--bad';
+  }
+
+  roleBadgeClass(roleKey: string): string {
+    switch (roleKey) {
+      case 'admin':      return 'u-role-badge u-role-badge--admin';
+      case 'instructor': return 'u-role-badge u-role-badge--instructor';
+      default:           return 'u-role-badge u-role-badge--learner';
+    }
+  }
+
+  /* ── Internals ──────────────────────────────────────────────── */
+  private emptyForm(): UserFormState {
+    return { id: null, source: null, name_en: '', name_ar: '', email: '', role: '', job_title: '' };
   }
 }

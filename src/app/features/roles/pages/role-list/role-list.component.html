@@ -1,194 +1,169 @@
-<p-confirmDialog />
+<p-toast />
 
-<div class="nas-page-container">
-
-  <nas-page-header
-    title="Roles"
-    subtitle="Manage system roles and their permissions">
-  </nas-page-header>
-
-  <div class="nas-card role-table-card">
-    <div class="role-toolbar">
-      <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
-        <input
-          type="text"
-          class="nas-search__input"
-          placeholder="Search roles..."
-          (input)="onSearch($any($event.target).value)"
-        />
-      </div>
-
-      <button type="button" class="nas-primary-btn" (click)="openCreate()">
-        <i class="pi pi-plus"></i>
-        <span>Add Role</span>
-      </button>
-    </div>
-
-    <div class="role-table-wrap">
-      <table class="nas-table">
-        <thead>
-          <tr>
-            <th>Role</th>
-            <th>Permissions</th>
-            <th>Created</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (loading()) {
-            @for (s of skeletons; track s) {
-              <tr>
-                @for (c of [1,2,3,4]; track c) {
-                  <td><p-skeleton height="20px" /></td>
-                }
-              </tr>
-            }
-          } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.name }}</td>
-                <td>
-                  @if (item.permissions && item.permissions.length) {
-                    <div class="permission-chips">
-                      @for (p of item.permissions.slice(0, 4); track p) {
-                        <span class="permission-chip">{{ p }}</span>
-                      }
-                      @if (item.permissions.length > 4) {
-                        <span class="permissions-count">+{{ item.permissions.length - 4 }} more</span>
-                      }
-                    </div>
-                  } @else {
-                    <span class="nas-table__muted">No permissions</span>
-                  }
-                </td>
-                <td class="nas-table__muted">{{ item.created_at ? (item.created_at | date:'dd MMM yyyy') : '—' }}</td>
-                <td class="nas-table__action">
-                  <button type="button" class="row-action-btn row-action-btn--edit" title="Edit"
-                          (click)="openEdit(item)">
-                    <i class="pi pi-pencil"></i>
-                  </button>
-                  <button type="button" class="row-action-btn row-action-btn--delete" title="Delete"
-                          (click)="confirmDelete(item)">
-                    <i class="pi pi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr><td colspan="4" class="nas-table__empty">No roles found.</td></tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-
-    @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
-        </span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left"></i>
-          </button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right"></i>
-          </button>
-        </div>
-      </div>
-    }
-  </div>
-
-</div>
-
+<!-- ═════════════════════════════════════════════════════════════════
+     DELETE CONFIRMATION
+═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [(visible)]="dialogVisible"
+  [header]="deleteTarget() ? 'Delete ' + (deleteTarget()!.name) + '?' : ''"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [closable]="!saving()"
-  [closeOnEscape]="!saving()"
-  [style]="{ width: '720px', maxWidth: '95vw' }"
-  styleClass="role-dialog"
-  [header]="dialogMode === 'create' ? 'Add Role' : 'Edit Role'">
+  [style]="{ width: '440px' }"
+  [visible]="!!deleteTarget()"
+  (visibleChange)="cancelDelete()"
+  styleClass="nas-dialog rl-confirm-dialog">
 
-  <form class="role-form" (ngSubmit)="save()" #f="ngForm">
+  <p class="rl-confirm__body">
+    Are you sure you want to delete the role
+    <strong>{{ deleteTarget()?.name }}</strong>?
+    This action cannot be undone.
+  </p>
 
-    <div class="role-form__row">
-      <div class="role-form__field">
-        <label for="role-name">Role Name</label>
-        <input id="role-name" type="text" class="nas-input"
-               name="name" [(ngModel)]="form.name" required maxlength="255" autocomplete="off" />
-      </div>
-
-      <div class="role-form__field role-form__field--filter">
-        <label for="perm-filter">Filter permissions</label>
-        <div class="nas-search nas-search--compact">
-          <i class="pi pi-search nas-search__icon"></i>
-          <input id="perm-filter" type="text" class="nas-search__input"
-                 placeholder="e.g. courses-edit"
-                 [(ngModel)]="permissionFilter" name="permissionFilter" autocomplete="off" />
-        </div>
-      </div>
-    </div>
-
-    <div class="role-form__permissions-header">
-      <span>
-        Permissions
-        @if (guardLabel(); as g) {
-          <span class="role-form__guard-pill" title="Auth guard">{{ g }}</span>
-        }
-      </span>
-      <span class="role-form__permissions-count">{{ selectedCount() }} selected</span>
-    </div>
-
-    <div class="role-form__permissions">
-      @if (!permissionGroups().length) {
-        <div class="role-form__permissions-empty">
-          <i class="pi pi-spin pi-spinner"></i>
-          <span>Loading permissions…</span>
-        </div>
-      } @else if (!visibleGroups().length) {
-        <div class="role-form__permissions-empty">No permissions match your filter.</div>
+  <ng-template pTemplate="footer">
+    <button type="button" class="rl-btn rl-btn--ghost"
+            [disabled]="deleting()"
+            (click)="cancelDelete()">
+      Cancel
+    </button>
+    <button type="button" class="rl-btn rl-btn--danger"
+            [disabled]="deleting()"
+            (click)="confirmDelete()">
+      @if (deleting()) {
+        <i class="pi pi-spin pi-spinner"></i>
       } @else {
-        @for (group of visibleGroups(); track group.table) {
-          <div class="perm-group">
-            <label class="perm-group__head">
-              <p-checkbox
-                [binary]="true"
-                [ngModel]="isGroupAllSelected(group)"
-                [ngModelOptions]="{ standalone: true }"
-                (onChange)="toggleGroup(group, isGroupAllSelected(group))" />
-              <span class="perm-group__title">{{ group.table }}</span>
-              <span class="perm-group__count">{{ group.permissions.length }}</span>
-            </label>
-            <div class="perm-group__items">
-              @for (p of group.permissions; track p) {
-                <label class="perm-item">
-                  <p-checkbox
-                    [binary]="true"
-                    [ngModel]="form.selected.has(p)"
-                    [ngModelOptions]="{ standalone: true }"
-                    (onChange)="togglePermission(p, !form.selected.has(p))" />
-                  <span class="perm-item__name">{{ p }}</span>
-                </label>
-              }
-            </div>
-          </div>
-        }
+        <i class="pi pi-trash"></i>
+      }
+      Yes, Delete
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═════════════════════════════════════════════════════════════════
+     PAGE
+═══════════════════════════════════════════════════════════════════ -->
+<div class="nas-page-container" (click)="closeMenu()">
+
+  <nas-page-header
+    title="Roles"
+    subtitle="Define roles and control which dashboard sections each role can access.">
+    <button type="button" class="rl-add-btn" (click)="goToCreate()">
+      <i class="pi pi-plus"></i> Add Role
+    </button>
+  </nas-page-header>
+
+  <!-- ── Role grid ──────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="rl-grid">
+      @for (s of skeletonCards; track s) {
+        <div class="rl-card rl-card--skeleton">
+          <p-skeleton height="22px" width="50%"></p-skeleton>
+          <p-skeleton height="14px" width="80%" styleClass="rl-card__sk-line"></p-skeleton>
+          <p-skeleton height="14px" width="40%" styleClass="rl-card__sk-line"></p-skeleton>
+        </div>
       }
     </div>
+  } @else {
+    <div class="rl-grid">
+      @for (role of visibleRoles(); track role.id) {
+        <article class="rl-card"
+                 [ngClass]="cardColorClass(role.color)"
+                 [class.rl-card--expanded]="isExpanded(role.id)">
 
-    <div class="role-form__actions">
-      <button type="button" class="nas-secondary-btn"
-              (click)="dialogVisible = false" [disabled]="saving()">Cancel</button>
-      <button type="submit" class="nas-primary-btn" [disabled]="saving()">
-        @if (saving()) {
-          <i class="pi pi-spin pi-spinner"></i>
-        }
-        <span>{{ dialogMode === 'create' ? 'Create Role' : 'Save Changes' }}</span>
+          <!-- Card head -->
+          <header class="rl-card__head">
+            <div class="rl-card__icon-wrap">
+              <i class="pi pi-user rl-card__icon"></i>
+            </div>
+
+            <div class="rl-card__title-block">
+              <div class="rl-card__title-row">
+                <h3 class="rl-card__title">{{ role.name }}</h3>
+                @if (role.is_system) {
+                  <span class="rl-card__tag">System</span>
+                }
+              </div>
+              <p class="rl-card__desc">{{ role.description || '—' }}</p>
+            </div>
+
+            <div class="rl-card__head-actions">
+              <button type="button" class="rl-icon-btn"
+                      (click)="toggleMenu(role.id, $event)"
+                      [attr.aria-expanded]="menuOpenId() === role.id">
+                <i class="pi pi-ellipsis-v"></i>
+              </button>
+
+              @if (menuOpenId() === role.id) {
+                <div class="rl-card-menu" (click)="$event.stopPropagation()">
+                  <button type="button" (click)="goToEdit(role)">
+                    <i class="pi pi-pencil"></i> Edit
+                  </button>
+                  @if (!role.is_system) {
+                    <button type="button" class="rl-card-menu__danger"
+                            (click)="askDelete(role)">
+                      <i class="pi pi-trash"></i> Delete
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </header>
+
+          <!-- Card foot -->
+          <footer class="rl-card__foot">
+            <span class="rl-card__meta">
+              <i class="pi pi-users"></i>
+              {{ role.user_count }} {{ role.user_count === 1 ? 'user' : 'users' }}
+            </span>
+            <span class="rl-card__meta">
+              <i class="pi pi-eye"></i>
+              {{ role.view_count }}/{{ role.view_total }} sections visible
+            </span>
+
+            <div class="rl-progress" [ngClass]="badgeColorClass(role.color)">
+              <span class="rl-progress__bar" [style.width.%]="role.view_percentage"></span>
+            </div>
+
+            <button type="button" class="rl-icon-btn rl-icon-btn--chevron"
+                    (click)="toggleExpand(role.id, $event)"
+                    [attr.aria-expanded]="isExpanded(role.id)">
+              <i class="pi"
+                 [ngClass]="isExpanded(role.id) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+            </button>
+          </footer>
+
+          <!-- Expanded section pills -->
+          @if (isExpanded(role.id)) {
+            <div class="rl-card__expand">
+              @for (g of groupsForRole(role); track g.group.key) {
+                <div class="rl-card__group">
+                  <span class="rl-card__group-title">
+                    {{ g.group.label | uppercase }}
+                  </span>
+                  <div class="rl-card__group-pills">
+                    @for (item of g.visible; track item.key) {
+                      <span class="rl-card__pill"
+                            [ngClass]="badgeColorClass(role.color)">
+                        {{ item.label }}
+                      </span>
+                    }
+                    @if (g.hidden > 0) {
+                      <span class="rl-card__pill rl-card__pill--hidden">
+                        +{{ g.hidden }} hidden
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </article>
+      }
+
+      <!-- "Add New Role" empty card -->
+      <button type="button" class="rl-card rl-card--add" (click)="goToCreate()">
+        <i class="pi pi-plus rl-card--add__icon"></i>
+        <span class="rl-card--add__label">Add New Role</span>
       </button>
     </div>
-  </form>
-</p-dialog>
+  }
+</div>

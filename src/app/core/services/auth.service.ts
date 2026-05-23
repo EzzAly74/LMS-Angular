@@ -20,6 +20,34 @@ export class AuthService {
   readonly currentAdmin    = this._admin.asReadonly();
   readonly isAuthenticated = computed(() => !!this._token());
 
+  /**
+   * Distinct `view-*` permission keys the current admin holds.
+   * Sourced from the backend on login / `/me` refresh, materialised
+   * as a Set for O(1) lookups by the sidebar and route guard.
+   */
+  readonly viewKeys = computed<ReadonlySet<string>>(() => {
+    const admin = this._admin();
+    return new Set(admin?.view_keys ?? []);
+  });
+
+  /** True when the current admin holds the legacy `superAdmin` role. */
+  readonly isSuperAdmin = computed(() => !!this._admin()?.is_super_admin);
+
+  /**
+   * True when the current admin can access a permission-gated section.
+   *   - Super admins pass every check.
+   *   - Unprotected sections (`key` empty / null) are open to anyone
+   *     who has reached the layout.
+   *   - Otherwise the key must appear in `view_keys`.
+   *
+   * Synchronous & signal-safe — call freely from templates and guards.
+   */
+  hasView(key: string | null | undefined): boolean {
+    if (!key) return true;
+    if (this.isSuperAdmin()) return true;
+    return this.viewKeys().has(key);
+  }
+
   login(email: string, password: string): Observable<ApiResponse<{ token: string; admin: AuthAdmin }>> {
     return this.http
       .post<ApiResponse<{ token: string; admin: AuthAdmin }>>(API.AUTH.LOGIN, { email, password })

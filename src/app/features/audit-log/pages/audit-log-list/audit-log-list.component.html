@@ -1,72 +1,209 @@
+<p-toast />
+
+<!-- ═════════════════════════════════════════════════════════════════
+     INSTRUCTORS SUB-FILTER MODAL
+═══════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="Filter your results"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px' }"
+  [visible]="instructorModal().open"
+  (visibleChange)="closeInstructorModal()"
+  styleClass="nas-dialog al-filter-dialog">
+
+  <div class="al-modal-label">Instructors</div>
+
+  <div class="al-modal-search">
+    <i class="pi pi-search al-modal-search__icon"></i>
+    <input
+      type="text"
+      class="al-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="instructorModal().query"
+      (ngModelChange)="onInstructorQuery($event)" />
+  </div>
+
+  <div class="al-modal-list">
+    @for (item of filteredInstructorOptions(); track item.id) {
+      <label class="al-modal-row" [class.al-modal-row--selected]="isInstructorSelected(item.id)">
+        <input
+          type="checkbox"
+          [checked]="isInstructorSelected(item.id)"
+          (change)="toggleInstructorSelection(item.id)" />
+        <span class="al-modal-row__title">{{ item.name }}</span>
+      </label>
+    }
+    @if (!filteredInstructorOptions().length) {
+      <p class="al-modal-empty">No instructors match your search.</p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="al-btn al-btn--ghost" (click)="clearInstructorSelection()">
+      Clear
+    </button>
+    <button type="button" class="al-btn al-btn--primary" (click)="applyInstructorFilter()">
+      <i class="pi pi-filter"></i> Filter
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═════════════════════════════════════════════════════════════════
+     PAGE
+═══════════════════════════════════════════════════════════════════ -->
 <div class="nas-page-container">
-  <nas-page-header title="Audit Log" subtitle="Track all admin actions and system events">
-  </nas-page-header>
-  <div class="nas-card audit-table-card">
-    <div class="audit-toolbar">
-      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">From</label>
-      <p-calendar [(ngModel)]="dateFrom" [showIcon]="true" dateFormat="yy-mm-dd" placeholder="Start date"
-        (onSelect)="onDateChange()" [style]="{'width':'180px'}" styleClass="nas-calendar" />
-      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">To</label>
-      <p-calendar [(ngModel)]="dateTo" [showIcon]="true" dateFormat="yy-mm-dd" placeholder="End date"
-        (onSelect)="onDateChange()" [style]="{'width':'180px'}" styleClass="nas-calendar" />
-      @if (dateFrom || dateTo) {
-        <button type="button" class="clear-filter-btn" (click)="clearDates()">
-          <i class="pi pi-times"></i>Clear
-        </button>
+
+  <nas-page-header
+    title="Audit Log"
+    subtitle="Immutable record of all admin and instructor platform actions">
+    <button
+      type="button"
+      class="al-export-btn"
+      [disabled]="exporting() || loading()"
+      (click)="exportLog()">
+      @if (exporting()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      } @else {
+        <i class="pi pi-upload"></i>
       }
-    </div>
-    <div class="audit-table-wrap">
-      <table class="nas-table">
+      Export Log
+    </button>
+  </nas-page-header>
+
+  <!-- ── Search ─────────────────────────────────────────────── -->
+  <div class="al-search">
+    <i class="pi pi-search al-search__icon"></i>
+    <input
+      type="text"
+      class="al-search__input"
+      placeholder="Quick search..."
+      [ngModel]="search"
+      (ngModelChange)="onSearch($event)" />
+  </div>
+
+  <!-- ── Filter pills ───────────────────────────────────────── -->
+  <div class="al-pill-row">
+    <button
+      type="button"
+      class="al-pill"
+      [class.al-pill--active]="activeTab() === 'all'"
+      (click)="setTab('all')">
+      All
+    </button>
+
+    <button
+      type="button"
+      class="al-pill"
+      [class.al-pill--active]="activeTab() === 'admin'"
+      (click)="setTab('admin')">
+      Admin
+      <i class="pi pi-chevron-down"></i>
+    </button>
+
+    <button
+      type="button"
+      class="al-pill"
+      [class.al-pill--active]="activeTab() === 'instructor'"
+      (click)="openInstructorModal()">
+      Instructors
+      @if (instructorTabCount()) {
+        <span class="al-pill__count">{{ instructorTabCount() }}</span>
+      }
+      <i class="pi pi-chevron-down"></i>
+    </button>
+  </div>
+
+  <!-- ── Table card ─────────────────────────────────────────── -->
+  <div class="al-table-card">
+    <div class="al-table-wrap">
+      <table class="al-table">
         <thead>
           <tr>
-            <th>User</th>
+            <th>Timestamp</th>
+            <th>Actor</th>
             <th>Action</th>
-            <th>Description</th>
+            <th>Entity</th>
             <th>IP Address</th>
-            <th>Date</th>
           </tr>
         </thead>
         <tbody>
           @if (loading()) {
-            @for (s of skeletons; track s) {
+            @for (s of skeletonRows; track s) {
               <tr>
                 @for (c of [1,2,3,4,5]; track c) {
-                  <td><p-skeleton height="20px" /></td>
+                  <td><p-skeleton height="18px" /></td>
                 }
               </tr>
             }
+          } @else if (!items().length) {
+            <tr>
+              <td colspan="5" class="al-table__empty">
+                <i class="pi pi-shield"></i>
+                No audit log entries match the current filters.
+              </td>
+            </tr>
           } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td>
-                  <div class="nas-table__primary">{{ item.user_name || '—' }}</div>
-                  @if (item.user_type) {
-                    <div class="nas-table__muted">{{ item.user_type | titlecase }}</div>
-                  }
+            @for (row of items(); track row.id) {
+              <tr class="al-row">
+                <td class="al-cell-muted">
+                  {{ row.created_at | date:'dd MMM yyyy, HH:mm:ss' }}
                 </td>
-                <td><span class="audit-tag">{{ item.action }}</span></td>
-                <td style="max-width:350px;white-space:normal;">{{ item.description || '—' }}</td>
-                <td class="nas-table__muted" style="font-family:monospace;">{{ item.ip_address ?? '—' }}</td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy, HH:mm' }}</td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr>
-                <td colspan="5" class="nas-table__empty">No audit log entries found.</td>
+                <td>
+                  <div class="al-actor-cell">
+                    <span class="al-actor-cell__name">{{ row.actor_name }}</span>
+                    <span [class]="roleBadgeClass(row.actor_role)">
+                      {{ row.actor_role_label }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <span class="al-action-chip"
+                        [attr.title]="row.action_raw || (row.entity_token + ' ' + row.action_token)">
+                    @if (row.entity_token) {
+                      <span class="al-action-chip__entity">{{ row.entity_token }}</span>
+                      <i class="pi pi-arrow-right al-action-chip__sep"></i>
+                    }
+                    <span class="al-action-chip__verb">{{ row.action_token || row.action_raw }}</span>
+                  </span>
+                </td>
+                <td class="al-entity-cell">{{ row.entity || '—' }}</td>
+                <td class="al-cell-muted al-cell-mono">{{ row.ip_address || '—' }}</td>
               </tr>
             }
           }
         </tbody>
       </table>
     </div>
+
     @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+      <div class="al-pagination">
+        <span class="al-pagination__info">
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+        </span>
+        <div class="al-pagination__nav">
+          <button
+            type="button"
+            class="al-pagination__btn"
+            [disabled]="page === 1"
+            (click)="onPage(page - 1)">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+          <button
+            type="button"
+            class="al-pagination__btn"
+            [disabled]="page * perPage >= total()"
+            (click)="onPage(page + 1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
         </div>
       </div>
     }
   </div>
+
+  <!-- ── Footer disclosure (Figma) ──────────────────────────── -->
+  <p class="al-footnote">
+    Audit log entries are immutable and retained for 12 months per platform policy.
+  </p>
 </div>

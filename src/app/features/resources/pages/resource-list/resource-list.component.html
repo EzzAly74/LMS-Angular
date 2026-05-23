@@ -1,71 +1,135 @@
-<div class="nas-page-container">
+<div class="nas-page-container" (click)="closeMenu()">
 
   <nas-page-header
     title="Resources"
-    subtitle="Browse and manage learning resources">
+    subtitle="Learning materials and references available to all employees">
     <a routerLink="/admin/resources/add" class="nas-cta-btn">
       <i class="pi pi-plus-circle"></i>
-      Add Resource
+      New Resource
     </a>
   </nas-page-header>
 
-  <div class="nas-card res-table-card">
-    <div class="res-table-wrap">
-      <table class="nas-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Qualification</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (loading()) {
-            @for (s of skeletons; track s) {
-              <tr>@for (c of [1,2,3,4,5]; track c) { <td><p-skeleton height="20px" /></td> }</tr>
-            }
-          } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td>
-                  <div class="nas-table__primary">
-                    <i [class]="typeIcon(item.type)" style="color: var(--nas-color-text-muted); font-size: 14px;"></i>
-                    {{ item.title }}
-                  </div>
-                </td>
-                <td>
-                  <nas-status-badge [tone]="item.type === 'file' ? 'warning' : item.type === 'link' ? 'sky' : 'info'">
-                    {{ item.type | titlecase }}
-                  </nas-status-badge>
-                </td>
-                <td class="nas-table__muted">{{ item.qualification?.name ?? '—' }}</td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
-                <td class="nas-table__action">
-                  <a class="row-action-btn" [routerLink]="['/admin/resources', item.id]" title="View">
-                    <i class="pi pi-eye"></i>
-                  </a>
-                </td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr><td colspan="5" class="nas-table__empty">No resources found.</td></tr>
-            }
-          }
-        </tbody>
-      </table>
+  <!-- Filters -->
+  <div class="res-filters">
+    <div class="res-filters__search">
+      <i class="pi pi-search res-filters__search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="search"
+        (ngModelChange)="onSearchInput()"
+        placeholder="Search resources..."
+        class="res-filters__search-input"
+      />
     </div>
-
-    @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
-        </div>
-      </div>
-    }
+    <p-dropdown
+      [options]="typeFilterOptions"
+      [(ngModel)]="selectedType"
+      optionLabel="label"
+      optionValue="value"
+      (onChange)="onTypeChange()"
+      styleClass="res-type-filter"
+    />
   </div>
 
+  <!-- Resource list card -->
+  <div class="res-list-card">
+
+    @if (loading()) {
+      @for (s of skeletons; track s) {
+        <div class="res-row" [class.res-row--first]="$first">
+          <p-skeleton width="40px" height="40px" borderRadius="12px" />
+          <div class="res-row__body">
+            <p-skeleton width="55%" height="16px" />
+            <p-skeleton width="85%" height="13px" styleClass="mt-2" />
+            <p-skeleton width="28%" height="12px" styleClass="mt-2" />
+          </div>
+        </div>
+      }
+    } @else if (!items().length) {
+      <div class="res-empty">
+        <i class="pi pi-book res-empty__icon"></i>
+        <p>No resources found.</p>
+      </div>
+    } @else {
+      @for (item of items(); track item.id) {
+        <div class="res-row" [class.res-row--first]="$first">
+
+          <!-- Type icon -->
+          <div class="res-row__icon-wrap">
+            <i [class]="typeIcon(item.type)"></i>
+          </div>
+
+          <!-- Content -->
+          <div class="res-row__body">
+            <div class="res-row__header">
+              <span class="res-row__title">{{ item.title }}</span>
+              <span class="res-badge" [ngClass]="'res-badge--' + item.type">
+                {{ item.type | titlecase }}
+              </span>
+              @if (item.qualification?.name) {
+                <span class="res-badge res-badge--qual">{{ item.qualification!.name }}</span>
+              }
+            </div>
+            @if (item.content || item.url) {
+              <p class="res-row__desc">{{ item.content || item.url }}</p>
+            }
+            <p class="res-row__meta">
+              Added by <strong>{{ item.created_by_name || 'Admin' }}</strong>
+              &nbsp;&middot;&nbsp;{{ item.created_at | date:'dd MMM yyyy' }}
+            </p>
+          </div>
+
+          <!-- Kebab menu -->
+          <div class="res-menu-wrap" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="res-menu-btn"
+              [class.res-menu-btn--active]="openMenuId() === item.id"
+              (click)="toggleMenu(item.id, $event)"
+              [attr.aria-label]="'Options for ' + item.title"
+            >
+              <i class="pi pi-ellipsis-h"></i>
+            </button>
+            @if (openMenuId() === item.id) {
+              <div class="res-menu-dropdown">
+                <button type="button" class="res-menu-item" (click)="editResource(item.id)">
+                  <i class="pi pi-pencil"></i> Edit
+                </button>
+                <button
+                  type="button"
+                  class="res-menu-item res-menu-item--danger"
+                  [disabled]="deleting() === item.id"
+                  (click)="confirmDelete(item, $event)"
+                >
+                  <i class="pi pi-trash"></i> Delete
+                </button>
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+    }
+
+  </div>
+
+  <!-- Pagination -->
+  @if (total() > perPage) {
+    <div class="nas-table-pagination">
+      <span class="nas-table-pagination__info">
+        {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+      </span>
+      <div class="nas-table-pagination__nav">
+        <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
 </div>
+
+<p-confirmDialog />

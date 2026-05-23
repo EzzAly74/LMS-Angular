@@ -1,0 +1,174 @@
+<div class="nas-page-container">
+
+  <!-- Breadcrumbs -->
+  <div class="re-breadcrumbs">
+    <a routerLink="/admin/resources" class="re-breadcrumbs__link">
+      <i class="pi pi-book-open"></i>
+      Resources
+    </a>
+    <i class="pi pi-chevron-right re-breadcrumbs__sep"></i>
+    <span class="re-breadcrumbs__current">Edit Resource</span>
+  </div>
+
+  <!-- Page heading -->
+  <div class="re-heading">
+    <h1 class="re-heading__title">Edit Resource</h1>
+    <p class="re-heading__sub">Edit a learning resource for employees — article, external link, or file</p>
+  </div>
+
+  @if (loading()) {
+    <div class="re-layout">
+      <div class="re-card re-card--main">
+        <p-skeleton width="100%" height="44px" styleClass="mb-3" />
+        <p-skeleton width="100%" height="44px" styleClass="mb-3" />
+        <p-skeleton width="100%" height="44px" styleClass="mb-3" />
+        <p-skeleton width="100%" height="80px" />
+      </div>
+      <div class="re-card re-card--side">
+        <p-skeleton width="100%" height="44px" />
+      </div>
+    </div>
+  } @else if (!resource()) {
+    <div class="re-not-found">Resource not found.</div>
+  } @else {
+    <div class="re-layout">
+
+      <!-- Main form -->
+      <div class="re-card re-card--main">
+
+        <!-- Title -->
+        <div class="re-field">
+          <label class="re-field__label">Title <span class="re-field__req">*</span></label>
+          <input
+            type="text"
+            [(ngModel)]="form.title"
+            placeholder="Resource title"
+            class="re-input"
+          />
+        </div>
+
+        <!-- Resource Type -->
+        <div class="re-field">
+          <label class="re-field__label">Resource Type <span class="re-field__req">*</span></label>
+          <p-dropdown
+            [options]="typeOptions"
+            [(ngModel)]="form.type"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="re-dropdown"
+          />
+        </div>
+
+        <!-- Article: Description -->
+        @if (form.type === 'article') {
+          <div class="re-field">
+            <label class="re-field__label">Description (English)</label>
+            <textarea
+              [(ngModel)]="form.content"
+              placeholder="Brief description of this resource…"
+              rows="5"
+              class="re-textarea"
+            ></textarea>
+          </div>
+        }
+
+        <!-- Link: URL -->
+        @if (form.type === 'link') {
+          <div class="re-field">
+            <label class="re-field__label">URL <span class="re-field__req">*</span></label>
+            <input
+              type="url"
+              [(ngModel)]="form.url"
+              placeholder="https://…"
+              class="re-input"
+            />
+          </div>
+        }
+
+        <!-- File: Upload -->
+        @if (form.type === 'file') {
+          <div class="re-field">
+            <label class="re-field__label">Upload File</label>
+
+            @if (resource()?.file_name && !form.file) {
+              <div class="re-current-file">
+                <i class="pi pi-file re-current-file__icon"></i>
+                <span>{{ resource()!.file_name }}</span>
+                <a
+                  [href]="resource()!.file_path ?? '#'"
+                  target="_blank"
+                  rel="noopener"
+                  class="re-current-file__link"
+                >
+                  <i class="pi pi-external-link"></i> View
+                </a>
+              </div>
+            }
+
+            <label class="re-dropzone">
+              <i class="pi pi-upload re-dropzone__icon"></i>
+              <div class="re-dropzone__text">
+                <span>Drag &amp; drop or <strong class="re-dropzone__browse">browse file</strong></span>
+                <span class="re-dropzone__hint">PDF, DOCX, XLSX, PPTX · Max: 50 MB</span>
+              </div>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                class="re-dropzone__input"
+                (change)="onFileSelect($event)"
+              />
+            </label>
+
+            @if (form.file) {
+              <div class="re-file-selected">
+                <i class="pi pi-check-circle re-file-selected__icon"></i>
+                {{ form.file.name }}
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="re-card re-card--side">
+        <p class="re-side__heading">Publishing</p>
+
+        <!-- Qualification -->
+        <div class="re-field">
+          <label class="re-field__label">
+            Linked Qualification
+            <span class="re-field__opt">(optional)</span>
+          </label>
+          <p-dropdown
+            [options]="qualOptions()"
+            [(ngModel)]="form.qualification_skill_id"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Qualification"
+            [showClear]="true"
+            [filter]="true"
+            styleClass="re-dropdown"
+          />
+          <p class="re-side__hint">Surfaces this resource in the relevant qualification view</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="re-actions">
+          <button type="button" class="re-btn re-btn--cancel" (click)="cancel()">Cancel</button>
+          <button
+            type="button"
+            class="re-btn re-btn--save"
+            [disabled]="saving() || !form.title.trim()"
+            (click)="save()"
+          >
+            <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : 'pi-floppy-disk'"></i>
+            Save Changes
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

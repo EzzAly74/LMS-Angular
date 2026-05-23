@@ -27,7 +27,7 @@ The final result MUST be production-ready.
 ## Angular Frontend
 
 Path:
-D:\2b-source-code\2B-Academy-Angular
+F:\LMS-Angular
 
 Technology:
 
@@ -39,7 +39,7 @@ Technology:
 ## Laravel Backend
 
 Path:
-D:\2b-source-code\2B-Academy
+F:\Lms-Backend
 
 Technology:
 
@@ -78,71 +78,98 @@ NO partial implementations.
 
 Figma links:
 
-- Sidebar and Dashbard
+- Assignments
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=271-3965&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=271-3706&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-4716&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-5186&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=447-24950&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=447-25579&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=396-19925&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=447-26222&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=447-26850&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=407-22353&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=407-23398&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=407-22854&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=416-16637&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=416-17314&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=419-19565&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=418-18413&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=418-18043&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=416-17846&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=417-17016&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=418-18665&m=dev
 
-- Notifications
+- Quizes
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-5920&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-7512&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-8104&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-64242&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-63618&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-63930&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-62894&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-63256&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-60614&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-60908&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-61247&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-61541&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-61699&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-61857&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-62240&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-62142&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-62023&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-62338&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=452-62532&m=dev
 
-- Inbox
+- Ratings
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=272-4469&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=272-4779&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=272-5142&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=275-4256&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=420-21307&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=420-22086&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=420-23131&m=dev
 
-- Courses
+- Resources
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=276-5232&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-9057&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=281-9544&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=321-7349&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-22773&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=420-24055&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=420-24674&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=421-25070&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=424-19339&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=424-19691&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=424-20071&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=424-20353&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-23108&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-23409&m=dev
 
-- Course Details
+- Reports
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=313-13591&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=313-13836&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=321-6424&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=332-9988&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=332-10708&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=321-6791&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=322-8125&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=331-9547&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=425-21375&m=dev
 
-- Cohort
+- Users
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=342-11813&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=355-9951&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=355-10440&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=355-11010&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=359-13673&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=355-12084&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=355-12154&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=359-14227&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=355-12721&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25628&m=dev
 
-- Job Titles
+- Audit Log
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=359-14969&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-8735&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-10066&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=448-25629&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=450-29325&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=450-29773&m=dev
 
-- Qualifications
+- Roles
 
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-11514&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-9151&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-9633&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-10498&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-11792&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-12118&m=dev
-https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=364-12432&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-32814&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=450-31825&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-40638&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-33893&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-34772&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-35287&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-35787&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-36287&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-41533&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=451-42134&m=dev
 
 You MUST:
 
@@ -157,6 +184,7 @@ You MUST:
 - Inspect ALL transitions/animations
 - Inspect ALL modal/dialog behavior
 - Inspect ALL tables/forms/cards/layouts
+- Download ALL SVGs from figma dont use prime icons
 
 The Angular implementation MUST become visually equivalent to Figma.
 

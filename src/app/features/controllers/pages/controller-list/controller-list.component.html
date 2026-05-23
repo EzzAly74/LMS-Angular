@@ -1,77 +1,247 @@
-<p-confirmDialog />
+<p-toast />
+<p-confirmDialog styleClass="ctrl-confirm" />
 
+<!-- ═════════════════════════════════════════════════════════════════
+     ADD / EDIT CONTROLLER DIALOG
+═══════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="dialogMode() === 'create' ? 'Add Controller' : 'Edit Controller'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!saving()"
+  [style]="{ width: '520px' }"
+  [visible]="dialogOpen()"
+  (visibleChange)="closeDialog()"
+  styleClass="nas-dialog ctrl-form-dialog">
+
+  <form class="ctrl-form" (ngSubmit)="submit()" autocomplete="off">
+
+    <div class="ctrl-form__field">
+      <label>Full Name <span class="ctrl-form__req">*</span></label>
+      <input
+        type="text"
+        class="ctrl-input"
+        placeholder="e.g. Sarah Operator"
+        [ngModel]="form().name"
+        (ngModelChange)="updateForm('name', $event)"
+        name="name"
+        maxlength="255" />
+    </div>
+
+    <div class="ctrl-form__field">
+      <label>Email Address <span class="ctrl-form__req">*</span></label>
+      <input
+        type="email"
+        class="ctrl-input"
+        placeholder="e.g. name@2bacademy.com"
+        [ngModel]="form().email"
+        (ngModelChange)="updateForm('email', $event)"
+        name="email" />
+    </div>
+
+    <div class="ctrl-form__field">
+      <label>Role <span class="ctrl-form__req">*</span></label>
+
+      <div class="ctrl-select-wrap">
+        <select
+          class="ctrl-input ctrl-select"
+          [ngModel]="form().role"
+          (ngModelChange)="updateForm('role', $event)"
+          name="role">
+          <option value="" disabled>
+            {{ roleOptions().length ? 'Select a role' : 'Loading roles…' }}
+          </option>
+          @for (opt of roleOptions(); track opt.id) {
+            <option [value]="opt.machine_name">{{ roleLabel(opt) }}</option>
+          }
+        </select>
+        <i class="pi pi-chevron-down ctrl-select__chevron"></i>
+      </div>
+
+      @if (previewChip()) {
+        <span class="ctrl-badge"
+              [ngClass]="badgeColorClass(previewChip()!.color)">
+          <span class="ctrl-badge__dot"></span>
+          {{ previewChip()!.name }}
+        </span>
+      }
+    </div>
+
+    <div class="ctrl-form__field">
+      <label>
+        Password
+        @if (dialogMode() === 'edit') {
+          <span class="ctrl-form__hint">(leave blank to keep current)</span>
+        } @else {
+          <span class="ctrl-form__req">*</span>
+        }
+      </label>
+      <div class="ctrl-pwd-wrap">
+        <input
+          [type]="showPwd() ? 'text' : 'password'"
+          class="ctrl-input"
+          autocomplete="new-password"
+          placeholder="At least 8 characters"
+          [ngModel]="form().password"
+          (ngModelChange)="updateForm('password', $event)"
+          name="password"
+          [required]="dialogMode() === 'create'"
+          minlength="8" />
+        <button type="button" class="ctrl-pwd-toggle"
+                (click)="togglePwd()"
+                [attr.aria-label]="showPwd() ? 'Hide password' : 'Show password'">
+          <i class="pi" [ngClass]="showPwd() ? 'pi-eye-slash' : 'pi-eye'"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="ctrl-form__field">
+      <label>Confirm Password</label>
+      <div class="ctrl-pwd-wrap">
+        <input
+          [type]="showConfirm() ? 'text' : 'password'"
+          class="ctrl-input"
+          autocomplete="new-password"
+          placeholder="Re-enter the password"
+          [ngModel]="form().password_confirmation"
+          (ngModelChange)="updateForm('password_confirmation', $event)"
+          name="password_confirmation"
+          [required]="dialogMode() === 'create' || !!form().password" />
+        <button type="button" class="ctrl-pwd-toggle"
+                (click)="toggleConfirm()"
+                [attr.aria-label]="showConfirm() ? 'Hide password' : 'Show password'">
+          <i class="pi" [ngClass]="showConfirm() ? 'pi-eye-slash' : 'pi-eye'"></i>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="ctrl-btn ctrl-btn--ghost"
+            [disabled]="saving()" (click)="closeDialog()">
+      Cancel
+    </button>
+    <button type="button" class="ctrl-btn ctrl-btn--primary"
+            [disabled]="saving()" (click)="submit()">
+      @if (saving()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      } @else {
+        <i class="pi pi-check-circle"></i>
+      }
+      {{ dialogMode() === 'create' ? 'Create Controller' : 'Save Changes' }}
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═════════════════════════════════════════════════════════════════
+     PAGE
+═══════════════════════════════════════════════════════════════════ -->
 <div class="nas-page-container">
 
   <nas-page-header
     title="Controllers"
-    subtitle="Manage portal administrators and their assigned roles">
+    subtitle="Manage portal administrators and the roles they operate under.">
+    <button type="button" class="ctrl-add-btn" (click)="openCreate()">
+      <i class="pi pi-plus"></i> Add Controller
+    </button>
   </nas-page-header>
 
-  <div class="nas-card controller-table-card">
+  <!-- ── Search ────────────────────────────────────────────── -->
+  <div class="ctrl-search">
+    <i class="pi pi-search ctrl-search__icon"></i>
+    <input
+      type="text"
+      class="ctrl-search__input"
+      placeholder="Search controllers by name or email…"
+      (input)="onSearch($any($event.target).value)" />
+  </div>
 
-    <div class="controller-toolbar">
-      <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
-        <input
-          type="text"
-          class="nas-search__input"
-          placeholder="Search controllers..."
-          (input)="onSearch($any($event.target).value)"
-        />
-      </div>
-
-      <button type="button" class="nas-primary-btn" (click)="openCreate()">
-        <i class="pi pi-plus"></i>
-        <span>Add Controller</span>
-      </button>
-    </div>
-
-    <div class="controller-table-wrap">
-      <table class="nas-table">
+  <!-- ── Table card ─────────────────────────────────────────── -->
+  <div class="ctrl-card">
+    <div class="ctrl-table-wrap">
+      <table class="ctrl-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Created</th>
-            <th></th>
+            <th>Controller</th>
+            <th>Role</th>
+            <th>Date Added</th>
+            <th class="ctrl-table__th--actions"></th>
           </tr>
         </thead>
+
         <tbody>
           @if (loading()) {
             @for (s of skeletons; track s) {
               <tr>
-                @for (c of [1, 2, 3, 4]; track c) {
-                  <td><p-skeleton height="20px" /></td>
-                }
-              </tr>
-            }
-          } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">
-                  <div class="user-cell">
-                    <span class="user-cell__avatar">{{ initial(item.name) }}</span>
-                    <span class="user-cell__name">{{ item.name }}</span>
+                <td>
+                  <div class="ctrl-user-cell">
+                    <p-skeleton shape="circle" size="32px" />
+                    <div class="ctrl-user-cell__col">
+                      <p-skeleton height="14px" width="140px" />
+                      <p-skeleton height="11px" width="180px" styleClass="ctrl-sk-second" />
+                    </div>
                   </div>
                 </td>
-                <td class="nas-table__muted">{{ item.email }}</td>
-                <td class="nas-table__muted">
+                <td><p-skeleton height="22px" width="90px" /></td>
+                <td><p-skeleton height="14px" width="100px" /></td>
+                <td><p-skeleton height="24px" width="64px" /></td>
+              </tr>
+            }
+          } @else if (!hasRows()) {
+            <tr>
+              <td colspan="4" class="ctrl-table__empty">
+                <i class="pi pi-users ctrl-table__empty-icon"></i>
+                <strong>No controllers found</strong>
+                <span>Try adjusting your search, or add a new controller.</span>
+              </td>
+            </tr>
+          } @else {
+            @for (item of items(); track item.id) {
+              <tr class="ctrl-table__row">
+                <td>
+                  <div class="ctrl-user-cell">
+                    <span class="ctrl-user-cell__avatar"
+                          [ngClass]="badgeColorClass(item.role_chip?.color)">
+                      {{ initial(item.name) }}
+                    </span>
+                    <div class="ctrl-user-cell__col">
+                      <span class="ctrl-user-cell__name">{{ item.name }}</span>
+                      <span class="ctrl-user-cell__email">{{ item.email }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  @if (item.role_chip) {
+                    <span class="ctrl-badge"
+                          [ngClass]="badgeColorClass(item.role_chip.color)">
+                      <span class="ctrl-badge__dot"></span>
+                      {{ item.role_chip.name }}
+                    </span>
+                  } @else {
+                    <span class="ctrl-badge ctrl-badge--muted">
+                      <span class="ctrl-badge__dot"></span>
+                      Unassigned
+                    </span>
+                  }
+                </td>
+
+                <td class="ctrl-table__muted">
                   {{ item.created_at ? (item.created_at | date:'dd MMM yyyy') : '—' }}
                 </td>
-                <td class="nas-table__action">
-                  <button type="button" class="row-action-btn row-action-btn--edit" title="Edit"
-                          (click)="openEdit(item)">
+
+                <td class="ctrl-table__actions">
+                  <button type="button" class="ctrl-icon-btn"
+                          title="Edit" (click)="openEdit(item)">
                     <i class="pi pi-pencil"></i>
                   </button>
-                  <button type="button" class="row-action-btn row-action-btn--delete" title="Delete"
-                          (click)="confirmDelete(item)">
+                  <button type="button" class="ctrl-icon-btn ctrl-icon-btn--danger"
+                          title="Delete" (click)="askDelete(item)">
                     <i class="pi pi-trash"></i>
                   </button>
                 </td>
               </tr>
-            }
-            @if (!items().length) {
-              <tr><td colspan="4" class="nas-table__empty">No controllers found.</td></tr>
             }
           }
         </tbody>
@@ -79,16 +249,16 @@
     </div>
 
     @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">
+      <div class="ctrl-pagination">
+        <span class="ctrl-pagination__info">
           {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
         </span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn"
+        <div class="ctrl-pagination__nav">
+          <button type="button" class="ctrl-icon-btn"
                   [disabled]="page === 1" (click)="onPage(page - 1)">
             <i class="pi pi-chevron-left"></i>
           </button>
-          <button type="button" class="nas-table-pagination__btn"
+          <button type="button" class="ctrl-icon-btn"
                   [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
             <i class="pi pi-chevron-right"></i>
           </button>
@@ -96,78 +266,4 @@
       </div>
     }
   </div>
-
 </div>
-
-<p-dialog
-  [(visible)]="dialogVisible"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [closeOnEscape]="!saving()"
-  [closable]="!saving()"
-  [style]="{ width: '480px' }"
-  styleClass="controller-dialog"
-  [header]="dialogMode === 'create' ? 'Add Controller' : 'Edit Controller'">
-
-  <form class="controller-form" (ngSubmit)="save()" #f="ngForm">
-
-    <div class="controller-form__field">
-      <label for="ctrl-name">Name</label>
-      <input id="ctrl-name" type="text" class="nas-input"
-             name="name" [(ngModel)]="form.name" required maxlength="255" />
-    </div>
-
-    <div class="controller-form__field">
-      <label for="ctrl-email">Email</label>
-      <input id="ctrl-email" type="email" class="nas-input"
-             name="email" [(ngModel)]="form.email" required />
-    </div>
-
-    <div class="controller-form__field">
-      <label for="ctrl-role">Role</label>
-      <p-dropdown
-        inputId="ctrl-role"
-        name="role"
-        [options]="roleOptions()"
-        [(ngModel)]="form.role"
-        optionLabel="name"
-        optionValue="name"
-        placeholder="Select a role"
-        appendTo="body"
-        [filter]="true"
-        styleClass="controller-form__dropdown">
-      </p-dropdown>
-    </div>
-
-    <div class="controller-form__field">
-      <label for="ctrl-password">
-        Password
-        @if (dialogMode === 'edit') {
-          <span class="controller-form__hint">(leave blank to keep current)</span>
-        }
-      </label>
-      <input id="ctrl-password" type="password" class="nas-input" autocomplete="new-password"
-             name="password" [(ngModel)]="form.password"
-             [required]="dialogMode === 'create'" minlength="8" />
-    </div>
-
-    <div class="controller-form__field">
-      <label for="ctrl-password-confirm">Confirm Password</label>
-      <input id="ctrl-password-confirm" type="password" class="nas-input" autocomplete="new-password"
-             name="password_confirmation" [(ngModel)]="form.password_confirmation"
-             [required]="dialogMode === 'create' || !!form.password" />
-    </div>
-
-    <div class="controller-form__actions">
-      <button type="button" class="nas-secondary-btn"
-              (click)="dialogVisible = false" [disabled]="saving()">Cancel</button>
-      <button type="submit" class="nas-primary-btn" [disabled]="saving()">
-        @if (saving()) {
-          <i class="pi pi-spin pi-spinner"></i>
-        }
-        <span>{{ dialogMode === 'create' ? 'Create' : 'Save' }}</span>
-      </button>
-    </div>
-  </form>
-</p-dialog>

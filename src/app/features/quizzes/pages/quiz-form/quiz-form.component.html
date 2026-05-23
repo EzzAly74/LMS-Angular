@@ -1,0 +1,368 @@
+<p-toast position="bottom-right" />
+
+<div class="nas-page-container">
+
+  <!-- ── Breadcrumb + title bar ──────────────────────────────── -->
+  <div class="qf-breadcrumb">
+    <a routerLink="/admin/quizzes" class="qf-breadcrumb__link">
+      <i class="pi pi-book"></i> Quizzes
+    </a>
+    <i class="pi pi-angle-right qf-breadcrumb__sep"></i>
+    <span class="qf-breadcrumb__current">
+      {{ quizId() ? 'Edit Quiz' : 'Create Quiz' }}
+    </span>
+  </div>
+
+  <div class="qf-titlebar">
+    <h1 class="qf-title">{{ quizId() ? 'Edit Quiz' : 'Generate Quiz' }}</h1>
+    <div class="qf-titlebar__actions">
+      <button type="button" class="qf-btn qf-btn--ghost" (click)="cancel()">Cancel</button>
+      <button
+        type="button"
+        class="qf-btn qf-btn--primary"
+        [disabled]="!canPublish() || saving()"
+        (click)="publish()">
+        @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
+        @else { <i class="pi pi-send"></i> }
+        {{ quizId() ? 'Save Changes' : 'Publish Quiz' }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="nas-card qf-card qf-loading">
+      @for (s of [1,2,3,4,5]; track s) {
+        <p-skeleton height="20px" styleClass="qf-loading__row" />
+      }
+    </div>
+  } @else {
+
+  <div class="qf-layout">
+
+    <!-- ── Left column (form) ───────────────────────────────── -->
+    <form [formGroup]="form" class="qf-form" novalidate>
+
+      <!-- ── General card ─────────────────────────────────── -->
+      <div class="nas-card qf-card">
+        <h2 class="qf-card__title">General</h2>
+
+        <div class="qf-field">
+          <label class="qf-label">Quiz title (English) <span class="qf-req">*</span></label>
+          <input
+            type="text"
+            formControlName="title"
+            class="qf-input"
+            placeholder="e.g. Safety readiness assessment" />
+          @if (form.controls.title.touched && form.controls.title.invalid) {
+            <span class="qf-err">Title is required.</span>
+          }
+        </div>
+
+        <div class="qf-field">
+          <label class="qf-label">Quiz title (Arabic)</label>
+          <input
+            type="text"
+            formControlName="title_ar"
+            class="qf-input"
+            dir="rtl"
+            placeholder="مثال: تقييم الجاهزية للسلامة" />
+        </div>
+
+        <div class="qf-field">
+          <label class="qf-label">Course <span class="qf-req">*</span></label>
+          <p-dropdown
+            formControlName="course_id"
+            [options]="courses()"
+            optionLabel="title"
+            optionValue="id"
+            placeholder="Select a course"
+            styleClass="qf-dropdown"
+            [style]="{'width':'100%'}" />
+          @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
+            <span class="qf-err">Course is required.</span>
+          }
+        </div>
+
+        <div class="qf-field">
+          <label class="qf-label">Cohort scope <span class="qf-req">*</span></label>
+          <p-dropdown
+            formControlName="cohort_scope"
+            [options]="scopeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select cohort scope"
+            styleClass="qf-dropdown"
+            [style]="{'width':'100%'}" />
+        </div>
+
+        @if (form.controls.cohort_scope.value === 'specific') {
+          <div class="qf-field">
+            <label class="qf-label">Cohorts <span class="qf-req">*</span></label>
+            @if (cohortsLoading()) {
+              <p class="qf-hint">Loading cohorts…</p>
+            } @else if (!cohorts().length) {
+              <p class="qf-hint">No cohorts available for this course.</p>
+            } @else {
+              <div class="qf-cohort-list">
+                @for (cohort of cohorts(); track cohort.id) {
+                  <label class="qf-checkbox">
+                    <input
+                      type="checkbox"
+                      [checked]="isCohortSelected(cohort.id)"
+                      (change)="toggleCohort(cohort.id)" />
+                    <span>{{ cohort.title || ('Cohort #' + cohort.id) }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <div class="qf-field">
+          <label class="qf-label">Due date</label>
+          <input
+            type="date"
+            formControlName="due_date"
+            class="qf-input"
+            placeholder="DD/MM/YYYY" />
+        </div>
+
+        <div class="qf-field">
+          <label class="qf-label">Learner instructions (English)</label>
+          <textarea
+            formControlName="instructions_en"
+            rows="3"
+            class="qf-textarea"
+            placeholder="Explain what learners should complete before submitting."></textarea>
+        </div>
+
+        <div class="qf-field">
+          <label class="qf-label">Learner instructions (Arabic)</label>
+          <textarea
+            formControlName="instructions_ar"
+            rows="3"
+            class="qf-textarea"
+            dir="rtl"
+            placeholder="اشرح للمستخدمين ما يجب إكماله قبل التسليم."></textarea>
+        </div>
+      </div>
+
+      <!-- ── Questions card ───────────────────────────────── -->
+      <div class="nas-card qf-card">
+        <div class="qf-card__header">
+          <h2 class="qf-card__title">Questions</h2>
+          <button type="button" class="qf-btn qf-btn--primary qf-btn--sm" (click)="addQuestion()">
+            <i class="pi pi-plus-circle"></i> Add Question
+          </button>
+        </div>
+
+        @for (q of questions.controls; track $index; let i = $index) {
+          <div class="qf-question" [formGroup]="q">
+            <div class="qf-question__head">
+              <div class="qf-question__num">{{ i + 1 }}</div>
+              @if (questions.length > 1) {
+                <button type="button" class="qf-question__remove" (click)="removeQuestion(i)">
+                  <i class="pi pi-minus-circle"></i> Remove
+                </button>
+              }
+            </div>
+
+            <div class="qf-row qf-row--cols2">
+              <div class="qf-field">
+                <label class="qf-label">Question (English) <span class="qf-req">*</span></label>
+                <input
+                  type="text"
+                  formControlName="question_en"
+                  class="qf-input"
+                  placeholder="Question" />
+              </div>
+              <div class="qf-field">
+                <label class="qf-label">Question (Arabic)</label>
+                <input
+                  type="text"
+                  formControlName="question_ar"
+                  class="qf-input"
+                  dir="rtl"
+                  placeholder="سؤال" />
+              </div>
+            </div>
+
+            <div class="qf-row qf-row--cols2">
+              <div class="qf-field">
+                <label class="qf-label">Type <span class="qf-req">*</span></label>
+                <p-dropdown
+                  [options]="questionTypeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="questionType(i)"
+                  [ngModelOptions]="{ standalone: true }"
+                  (onChange)="changeQuestionType(i, $event.value)"
+                  styleClass="qf-dropdown"
+                  [style]="{'width':'100%'}" />
+              </div>
+              <div class="qf-field">
+                <label class="qf-label">Score <span class="qf-req">*</span></label>
+                <input
+                  type="number"
+                  formControlName="score"
+                  min="0"
+                  class="qf-input" />
+              </div>
+            </div>
+
+            <!-- ── MCQ / Reorder options ──────────────────── -->
+            @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
+              <div class="qf-field">
+                <label class="qf-label">
+                  @if (questionType(i) === 'mcq') { MCQ Options (English) }
+                  @else { Items to reorder (English) }
+                  <span class="qf-req">*</span>
+                </label>
+                <div class="qf-options" formArrayName="options_en">
+                  @for (opt of optionsEn(i).controls; track $index; let j = $index) {
+                    <div class="qf-option-row">
+                      <input
+                        type="text"
+                        [formControlName]="j"
+                        class="qf-input"
+                        [placeholder]="(questionType(i) === 'mcq' ? 'Option ' : 'Order ') + (j + 1)" />
+                      @if (optionsEn(i).length > 2) {
+                        <button type="button" class="qf-option-remove" (click)="removeOption(i, 'en', j)">
+                          <i class="pi pi-times"></i>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+                <button type="button" class="qf-option-add" (click)="addOption(i, 'en')">
+                  <i class="pi pi-plus-circle"></i> Add Option
+                </button>
+              </div>
+
+              <div class="qf-field">
+                <label class="qf-label">
+                  @if (questionType(i) === 'mcq') { MCQ Options (Arabic) }
+                  @else { Items to reorder (Arabic) }
+                </label>
+                <div class="qf-options" formArrayName="options_ar">
+                  @for (opt of optionsAr(i).controls; track $index; let j = $index) {
+                    <div class="qf-option-row">
+                      <input
+                        type="text"
+                        [formControlName]="j"
+                        class="qf-input"
+                        dir="rtl"
+                        [placeholder]="(questionType(i) === 'mcq' ? 'خيار ' : 'ترتيب ') + (j + 1)" />
+                      @if (optionsAr(i).length > 2) {
+                        <button type="button" class="qf-option-remove" (click)="removeOption(i, 'ar', j)">
+                          <i class="pi pi-times"></i>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+                <button type="button" class="qf-option-add" (click)="addOption(i, 'ar')">
+                  <i class="pi pi-plus-circle"></i> إضافة خيار
+                </button>
+              </div>
+            }
+
+            <!-- ── Correct answer / grading key ────────────────── -->
+            @if (questionType(i) !== 'open') {
+              <div class="qf-row qf-row--cols2">
+                <div class="qf-field">
+                  <label class="qf-label">
+                    @if (questionType(i) === 'reorder') { Correct order (English) }
+                    @else { Correct answer / grading key (English) }
+                    <span class="qf-req">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="correct_answer_en"
+                    class="qf-input"
+                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : 'Answer'" />
+                </div>
+                <div class="qf-field">
+                  <label class="qf-label">
+                    @if (questionType(i) === 'reorder') { Correct order (Arabic) }
+                    @else { Correct answer / grading key (Arabic) }
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="correct_answer_ar"
+                    class="qf-input"
+                    dir="rtl"
+                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : 'الإجابة'" />
+                </div>
+              </div>
+            }
+
+            <div class="qf-row qf-row--cols2">
+              <div class="qf-field">
+                <label class="qf-label">Explanation for learner feedback (English)</label>
+                <textarea
+                  formControlName="explanation_en"
+                  rows="2"
+                  class="qf-textarea"
+                  placeholder="Optional explanation shown after grading"></textarea>
+              </div>
+              <div class="qf-field">
+                <label class="qf-label">Explanation for learner feedback (Arabic)</label>
+                <textarea
+                  formControlName="explanation_ar"
+                  rows="2"
+                  class="qf-textarea"
+                  dir="rtl"
+                  placeholder="شرح اختياري يظهر بعد التصحيح"></textarea>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+    </form>
+
+    <!-- ── Right sidebar (publish summary) ──────────────────── -->
+    <aside class="qf-sidebar">
+      <div class="nas-card qf-summary">
+        <h3 class="qf-summary__title">PUBLISH SUMMARY</h3>
+
+        <div class="qf-summary__row">
+          <span class="qf-summary__label">Scope</span>
+          <nas-status-badge [tone]="scopePillTone(form.controls.cohort_scope.value)">
+            {{ scopeLabel(form.controls.cohort_scope.value) }}
+          </nas-status-badge>
+        </div>
+
+        <div class="qf-summary__row">
+          <span class="qf-summary__label">Questions</span>
+          <span class="qf-summary__value">{{ questionCount() }}</span>
+        </div>
+
+        <div class="qf-summary__row">
+          <span class="qf-summary__label">Total score</span>
+          <span class="qf-summary__value qf-summary__value--large">{{ totalScore() }}</span>
+        </div>
+
+        <div class="qf-summary__row qf-summary__row--col">
+          <label class="qf-label" for="passScore">Pass score</label>
+          <input
+            id="passScore"
+            type="number"
+            class="qf-input"
+            min="0"
+            [max]="totalScore()"
+            [formControl]="form.controls.pass_score" />
+        </div>
+      </div>
+
+      <div class="qf-rule">
+        <h4 class="qf-rule__title">Business rule</h4>
+        <p>Quizzes are published directly to learners once the answer keys and scores are complete.</p>
+      </div>
+    </aside>
+
+  </div>
+
+  }
+</div>

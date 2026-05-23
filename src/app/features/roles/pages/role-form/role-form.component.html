@@ -1,0 +1,244 @@
+<p-toast />
+
+<div class="nas-page-container rf-page">
+
+  <!-- ── Breadcrumb + title ─────────────────────────────────── -->
+  <header class="rf-header">
+    <nav class="rf-breadcrumb" aria-label="breadcrumb">
+      <i class="pi pi-shield rf-breadcrumb__icon"></i>
+      <a [routerLink]="['/admin/roles']">Roles</a>
+      <i class="pi pi-chevron-right rf-breadcrumb__sep"></i>
+      <span>{{ mode() === 'create' ? 'Create Role' : 'Edit Role' }}</span>
+    </nav>
+
+    <div class="rf-header__row">
+      <div>
+        <h1 class="rf-header__title">
+          {{ mode() === 'create' ? 'Create Role' : 'Edit Role' }}
+        </h1>
+        <p class="rf-header__sub">
+          Name the role and choose the dashboard views it can access.
+        </p>
+      </div>
+
+      <div class="rf-header__actions">
+        <button type="button" class="rf-btn rf-btn--ghost"
+                [disabled]="saving()"
+                (click)="cancel()">
+          Cancel
+        </button>
+        <button type="button" class="rf-btn rf-btn--primary"
+                [disabled]="!canSubmit()"
+                (click)="submit()">
+          @if (saving()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else {
+            <i class="pi pi-check-circle"></i>
+          }
+          {{ mode() === 'create' ? 'Create Role' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 2-column layout ─────────────────────────────────────── -->
+  <div class="rf-layout">
+
+    <!-- ── LEFT (form) ──────────────────────────────────────── -->
+    <div class="rf-main">
+
+      <!-- Role Identity card -->
+      <section class="rf-card">
+        <header class="rf-card__head">
+          <h2 class="rf-card__title">Role Identity</h2>
+          <p class="rf-card__sub">
+            Keep the role clear enough for admins to assign it confidently.
+          </p>
+        </header>
+
+        <div class="rf-card__body">
+          <div class="rf-field-grid">
+            <div class="rf-field">
+              <label>Role Name (English) <span class="rf-req">*</span></label>
+              <input type="text"
+                     class="rf-input"
+                     placeholder="e.g. Compliance Viewer"
+                     [ngModel]="form().name_en"
+                     (ngModelChange)="updateField('name_en', $event)"
+                     name="name_en" />
+            </div>
+
+            <div class="rf-field">
+              <label>Description (English) <span class="rf-opt">optional</span></label>
+              <input type="text"
+                     class="rf-input"
+                     placeholder="What this role is for"
+                     [ngModel]="form().description_en"
+                     (ngModelChange)="updateField('description_en', $event)"
+                     name="description_en" />
+            </div>
+
+            <div class="rf-field">
+              <label>Role Name (Arabic) <span class="rf-req">*</span></label>
+              <input type="text"
+                     class="rf-input"
+                     dir="rtl"
+                     placeholder="مثال: مراجع الامتثال"
+                     [ngModel]="form().name_ar"
+                     (ngModelChange)="updateField('name_ar', $event)"
+                     name="name_ar" />
+            </div>
+
+            <div class="rf-field">
+              <label>Description (Arabic) <span class="rf-opt">optional</span></label>
+              <input type="text"
+                     class="rf-input"
+                     dir="rtl"
+                     placeholder="ما الغرض من هذا الدور"
+                     [ngModel]="form().description_ar"
+                     (ngModelChange)="updateField('description_ar', $event)"
+                     name="description_ar" />
+            </div>
+          </div>
+
+          <!-- Role color + Badge preview -->
+          <div class="rf-color-row">
+            <div class="rf-color-row__col">
+              <h3 class="rf-color-row__title">Role Color</h3>
+              <p class="rf-color-row__sub">Used on role badges and quick summaries.</p>
+
+              <div class="rf-swatches">
+                @for (c of colors; track c) {
+                  <button type="button"
+                          class="rf-swatch"
+                          [ngClass]="swatchClass(c)"
+                          [class.rf-swatch--active]="form().color === c"
+                          [attr.aria-label]="c"
+                          (click)="pickColor(c)">
+                    @if (form().color === c) {
+                      <i class="pi pi-check"></i>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="rf-color-row__preview">
+              <span class="rf-preview-label">Badge preview</span>
+              <span class="rf-badge" [ngClass]="badgePreviewClass()">
+                {{ form().name_en.trim() || 'New Role' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Views card -->
+      <section class="rf-card">
+        <header class="rf-card__head rf-card__head--row">
+          <div>
+            <h2 class="rf-card__title">Dashboard Views</h2>
+            <p class="rf-card__sub">
+              Choose the pages this role can view in the dashboard.
+            </p>
+          </div>
+
+          <div class="rf-card__head-actions">
+            <button type="button" class="rf-link" (click)="selectAll()">Select all views</button>
+            <button type="button" class="rf-link rf-link--muted" (click)="clearAll()">Clear all views</button>
+          </div>
+        </header>
+
+        <div class="rf-card__body">
+          <!-- Status row -->
+          <div class="rf-status"
+               [class.rf-status--warning]="noneSelected()"
+               [class.rf-status--success]="!noneSelected()">
+            <i class="pi" [ngClass]="noneSelected() ? 'pi-exclamation-triangle' : 'pi-check-circle'"></i>
+            <div>
+              <strong>{{ selectedCount() }} of {{ totalViews() }} dashboard views selected</strong>
+              <p>
+                @if (noneSelected()) {
+                  New roles start with no access until views are checked.
+                } @else {
+                  Members of this role will be able to access the checked views.
+                }
+              </p>
+            </div>
+          </div>
+
+          @if (catalogLoading()) {
+            <div class="rf-skeleton-block">
+              <p-skeleton height="48px" styleClass="rf-skeleton-block__line"></p-skeleton>
+              <p-skeleton height="48px" styleClass="rf-skeleton-block__line"></p-skeleton>
+              <p-skeleton height="48px" styleClass="rf-skeleton-block__line"></p-skeleton>
+            </div>
+          } @else {
+            @for (g of groupCounts(); track g.group.key) {
+              <div class="rf-group">
+                <header class="rf-group__head">
+                  <span class="rf-group__title">{{ g.group.label }}</span>
+                  <span class="rf-group__count">{{ g.selected }} / {{ g.total }}</span>
+
+                  <div class="rf-group__actions">
+                    <button type="button" class="rf-link"
+                            (click)="selectGroup(g.group.items)">Select Group</button>
+                    <button type="button" class="rf-link rf-link--muted"
+                            (click)="clearGroup(g.group.items)">Clear Group</button>
+                  </div>
+                </header>
+
+                <div class="rf-checkbox-grid">
+                  @for (item of g.group.items; track item.key) {
+                    <label class="rf-checkbox-row"
+                           [class.rf-checkbox-row--checked]="isSelected(item.key)">
+                      <input type="checkbox"
+                             [checked]="isSelected(item.key)"
+                             (change)="toggle(item.key)" />
+                      <span class="rf-checkbox-row__label">{{ item.label }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- ── RIGHT (sticky summary) ──────────────────────────── -->
+    <aside class="rf-summary">
+      <span class="rf-summary__eyebrow">Role Summary</span>
+      <h2 class="rf-summary__title">{{ form().name_en.trim() || 'New Role' }}</h2>
+      <p class="rf-summary__desc">
+        {{ form().description_en.trim() || 'No description added yet.' }}
+      </p>
+
+      <div class="rf-summary__status"
+           [class.rf-summary__status--warning]="noneSelected()"
+           [class.rf-summary__status--success]="!noneSelected()">
+        <strong>{{ selectedCount() }} dashboard views selected</strong>
+        @if (noneSelected()) {
+          <p>This role has no dashboard access until you check at least one view.</p>
+        } @else {
+          <p>Members of this role can access {{ selectedCount() }} of {{ totalViews() }} dashboard pages.</p>
+        }
+      </div>
+
+      <div class="rf-summary__groups">
+        @for (g of groupCounts(); track g.group.key) {
+          <div class="rf-summary__group">
+            <div class="rf-summary__group-head">
+              <span class="rf-summary__group-label">{{ g.group.label }}</span>
+              <span class="rf-summary__group-count">{{ g.selected }}/{{ g.total }}</span>
+            </div>
+            <div class="rf-progress" [ngClass]="badgePreviewClass()">
+              <span class="rf-progress__bar"
+                    [style.width.%]="g.total > 0 ? (g.selected / g.total) * 100 : 0"></span>
+            </div>
+          </div>
+        }
+      </div>
+    </aside>
+  </div>
+</div>

@@ -25,7 +25,7 @@
 
     <!-- Nav -->
     <nav class="nas-sidebar__nav">
-      @for (group of navGroups; track group.label) {
+      @for (group of navGroups(); track group.label) {
       <div class="nas-nav-group">
         @if (!sidebarCollapsed()) {
         <div class="nas-nav-group__label">{{ group.label | translate }}</div>
@@ -70,11 +70,11 @@
     <!-- Footer profile -->
     <div class="nas-sidebar__footer">
       <div class="nas-profile">
-        <div class="nas-profile__avatar">A</div>
+        <div class="nas-profile__avatar">{{ profileInitial() }}</div>
         @if (!sidebarCollapsed()) {
         <div class="nas-profile__meta">
           <div class="nas-profile__hello">{{ 'nav.welcome_back' | translate }}</div>
-          <div class="nas-profile__name">Admin</div>
+          <div class="nas-profile__name">{{ profileName() }}</div>
         </div>
         <button class="nas-profile__logout" (click)="auth.logout()" [title]="'nav.logout' | translate">
           <i class="pi pi-sign-out"></i>

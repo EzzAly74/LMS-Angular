@@ -12,6 +12,11 @@ export const RESOURCES_ROUTES: Routes = [
     title: 'Add Resource — 2B Academy',
   },
   {
+    path: ':id/edit',
+    loadComponent: () => import('./pages/resource-edit/resource-edit.component').then(m => m.ResourceEditComponent),
+    title: 'Edit Resource — 2B Academy',
+  },
+  {
     path: ':id',
     loadComponent: () => import('./pages/resource-detail/resource-detail.component').then(m => m.ResourceDetailComponent),
     title: 'Resource — 2B Academy',

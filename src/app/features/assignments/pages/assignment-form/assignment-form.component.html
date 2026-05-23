@@ -1,0 +1,368 @@
+<p-toast position="bottom-right" />
+
+<div class="nas-page-container">
+
+  <!-- ── Breadcrumb + title bar ──────────────────────────────── -->
+  <div class="af-breadcrumb">
+    <a routerLink="/admin/assignments" class="af-breadcrumb__link">
+      <i class="pi pi-book"></i> Assignments
+    </a>
+    <i class="pi pi-angle-right af-breadcrumb__sep"></i>
+    <span class="af-breadcrumb__current">
+      {{ assignmentId() ? 'Edit Assignment' : 'Create Assignment' }}
+    </span>
+  </div>
+
+  <div class="af-titlebar">
+    <h1 class="af-title">{{ assignmentId() ? 'Edit Assignment' : 'Generate Assignment' }}</h1>
+    <div class="af-titlebar__actions">
+      <button type="button" class="af-btn af-btn--ghost" (click)="cancel()">Cancel</button>
+      <button
+        type="button"
+        class="af-btn af-btn--primary"
+        [disabled]="!canPublish() || saving()"
+        (click)="publish()">
+        @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
+        @else { <i class="pi pi-send"></i> }
+        {{ assignmentId() ? 'Save Changes' : 'Publish Assignment' }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="nas-card af-card af-loading">
+      @for (s of [1,2,3,4,5]; track s) {
+        <p-skeleton height="20px" styleClass="af-loading__row" />
+      }
+    </div>
+  } @else {
+
+  <div class="af-layout">
+
+    <!-- ── Left column (form) ───────────────────────────────── -->
+    <form [formGroup]="form" class="af-form" novalidate>
+
+      <!-- ── General card ─────────────────────────────────── -->
+      <div class="nas-card af-card">
+        <h2 class="af-card__title">General</h2>
+
+        <div class="af-field">
+          <label class="af-label">Assignment title (English) <span class="af-req">*</span></label>
+          <input
+            type="text"
+            formControlName="title"
+            class="af-input"
+            placeholder="e.g. Safety readiness assessment" />
+          @if (form.controls.title.touched && form.controls.title.invalid) {
+            <span class="af-err">Title is required.</span>
+          }
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Assignment title (Arabic)</label>
+          <input
+            type="text"
+            formControlName="title_ar"
+            class="af-input"
+            dir="rtl"
+            placeholder="مثال: تقييم الجاهزية للسلامة" />
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Course <span class="af-req">*</span></label>
+          <p-dropdown
+            formControlName="course_id"
+            [options]="courses()"
+            optionLabel="title"
+            optionValue="id"
+            placeholder="Select a course"
+            styleClass="af-dropdown"
+            [style]="{'width':'100%'}" />
+          @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
+            <span class="af-err">Course is required.</span>
+          }
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Cohort scope <span class="af-req">*</span></label>
+          <p-dropdown
+            formControlName="cohort_scope"
+            [options]="scopeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select cohort scope"
+            styleClass="af-dropdown"
+            [style]="{'width':'100%'}" />
+        </div>
+
+        @if (form.controls.cohort_scope.value === 'specific') {
+          <div class="af-field">
+            <label class="af-label">Cohorts <span class="af-req">*</span></label>
+            @if (cohortsLoading()) {
+              <p class="af-hint">Loading cohorts…</p>
+            } @else if (!cohorts().length) {
+              <p class="af-hint">No cohorts available for this course.</p>
+            } @else {
+              <div class="af-cohort-list">
+                @for (cohort of cohorts(); track cohort.id) {
+                  <label class="af-checkbox">
+                    <input
+                      type="checkbox"
+                      [checked]="isCohortSelected(cohort.id)"
+                      (change)="toggleCohort(cohort.id)" />
+                    <span>{{ cohort.title || ('Cohort #' + cohort.id) }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <div class="af-field">
+          <label class="af-label">Due date</label>
+          <input
+            type="date"
+            formControlName="due_date"
+            class="af-input"
+            placeholder="DD/MM/YYYY" />
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Learner instructions (English)</label>
+          <textarea
+            formControlName="instructions_en"
+            rows="3"
+            class="af-textarea"
+            placeholder="Explain what learners should complete before submitting."></textarea>
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Learner instructions (Arabic)</label>
+          <textarea
+            formControlName="instructions_ar"
+            rows="3"
+            class="af-textarea"
+            dir="rtl"
+            placeholder="اشرح للمستخدمين ما يجب إكماله قبل التسليم."></textarea>
+        </div>
+      </div>
+
+      <!-- ── Questions card ───────────────────────────────── -->
+      <div class="nas-card af-card">
+        <div class="af-card__header">
+          <h2 class="af-card__title">Questions</h2>
+          <button type="button" class="af-btn af-btn--primary af-btn--sm" (click)="addQuestion()">
+            <i class="pi pi-plus-circle"></i> Add Question
+          </button>
+        </div>
+
+        @for (q of questions.controls; track $index; let i = $index) {
+          <div class="af-question" [formGroup]="q">
+            <div class="af-question__head">
+              <div class="af-question__num">{{ i + 1 }}</div>
+              @if (questions.length > 1) {
+                <button type="button" class="af-question__remove" (click)="removeQuestion(i)">
+                  <i class="pi pi-minus-circle"></i> Remove
+                </button>
+              }
+            </div>
+
+            <div class="af-row af-row--cols2">
+              <div class="af-field">
+                <label class="af-label">Question (English) <span class="af-req">*</span></label>
+                <input
+                  type="text"
+                  formControlName="question_en"
+                  class="af-input"
+                  placeholder="Question" />
+              </div>
+              <div class="af-field">
+                <label class="af-label">Question (Arabic)</label>
+                <input
+                  type="text"
+                  formControlName="question_ar"
+                  class="af-input"
+                  dir="rtl"
+                  placeholder="سؤال" />
+              </div>
+            </div>
+
+            <div class="af-row af-row--cols2">
+              <div class="af-field">
+                <label class="af-label">Type <span class="af-req">*</span></label>
+                <p-dropdown
+                  [options]="questionTypeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="questionType(i)"
+                  [ngModelOptions]="{ standalone: true }"
+                  (onChange)="changeQuestionType(i, $event.value)"
+                  styleClass="af-dropdown"
+                  [style]="{'width':'100%'}" />
+              </div>
+              <div class="af-field">
+                <label class="af-label">Score <span class="af-req">*</span></label>
+                <input
+                  type="number"
+                  formControlName="score"
+                  min="0"
+                  class="af-input" />
+              </div>
+            </div>
+
+            <!-- ── MCQ / Reorder options ──────────────────── -->
+            @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
+              <div class="af-field">
+                <label class="af-label">
+                  @if (questionType(i) === 'mcq') { MCQ Options (English) }
+                  @else { Items to reorder (English) }
+                  <span class="af-req">*</span>
+                </label>
+                <div class="af-options" formArrayName="options_en">
+                  @for (opt of optionsEn(i).controls; track $index; let j = $index) {
+                    <div class="af-option-row">
+                      <input
+                        type="text"
+                        [formControlName]="j"
+                        class="af-input"
+                        [placeholder]="(questionType(i) === 'mcq' ? 'Option ' : 'Order ') + (j + 1)" />
+                      @if (optionsEn(i).length > 2) {
+                        <button type="button" class="af-option-remove" (click)="removeOption(i, 'en', j)">
+                          <i class="pi pi-times"></i>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+                <button type="button" class="af-option-add" (click)="addOption(i, 'en')">
+                  <i class="pi pi-plus-circle"></i> Add Option
+                </button>
+              </div>
+
+              <div class="af-field">
+                <label class="af-label">
+                  @if (questionType(i) === 'mcq') { MCQ Options (Arabic) }
+                  @else { Items to reorder (Arabic) }
+                </label>
+                <div class="af-options" formArrayName="options_ar">
+                  @for (opt of optionsAr(i).controls; track $index; let j = $index) {
+                    <div class="af-option-row">
+                      <input
+                        type="text"
+                        [formControlName]="j"
+                        class="af-input"
+                        dir="rtl"
+                        [placeholder]="(questionType(i) === 'mcq' ? 'خيار ' : 'ترتيب ') + (j + 1)" />
+                      @if (optionsAr(i).length > 2) {
+                        <button type="button" class="af-option-remove" (click)="removeOption(i, 'ar', j)">
+                          <i class="pi pi-times"></i>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+                <button type="button" class="af-option-add" (click)="addOption(i, 'ar')">
+                  <i class="pi pi-plus-circle"></i> إضافة خيار
+                </button>
+              </div>
+            }
+
+            <!-- ── Correct answer / grading key ────────────────── -->
+            @if (questionType(i) !== 'open') {
+              <div class="af-row af-row--cols2">
+                <div class="af-field">
+                  <label class="af-label">
+                    @if (questionType(i) === 'reorder') { Correct order (English) }
+                    @else { Correct answer / grading key (English) }
+                    <span class="af-req">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="correct_answer_en"
+                    class="af-input"
+                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : 'Answer'" />
+                </div>
+                <div class="af-field">
+                  <label class="af-label">
+                    @if (questionType(i) === 'reorder') { Correct order (Arabic) }
+                    @else { Correct answer / grading key (Arabic) }
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="correct_answer_ar"
+                    class="af-input"
+                    dir="rtl"
+                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : 'الإجابة'" />
+                </div>
+              </div>
+            }
+
+            <div class="af-row af-row--cols2">
+              <div class="af-field">
+                <label class="af-label">Explanation for learner feedback (English)</label>
+                <textarea
+                  formControlName="explanation_en"
+                  rows="2"
+                  class="af-textarea"
+                  placeholder="Optional explanation shown after grading"></textarea>
+              </div>
+              <div class="af-field">
+                <label class="af-label">Explanation for learner feedback (Arabic)</label>
+                <textarea
+                  formControlName="explanation_ar"
+                  rows="2"
+                  class="af-textarea"
+                  dir="rtl"
+                  placeholder="شرح اختياري يظهر بعد التصحيح"></textarea>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+    </form>
+
+    <!-- ── Right sidebar (publish summary) ──────────────────── -->
+    <aside class="af-sidebar">
+      <div class="nas-card af-summary">
+        <h3 class="af-summary__title">PUBLISH SUMMARY</h3>
+
+        <div class="af-summary__row">
+          <span class="af-summary__label">Scope</span>
+          <nas-status-badge [tone]="scopePillTone(form.controls.cohort_scope.value)">
+            {{ scopeLabel(form.controls.cohort_scope.value) }}
+          </nas-status-badge>
+        </div>
+
+        <div class="af-summary__row">
+          <span class="af-summary__label">Questions</span>
+          <span class="af-summary__value">{{ questionCount() }}</span>
+        </div>
+
+        <div class="af-summary__row">
+          <span class="af-summary__label">Total score</span>
+          <span class="af-summary__value af-summary__value--large">{{ totalScore() }}</span>
+        </div>
+
+        <div class="af-summary__row af-summary__row--col">
+          <label class="af-label" for="passScore">Pass score</label>
+          <input
+            id="passScore"
+            type="number"
+            class="af-input"
+            min="0"
+            [max]="totalScore()"
+            [formControl]="form.controls.pass_score" />
+        </div>
+      </div>
+
+      <div class="af-rule">
+        <h4 class="af-rule__title">Business rule</h4>
+        <p>Assignments are published directly to learners once the answer keys and scores are complete.</p>
+      </div>
+    </aside>
+
+  </div>
+
+  }
+</div>

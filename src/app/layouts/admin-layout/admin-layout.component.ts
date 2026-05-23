@@ -8,7 +8,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { LocaleService } from '../../core/services/locale.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ADMIN_NAV_GROUPS, NavItem } from './admin-nav.config';
+import { ADMIN_NAV_GROUPS, NavGroup, NavItem } from './admin-nav.config';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -33,8 +33,41 @@ export class AdminLayoutComponent {
   auth   = inject(AuthService);
   router = inject(Router);
 
-  navGroups        = ADMIN_NAV_GROUPS;
   sidebarCollapsed = signal(false);
+
+  /**
+   * Sidebar groups filtered by the current admin's `view_keys`.
+   *
+   *   - Leaf items: kept only if their `viewKey` is either unset
+   *     (legacy un-gated) or held by the admin.
+   *   - Parent items with children: kept only if at least one child
+   *     survives the filter (also dropped when the parent itself has
+   *     a `viewKey` the admin lacks).
+   *   - Groups with zero surviving items are dropped entirely.
+   *
+   * Recomputes automatically when the auth signal updates (login,
+   * /me refresh, logout).
+   */
+  navGroups = computed<NavGroup[]>(() => {
+    const auth = this.auth;
+    return ADMIN_NAV_GROUPS
+      .map<NavGroup>(group => ({
+        label: group.label,
+        items: group.items.flatMap<NavItem>(item => {
+          // Parent with children — recurse, then drop if none survive.
+          if (item.children?.length) {
+            if (item.viewKey && !auth.hasView(item.viewKey)) return [];
+            const visibleChildren = item.children.filter(c => auth.hasView(c.viewKey));
+            if (!visibleChildren.length) return [];
+            return [{ ...item, children: visibleChildren }];
+          }
+          return auth.hasView(item.viewKey) ? [item] : [];
+        }),
+      }))
+      .filter(g => g.items.length > 0);
+  });
+
+
   searchTerm       = signal('');
   expandedGroups   = signal<Record<string, boolean>>({ 'nav.learning': true });
 
@@ -68,4 +101,13 @@ export class AdminLayoutComponent {
   toggleLocale(locale: 'en' | 'ar'): void {
     if (this.locale.locale() !== locale) this.locale.switch(locale);
   }
+
+  /** First initial of the signed-in admin, used by the avatar bubble. */
+  profileInitial = computed(() => {
+    const name = this.auth.currentAdmin()?.name?.trim();
+    return (name?.[0] ?? 'A').toUpperCase();
+  });
+
+  /** Display name shown beneath "Welcome back". */
+  profileName = computed(() => this.auth.currentAdmin()?.name ?? 'Admin');
 }

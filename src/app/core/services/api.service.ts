@@ -26,12 +26,12 @@ interface RawLaravelPaginated<T> {
 export class ApiService {
   constructor(private http: HttpClient) {}
 
-  get<T>(url: string, params?: Record<string, string | number | boolean | null | undefined>): Observable<ApiResponse<T>> {
+  get<T>(url: string, params?: ApiParams): Observable<ApiResponse<T>> {
     const httpParams = this.buildParams(params);
     return this.http.get<ApiResponse<T>>(url, { params: httpParams });
   }
 
-  getPaginated<T>(url: string, params?: Record<string, string | number | boolean | null | undefined>): Observable<PaginatedResponse<T>> {
+  getPaginated<T>(url: string, params?: ApiParams): Observable<PaginatedResponse<T>> {
     const httpParams = this.buildParams(params);
     return this.http
       .get<RawLaravelPaginated<T>>(url, { params: httpParams })
@@ -89,12 +89,29 @@ export class ApiService {
     return this.http.delete<ApiResponse<T>>(url);
   }
 
-  private buildParams(params?: Record<string, string | number | boolean | null | undefined>): HttpParams {
+  private buildParams(params?: ApiParams): HttpParams {
     let p = new HttpParams();
     if (!params) return p;
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== null && v !== undefined) p = p.set(k, String(v));
+      if (v === null || v === undefined) return;
+      if (Array.isArray(v)) {
+        v.forEach(item => {
+          if (item !== null && item !== undefined) {
+            p = p.append(`${k}[]`, String(item));
+          }
+        });
+        return;
+      }
+      p = p.set(k, String(v));
     });
     return p;
   }
 }
+
+/** Acceptable value types for query string parameters. */
+export type ApiParamValue =
+  | string | number | boolean | null | undefined
+  | Array<string | number>;
+
+/** Convenience alias for params objects passed to ApiService.get/getPaginated. */
+export type ApiParams = Record<string, ApiParamValue>;

@@ -1,25 +1,150 @@
 <div class="nas-page-container">
-  <nas-page-header title="Reports" subtitle="Generate and export data reports as CSV">
+  <nas-page-header
+    title="Reports"
+    subtitle="Generate and export compliance and learning reports">
+    <button
+      type="button"
+      class="rp-export-all-btn"
+      [disabled]="downloadingAll()"
+      (click)="exportAll('csv')">
+      @if (downloadingAll()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      } @else {
+        <i class="pi pi-upload"></i>
+      }
+      Export All
+    </button>
   </nas-page-header>
-  <div class="reports-grid">
-    @for (report of reportTypes; track report.key) {
-      <div class="report-card">
-        <div class="report-card__icon-wrap">
-          <i [class]="report.icon"></i>
+
+  <!-- ── Report cards grid ──────────────────────────────────────── -->
+  <div class="rp-grid">
+    @if (cardsLoading()) {
+      @for (s of [1,2,3,4,5,6]; track s) {
+        <div class="rp-card rp-card--skeleton">
+          <p-skeleton width="44px" height="44px" borderRadius="12px" />
+          <p-skeleton width="60%" height="18px" styleClass="rp-card__sk-row" />
+          <p-skeleton width="100%" height="14px" styleClass="rp-card__sk-row" />
+          <p-skeleton width="70%" height="14px" styleClass="rp-card__sk-row" />
         </div>
-        <div>
-          <div class="report-card__title">{{ report.label }}</div>
-          <div class="report-card__desc">{{ report.description }}</div>
+      }
+    } @else {
+      @for (card of cards(); track card.key) {
+        <div class="rp-card">
+          <div class="rp-card__head">
+            <div class="rp-card__icon-wrap">
+              <i [class]="iconFor(card.icon)"></i>
+            </div>
+            <div class="rp-card__head-text">
+              <div class="rp-card__title">{{ card.label }}</div>
+              <div class="rp-card__desc">{{ card.description }}</div>
+            </div>
+          </div>
+
+          <div class="rp-card__meta">
+            Last generated:
+            <strong>{{ card.last_generated_at ? (card.last_generated_at | date:'dd MMM yyyy') : '—' }}</strong>
+          </div>
+
+          <div class="rp-card__actions">
+            <button
+              type="button"
+              class="rp-card__btn"
+              [disabled]="isDownloading(card.key, 'csv')"
+              (click)="exportReport(card.key, 'csv')">
+              @if (isDownloading(card.key, 'csv')) {
+                <i class="pi pi-spin pi-spinner"></i>
+              }
+              Export CSV
+            </button>
+            <button
+              type="button"
+              class="rp-card__btn"
+              [disabled]="isDownloading(card.key, 'xlsx')"
+              (click)="exportReport(card.key, 'xlsx')">
+              @if (isDownloading(card.key, 'xlsx')) {
+                <i class="pi pi-spin pi-spinner"></i>
+              }
+              Export Excel
+            </button>
+          </div>
         </div>
-        <button type="button" class="report-card__btn" (click)="exportCsv(report.key)" [disabled]="downloading()[report.key] ?? false">
-          @if (downloading()[report.key]) {
-            <i class="pi pi-spin pi-spinner"></i>
-          } @else {
-            <i class="pi pi-download"></i>
-          }
-          Generate &amp; Export CSV
-        </button>
-      </div>
+      }
     }
+  </div>
+
+  <!-- ── Compliance preview ─────────────────────────────────────── -->
+  <div class="rp-preview">
+    <div class="rp-preview__head">
+      <div class="rp-preview__head-text">
+        <div class="rp-preview__title">Preview: Compliance by Job Title</div>
+        <div class="rp-preview__sub">Live data snapshot — export for the full dataset</div>
+      </div>
+      <button
+        type="button"
+        class="rp-preview__btn"
+        [disabled]="isDownloading('compliance-by-job-title', 'csv')"
+        (click)="exportReport('compliance-by-job-title', 'csv')">
+        @if (isDownloading('compliance-by-job-title', 'csv')) {
+          <i class="pi pi-spin pi-spinner"></i>
+        } @else {
+          <i class="pi pi-upload"></i>
+        }
+        Export CSV
+      </button>
+    </div>
+
+    <div class="rp-preview__card">
+      <div class="rp-table-wrap">
+        <table class="rp-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Department</th>
+              <th class="rp-table__num">Learners</th>
+              <th class="rp-table__num">Qualified</th>
+              <th class="rp-table__bar">Compliance %</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (previewLoading()) {
+              @for (s of [1,2,3,4,5]; track s) {
+                <tr>
+                  @for (c of [1,2,3,4,5]; track c) {
+                    <td><p-skeleton height="16px" /></td>
+                  }
+                </tr>
+              }
+            } @else if (!preview().length) {
+              <tr><td colspan="5" class="rp-table__empty">No data available.</td></tr>
+            } @else {
+              @for (row of preview(); track row.role) {
+                <tr class="rp-table__row">
+                  <td class="rp-table__primary">{{ row.role }}</td>
+                  <td class="rp-table__muted">{{ row.department || '—' }}</td>
+                  <td class="rp-table__num">{{ row.learners }}</td>
+                  <td class="rp-table__num">{{ row.qualified }}</td>
+                  <td class="rp-table__bar">
+                    <div class="rp-bar">
+                      <div class="rp-bar__track">
+                        <div
+                          class="rp-bar__fill"
+                          [style.width.%]="row.compliance_pct"
+                          [style.background-color]="complianceColor(row.compliance_pct)">
+                        </div>
+                      </div>
+                      <span
+                        class="rp-bar__value"
+                        [style.color]="complianceColor(row.compliance_pct)">
+                        {{ row.compliance_pct }}%
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>

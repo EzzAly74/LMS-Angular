@@ -56,7 +56,9 @@
       "Bash(find D:\\\\\\\\2b-source-code\\\\\\\\2B-Academy\\\\\\\\database\\\\\\\\migrations *)",
       "Bash(grep -r \"job_title_id\" \"D:\\\\\\\\2b-source-code\\\\\\\\2B-Academy\\\\\\\\database\\\\\\\\migrations\")",
       "Bash(grep *)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(sed 's/\\\\\">//g')",
+      "Bash(npx tsc *)"
     ]
   }
 }

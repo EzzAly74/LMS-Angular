@@ -1,22 +1,161 @@
+<!-- ═══════════════════════════════════════════════════════════════
+     FILTER MODAL (Instructors / Learners / Courses)
+════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="Filter your results"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{'width':'420px'}"
+  [visible]="filter().open"
+  (visibleChange)="closeFilter()"
+  styleClass="nas-dialog rl-filter-dialog">
+
+  <div class="rl-modal-section-label">
+    @switch (filter().kind) {
+      @case ('instructors') { Instructors }
+      @case ('learners')    { Learners }
+      @case ('courses')     { Courses }
+    }
+  </div>
+
+  <div class="rl-modal-search">
+    <i class="pi pi-search rl-modal-search__icon"></i>
+    <input
+      type="text"
+      class="rl-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="filter().query"
+      (ngModelChange)="onFilterQuery($event)" />
+  </div>
+
+  <div class="rl-modal-list">
+    @for (item of filterItems(); track item.id) {
+      <label class="rl-modal-row" [class.rl-modal-row--selected]="isFilterSelected(item.id)">
+        <input type="checkbox" [checked]="isFilterSelected(item.id)" (change)="toggleFilterItem(item.id)" />
+        <span class="rl-modal-row__title">{{ item.name }}</span>
+      </label>
+    }
+    @if (!filterItems().length) {
+      <p class="rl-modal-empty">No results.</p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">Clear</button>
+    <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
+      <i class="pi pi-filter"></i> Filter
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE
+════════════════════════════════════════════════════════════════ -->
 <div class="nas-page-container">
-  <nas-page-header title="Ratings" subtitle="View learner course ratings and reviews">
+
+  <nas-page-header
+    title="Ratings"
+    subtitle="All learner ratings and comments across the platform">
   </nas-page-header>
-  <div class="nas-card rating-table-card">
-    <div class="rating-toolbar">
-      <p-dropdown [options]="courseOptions()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
-        placeholder="Filter by course" [showClear]="true" styleClass="nas-dropdown"
-        (onChange)="onFilterChange()" [style]="{'min-width':'220px','height':'36px'}" />
-      <div class="nas-search">
-        <i class="nas-search__icon pi pi-search"></i>
-        <input class="nas-search__input" placeholder="Search learner..." (input)="onSearch($any($event.target).value)" />
+
+  <!-- ── KPI cards ───────────────────────────────────────────── -->
+  <div class="rl-kpi-grid">
+    <div class="rl-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3rem" height="2rem" styleClass="rl-kpi-card__sk-value" />
+      } @else {
+        <div class="rl-kpi-card__value">{{ summary().total_ratings }}</div>
+      }
+      <div class="rl-kpi-card__label">Total Ratings</div>
+    </div>
+
+    <div class="rl-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3rem" height="2rem" styleClass="rl-kpi-card__sk-value" />
+      } @else {
+        <div class="rl-kpi-card__value rl-kpi-card__value--avg">
+          <i class="pi pi-star-fill rl-kpi-card__avg-icon"></i>
+          <span>{{ averageDisplay() }}</span>
+        </div>
+      }
+      <div class="rl-kpi-card__label">Average Score</div>
+    </div>
+
+    <div class="rl-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3rem" height="2rem" styleClass="rl-kpi-card__sk-value" />
+      } @else {
+        <div class="rl-kpi-card__value rl-kpi-card__value--success">{{ summary().five_star_count }}</div>
+      }
+      <div class="rl-kpi-card__label">5-Star Reviews</div>
+    </div>
+
+    <div class="rl-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3rem" height="2rem" styleClass="rl-kpi-card__sk-value" />
+      } @else {
+        <div class="rl-kpi-card__value rl-kpi-card__value--danger">{{ summary().low_count }}</div>
+      }
+      <div class="rl-kpi-card__label">Low Ratings (&le;2&#9733;)</div>
+    </div>
+  </div>
+
+  <!-- ── Filter pills row ────────────────────────────────────── -->
+  <div class="rl-filter-row">
+    <button
+      type="button"
+      class="rl-pill-btn"
+      [class.rl-pill-btn--active]="!hasAnyFilter()"
+      (click)="clearAllFilters()">
+      All
+    </button>
+
+    <button type="button" class="rl-pill-btn" (click)="openFilter('instructors')">
+      Instructors
+      @if (filterPillCounts().instructors) {
+        <span class="rl-pill-btn__count">{{ filterPillCounts().instructors }}</span>
+      }
+      <i class="pi pi-chevron-down"></i>
+    </button>
+
+    <button type="button" class="rl-pill-btn" (click)="openFilter('learners')">
+      Learners
+      @if (filterPillCounts().learners) {
+        <span class="rl-pill-btn__count">{{ filterPillCounts().learners }}</span>
+      }
+      <i class="pi pi-chevron-down"></i>
+    </button>
+
+    <button type="button" class="rl-pill-btn" (click)="openFilter('courses')">
+      Courses
+      @if (filterPillCounts().courses) {
+        <span class="rl-pill-btn__count">{{ filterPillCounts().courses }}</span>
+      }
+      <i class="pi pi-chevron-down"></i>
+    </button>
+
+    <div class="rl-search-spacer">
+      <div class="rl-search">
+        <i class="pi pi-search rl-search__icon"></i>
+        <input
+          type="text"
+          class="rl-search__input"
+          placeholder="Search learner or comment..."
+          (input)="onSearch($any($event.target).value)" />
       </div>
     </div>
-    <div class="rating-table-wrap">
-      <table class="nas-table">
+  </div>
+
+  <!-- ── Table ───────────────────────────────────────────────── -->
+  <div class="nas-card rl-section-card">
+    <div class="rl-table-wrap">
+      <table class="rl-table">
         <thead>
           <tr>
             <th>Learner</th>
             <th>Course</th>
+            <th>Instructor</th>
             <th>Rating</th>
             <th>Comment</th>
             <th>Date</th>
@@ -26,43 +165,55 @@
           @if (loading()) {
             @for (s of skeletons; track s) {
               <tr>
-                @for (c of [1,2,3,4,5]; track c) {
-                  <td><p-skeleton height="20px" /></td>
+                @for (c of [1,2,3,4,5,6]; track c) {
+                  <td><p-skeleton height="16px" /></td>
                 }
               </tr>
             }
+          } @else if (!items().length) {
+            <tr><td colspan="6" class="rl-table__empty">No ratings found.</td></tr>
           } @else {
             @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.user_name }}</td>
-                <td>{{ item.course_title }}</td>
+              <tr class="rl-table__row">
+                <td class="rl-table__primary">
+                  {{ item.user?.name ?? '—' }}
+                  @if (item.user?.machine_code) {
+                    <span class="rl-table__sub">{{ item.user!.machine_code }}</span>
+                  }
+                </td>
+                <td class="rl-table__course">{{ item.course?.title ?? '—' }}</td>
+                <td class="rl-table__muted">{{ item.instructor?.name ?? '—' }}</td>
                 <td>
-                  <div class="star-row">
-                    @for (star of starsArray; track $index) {
-                      <i [class]="$index < item.rating ? 'pi pi-star-fill' : 'pi pi-star dim'"></i>
-                    }
-                    <span class="nas-table__muted" style="margin-inline-start:4px;">({{ item.rating }}/5)</span>
+                  <div class="rl-rating">
+                    <div class="rl-rating__stars">
+                      @for (idx of starsTrack; track idx) {
+                        <i [class]="$index < item.rating ? 'pi pi-star-fill' : 'pi pi-star rl-rating__star--dim'"></i>
+                      }
+                    </div>
+                    <span class="rl-rating__score">{{ item.rating }}/5</span>
                   </div>
                 </td>
-                <td class="comment-cell nas-table__muted">{{ item.comment ?? '—' }}</td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr>
-                <td colspan="5" class="nas-table__empty">No ratings found.</td>
+                <td class="rl-table__comment">{{ item.comment || '—' }}</td>
+                <td class="rl-table__muted">{{ item.created_at ? (item.created_at | date:'dd MMM yyyy') : '—' }}</td>
               </tr>
             }
           }
         </tbody>
       </table>
     </div>
+
     @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+      <div class="rl-pagination">
+        <span class="rl-pagination__info">
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+        </span>
+        <div class="rl-pagination__nav">
+          <button type="button" class="rl-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+          <button type="button" class="rl-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
         </div>
       </div>
     }

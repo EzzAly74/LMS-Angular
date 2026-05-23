@@ -1,207 +1,446 @@
-<p-confirmDialog />
+<p-toast />
 
-<!-- ── Edit Dialog ────────────────────────────────────────────────────── -->
+<!-- ═════════════════════════════════════════════════════════════════
+     ADD / EDIT USER MODAL
+═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [(visible)]="editVisible"
-  header="Edit User"
+  [header]="formMode() === 'create' ? 'Add New User' : 'Edit User'"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [closable]="true"
-  [closeOnEscape]="true"
-  styleClass="nas-dialog"
-  [style]="{ width: '460px' }">
+  [closable]="!formSaving()"
+  [style]="{ width: '480px' }"
+  [visible]="formOpen()"
+  (visibleChange)="closeForm()"
+  styleClass="nas-dialog ul-form-dialog">
 
-  <form class="nas-form" (ngSubmit)="saveEdit()">
-    <div class="nas-form__field">
-      <label>Name</label>
-      <input class="nas-input" type="text" [(ngModel)]="editForm.name" name="name" autocomplete="off" />
+  <form class="ul-form" (ngSubmit)="submitForm()" autocomplete="off">
+    <div class="ul-form__field">
+      <label>Full Name (English) <span class="ul-form__req">*</span></label>
+      <input
+        type="text"
+        class="ul-input"
+        placeholder="e.g. Sara Al-Mansouri"
+        [ngModel]="form().name_en"
+        (ngModelChange)="updateForm('name_en', $event)"
+        name="name_en" />
     </div>
-    <div class="nas-form__field">
-      <label>Email</label>
-      <input class="nas-input" type="email" [(ngModel)]="editForm.email" name="email" autocomplete="off" />
+
+    <div class="ul-form__field">
+      <label>Full Name (Arabic) <span class="ul-form__req">*</span></label>
+      <input
+        type="text"
+        class="ul-input"
+        placeholder="مثال: سارة المنصوري"
+        dir="rtl"
+        [ngModel]="form().name_ar"
+        (ngModelChange)="updateForm('name_ar', $event)"
+        name="name_ar" />
     </div>
-    <div class="nas-form__field">
-      <label>Job Title</label>
-      <input class="nas-input" type="text" [(ngModel)]="editForm.job_title" name="job_title" autocomplete="off" />
+
+    <div class="ul-form__field">
+      <label>Email Address <span class="ul-form__req">*</span></label>
+      <input
+        type="email"
+        class="ul-input"
+        placeholder="e.g. Name@mail.com"
+        [ngModel]="form().email"
+        (ngModelChange)="updateForm('email', $event)"
+        name="email" />
     </div>
-    <div class="nas-form__field">
-      <label>Department</label>
-      <input class="nas-input" type="text" [(ngModel)]="editForm.department_name" name="department_name" autocomplete="off" />
+
+    <div class="ul-form__field">
+      <label>Role <span class="ul-form__req">*</span></label>
+      <div class="ul-select-wrap">
+        <select
+          class="ul-input ul-select"
+          [ngModel]="form().role"
+          (ngModelChange)="updateForm('role', $event)"
+          name="role">
+          <option value="" disabled>
+            {{ roleOptions().length ? 'Select a role' : 'Loading roles…' }}
+          </option>
+          @for (opt of roleOptions(); track opt.key) {
+            <option [value]="opt.key">{{ opt.label }}</option>
+          }
+        </select>
+        <i class="pi pi-chevron-down ul-select__chevron"></i>
+      </div>
     </div>
-    <div class="nas-form__field">
-      <label>Learner Type</label>
-      <p-dropdown
-        [options]="learnerTypeOptions"
-        [(ngModel)]="editForm.learner_type"
-        name="learner_type"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Select type"
-        styleClass="w-full"
-      />
+
+    <div class="ul-form__field">
+      <label>Job Role</label>
+      <div class="ul-select-wrap">
+        <input
+          type="text"
+          class="ul-input"
+          placeholder="e.g. HR"
+          list="ul-job-title-options"
+          [ngModel]="form().job_title"
+          (ngModelChange)="updateForm('job_title', $event)"
+          name="job_title" />
+        <datalist id="ul-job-title-options">
+          @for (jt of lookupJobTitles(); track jt) {
+            <option [value]="jt"></option>
+          }
+        </datalist>
+      </div>
     </div>
   </form>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="editVisible = false">Cancel</button>
-    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="saveEdit()">
-      <i class="pi pi-check"></i>
-      Save
+    <button
+      type="button"
+      class="ul-btn ul-btn--ghost"
+      [disabled]="formSaving()"
+      (click)="closeForm()">
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="ul-btn ul-btn--primary"
+      [disabled]="!formValid() || formSaving()"
+      (click)="submitForm()">
+      @if (formSaving()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      } @else {
+        <i class="pi pi-plus"></i>
+      }
+      {{ formMode() === 'create' ? 'Add User' : 'Save Changes' }}
     </button>
   </ng-template>
 </p-dialog>
 
-<!-- ── Profile Slide-over ─────────────────────────────────────────────── -->
-@if (profileUser()) {
-  <div class="profile-overlay" (click)="closeProfile()"></div>
-  <div class="profile-panel">
-    <div class="profile-panel__header">
-      <h3>User Profile</h3>
-      <button type="button" class="profile-close-btn" (click)="closeProfile()">
-        <i class="pi pi-times"></i>
-      </button>
-    </div>
-    <div class="profile-panel__body">
-      <div class="profile-user-row">
-        <div class="profile-avatar">{{ profileUser()!.name.charAt(0).toUpperCase() }}</div>
-        <div>
-          <div class="profile-name">{{ profileUser()!.name }}</div>
-          <div class="profile-email">{{ profileUser()!.email }}</div>
-        </div>
-      </div>
-      <div class="profile-fields">
-        <div class="profile-field">
-          <span class="profile-field__label">Job Title</span>
-          <span class="profile-field__value">{{ profileUser()!.job_title || '—' }}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field__label">Department</span>
-          <span class="profile-field__value">{{ profileUser()!.department_name || '—' }}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field__label">Learner Type</span>
-          <span class="profile-field__value">{{ profileUser()!.learner_type || '—' }}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field__label">Machine Code</span>
-          <span class="profile-field__value">{{ profileUser()!.machine_code || '—' }}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field__label">Phone</span>
-          <span class="profile-field__value">{{ profileUser()!.phone || '—' }}</span>
-        </div>
-      </div>
-    </div>
+<!-- ═════════════════════════════════════════════════════════════════
+     INSTRUCTORS SUB-FILTER MODAL
+═══════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="Filter your results"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px' }"
+  [visible]="instructorModal().open"
+  (visibleChange)="closeInstructorModal()"
+  styleClass="nas-dialog ul-filter-dialog">
+
+  <div class="ul-modal-label">Instructors</div>
+
+  <div class="ul-modal-search">
+    <i class="pi pi-search ul-modal-search__icon"></i>
+    <input
+      type="text"
+      class="ul-modal-search__input"
+      placeholder="Quick search..."
+      [ngModel]="instructorModal().query"
+      (ngModelChange)="onInstructorQuery($event)" />
   </div>
-}
 
-<!-- ── Page ──────────────────────────────────────────────────────────── -->
-<div class="nas-page-container">
-
-  <nas-page-header
-    title="Users"
-    subtitle="Manage learners and instructors">
-  </nas-page-header>
-
-  <!-- Tabs -->
-  <div class="user-filters">
-    <div class="user-tab-row">
-      @for (tab of tabs; track tab.key) {
-        <button type="button"
-          class="user-tab-btn"
-          [class.user-tab-btn--active]="activeTab() === tab.key"
-          (click)="setTab(tab.key)">
-          {{ tab.label }}
-        </button>
-      }
-    </div>
-
-    @if (activeTab() === 'learner') {
-      <div class="user-tab-row">
-        @for (sf of subFilters; track sf.key) {
-          <button type="button"
-            class="user-tab-btn user-tab-btn--sub"
-            [class.user-tab-btn--active]="learnerSubFilter() === sf.key"
-            (click)="setSubFilter(sf.key)">
-            {{ sf.label }}
-          </button>
-        }
-      </div>
+  <div class="ul-modal-list">
+    @for (item of filteredInstructorOptions(); track item.id) {
+      <label class="ul-modal-row" [class.ul-modal-row--selected]="isInstructorSelected(item.id)">
+        <input type="checkbox" [checked]="isInstructorSelected(item.id)" (change)="toggleInstructorSelection(item.id)" />
+        <span class="ul-modal-row__title">{{ item.name }}</span>
+      </label>
+    }
+    @if (!filteredInstructorOptions().length) {
+      <p class="ul-modal-empty">No instructors match your search.</p>
     }
   </div>
 
-  <nas-data-table
-    [columns]="columns"
-    [items]="items()"
-    [loading]="loading()"
-    [total]="total()"
-    [perPage]="perPage"
-    [page]="page"
-    [rowClickable]="true"
-    emptyText="No users found"
-    emptyIcon="pi pi-users"
-    (pageChange)="onPage($event)"
-    (rowClick)="openProfile($any($event))">
+  <ng-template pTemplate="footer">
+    <button type="button" class="ul-btn ul-btn--ghost" (click)="clearInstructorSelection()">Clear</button>
+    <button type="button" class="ul-btn ul-btn--primary" (click)="applyInstructorFilter()">
+      <i class="pi pi-filter"></i> Filter
+    </button>
+  </ng-template>
+</p-dialog>
 
-    <!-- Toolbar slot (search) -->
-    <div ndtToolbar class="user-toolbar">
-      <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
-        <input
-          type="text"
-          class="nas-search__input"
-          placeholder="Search users..."
-          (input)="onSearch($any($event.target).value)"
-        />
+<!-- ═════════════════════════════════════════════════════════════════
+     DEACTIVATE CONFIRMATION
+═══════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="deactivateTarget() ? 'Deactivate ' + (deactivateTarget()!.name ?? 'user') : ''"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px' }"
+  [visible]="!!deactivateTarget()"
+  (visibleChange)="cancelDeactivate()"
+  styleClass="nas-dialog ul-confirm-dialog">
+
+  <p class="ul-confirm__body">
+    Are you sure you want to deactivate
+    <strong>{{ deactivateTarget()?.name ?? 'this user' }}</strong>'s account?
+  </p>
+
+  <ng-template pTemplate="footer">
+    <button
+      type="button"
+      class="ul-btn ul-btn--ghost"
+      [disabled]="deactivating()"
+      (click)="confirmDeactivate()">
+      Yes, Deactivate
+    </button>
+    <button
+      type="button"
+      class="ul-btn ul-btn--primary"
+      [disabled]="deactivating()"
+      (click)="cancelDeactivate()">
+      No, Keep it
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═════════════════════════════════════════════════════════════════
+     PROFILE DRAWER
+═══════════════════════════════════════════════════════════════════ -->
+@if (profile()) {
+  <div class="ul-drawer-overlay" (click)="closeProfile()"></div>
+  <aside class="ul-drawer">
+    <header class="ul-drawer__header">
+      <h3>User Profile</h3>
+      <button type="button" class="ul-icon-btn" (click)="closeProfile()">
+        <i class="pi pi-times"></i>
+      </button>
+    </header>
+
+    <div class="ul-drawer__identity">
+      <div class="ul-avatar ul-avatar--lg">{{ profile()!.avatar_initial }}</div>
+      <div>
+        <div class="ul-drawer__name">{{ profile()!.name }}</div>
+        @if (profile()!.email) {
+          <div class="ul-drawer__email">{{ profile()!.email }}</div>
+        }
       </div>
     </div>
 
-    <!-- User column -->
-    <ng-template nasCellTpl="user" let-row>
-      <div class="user-cell">
-        <div class="user-avatar-wrap">
-          <div class="user-avatar">{{ (row.name?.charAt(0) || '?').toUpperCase() }}</div>
-        </div>
-        <div>
-          <div class="user-name">{{ row.name || '—' }}</div>
-          <div class="user-email">{{ row.email || row.machine_code || '—' }}</div>
-        </div>
+    <dl class="ul-drawer__fields">
+      <div class="ul-drawer__row">
+        <dt>Role</dt>
+        <dd>
+          <span [class]="roleBadgeClass(profile()!.role_key)">{{ profile()!.role }}</span>
+        </dd>
       </div>
-    </ng-template>
+      <div class="ul-drawer__row">
+        <dt>Job Role</dt>
+        <dd>{{ profile()!.job_title || '—' }}</dd>
+      </div>
+      <div class="ul-drawer__row">
+        <dt>Enrolled Courses</dt>
+        <dd>{{ profile()!.enrolled_courses_count }}</dd>
+      </div>
+      <div class="ul-drawer__row">
+        <dt>Last Active</dt>
+        <dd>{{ profile()!.last_active_at ? (profile()!.last_active_at | date:'dd MMM') : '—' }}</dd>
+      </div>
+      <div class="ul-drawer__row">
+        <dt>Status</dt>
+        <dd>
+          <span class="u-status" [class]="statusTone(profile()!.status)">
+            {{ statusLabel(profile()!.status) }}
+          </span>
+        </dd>
+      </div>
+    </dl>
 
-    <!-- Job Title -->
-    <ng-template nasCellTpl="job_title" let-row>
-      <span class="muted">{{ row.job_title || '—' }}</span>
-    </ng-template>
+    <footer class="ul-drawer__footer">
+      <button type="button" class="ul-btn ul-btn--ghost" (click)="closeProfile()">Cancel</button>
+      <button type="button" class="ul-btn ul-btn--primary" (click)="editFromProfile()">
+        <i class="pi pi-pencil"></i> Edit Profile
+      </button>
+    </footer>
+  </aside>
+}
 
-    <!-- Department -->
-    <ng-template nasCellTpl="department_name" let-row>
-      <span class="muted">{{ row.department_name || '—' }}</span>
-    </ng-template>
+<!-- ═════════════════════════════════════════════════════════════════
+     PAGE
+═══════════════════════════════════════════════════════════════════ -->
+<div class="nas-page-container" (click)="closeMenu()">
 
-    <!-- Learner Type -->
-    <ng-template nasCellTpl="learner_type" let-row>
-      @if (row.learner_type) {
-        <nas-status-badge [tone]="learnerTone(row.learner_type)">
-          {{ row.learner_type | titlecase }}
-        </nas-status-badge>
+  <nas-page-header
+    title="Users"
+    subtitle="Manage Admin, instructors, and access across the organisation">
+    <button type="button" class="ul-btn ul-btn--primary ul-add-btn" (click)="openCreateForm()">
+      <i class="pi pi-plus-circle"></i>
+      Add User
+    </button>
+  </nas-page-header>
+
+  <!-- ── KPI cards ────────────────────────────────────────────── -->
+  <div class="ul-kpi-grid">
+    <div class="ul-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3.5rem" height="2.2rem" styleClass="ul-kpi-card__sk-value" />
       } @else {
-        <span>—</span>
+        <div class="ul-kpi-card__value">{{ summary().total_users }}</div>
       }
-    </ng-template>
+      <div class="ul-kpi-card__label">Total Users</div>
+    </div>
 
-    <!-- Row actions -->
-    <ng-template nasCellTpl="actions" let-row>
-      <div class="row-actions" (click)="$event.stopPropagation()">
-        <button type="button" class="row-action-btn" title="Edit" (click)="openEdit(row)">
-          <i class="pi pi-pencil"></i>
-        </button>
-        <button type="button" class="row-action-btn row-action-btn--danger" title="Delete" (click)="confirmDelete(row)">
-          <i class="pi pi-trash"></i>
-        </button>
+    <div class="ul-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3.5rem" height="2.2rem" styleClass="ul-kpi-card__sk-value" />
+      } @else {
+        <div class="ul-kpi-card__value">{{ summary().instructors }}</div>
+      }
+      <div class="ul-kpi-card__label">Instructors</div>
+    </div>
+
+    <div class="ul-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3.5rem" height="2.2rem" styleClass="ul-kpi-card__sk-value" />
+      } @else {
+        <div class="ul-kpi-card__value">{{ summary().admins }}</div>
+      }
+      <div class="ul-kpi-card__label">Admin</div>
+    </div>
+
+    <div class="ul-kpi-card">
+      @if (summaryLoading()) {
+        <p-skeleton width="3.5rem" height="2.2rem" styleClass="ul-kpi-card__sk-value" />
+      } @else {
+        <div class="ul-kpi-card__value">{{ visibleStatusKpi() }}</div>
+      }
+      <div class="ul-kpi-card__label">Inactive</div>
+    </div>
+  </div>
+
+  <!-- ── Search + Pills ───────────────────────────────────────── -->
+  <div class="ul-search">
+    <i class="pi pi-search ul-search__icon"></i>
+    <input
+      type="text"
+      class="ul-search__input"
+      placeholder="Quick search..."
+      (input)="onSearch($any($event.target).value)" />
+  </div>
+
+  <div class="ul-pill-row">
+    <button
+      type="button"
+      class="ul-pill"
+      [class.ul-pill--active]="activeTab() === 'all'"
+      (click)="setTab('all')">
+      All
+    </button>
+
+    <button
+      type="button"
+      class="ul-pill"
+      [class.ul-pill--active]="activeTab() === 'admin'"
+      (click)="setTab('admin')">
+      Admin
+      <i class="pi pi-chevron-down"></i>
+    </button>
+
+    <button
+      type="button"
+      class="ul-pill"
+      [class.ul-pill--active]="activeTab() === 'instructor'"
+      (click)="openInstructorModal()">
+      Instructors
+      @if (instructorIds.length) {
+        <span class="ul-pill__count">{{ instructorIds.length }}</span>
+      }
+      <i class="pi pi-chevron-down"></i>
+    </button>
+  </div>
+
+  <!-- ── Users table ──────────────────────────────────────────── -->
+  <div class="ul-table-card">
+    <div class="ul-table-wrap">
+      <table class="ul-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Job Role</th>
+            <th>Compliance</th>
+            <th>Status</th>
+            <th>Last Active</th>
+            <th class="ul-table__action-head"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletonRows; track s) {
+              <tr>
+                @for (c of [1,2,3,4,5,6,7]; track c) {
+                  <td><p-skeleton height="14px" /></td>
+                }
+              </tr>
+            }
+          } @else if (!items().length) {
+            <tr>
+              <td colspan="7" class="ul-table__empty">
+                <i class="pi pi-users"></i>
+                <span>No users found.</span>
+              </td>
+            </tr>
+          } @else {
+            @for (user of items(); track user.composite_id) {
+              <tr class="ul-row" (click)="openProfile(user)">
+                <td>
+                  <div class="ul-name-cell">
+                    <div class="ul-avatar">{{ user.avatar_initial }}</div>
+                    <div>
+                      <div class="ul-name-cell__title">{{ user.name }}</div>
+                      <div class="ul-name-cell__email">{{ user.email || user.machine_code || '—' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span [class]="roleBadgeClass(user.role_key)">{{ user.role }}</span>
+                </td>
+                <td class="ul-cell-muted">{{ user.job_title || '—' }}</td>
+                <td class="ul-cell-pct" [class]="complianceTone(user.compliance_pct)">
+                  @if (user.has_compliance) {
+                    {{ user.compliance_pct }}%
+                  } @else {
+                    —
+                  }
+                </td>
+                <td>
+                  <span class="u-status" [class]="statusTone(user.status)">
+                    {{ statusLabel(user.status) }}
+                  </span>
+                </td>
+                <td class="ul-cell-muted">{{ user.last_active_at ? (user.last_active_at | date:'dd MMM') : '—' }}</td>
+                <td class="ul-table__action" (click)="$event.stopPropagation()">
+                  <button type="button" class="ul-icon-btn" (click)="toggleMenu(user.composite_id, $event)">
+                    <i class="pi pi-ellipsis-h"></i>
+                  </button>
+                  @if (menuOpenKey() === user.composite_id) {
+                    <div class="ul-row-menu" (click)="$event.stopPropagation()">
+                      <button type="button" (click)="openProfile(user)">View Profile</button>
+                      <button type="button" (click)="openEditForm(user)">Edit</button>
+                      <button type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">Deactivate</button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (total() > perPage) {
+      <div class="ul-pagination">
+        <span class="ul-pagination__info">
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+        </span>
+        <div class="ul-pagination__nav">
+          <button type="button" class="ul-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+          <button type="button" class="ul-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
+        </div>
       </div>
-    </ng-template>
-  </nas-data-table>
+    }
+  </div>
 
 </div>
