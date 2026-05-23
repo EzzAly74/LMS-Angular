@@ -18,7 +18,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Subject, forkJoin, takeUntil, startWith } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
@@ -274,8 +275,26 @@ export class QuizFormComponent implements OnInit, OnDestroy {
 
   /* ── Submit ──────────────────────────────────────────────────── */
 
-  canPublish = computed(() => {
-    const v = this.form.getRawValue();
+  /**
+   * Reactive bridge from the form to the signals graph.
+   *
+   * Reactive Forms aren't signal-aware out of the box, so the previous
+   * `computed(() => this.form.getRawValue())` ran exactly once on
+   * construction (when title was empty + course_id was null) and never
+   * re-ran — which is why the Publish button was permanently disabled.
+   *
+   * `toSignal(valueChanges, { initialValue })` emits the *current* form
+   * value into the signal graph, and `startWith` makes sure the signal
+   * fires immediately after `populateForm()` runs on edit screens too.
+   */
+  private readonly formValue = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
+    { initialValue: this.form.getRawValue() },
+  );
+
+  readonly canPublish = computed(() => {
+    this.formValue();                       // dependency tracker
+    const v = this.form.getRawValue();      // always read the latest, raw value
     if (!v.title || !v.course_id) return false;
     if (v.cohort_scope === 'specific' && (!v.cohort_ids || v.cohort_ids.length === 0)) return false;
     if (!v.questions.length) return false;
