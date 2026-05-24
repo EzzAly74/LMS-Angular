@@ -15,7 +15,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -48,6 +48,7 @@ export class RoleListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(AdminRolesApiService);
   private readonly router   = inject(Router);
   private readonly messages = inject(MessageService);
+  private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$  = new Subject<string>();
@@ -176,8 +177,8 @@ export class RoleListComponent implements OnInit, OnDestroy {
         this.deleteTarget.set(null);
         this.messages.add({
           severity: 'success',
-          summary:  'Deleted',
-          detail:   `${target.name} has been removed.`,
+          summary:  this.t.instant('common.deleted'),
+          detail:   this.t.instant('roles.deleted'),
         });
         this.refresh();
       },
@@ -185,8 +186,8 @@ export class RoleListComponent implements OnInit, OnDestroy {
         this.deleting.set(false);
         const msg = err?.error?.message
                  ?? err?.error?.errors?.role?.[0]
-                 ?? 'Could not delete the role. Please retry.';
-        this.messages.add({ severity: 'error', summary: 'Error', detail: msg });
+                 ?? this.t.instant('errors.unexpected');
+        this.messages.add({ severity: 'error', summary: this.t.instant('errors.title'), detail: msg });
       },
     });
   }

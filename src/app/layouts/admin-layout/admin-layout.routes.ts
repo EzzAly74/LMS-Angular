@@ -51,7 +51,9 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
 
       // ── Communication ─────────────────────────────────────────────
       { path: 'messages',       loadChildren: () => import('../../features/messages/messages.routes').then(m => m.MESSAGES_ROUTES),             data: { viewKey: 'view-inbox' } },
-      { path: 'notifications',  loadChildren: () => import('../../features/notifications/notifications.routes').then(m => m.NOTIFICATIONS_ROUTES) }, // legacy
+      // /admin/notifications is now a global p-sidebar drawer (Figma 281:8104) — opened from the
+      // header bell and the dashboard "View All" link. The old standalone page is intentionally
+      // removed so admins can't reach an inconsistent surface.
       { path: 'articles',       loadChildren: () => import('../../features/articles/articles.routes').then(m => m.ARTICLES_ROUTES) },               // legacy
       { path: 'forms',          loadChildren: () => import('../../features/forms/forms.routes').then(m => m.FORMS_ROUTES) },                        // legacy
 

@@ -2,7 +2,7 @@
      FILTER MODAL (Instructors / Learners / Courses)
 ════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="Filter your results"
+  [header]="'ratings.filter_results' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -13,9 +13,9 @@
 
   <div class="rl-modal-section-label">
     @switch (filter().kind) {
-      @case ('instructors') { Instructors }
-      @case ('learners')    { Learners }
-      @case ('courses')     { Courses }
+      @case ('instructors') { {{ 'ratings.instructors' | translate }} }
+      @case ('learners')    { {{ 'ratings.learners'    | translate }} }
+      @case ('courses')     { {{ 'ratings.courses'     | translate }} }
     }
   </div>
 
@@ -24,7 +24,7 @@
     <input
       type="text"
       class="rl-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'ratings.quick_search' | translate"
       [ngModel]="filter().query"
       (ngModelChange)="onFilterQuery($event)" />
   </div>
@@ -37,14 +37,14 @@
       </label>
     }
     @if (!filterItems().length) {
-      <p class="rl-modal-empty">No results.</p>
+      <p class="rl-modal-empty">{{ 'common.no_results' | translate }}</p>
     }
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">Clear</button>
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">{{ 'common.reset' | translate }}</button>
     <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
-      <i class="pi pi-filter"></i> Filter
+      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -55,8 +55,8 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Ratings"
-    subtitle="All learner ratings and comments across the platform">
+    [title]="'ratings.title' | translate"
+    [subtitle]="'ratings.subtitle' | translate">
   </nas-page-header>
 
   <!-- ── KPI cards ───────────────────────────────────────────── -->
@@ -67,7 +67,7 @@
       } @else {
         <div class="rl-kpi-card__value">{{ summary().total_ratings }}</div>
       }
-      <div class="rl-kpi-card__label">Total Ratings</div>
+      <div class="rl-kpi-card__label">{{ 'ratings.total_ratings' | translate }}</div>
     </div>
 
     <div class="rl-kpi-card">
@@ -79,7 +79,7 @@
           <span>{{ averageDisplay() }}</span>
         </div>
       }
-      <div class="rl-kpi-card__label">Average Score</div>
+      <div class="rl-kpi-card__label">{{ 'ratings.average_score' | translate }}</div>
     </div>
 
     <div class="rl-kpi-card">
@@ -88,7 +88,7 @@
       } @else {
         <div class="rl-kpi-card__value rl-kpi-card__value--success">{{ summary().five_star_count }}</div>
       }
-      <div class="rl-kpi-card__label">5-Star Reviews</div>
+      <div class="rl-kpi-card__label">{{ 'ratings.five_star_reviews' | translate }}</div>
     </div>
 
     <div class="rl-kpi-card">
@@ -97,7 +97,7 @@
       } @else {
         <div class="rl-kpi-card__value rl-kpi-card__value--danger">{{ summary().low_count }}</div>
       }
-      <div class="rl-kpi-card__label">Low Ratings (&le;2&#9733;)</div>
+      <div class="rl-kpi-card__label">{{ 'ratings.low_ratings' | translate }}</div>
     </div>
   </div>
 
@@ -108,11 +108,11 @@
       class="rl-pill-btn"
       [class.rl-pill-btn--active]="!hasAnyFilter()"
       (click)="clearAllFilters()">
-      All
+      {{ 'ratings.all' | translate }}
     </button>
 
     <button type="button" class="rl-pill-btn" (click)="openFilter('instructors')">
-      Instructors
+      {{ 'ratings.instructors' | translate }}
       @if (filterPillCounts().instructors) {
         <span class="rl-pill-btn__count">{{ filterPillCounts().instructors }}</span>
       }
@@ -120,7 +120,7 @@
     </button>
 
     <button type="button" class="rl-pill-btn" (click)="openFilter('learners')">
-      Learners
+      {{ 'ratings.learners' | translate }}
       @if (filterPillCounts().learners) {
         <span class="rl-pill-btn__count">{{ filterPillCounts().learners }}</span>
       }
@@ -128,7 +128,7 @@
     </button>
 
     <button type="button" class="rl-pill-btn" (click)="openFilter('courses')">
-      Courses
+      {{ 'ratings.courses' | translate }}
       @if (filterPillCounts().courses) {
         <span class="rl-pill-btn__count">{{ filterPillCounts().courses }}</span>
       }
@@ -141,7 +141,7 @@
         <input
           type="text"
           class="rl-search__input"
-          placeholder="Search learner or comment..."
+          [placeholder]="'ratings.search_placeholder' | translate"
           (input)="onSearch($any($event.target).value)" />
       </div>
     </div>
@@ -153,12 +153,12 @@
       <table class="rl-table">
         <thead>
           <tr>
-            <th>Learner</th>
-            <th>Course</th>
-            <th>Instructor</th>
-            <th>Rating</th>
-            <th>Comment</th>
-            <th>Date</th>
+            <th>{{ 'ratings.learner' | translate }}</th>
+            <th>{{ 'ratings.course' | translate }}</th>
+            <th>{{ 'ratings.instructor' | translate }}</th>
+            <th>{{ 'ratings.rating' | translate }}</th>
+            <th>{{ 'ratings.comment' | translate }}</th>
+            <th>{{ 'ratings.date' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -171,7 +171,7 @@
               </tr>
             }
           } @else if (!items().length) {
-            <tr><td colspan="6" class="rl-table__empty">No ratings found.</td></tr>
+            <tr><td colspan="6" class="rl-table__empty">{{ 'ratings.no_results' | translate }}</td></tr>
           } @else {
             @for (item of items(); track item.id) {
               <tr class="rl-table__row">
@@ -205,7 +205,7 @@
     @if (total() > perPage) {
       <div class="rl-pagination">
         <span class="rl-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="rl-pagination__nav">
           <button type="button" class="rl-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">

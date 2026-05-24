@@ -3,8 +3,8 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Instructors"
-    subtitle="Manage instructors and their assigned courses">
+    [title]="'instructors.title' | translate"
+    [subtitle]="'instructors.subtitle' | translate">
   </nas-page-header>
 
   <div class="nas-card inst-table-card">
@@ -14,7 +14,7 @@
         <input
           type="text"
           class="nas-search__input"
-          placeholder="Search instructors..."
+          [placeholder]="'instructors.search_placeholder' | translate"
           (input)="onSearch($any($event.target).value)"
         />
       </div>
@@ -24,10 +24,10 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>Instructor</th>
-            <th>Job Title</th>
-            <th>Courses</th>
-            <th>Joined</th>
+            <th>{{ 'instructors.instructor' | translate }}</th>
+            <th>{{ 'instructors.job_title' | translate }}</th>
+            <th>{{ 'instructors.courses' | translate }}</th>
+            <th>{{ 'instructors.joined' | translate }}</th>
             <th></th>
           </tr>
         </thead>
@@ -57,14 +57,14 @@
                 <td>{{ item.courses_count ?? 0 }}</td>
                 <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
                 <td class="nas-table__action">
-                  <button type="button" class="row-action-btn" title="Delete" (click)="confirmDelete(item)">
+                  <button type="button" class="row-action-btn" [title]="'common.delete' | translate" (click)="confirmDelete(item)">
                     <i class="pi pi-trash"></i>
                   </button>
                 </td>
               </tr>
             }
             @if (!items().length) {
-              <tr><td colspan="5" class="nas-table__empty">No instructors found.</td></tr>
+              <tr><td colspan="5" class="nas-table__empty">{{ 'instructors.no_results' | translate }}</td></tr>
             }
           }
         </tbody>
@@ -74,7 +74,7 @@
     @if (total() > perPage) {
       <div class="nas-table-pagination">
         <span class="nas-table-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="nas-table-pagination__nav">
           <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">

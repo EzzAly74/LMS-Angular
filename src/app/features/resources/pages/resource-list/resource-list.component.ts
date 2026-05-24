@@ -14,6 +14,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -42,6 +43,7 @@ interface LmsResource {
     SkeletonModule,
     DropdownModule,
     ConfirmDialogModule,
+    TranslateModule,
     NasPageHeaderComponent,
   ],
   providers: [ConfirmationService],
@@ -53,6 +55,7 @@ export class ResourceListComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private router = inject(Router);
   private confirm = inject(ConfirmationService);
+  private t = inject(TranslateService);
   private destroy$ = new Subject<void>();
   private search$ = new Subject<string>();
 
@@ -147,8 +150,8 @@ export class ResourceListComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.closeMenu();
     this.confirm.confirm({
-      message: `Delete "${item.title}"? This action cannot be undone.`,
-      header: 'Delete Resource',
+      message: this.t.instant('confirm.delete_message_title', { title: item.title }),
+      header: this.t.instant('resources_list_toasts.delete_title'),
       icon: 'pi pi-trash',
       acceptButtonStyleClass: 'p-button-danger p-button-sm',
       rejectButtonStyleClass: 'p-button-secondary p-button-sm',

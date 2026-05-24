@@ -11,6 +11,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { ADMIN_NAV_GROUPS, NavGroup, NavItem } from './admin-nav.config';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { NasConfirmModalComponent } from '../../shared/nas/nas-confirm-modal.component';
+import { NasIconComponent } from '../../shared/nas/nas-icon.component';
+import { NotificationsDrawerComponent } from '../../shared/nas/notifications-drawer/notifications-drawer.component';
+import { NotificationsDrawerService } from '../../shared/nas/notifications-drawer/notifications-drawer.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -23,17 +27,22 @@ import { toSignal } from '@angular/core/rxjs-interop';
     ToastModule,
     ConfirmDialogModule,
     OverlayPanelModule,
+    NasConfirmModalComponent,
+    NasIconComponent,
+    NotificationsDrawerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.scss',
 })
 export class AdminLayoutComponent {
-  locale = inject(LocaleService);
-  auth   = inject(AuthService);
-  router = inject(Router);
+  locale          = inject(LocaleService);
+  auth            = inject(AuthService);
+  router          = inject(Router);
+  notifsDrawer    = inject(NotificationsDrawerService);
 
   sidebarCollapsed = signal(false);
+  logoutConfirmOpen = signal(false);
 
   /**
    * Sidebar groups filtered by the current admin's `view_keys`.
@@ -110,4 +119,20 @@ export class AdminLayoutComponent {
 
   /** Display name shown beneath "Welcome back". */
   profileName = computed(() => this.auth.currentAdmin()?.name ?? 'Admin');
+
+  /** Open the Figma logout-confirmation dialog instead of signing out directly. */
+  requestLogout(): void {
+    this.logoutConfirmOpen.set(true);
+  }
+
+  /** "Yes, logout" — flush the session and route to /auth/login. */
+  confirmLogout(): void {
+    this.logoutConfirmOpen.set(false);
+    this.auth.logout();
+  }
+
+  /** "No, keep it logged in" — just close the modal. */
+  cancelLogout(): void {
+    this.logoutConfirmOpen.set(false);
+  }
 }

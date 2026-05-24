@@ -4,7 +4,7 @@
      DELETE CONFIRMATION
 ═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [header]="deleteTarget() ? 'Delete ' + (deleteTarget()!.name) + '?' : ''"
+  [header]="deleteTarget() ? ('roles.delete_confirm_title' | translate:{ name: deleteTarget()!.name }) : ''"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -14,16 +14,14 @@
   styleClass="nas-dialog rl-confirm-dialog">
 
   <p class="rl-confirm__body">
-    Are you sure you want to delete the role
-    <strong>{{ deleteTarget()?.name }}</strong>?
-    This action cannot be undone.
+    {{ 'roles.delete_confirm_body' | translate:{ name: deleteTarget()?.name } }}
   </p>
 
   <ng-template pTemplate="footer">
     <button type="button" class="rl-btn rl-btn--ghost"
             [disabled]="deleting()"
             (click)="cancelDelete()">
-      Cancel
+      {{ 'common.cancel' | translate }}
     </button>
     <button type="button" class="rl-btn rl-btn--danger"
             [disabled]="deleting()"
@@ -33,7 +31,7 @@
       } @else {
         <i class="pi pi-trash"></i>
       }
-      Yes, Delete
+      {{ 'common.yes_delete' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -44,10 +42,10 @@
 <div class="nas-page-container" (click)="closeMenu()">
 
   <nas-page-header
-    title="Roles"
-    subtitle="Define roles and control which dashboard sections each role can access.">
+    [title]="'roles.title' | translate"
+    [subtitle]="'roles.subtitle' | translate">
     <button type="button" class="rl-add-btn" (click)="goToCreate()">
-      <i class="pi pi-plus"></i> Add Role
+      <i class="pi pi-plus"></i> {{ 'roles.add_role' | translate }}
     </button>
   </nas-page-header>
 
@@ -79,7 +77,7 @@
               <div class="rl-card__title-row">
                 <h3 class="rl-card__title">{{ role.name }}</h3>
                 @if (role.is_system) {
-                  <span class="rl-card__tag">System</span>
+                  <span class="rl-card__tag">{{ 'roles.system' | translate }}</span>
                 }
               </div>
               <p class="rl-card__desc">{{ role.description || '—' }}</p>
@@ -95,12 +93,12 @@
               @if (menuOpenId() === role.id) {
                 <div class="rl-card-menu" (click)="$event.stopPropagation()">
                   <button type="button" (click)="goToEdit(role)">
-                    <i class="pi pi-pencil"></i> Edit
+                    <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
                   </button>
                   @if (!role.is_system) {
                     <button type="button" class="rl-card-menu__danger"
                             (click)="askDelete(role)">
-                      <i class="pi pi-trash"></i> Delete
+                      <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
                     </button>
                   }
                 </div>
@@ -112,11 +110,11 @@
           <footer class="rl-card__foot">
             <span class="rl-card__meta">
               <i class="pi pi-users"></i>
-              {{ role.user_count }} {{ role.user_count === 1 ? 'user' : 'users' }}
+              {{ role.user_count }} {{ (role.user_count === 1 ? 'common.user_one' : 'common.user_many') | translate }}
             </span>
             <span class="rl-card__meta">
               <i class="pi pi-eye"></i>
-              {{ role.view_count }}/{{ role.view_total }} sections visible
+              {{ 'common.sections_visible' | translate:{ count: role.view_count, total: role.view_total } }}
             </span>
 
             <div class="rl-progress" [ngClass]="badgeColorClass(role.color)">
@@ -148,7 +146,7 @@
                     }
                     @if (g.hidden > 0) {
                       <span class="rl-card__pill rl-card__pill--hidden">
-                        +{{ g.hidden }} hidden
+                        {{ 'common.hidden_count' | translate:{ count: g.hidden } }}
                       </span>
                     }
                   </div>
@@ -162,7 +160,7 @@
       <!-- "Add New Role" empty card -->
       <button type="button" class="rl-card rl-card--add" (click)="goToCreate()">
         <i class="pi pi-plus rl-card--add__icon"></i>
-        <span class="rl-card--add__label">Add New Role</span>
+        <span class="rl-card--add__label">{{ 'roles.add_new_role' | translate }}</span>
       </button>
     </div>
   }

@@ -11,3 +11,7 @@ export * from './nas-data-table.component';
 export * from './nas-icon.component';
 export * from './nas-rich-text.component';
 export * from './nas-photo-upload.component';
+export * from './nas-confirm-modal.component';
+export * from './notifications-drawer/notifications-drawer.service';
+export * from './notifications-drawer/notifications-drawer.component';
+export * from './cohort-attendance-drawer/cohort-attendance-drawer.component';

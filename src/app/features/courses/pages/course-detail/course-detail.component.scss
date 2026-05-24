@@ -330,8 +330,85 @@
   }
 }
 
-/* ── Learners ────────────────────────────────────────────────────── */
-.learner-cell { display: flex; align-items: center; gap: var(--nas-space-2); }
+/* ── Learners tab ────────────────────────────────────────────────── */
+.learners-tab { display: flex; flex-direction: column; gap: var(--nas-space-3); }
+
+.learners-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.learners-table {
+  th {
+    background: var(--nas-color-bg-surface, #fafafa);
+    font-size: var(--nas-size-2xs);
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-muted);
+    padding: 12px 20px;
+  }
+  td {
+    padding: 12px 20px;
+    vertical-align: middle;
+    font-size: var(--nas-size-2xs);
+  }
+
+  &__col-name     { width: 30%; }
+  &__col-cohort   { width: 15%; }
+  &__col-progress { width: 22%; }
+  &__col-status   { width: 18%; }
+  &__col-date     { width: 15%; }
+
+  &__cohort,
+  &__date {
+    color: var(--nas-color-text-muted);
+  }
+  &__date { font-size: var(--nas-size-3xs); }
+  &__progress { min-width: 180px; }
+
+  /* Status column — Figma 321:6791 uses plain coloured text, not a pill.
+     Each colour comes straight from the LMS design tokens used in the
+     mock so the row reads identically to the spec. */
+  &__status {
+    font-size: var(--nas-size-2xs);
+    font-weight: var(--nas-weight-medium);
+    white-space: nowrap;
+
+    &[data-status="completed"]   { color: var(--nas-color-text-strong, #0c2427); }
+    &[data-status="in_progress"] { color: #496e91; }
+    &[data-status="not_started"] { color: #595959; }
+  }
+}
+
+.learner-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+
+  &__avatar {
+    position: relative;
+    display: inline-flex;
+
+    /* Figma shows a small green dot in the bottom-right of the avatar for
+       completed / in-progress learners only. Not-started learners get a
+       plain avatar so the table reads at a glance. */
+    &--active::after {
+      content: '';
+      position: absolute;
+      inset-inline-end: -1px;
+      bottom: -1px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--nas-status-green-500, #0fb86a);
+      border: 2px solid var(--nas-color-bg, #ffffff);
+    }
+  }
+
+  &__name {
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+  }
+}
 
 /* ── Qualifications tab ──────────────────────────────────────────── */
 .qual-list {
@@ -509,6 +586,29 @@
   &--warn { color: var(--nas-status-red-500, #DC2626); }
 }
 
+/* ── Cohort dialog (Figma 332:9988 / 332:10708) ──────────────────── */
+.cohort-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-4);
+
+  .required { color: var(--nas-status-red-500, #DC2626); }
+}
+
+.cohort-form__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: var(--nas-size-3xs);
+  color: var(--nas-color-accent-600, #0891B2);
+
+  i {
+    font-size: 14px;
+    color: currentColor;
+  }
+}
+
 /* "Approximate Duration" — boxed input with the `minutes` label and a small
    vertical chevron stepper rendered *inside* the field, matching Figma. We
    intentionally avoid PrimeNG's `<p-inputNumber>` here because the project
@@ -667,10 +767,11 @@
 }
 
 /* ── Ratings tab ─────────────────────────────────────────────────── */
+.ratings-tab { display: flex; flex-direction: column; gap: var(--nas-space-3); }
+
 .ratings-tab__head {
   font-size: var(--nas-size-2xs);
   color: var(--nas-color-text-muted);
-  margin-bottom: var(--nas-space-3);
 }
 .ratings-tab__list {
   display: flex;
@@ -680,21 +781,35 @@
 .review-card {
   padding: var(--nas-space-4) var(--nas-space-5);
 
-  &__head { display: flex; align-items: center; justify-content: space-between; gap: var(--nas-space-3); margin-bottom: var(--nas-space-2); }
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--nas-space-3);
+    margin-bottom: var(--nas-space-2);
+  }
   &__user { display: flex; align-items: center; gap: var(--nas-space-3); }
   &__name { font-size: var(--nas-size-2xs); font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
   &__code { font-size: var(--nas-size-3xs); color: var(--nas-color-text-muted); }
 
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
   &__rating {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     color: var(--nas-status-amber-500);
     font-size: var(--nas-size-2xs);
     font-weight: var(--nas-weight-medium);
     i { font-size: 12px; &.dim { color: var(--nas-neutral-400); } }
-    span { color: var(--nas-color-text-strong); margin-inline-start: 4px; }
   }
+  &__score { color: var(--nas-color-text-strong); margin-inline-start: 4px; }
+  &__date  { font-size: var(--nas-size-3xs); color: var(--nas-color-text-muted); }
+
   &__comment {
     font-size: var(--nas-size-xs);
     color: var(--nas-color-text-body);
@@ -702,6 +817,19 @@
     line-height: var(--nas-height-l);
     &--muted { color: var(--nas-color-text-muted); font-style: italic; }
   }
+}
+
+.ratings-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  padding: var(--nas-space-12) var(--nas-space-6);
+  text-align: center;
+  color: var(--nas-color-text-muted);
+  i  { font-size: 28px; color: var(--nas-neutral-400); }
+  p  { font-size: var(--nas-size-2xs); margin: 0; }
 }
 
 /* ── Form (modal) ────────────────────────────────────────────────── */

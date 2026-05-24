@@ -20,6 +20,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject, forkJoin, takeUntil, startWith } from 'rxjs';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
@@ -124,6 +125,18 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
 
   readonly totalScore = signal(0);
   readonly questionCount = signal(0);
+
+  constructor() {
+    // Refetch the form + lookups whenever the UI locale changes so the
+    // server returns localized titles/instructions in the new language.
+    withLocaleReload(() => {
+      const id = this.assignmentId();
+      if (id) this.fetchAssignment(id);
+      this.coursesApi.list({ per_page: 200 }).subscribe({
+        next: r => this.courses.set((r.result.data ?? []) as unknown as CourseOpt[]),
+      });
+    });
+  }
 
   /* ── Lifecycle ──────────────────────────────────────────────── */
 

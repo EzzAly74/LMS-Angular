@@ -1,22 +1,22 @@
 <p-confirmDialog />
 <div class="nas-page-container">
-  <nas-page-header title="Exams" subtitle="Manage exams by course">
+  <nas-page-header [title]="'exams.title' | translate" [subtitle]="'exams.subtitle' | translate">
   </nas-page-header>
   <div class="nas-card exam-table-card">
     <div class="exam-toolbar">
-      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">Filter by course</label>
+      <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">{{ 'exams.filter_by_course' | translate }}</label>
       <p-dropdown [options]="courses()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
-        placeholder="Select a course" [loading]="coursesLoading()" [showClear]="true"
+        [placeholder]="'exams.select_course' | translate" [loading]="coursesLoading()" [showClear]="true"
         styleClass="nas-dropdown" (onChange)="onCourseChange()" [style]="{'min-width':'240px','height':'36px'}" />
     </div>
     <div class="exam-table-wrap">
       <table class="nas-table">
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Degree</th>
-            <th>Type</th>
-            <th>Created</th>
+            <th>{{ 'common.title' | translate }}</th>
+            <th>{{ 'exams.degree' | translate }}</th>
+            <th>{{ 'common.type' | translate }}</th>
+            <th>{{ 'common.created_at' | translate }}</th>
             <th></th>
           </tr>
         </thead>
@@ -34,7 +34,7 @@
               <tr class="nas-table__row">
                 <td class="nas-table__primary">{{ item.title }}</td>
                 <td>{{ item.degree }}</td>
-                <td><nas-status-badge [tone]="item.is_final ? 'danger' : 'info'">{{ item.is_final ? 'Final' : 'Regular' }}</nas-status-badge></td>
+                <td><nas-status-badge [tone]="item.is_final ? 'danger' : 'info'">{{ (item.is_final ? 'exams.final' : 'exams.not_final') | translate }}</nas-status-badge></td>
                 <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
                 <td class="nas-table__action">
                   <button type="button" class="row-action-btn" (click)="confirmDelete(item)"><i class="pi pi-trash"></i></button>
@@ -43,7 +43,7 @@
             }
             @if (!items().length) {
               <tr>
-                <td colspan="5" class="nas-table__empty">{{ selectedCourseId ? 'No exams found.' : 'Select a course to view its exams.' }}</td>
+                <td colspan="5" class="nas-table__empty">{{ (selectedCourseId ? 'exams.no_results' : 'exams.select_to_view') | translate }}</td>
               </tr>
             }
           }
@@ -52,7 +52,7 @@
     </div>
     @if (total() > perPage) {
       <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}</span>
         <div class="nas-table-pagination__nav">
           <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
           <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>

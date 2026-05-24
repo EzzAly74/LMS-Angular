@@ -14,7 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -50,6 +50,7 @@ type RoleTab = 'all' | 'admin' | 'instructor';
 export class AuditLogListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(AdminAuditLogApiService);
   private readonly messages = inject(MessageService);
+  private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$  = new Subject<string>();
@@ -191,8 +192,8 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
         this.exporting.set(false);
         this.messages.add({
           severity: 'error',
-          summary:  'Export failed',
-          detail:   'Could not generate the audit log. Please retry.',
+          summary:  this.t.instant('common.export_failed'),
+          detail:   this.t.instant('audit_toasts.generate_failed'),
         });
       },
     });
@@ -212,8 +213,8 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
     this.exporting.set(false);
     this.messages.add({
       severity: 'success',
-      summary:  'Export ready',
-      detail:   `${filename} has been downloaded.`,
+      summary:  this.t.instant('common.export_ready'),
+      detail:   this.t.instant('audit_toasts.export_downloaded', { filename }),
     });
   }
 

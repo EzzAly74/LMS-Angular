@@ -1,115 +1,185 @@
-<div class="nas-page-container">
+<div class="nas-page-container jt-page">
 
-  <nas-page-header
-    title="Job Titles"
-    subtitle="Assign qualification requirements to each job title">
-  </nas-page-header>
+  <header class="jt-page__head">
+    <h1 class="jt-page__title">{{ 'job_titles.title' | translate }}</h1>
+    <p class="jt-page__subtitle">{{ 'job_titles.subtitle' | translate }}</p>
+  </header>
 
-  <!-- Card grid -->
-  <div class="job-title-grid">
+  <div class="jt-page__toolbar">
+    <div class="jt-search">
+      <nas-icon name="magnifying-glass" [size]="18" />
+      <input
+        type="text"
+        class="jt-search__input"
+        [placeholder]="'common.quick_search' | translate"
+        [ngModel]="search()"
+        (ngModelChange)="onSearch($event)"
+      />
+    </div>
+  </div>
+
+  <div class="jt-grid">
     @if (loading()) {
       @for (s of skeletons; track s) {
-        <div class="job-title-card job-title-card--skeleton">
-          <p-skeleton height="32px" width="60%" borderRadius="6px" />
-          <p-skeleton height="20px" width="80%" borderRadius="6px" />
-          <p-skeleton height="40px" borderRadius="6px" />
-          <p-skeleton height="6px" borderRadius="9999px" />
-          <p-skeleton height="40px" borderRadius="12px" />
+        <div class="jt-card jt-card--skeleton">
+          <p-skeleton height="20px" width="55%" borderRadius="6px" />
+          <p-skeleton height="20px" width="80px" borderRadius="999px" />
+          <p-skeleton height="44px" borderRadius="6px" />
+          <p-skeleton height="6px" borderRadius="999px" />
+          <p-skeleton height="40px" borderRadius="8px" />
         </div>
       }
     } @else {
       @for (item of items(); track item.id) {
-        <article class="job-title-card">
-
-          <!-- Header: name + employee badge -->
-          <div class="job-title-card__header">
-            <span class="job-title-card__name">{{ item.name }}</span>
-            <span class="job-title-card__employee-badge">
-              {{ item.employees_count ?? 0 }} Employee
+        <article class="jt-card">
+          <header class="jt-card__head">
+            <h2 class="jt-card__name">{{ item.name }}</h2>
+            <span class="jt-card__pill">
+              {{ item.employees_count ?? 0 }} {{ 'job_titles.employee' | translate }}
             </span>
+          </header>
+
+          <div class="jt-card__stats">
+            <div class="jt-stat">
+              <div class="jt-stat__value">{{ item.learners_count ?? 0 }}</div>
+              <div class="jt-stat__label">{{ 'job_titles.learners' | translate }}</div>
+            </div>
+            <div class="jt-stat jt-stat--end">
+              <div class="jt-stat__value">{{ item.qualifications_count ?? 0 }}</div>
+              <div class="jt-stat__label">{{ 'job_titles.qualifications' | translate }}</div>
+            </div>
           </div>
 
-          <!-- Stats: employees + learners + qualifications -->
-          <div class="job-title-card__stats">
-            <div class="job-title-card__stat">
-              <div class="job-title-card__stat-value">{{ item.learners_count ?? 0 }}</div>
-              <div class="job-title-card__stat-label">Learners</div>
+          <div class="jt-compliance">
+            <div class="jt-compliance__row">
+              <span class="jt-compliance__label">{{ 'job_titles.compliance' | translate }}</span>
+              <span class="jt-compliance__value jt-compliance__value--{{ complianceTone(item.compliance_percent) }}">
+                {{ item.compliance_percent ?? 0 }}%
+              </span>
             </div>
-            <div class="job-title-card__stat">
-              <div class="job-title-card__stat-value">{{ item.qualifications_count ?? 0 }}</div>
-              <div class="job-title-card__stat-label">Qualifications</div>
+            <div class="jt-compliance__track">
+              <div class="jt-compliance__fill jt-compliance__fill--{{ complianceTone(item.compliance_percent) }}"
+                [style.width.%]="item.compliance_percent ?? 0">
+              </div>
             </div>
           </div>
 
-          <!-- CTA button -->
-          <button class="job-title-card__assign-btn" type="button" (click)="openDialog(item)">
-            <i class="pi pi-plus-circle"></i>
-            Assign Qualification
+          <button type="button" class="jt-card__cta" (click)="openDialog(item)">
+            <nas-icon name="plus-circle" [size]="18" />
+            <span>{{ 'job_titles.assign_qualification' | translate }}</span>
           </button>
-
         </article>
       }
 
       @if (!items().length) {
-        <div class="job-title-empty">No job titles found.</div>
+        <div class="jt-empty">
+          <nas-icon name="tray" [size]="32" />
+          <p>{{ 'job_titles.empty' | translate }}</p>
+        </div>
       }
     }
   </div>
 
+  @if (!loading() && total() > perPage) {
+    <nav class="jt-pagination" [attr.aria-label]="'common.pagination' | translate">
+      <span class="jt-pagination__info">
+        {{ rangeStart() }}–{{ rangeEnd() }} {{ 'common.of' | translate }} {{ total() }}
+      </span>
+      <div class="jt-pagination__nav">
+        <button type="button" class="jt-pagination__btn"
+          [disabled]="page() === 1"
+          (click)="onPage(page() - 1)"
+          [attr.aria-label]="'common.previous' | translate">
+          <nas-icon name="caret-left" [size]="16" />
+        </button>
+        <span class="jt-pagination__page">
+          {{ page() }} / {{ totalPages() }}
+        </span>
+        <button type="button" class="jt-pagination__btn"
+          [disabled]="page() >= totalPages()"
+          (click)="onPage(page() + 1)"
+          [attr.aria-label]="'common.next' | translate">
+          <nas-icon name="caret-right" [size]="16" />
+        </button>
+      </div>
+    </nav>
+  }
+
 </div>
 
-<!-- ── Assign Qualification modal ─────────────────────────────────────── -->
 <p-dialog
   [visible]="dialogVisible()"
-  (visibleChange)="dialogVisible.set($event)"
+  (visibleChange)="$event ? dialogVisible.set(true) : closeDialog()"
   [modal]="true"
-  [closable]="true"
+  [closable]="false"
   [draggable]="false"
   [resizable]="false"
-  [closeOnEscape]="true"
-  styleClass="nas-dialog"
-  [style]="{ width: '520px' }"
-  header="Assign Qualification">
+  [closeOnEscape]="!saving()"
+  [dismissableMask]="!saving()"
+  styleClass="jt-dialog"
+  [style]="{ width: '420px' }">
 
-  <div class="assign-modal">
-    <div class="assign-modal__for">For {{ selectedJobTitle()?.name }}</div>
+  <ng-template pTemplate="headless">
+    <div class="jt-dialog__card">
 
-    <div class="assign-modal__search-wrap">
-      <i class="pi pi-search assign-modal__search-icon"></i>
-      <input
-        type="text"
-        class="assign-modal__search-input"
-        placeholder="Quick search..."
-        [ngModel]="modalSearch()"
-        (ngModelChange)="onModalSearch($event)"
-      />
+      <header class="jt-dialog__head">
+        <h2 class="jt-dialog__title">{{ 'job_titles.modal_title' | translate }}</h2>
+        <button type="button" class="jt-dialog__close" (click)="closeDialog()" [disabled]="saving()"
+          [attr.aria-label]="'common.close' | translate">
+          <nas-icon name="x" [size]="18" />
+        </button>
+      </header>
+
+      <div class="jt-dialog__body">
+
+        <p class="jt-dialog__for">
+          {{ 'job_titles.modal_for' | translate }} {{ selectedJobTitle()?.name }}
+        </p>
+
+        <div class="jt-dialog__search">
+          <nas-icon name="magnifying-glass" [size]="18" />
+          <input
+            type="text"
+            class="jt-dialog__search-input"
+            [placeholder]="'common.quick_search' | translate"
+            [ngModel]="modalSearch()"
+            (ngModelChange)="onModalSearch($event)"
+          />
+        </div>
+
+        <ul class="jt-dialog__list" role="listbox" aria-multiselectable="true">
+          @for (q of filteredQuals(); track q.id) {
+            <li class="jt-dialog__option" role="option" [attr.aria-selected]="isSelected(q.id)"
+              (click)="toggleQual(q.id)">
+              <span class="jt-checkbox" [class.jt-checkbox--checked]="isSelected(q.id)">
+                @if (isSelected(q.id)) {
+                  <nas-icon name="check" [size]="12" />
+                }
+              </span>
+              <span class="jt-dialog__option-label">{{ q.name }}</span>
+            </li>
+          }
+          @if (!filteredQuals().length) {
+            <li class="jt-dialog__option jt-dialog__option--empty">
+              {{ 'job_titles.modal_no_results' | translate }}
+            </li>
+          }
+        </ul>
+
+      </div>
+
+      <footer class="jt-dialog__foot">
+        <button type="button" class="jt-btn jt-btn--ghost" (click)="closeDialog()" [disabled]="saving()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="jt-btn jt-btn--primary"
+          [disabled]="!canSave()" (click)="saveQualifications()">
+          <nas-icon name="floppy-disk" [size]="18" />
+          <span>{{ 'job_titles.save_assignments' | translate }}</span>
+        </button>
+      </footer>
+
     </div>
-
-    <ul class="assign-modal__list">
-      @for (q of filteredQuals(); track q.id) {
-        <li class="assign-modal__item" (click)="toggleQual(q.id)">
-          <span class="assign-modal__checkbox" [class.checked]="isSelected(q.id)">
-            @if (isSelected(q.id)) {
-              <i class="pi pi-check"></i>
-            }
-          </span>
-          <span class="assign-modal__item-label">{{ q.name }}</span>
-        </li>
-      }
-      @if (!filteredQuals().length) {
-        <li class="assign-modal__empty">No qualifications found</li>
-      }
-    </ul>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">
-      Cancel
-    </button>
-    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="saveQualifications()">
-      <i class="pi pi-save"></i>
-      Save Assignments
-    </button>
   </ng-template>
 
 </p-dialog>

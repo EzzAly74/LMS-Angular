@@ -12,7 +12,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
-import { DashboardApiService, DashboardData, DashboardNotification } from '../../services/dashboard-api.service';
+import {
+  DashboardApiService,
+  DashboardData,
+  DashboardNotification,
+  DashboardTrendRange,
+} from '../../services/dashboard-api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { pickLocalized } from '../../../../core/utils/localized';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -22,7 +27,9 @@ import {
   NasProgressComponent,
   NasPillTabsComponent,
   NasPillTab,
+  NasIconComponent,
 } from '../../../../shared/nas';
+import { NotificationsDrawerService } from '../../../../shared/nas/notifications-drawer/notifications-drawer.service';
 
 interface KpiStats {
   active_learners: number;
@@ -49,7 +56,7 @@ interface TopCourse {
   status?: string;
 }
 
-type TrendRange = 'week' | 'month' | 'quarter' | 'year';
+type TrendRange = DashboardTrendRange;
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -66,6 +73,7 @@ type TrendRange = 'week' | 'month' | 'quarter' | 'year';
     NasStatusBadgeComponent,
     NasProgressComponent,
     NasPillTabsComponent,
+    NasIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-dashboard.component.html',
@@ -73,15 +81,12 @@ type TrendRange = 'week' | 'month' | 'quarter' | 'year';
 })
 export class AdminDashboardComponent implements OnInit {
   private dashboardApi = inject(DashboardApiService);
-  private locale = inject(LocaleService);
+  private locale       = inject(LocaleService);
+  notifsDrawer         = inject(NotificationsDrawerService);
 
-  constructor() {
-    withLocaleReload(() => this.load());
-  }
-
-  loading = signal(true);
-  data = signal<DashboardData | null>(null);
-  today = new Date();
+  loading      = signal(true);
+  data         = signal<DashboardData | null>(null);
+  today        = new Date();
 
   trendRange = signal<TrendRange>('month');
   rangeTabs: NasPillTab[] = [
@@ -90,6 +95,21 @@ export class AdminDashboardComponent implements OnInit {
     { id: 'quarter', label: 'Quarter' },
     { id: 'year', label: 'Year' },
   ];
+
+  constructor() {
+    withLocaleReload(() => this.load());
+  }
+
+  /**
+   * Range tabs are fully server-driven — switching the active tab fires
+   * a fresh `/dashboard?range=…` request so the bucket grid (daily /
+   * weekly / monthly) always comes back pre-built. No client fabrication.
+   */
+  onRangeChange(range: TrendRange): void {
+    if (this.trendRange() === range) return;
+    this.trendRange.set(range);
+    this.fetch(range);
+  }
 
   greeting = computed(() => {
     const h = new Date().getHours();
@@ -100,18 +120,21 @@ export class AdminDashboardComponent implements OnInit {
         : 'dashboard.good_evening';
   });
 
-  /** Current trend series (real backend data when non-empty, otherwise generated demo data). */
+  /** Backend-driven trend buckets — never fabricated. */
   private readonly trendSeries = computed(() => {
-    const range = this.trendRange();
     const backend = this.data()?.enrollment_trend ?? [];
+    return {
+      labels:      backend.map(t => t.label),
+      enrollments: backend.map(t => t.enrollments ?? 0),
+      completions: backend.map(t => t.completions ?? 0),
+    };
+  });
 
-    const hasRealData =
-      backend.length > 0 &&
-      backend.some((t) => (t.enrollments ?? 0) > 0 || (t.completions ?? 0) > 0);
-
-    return hasRealData
-      ? this.adaptBackendToRange(backend, range)
-      : this.buildSampleSeries(range);
+  /** True when every bucket is zero — render the empty state instead. */
+  readonly trendIsEmpty = computed(() => {
+    const s = this.trendSeries();
+    if (!s.labels.length) return true;
+    return s.enrollments.every(v => !v) && s.completions.every(v => !v);
   });
 
   chartData = computed(() => {
@@ -242,93 +265,20 @@ export class AdminDashboardComponent implements OnInit {
     this.load();
   }
 
+  /** Public reload — used by the locale-reload helper. */
   load(): void {
-    this.dashboardApi.getSummary().subscribe({
+    this.fetch(this.trendRange());
+  }
+
+  /** Fetch the dashboard summary for the requested range. */
+  private fetch(range: TrendRange): void {
+    if (!this.data()) this.loading.set(true);
+    this.dashboardApi.getSummary(range).subscribe({
       next: (res) => {
         this.data.set(res.result);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
     });
-  }
-
-  /* ── Trend data helpers ───────────────────────────────────────────── */
-
-  /**
-   * Generate a realistic-looking demo series so the chart shows a curve
-   * before any real activity is recorded. Always returns positive integers
-   * with a mild upward bias and natural-looking variance.
-   */
-  private buildSampleSeries(range: TrendRange): {
-    labels: string[];
-    enrollments: number[];
-    completions: number[];
-  } {
-    const config: Record<
-      TrendRange,
-      { points: number; step: 'day' | 'week' | 'month'; base: number; spread: number }
-    > = {
-      week:    { points: 7,  step: 'day',   base: 8,  spread: 6 },
-      month:   { points: 30, step: 'day',   base: 12, spread: 10 },
-      quarter: { points: 13, step: 'week',  base: 60, spread: 35 },
-      year:    { points: 12, step: 'month', base: 240, spread: 110 },
-    };
-
-    const { points, step, base, spread } = config[range];
-    const labels: string[] = [];
-    const enrollments: number[] = [];
-    const completions: number[] = [];
-
-    const today = new Date();
-    let seed = 0x9e3779b1;
-    const rng = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return (seed & 0x7fffffff) / 0x7fffffff;
-    };
-
-    for (let i = points - 1; i >= 0; i--) {
-      const d = new Date(today);
-      if (step === 'day')   d.setDate(today.getDate() - i);
-      if (step === 'week')  d.setDate(today.getDate() - i * 7);
-      if (step === 'month') d.setMonth(today.getMonth() - i);
-
-      // Soft sine + noise + mild upward trend, clamped to >= 1
-      const t        = (points - 1 - i) / Math.max(1, points - 1);
-      const wave     = Math.sin(t * Math.PI * 1.6) * 0.45 + 0.55;
-      const trendUp  = 0.55 + t * 0.45;
-      const noise    = (rng() - 0.5) * 0.4;
-      const enroll   = Math.max(1, Math.round(base + wave * spread * trendUp + noise * spread));
-
-      // Completions trail enrollments by ~55–80%
-      const ratio    = 0.55 + rng() * 0.25;
-      const complete = Math.max(0, Math.round(enroll * ratio));
-
-      labels.push(this.formatLabel(d, step));
-      enrollments.push(enroll);
-      completions.push(complete);
-    }
-
-    return { labels, enrollments, completions };
-  }
-
-  /** Pick the right number of trailing buckets from backend data for the active range. */
-  private adaptBackendToRange(
-    backend: ReadonlyArray<{ date: string; enrollments: number; completions: number }>,
-    range: TrendRange,
-  ): { labels: string[]; enrollments: number[]; completions: number[] } {
-    const take = { week: 7, month: 30, quarter: 90, year: 365 }[range];
-    const slice = backend.slice(-take);
-    return {
-      labels:      slice.map((t) => this.formatLabel(new Date(t.date), 'day')),
-      enrollments: slice.map((t) => t.enrollments ?? 0),
-      completions: slice.map((t) => t.completions ?? 0),
-    };
-  }
-
-  private formatLabel(d: Date, step: 'day' | 'week' | 'month'): string {
-    if (step === 'month') {
-      return d.toLocaleDateString(undefined, { month: 'short' });
-    }
-    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
   }
 }

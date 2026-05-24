@@ -1,0 +1,221 @@
+<p-sidebar
+  [visible]="visible()"
+  (visibleChange)="onVisibleChange($event)"
+  position="right"
+  [showCloseIcon]="false"
+  [blockScroll]="true"
+  [dismissible]="true"
+  styleClass="nas-cohort-att-drawer"
+  [style]="{ width: '420px' }">
+
+  <ng-template pTemplate="header">
+    <div class="cad-head">
+      <div class="cad-head__text">
+        <h2 class="cad-head__title">{{ headerTitle() }}</h2>
+        <p class="cad-head__sub">{{ 'course_detail.attendance_record' | translate }}</p>
+      </div>
+      <button type="button" class="cad-head__close" aria-label="Close" (click)="close()">
+        <nas-icon name="x" [size]="20" />
+      </button>
+    </div>
+  </ng-template>
+
+  <div class="cad-body">
+
+    <!-- ── Search ───────────────────────────────────────────────────── -->
+    <label class="cad-search">
+      <nas-icon name="magnifying-glass" [size]="16" />
+      <input
+        type="text"
+        class="cad-search__input"
+        [placeholder]="'course_detail.attendance_search' | translate"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)" />
+    </label>
+
+    <!-- ── Tabs + filter chips ──────────────────────────────────────── -->
+    <div class="cad-toolbar">
+      <div class="cad-tabs" role="tablist">
+        <button type="button" class="cad-tab"
+                role="tab"
+                [class.cad-tab--active]="tab() === 'sessions'"
+                [attr.aria-selected]="tab() === 'sessions'"
+                (click)="setTab('sessions')">
+          <span>{{ 'course_detail.attendance_tab_sessions' | translate }}</span>
+          <span class="cad-tab__count">{{ sessionsCount() }}</span>
+        </button>
+        <button type="button" class="cad-tab"
+                role="tab"
+                [class.cad-tab--active]="tab() === 'learners'"
+                [attr.aria-selected]="tab() === 'learners'"
+                (click)="setTab('learners')">
+          <span>{{ 'course_detail.attendance_tab_learners' | translate }}</span>
+          <span class="cad-tab__count">{{ learnersCount() }}</span>
+        </button>
+      </div>
+
+      <div class="cad-filters">
+        <label class="cad-filter" [class.cad-filter--on]="filter() === 'all'">
+          <input type="checkbox"
+                 [checked]="filter() === 'all'"
+                 (change)="setFilter('all')" />
+          <span>{{ 'course_detail.attendance_filter_all' | translate }}</span>
+        </label>
+        <label class="cad-filter" [class.cad-filter--on]="filter() === 'presence'">
+          <input type="checkbox"
+                 [checked]="filter() === 'presence'"
+                 (change)="setFilter('presence')" />
+          <span>{{ 'course_detail.attendance_filter_presence' | translate }}</span>
+        </label>
+        <label class="cad-filter" [class.cad-filter--on]="filter() === 'absence'">
+          <input type="checkbox"
+                 [checked]="filter() === 'absence'"
+                 (change)="setFilter('absence')" />
+          <span>{{ 'course_detail.attendance_filter_absence' | translate }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Loading skeletons ────────────────────────────────────────── -->
+    @if (loading()) {
+      <div class="cad-list">
+        @for (i of [1,2,3,4]; track i) {
+          <article class="cad-row cad-row--skeleton">
+            <div class="cad-row__body">
+              <p-skeleton height="16px" width="60%" />
+              <p-skeleton height="12px" width="40%" styleClass="cad-mt-6" />
+            </div>
+            <p-skeleton height="28px" width="96px" />
+          </article>
+        }
+      </div>
+    } @else {
+
+      <!-- ── SESSIONS TAB ─────────────────────────────────────────── -->
+      @if (tab() === 'sessions') {
+        @if (filteredSessions().length) {
+          <div class="cad-list">
+            @for (s of filteredSessions(); track s.id) {
+              <article class="cad-row"
+                       [class.cad-row--open]="isExpanded(s.id)">
+                <button type="button" class="cad-row__head"
+                        (click)="toggleExpand(s.id)"
+                        [attr.aria-expanded]="isExpanded(s.id)">
+                  <div class="cad-row__text">
+                    <h3 class="cad-row__title">{{ sessionTitle(s) }}</h3>
+                    @if (s.date) {
+                      <p class="cad-row__sub">{{ s.date | date:'d MMMM, yyyy' }}</p>
+                    }
+                  </div>
+
+                  <div class="cad-pills">
+                    @if (s.total > 0 && s.full_attendance && showAttendedChip()) {
+                      <span class="cad-pill cad-pill--full">
+                        <span>{{ 'course_detail.attendance_full' | translate }}</span>
+                        <span class="cad-pill__caret"><nas-icon name="caret-down" [size]="12" /></span>
+                      </span>
+                    } @else {
+                      @if (showAttendedChip()) {
+                        <span class="cad-pill cad-pill--ok">
+                          <span>{{ attendedLabel(s.attended_count) }}</span>
+                          <span class="cad-pill__caret"><nas-icon name="caret-down" [size]="12" /></span>
+                        </span>
+                      }
+                      @if (showAbsentChip() && s.absent_count > 0) {
+                        <span class="cad-pill cad-pill--bad">
+                          <span>{{ absentLabel(s.absent_count) }}</span>
+                          <span class="cad-pill__caret"><nas-icon name="caret-down" [size]="12" /></span>
+                        </span>
+                      }
+                    }
+                  </div>
+                </button>
+
+                @if (isExpanded(s.id) && s.absent_learners.length) {
+                  <div class="cad-row__panel">
+                    <header class="cad-panel__head">
+                      {{ 'course_detail.attendance_absence_heading' | translate }}
+                    </header>
+                    <ul class="cad-panel__list">
+                      @for (l of s.absent_learners; track l.id) {
+                        <li>{{ l.name }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="cad-empty">
+            <nas-icon name="magnifying-glass" [size]="28" />
+            <p>
+              {{ search() || filter() !== 'all'
+                 ? ('course_detail.attendance_no_results' | translate)
+                 : ('course_detail.attendance_no_data' | translate) }}
+            </p>
+          </div>
+        }
+      }
+
+      <!-- ── LEARNERS TAB ─────────────────────────────────────────── -->
+      @if (tab() === 'learners') {
+        @if (filteredLearners().length) {
+          <div class="cad-list">
+            @for (l of filteredLearners(); track l.id) {
+              <article class="cad-row"
+                       [class.cad-row--open]="isExpanded(l.id)">
+                <button type="button" class="cad-row__head"
+                        (click)="toggleExpand(l.id)"
+                        [attr.aria-expanded]="isExpanded(l.id)">
+                  <div class="cad-row__text">
+                    <h3 class="cad-row__title">{{ l.name }}</h3>
+                    <p class="cad-row__sub">{{ sessionsCountLabel(l.total_sessions) }}</p>
+                  </div>
+
+                  <div class="cad-pills">
+                    @if (showAttendedChip()) {
+                      <span class="cad-pill cad-pill--ok">
+                        <span>{{ attendedLabel(l.attended_count) }}</span>
+                        <span class="cad-pill__caret"><nas-icon name="caret-down" [size]="12" /></span>
+                      </span>
+                    }
+                    @if (showAbsentChip() && l.absent_count > 0) {
+                      <span class="cad-pill cad-pill--bad">
+                        <span>{{ absentLabel(l.absent_count) }}</span>
+                        <span class="cad-pill__caret"><nas-icon name="caret-down" [size]="12" /></span>
+                      </span>
+                    }
+                  </div>
+                </button>
+
+                @if (isExpanded(l.id) && l.absent_sessions.length) {
+                  <div class="cad-row__panel">
+                    <header class="cad-panel__head">
+                      {{ 'course_detail.attendance_absence_heading' | translate }}
+                    </header>
+                    <ul class="cad-panel__list">
+                      @for (s of l.absent_sessions; track s.id) {
+                        <!-- Figma 454:38012 always uses "Session N" here too. -->
+                        <li>{{ sessionFallback(s.index) }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="cad-empty">
+            <nas-icon name="magnifying-glass" [size]="28" />
+            <p>
+              {{ search() || filter() !== 'all'
+                 ? ('course_detail.attendance_no_results' | translate)
+                 : ('course_detail.attendance_no_data' | translate) }}
+            </p>
+          </div>
+        }
+      }
+    }
+  </div>
+</p-sidebar>

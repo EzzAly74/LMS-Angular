@@ -4,6 +4,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { NasStatusBadgeComponent } from '../../../../shared/nas/nas-status-badge.component';
 import { ApiService } from '../../../../core/services/api.service';
@@ -22,7 +23,7 @@ interface Evaluation {
 @Component({
   selector: 'app-evaluation-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './evaluation-list.component.html',
   styleUrl: './evaluation-list.component.scss',
@@ -31,6 +32,7 @@ export class EvaluationListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private t              = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
 
@@ -67,12 +69,15 @@ export class EvaluationListComponent implements OnInit {
 
   confirmDelete(item: Evaluation): void {
     this.confirmService.confirm({
-      message: `Delete "${item.title}"?`,
-      header: 'Confirm Delete',
+      message: `${this.t.instant('confirm.delete_message')} (${item.title})`,
+      header:  this.t.instant('evaluations.confirm_delete'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.EVALUATIONS}/${item.id}`).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'Evaluation deleted.' }); this.load(); },
+          next: () => {
+            this.messageService.add({ severity: 'success', detail: this.t.instant('evaluations.deleted') });
+            this.load();
+          },
         });
       },
     });

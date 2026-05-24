@@ -3,10 +3,10 @@ import type {
   Course,
   CourseDetail,
   CourseLearner,
-  CourseSession,
   CourseStatus,
   CourseType,
   Cohort,
+  CohortStatus,
 } from '../models/course.types';
 import { pickLocalized, displayName, type MaybeLocalized } from './localized';
 
@@ -36,6 +36,12 @@ export interface ApiCourseRaw {
   price?: number;
   currency?: string;
   max_learners?: number;
+  /**
+   * Course thumbnail. The detail resource resolves this to a fully-
+   * qualified URL via `getFileUrl()` — the list endpoint usually doesn't
+   * include it, hence the optional/nullable shape.
+   */
+  image?: string | null;
   category?: { id: number; name: MaybeLocalized } | null;
   instructors?: Array<{ id: number; name: MaybeLocalized; image?: string | null }>;
   instructor?: { id: number; name: MaybeLocalized } | null;
@@ -48,6 +54,15 @@ export interface ApiCourseRaw {
   rating?: number;
   rating_count?: number;
   comments_count?: number;
+  rating_distribution?: number[];
+  reviews?: Array<{
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name?: string;
+    user_machine_code?: string | null;
+    created_at?: string;
+  }>;
   status?: CourseStatus;
   [key: string]: unknown;
 }
@@ -139,6 +154,16 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
     rating:                   raw.rating,
     rating_count:             raw.rating_count ?? 0,
     comments_count:           raw.comments_count ?? 0,
+    image:                    raw.image ?? null,
+    rating_distribution:      raw.rating_distribution ?? [0, 0, 0, 0, 0],
+    reviews:                  (raw.reviews ?? []).map(r => ({
+      id:                r.id,
+      user_name:         r.user_name ?? 'Unknown',
+      user_machine_code: r.user_machine_code ?? '',
+      rating:            r.rating,
+      comment:           r.comment ?? '',
+      created_at:        r.created_at ?? '',
+    })),
     cohorts:                  [],
   };
 }
@@ -153,6 +178,11 @@ export interface ApiEnrollmentRaw {
   user_id?: number;
   group_id?: number | null;
   created_at?: string;
+  /**
+   * Computed inline by the backend (FLOOR(completed_lectures * 100 / total)).
+   * MySQL returns `DECIMAL` as a string, so we accept both shapes here.
+   */
+  progress_percent?: number | string | null;
   user?: {
     id: number;
     name?: MaybeLocalized;
@@ -168,32 +198,76 @@ export interface ApiEnrollmentRaw {
 
 /**
  * Map a raw enrollment pivot record into a flat learner row for the table.
- * `progress` / `status` aren't tracked on the pivot — they default to
- * `0` / `not_started`, since neither column exists in the `users_courses`
- * schema. Falls back gracefully when fields are missing.
+ * Progress comes from the backend correlated sub-select; the status is
+ * derived locally so the Figma "Completed / In Progress / Not Started"
+ * chips don't need a separate column on the wire.
  */
 export function mapEnrollmentToLearner(raw: ApiEnrollmentRaw): CourseLearner {
+  const progress = Math.max(0, Math.min(100,
+    Math.round(Number(raw.progress_percent ?? 0)) || 0,
+  ));
+  const status: CourseLearner['status'] =
+    progress >= 100 ? 'completed'
+  : progress > 0   ? 'in_progress'
+  :                  'not_started';
+
   return {
     id:          raw.id,
     name:        pickLocalized(raw.user?.name, LOCALE, 'Unknown learner'),
     cohort_name: pickLocalized(raw.group?.name, LOCALE, '—'),
-    progress:    0,
-    status:      'not_started',
+    progress,
+    status,
     enrolled_at: raw.created_at ?? '',
   };
 }
 
-export function mapSessionToCohort(session: CourseSession): Cohort {
-  const date = session.session_date ?? '';
-  const isFuture = !!date && new Date(date) > new Date();
+/**
+ * Raw cohort row (CourseSectionResource) — the Cohort tab on the course
+ * detail screen reads cohorts straight from `course_sections` now, so
+ * this maps the new resource shape into the slimmer `Cohort` interface
+ * the UI binds to.
+ */
+export interface ApiCohortRaw {
+  id: number;
+  course_id?: number;
+  name?: MaybeLocalized;
+  name_translations?: { en?: string | null; ar?: string | null };
+  start_date?: string | null;
+  end_date?:   string | null;
+  capacity?:   number | null;
+  status?:     string | null;
+  enrolled_count?: number;
+}
+
+/**
+ * Lock a raw status value to one of the four canonical buckets. Anything
+ * unrecognised defaults to `scheduled` so the chip still has something to
+ * render rather than turning into an empty pill.
+ */
+function normalizeCohortStatus(s: string | null | undefined): CohortStatus {
+  switch (s) {
+    case 'active':
+    case 'completed':
+    case 'inactive':
+      return s;
+    default:
+      return 'scheduled';
+  }
+}
+
+export function mapApiCohort(raw: ApiCohortRaw): Cohort {
   return {
-    id:         session.id,
-    name:       session.title,
-    start_date: date,
-    end_date:   date,
-    enrolled:   0,
-    capacity:   0,
-    status:     date ? (isFuture ? 'upcoming' : 'active') : 'inactive',
-    section_id: session.section?.id,
+    id:         raw.id,
+    name:       pickLocalized(raw.name, LOCALE, ''),
+    name_en:    raw.name_translations?.en ?? null,
+    name_ar:    raw.name_translations?.ar ?? null,
+    start_date: raw.start_date ?? null,
+    end_date:   raw.end_date ?? null,
+    enrolled:   Number(raw.enrolled_count ?? 0),
+    capacity:   raw.capacity ?? null,
+    status:     normalizeCohortStatus(raw.status),
+    // Kept as an alias so the attendance drawer (which still reads
+    // `cohort.section_id`) keeps working — cohort.id IS the section id.
+    section_id: raw.id,
   };
 }

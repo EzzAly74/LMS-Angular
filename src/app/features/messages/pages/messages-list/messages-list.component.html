@@ -69,7 +69,7 @@
     } @else {
       <div class="inbox-empty">
         <i class="pi pi-inbox"></i>
-        <p>No messages yet</p>
+        <p>{{ 'inbox.empty' | translate }}</p>
       </div>
     }
   </div>
@@ -189,18 +189,17 @@
 
   <div class="nas-form">
     <p style="margin:0;color:var(--nas-color-text-body);font-size:var(--nas-size-xs);line-height:var(--nas-height-l);">
-      We are excited to announce the launch of our new Learning Management System.
-      Please explore the available courses and complete your required qualifications.
+      {{ 'inbox.welcome_body' | translate }}
     </p>
 
     <dl class="settings-list" style="margin-top:var(--nas-space-3);">
       <div>
         <dt>{{ 'inbox.welcome_recipients' | translate }}</dt>
-        <dd>Name 1, Name 2, Name 3</dd>
+        <dd>{{ 'inbox.welcome_recipients_sample' | translate }}</dd>
       </div>
       <div>
         <dt>{{ 'inbox.welcome_type' | translate }}</dt>
-        <dd><nas-status-badge tone="info">All Learners</nas-status-badge></dd>
+        <dd><nas-status-badge tone="info">{{ 'inbox.all_learners' | translate }}</nas-status-badge></dd>
       </div>
       <div>
         <dt>{{ 'inbox.welcome_sent' | translate }}</dt>

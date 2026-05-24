@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -54,6 +54,7 @@ export class MessagesListComponent implements OnInit {
   private api  = inject(ApiService);
   private fb   = inject(FormBuilder);
   private toast = inject(MessageService);
+  private t    = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
 
@@ -214,7 +215,7 @@ export class MessagesListComponent implements OnInit {
       recipient_ids: v.recipient_ids ?? [],
     }).subscribe({
       next: () => {
-        this.toast.add({ severity: 'success', detail: 'Message sent' });
+        this.toast.add({ severity: 'success', detail: this.t.instant('messages_list_toasts.sent') });
         this.showCompose.set(false);
         this.saving.set(false);
         this.load();

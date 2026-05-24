@@ -17,6 +17,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ApiService } from '../../../core/services/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { API } from '../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../core/utils/with-locale-reload';
 // Direct file imports — re-exporting through `index.ts` barrels confuses
 // Angular's compile-time `imports:[]` resolver and disables template type
 // inference (we end up with `$event: Event` on photo-upload handlers).
@@ -114,6 +115,13 @@ export class SettingsComponent implements OnInit {
    */
   basisSig = signal<CertificateBasis>('attendance');
   showMinScore = computed(() => this.basisSig() === 'score' || this.basisSig() === 'both');
+
+  constructor() {
+    // Refetch platform settings whenever the user switches UI language so
+    // bilingual fields (about_*, banner_description, why_us, etc.) come
+    // back in the new active locale via the `Accept-Language` header.
+    withLocaleReload(() => this.load());
+  }
 
   /* ── Lifecycle ───────────────────────────────────────────── */
   ngOnInit(): void {

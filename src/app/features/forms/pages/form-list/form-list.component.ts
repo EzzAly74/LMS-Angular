@@ -4,6 +4,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { NasStatusBadgeComponent } from '../../../../shared/nas/nas-status-badge.component';
 import { ApiService } from '../../../../core/services/api.service';
@@ -23,7 +24,7 @@ interface Form {
 @Component({
   selector: 'app-form-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './form-list.component.html',
   styleUrl: './form-list.component.scss',
@@ -32,6 +33,7 @@ export class FormListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private t              = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
 
@@ -68,12 +70,15 @@ export class FormListComponent implements OnInit {
 
   confirmDelete(item: Form): void {
     this.confirmService.confirm({
-      message: `Delete "${item.title}"?`,
-      header: 'Confirm Delete',
+      message: `${this.t.instant('confirm.delete_message')} (${item.title})`,
+      header:  this.t.instant('forms.confirm_delete'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.FORMS}/${item.id}`).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'Form deleted.' }); this.load(); },
+          next: () => {
+            this.messageService.add({ severity: 'success', detail: this.t.instant('forms.deleted') });
+            this.load();
+          },
         });
       },
     });

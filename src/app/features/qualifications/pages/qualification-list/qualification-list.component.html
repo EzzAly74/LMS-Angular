@@ -3,7 +3,7 @@
 <!-- ── Create / Edit Dialog ──────────────────────────────────────────── -->
 <p-dialog
   [(visible)]="dialogVisible"
-  [header]="editingId ? 'Edit Qualification' : 'New Qualification'"
+  [header]="(editingId ? 'qualifications.edit_qualification' : 'qualifications.new_qualification') | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -14,35 +14,35 @@
 
   <form class="nas-form" (ngSubmit)="save()">
     <div class="nas-form__field">
-      <label>Name (English) <span class="nas-form__required">*</span></label>
+      <label>{{ 'qualifications.name_en' | translate }} <span class="nas-form__required">*</span></label>
       <input
         class="nas-input"
         type="text"
         [(ngModel)]="form.name_en"
         name="name_en"
-        placeholder="e.g. Fire Safety Level 2"
+        [placeholder]="'qualifications.name_en_placeholder' | translate"
         autocomplete="off"
       />
     </div>
     <div class="nas-form__field">
-      <label>Name (Arabic)</label>
+      <label>{{ 'qualifications.name_ar' | translate }}</label>
       <input
         class="nas-input"
         type="text"
         [(ngModel)]="form.name_ar"
         name="name_ar"
         dir="rtl"
-        placeholder="اسم المؤهل بالعربية"
+        [placeholder]="'qualifications.name_ar_placeholder' | translate"
         autocomplete="off"
       />
     </div>
   </form>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">Cancel</button>
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">{{ 'common.cancel' | translate }}</button>
     <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="save()">
       <i class="pi pi-check"></i>
-      {{ editingId ? 'Update' : 'Create' }}
+      {{ (editingId ? 'common.updated' : 'common.create') | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -51,11 +51,11 @@
 <div class="nas-page-container" (click)="closeAllMenus()">
 
   <nas-page-header
-    title="Qualifications"
-    subtitle="Manage the qualification framework and linked courses">
+    [title]="'qualifications.title' | translate"
+    [subtitle]="'qualifications.subtitle' | translate">
     <button type="button" class="nas-cta-btn" (click)="openCreate(); $event.stopPropagation()">
       <i class="pi pi-plus-circle"></i>
-      New Qualification
+      {{ 'qualifications.new_qualification' | translate }}
     </button>
   </nas-page-header>
 
@@ -67,7 +67,7 @@
         <input
           type="text"
           class="qual-search__input"
-          placeholder="Search qualifications..."
+          [placeholder]="'qualifications.search_placeholder' | translate"
           (input)="onSearch($any($event.target).value)"
         />
       </div>
@@ -78,9 +78,9 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>Qualification</th>
-            <th>Linked Courses</th>
-            <th>Enrolled</th>
+            <th>{{ 'qualifications.qualification' | translate }}</th>
+            <th>{{ 'qualifications.linked_courses' | translate }}</th>
+            <th>{{ 'qualifications.enrolled' | translate }}</th>
             <th></th>
           </tr>
         </thead>
@@ -100,7 +100,7 @@
                 <td>
                   <span class="qual-courses-badge">
                     {{ item.courses_count ?? 0 }}
-                    {{ (item.courses_count ?? 0) === 1 ? 'Course' : 'Courses' }}
+                    {{ ((item.courses_count ?? 0) === 1 ? 'qualifications.course_word' : 'qualifications.courses_word') | translate }}
                   </span>
                 </td>
                 <td>{{ item.enrolled_count ?? 0 }}</td>
@@ -112,10 +112,10 @@
                     @if (activeRow()?.id === item.id) {
                       <div class="row-menu">
                         <button type="button" class="row-menu__item" (click)="openEdit(item)">
-                          <i class="pi pi-pencil"></i> Edit
+                          <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
                         </button>
                         <button type="button" class="row-menu__item row-menu__item--danger" (click)="confirmDelete(item)">
-                          <i class="pi pi-trash"></i> Delete
+                          <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
                         </button>
                       </div>
                     }
@@ -125,7 +125,7 @@
             }
             @if (!items().length) {
               <tr>
-                <td colspan="4" class="nas-table__empty">No qualifications found.</td>
+                <td colspan="4" class="nas-table__empty">{{ 'qualifications.no_results' | translate }}</td>
               </tr>
             }
           }

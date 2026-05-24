@@ -1,0 +1,179 @@
+/* ── Backdrop (full-screen scrim) ──────────────────────────────────── */
+.nas-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 36, 39, 0.4);
+  animation: nas-confirm-fade 120ms ease-out;
+  padding: 16px;
+}
+
+@keyframes nas-confirm-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Card ─────────────────────────────────────────────────────────── */
+.nas-confirm-card {
+  width: 512px;
+  max-width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: nas-confirm-pop 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nas-confirm-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)  scale(1);    }
+}
+
+/* Header — 65px, bottom border ────────────────────────────────────── */
+.nas-confirm-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px 17px;
+  border-bottom: 1px solid #e6e7e8;
+  min-height: 65px;
+}
+
+.nas-confirm-card__title {
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  color: #171819;
+  margin: 0;
+}
+
+.nas-confirm-card__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #676e76;
+  border-radius: 6px;
+  transition: background-color 120ms;
+}
+
+.nas-confirm-card__close:hover:not(:disabled) {
+  background: #f5f5f5;
+  color: #171819;
+}
+
+.nas-confirm-card__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Body ───────────────────────────────────────────────────────────── */
+.nas-confirm-card__body {
+  padding: 20px 24px;
+  flex: 1;
+}
+
+.nas-confirm-card__message {
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 21px;
+  color: #171819;
+  margin: 0;
+}
+
+/* Footer — 77px, top border, light grey bg ───────────────────────── */
+.nas-confirm-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 17px 24px 16px;
+  border-top: 1px solid #e6e7e8;
+  background: #fafafa;
+  min-height: 77px;
+}
+
+/* Buttons — 44px tall, 8px radius, Figma drop-shadows ────────────── */
+.nas-confirm-btn {
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16.8px;
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms, border-color 120ms, transform 80ms;
+  white-space: nowrap;
+}
+
+.nas-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nas-confirm-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Outline (left = confirm) — defaults to dark text/border ────────── */
+.nas-confirm-btn--outline {
+  background: #ffffff;
+  color: #0c2427;
+  border-color: #0c2427;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(103, 110, 118, 0.16),
+    0 2px 5px 0 rgba(103, 110, 118, 0.08);
+  flex: 0 0 auto;
+  min-width: 113px;
+}
+
+.nas-confirm-btn--outline:not(:disabled):hover {
+  background: #f7fafa;
+}
+
+.nas-confirm-btn--outline.nas-confirm-btn--danger {
+  color: #d62b2b;
+  border-color: #d62b2b;
+}
+
+.nas-confirm-btn--outline.nas-confirm-btn--danger:not(:disabled):hover {
+  background: #fef5f5;
+}
+
+/* Filled (right = cancel/safe default) — dark fill, white text ───── */
+.nas-confirm-btn--filled {
+  background: #0c2427;
+  color: #fffbf7;
+  border-color: #0c2427;
+  flex: 1 1 0;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    0 2px 5px 0 rgba(140, 140, 140, 0.08);
+}
+
+.nas-confirm-btn--filled:not(:disabled):hover {
+  background: #15363a;
+}
+
+/* RTL — keep buttons end-aligned, gap stays */
+:host-context([dir='rtl']) .nas-confirm-card__foot {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}

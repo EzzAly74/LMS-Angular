@@ -375,6 +375,26 @@
   gap: var(--nas-space-4);
 }
 
+.nas-header-bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--nas-neutral-400, #e6e7e8);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #171819;
+  cursor: pointer;
+  transition: background-color 120ms, border-color 120ms;
+  font-size: 16px;
+}
+.nas-header-bell:hover {
+  background: #f7fafa;
+  border-color: var(--nas-color-primary, #26787b);
+  color: var(--nas-color-primary, #26787b);
+}
+
 .nas-lang-toggle {
   display: inline-flex;
   background: var(--nas-neutral-300);

@@ -17,6 +17,13 @@ export class NasProgressComponent {
   @Input() set value(v: number | null | undefined) { this._value.set(v ?? 0); }
   @Input() tone: NasProgressTone = 'auto';
   @Input() showValue = true;
+  /**
+   * When `true`, the trailing percentage label inherits the same colour
+   * as the bar fill instead of the default muted grey. Off by default to
+   * preserve the look of existing usages (course-list, dashboard); the
+   * Learners tab opts in to match Figma 321:6791 exactly.
+   */
+  @Input() tintValue = false;
 
   protected readonly clamped = computed(() =>
     Math.max(0, Math.min(100, Math.round(this._value())))

@@ -16,6 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   NasPageHeaderComponent,
   NasStatusBadgeComponent,
@@ -53,6 +54,7 @@ interface FilterModalState {
     SkeletonModule,
     ConfirmDialogModule,
     ToastModule,
+    TranslateModule,
     NasPageHeaderComponent,
     NasStatusBadgeComponent,
   ],
@@ -67,6 +69,7 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   private readonly confirm    = inject(ConfirmationService);
   private readonly toast      = inject(MessageService);
   private readonly router     = inject(Router);
+  private readonly t          = inject(TranslateService);
 
   private readonly destroy$   = new Subject<void>();
   private readonly subSearch$ = new Subject<string>();
@@ -221,15 +224,18 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   confirmDelete(item: QuizListItem, event: MouseEvent): void {
     event.stopPropagation();
     this.confirm.confirm({
-      message: `Delete "${item.title}"? This action cannot be undone.`,
-      header: 'Delete Quiz',
+      message: this.t.instant('confirm.delete_message_title', { title: item.title }),
+      header: this.t.instant('quizzes_list_toasts.delete_title'),
       icon: 'pi pi-trash',
       acceptButtonStyleClass: 'p-button-danger p-button-sm',
       rejectButtonStyleClass: 'p-button-secondary p-button-sm',
       accept: () => {
         this.api.delete(item.id).subscribe({
           next: () => {
-            this.toast.add({ severity: 'success', detail: 'Quiz deleted.' });
+            this.toast.add({
+              severity: 'success',
+              detail: this.t.instant('quizzes_list_toasts.deleted'),
+            });
             this.refresh();
           },
         });

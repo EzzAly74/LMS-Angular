@@ -48,8 +48,8 @@ import { NasIconComponent } from './nas-icon.component';
 
         <button type="button" class="photo-upload__cta" (click)="$event.preventDefault(); openPicker($event)">
           {{ value
-            ? ('platform_settings.replace_photo' | translate)
-            : ('platform_settings.upload_photo' | translate) }}
+            ? (replaceLabel || ('platform_settings.replace_photo' | translate))
+            : (addLabel     || ('platform_settings.upload_photo'  | translate)) }}
         </button>
       </label>
 
@@ -72,6 +72,13 @@ export class NasPhotoUploadComponent {
   @Input() formats = 'PNG, JPG, JPEG, WEBP, SVG, GIF';
   @Input() maxLabel = 'Max, file size: 3MB';
   @Input() accept = 'image/png,image/jpeg,image/webp,image/svg+xml,image/gif';
+  /**
+   * Optional overrides for the CTA button label. Lets callers (e.g. the
+   * Courses Add/Edit dialog) match Figma's "Add Photo / Replace Photo"
+   * wording without leaking into the shared `platform_settings.*` keys.
+   */
+  @Input() addLabel?: string;
+  @Input() replaceLabel?: string;
 
   @Output() fileSelected = new EventEmitter<File>();
   @Output() cleared = new EventEmitter<void>();

@@ -14,7 +14,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminRolesApiService } from '../../services/admin-roles-api.service';
@@ -55,6 +55,7 @@ export class RoleFormComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messages = inject(MessageService);
+  private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
 
@@ -164,8 +165,8 @@ export class RoleFormComponent implements OnInit, OnDestroy {
           this.loading.set(false);
           this.messages.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Could not load this role. Please retry.',
+            summary:  this.t.instant('common.error_title'),
+            detail:   this.t.instant('roles_toasts.load_failed'),
           });
         },
       });
@@ -259,8 +260,8 @@ export class RoleFormComponent implements OnInit, OnDestroy {
         this.saving.set(false);
         this.messages.add({
           severity: 'success',
-          summary: 'Saved',
-          detail: this.mode() === 'create' ? 'Role created.' : 'Role updated.',
+          summary:  this.t.instant('common.saved'),
+          detail:   this.t.instant(this.mode() === 'create' ? 'common.created' : 'common.updated'),
         });
         this.router.navigate(['/admin/roles']);
       },
@@ -269,11 +270,11 @@ export class RoleFormComponent implements OnInit, OnDestroy {
         const detail =
           err?.error?.message ??
           err?.error?.errors ??
-          'Could not save the role. Please retry.';
+          this.t.instant('roles_toasts.load_failed');
         this.messages.add({
           severity: 'error',
-          summary: 'Error',
-          detail: typeof detail === 'string' ? detail : JSON.stringify(detail),
+          summary:  this.t.instant('common.error_title'),
+          detail:   typeof detail === 'string' ? detail : JSON.stringify(detail),
         });
       },
     });

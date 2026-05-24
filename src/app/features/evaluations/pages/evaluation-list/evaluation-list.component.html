@@ -3,15 +3,16 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Evaluations"
-    subtitle="Manage evaluation forms and requirements">
+    [title]="'evaluations.title' | translate"
+    [subtitle]="'evaluations.subtitle' | translate">
   </nas-page-header>
 
   <div class="nas-card eval-table-card">
     <div class="eval-toolbar">
       <div class="nas-search">
         <i class="pi pi-search nas-search__icon"></i>
-        <input type="text" class="nas-search__input" placeholder="Search evaluations..."
+        <input type="text" class="nas-search__input"
+          [placeholder]="'evaluations.search_placeholder' | translate"
           (input)="onSearch($any($event.target).value)" />
       </div>
     </div>
@@ -20,11 +21,11 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Category</th>
-            <th>Required</th>
-            <th>Created</th>
+            <th>{{ 'common.title' | translate }}</th>
+            <th>{{ 'evaluations.type' | translate }}</th>
+            <th>{{ 'evaluations.category' | translate }}</th>
+            <th>{{ 'evaluations.is_required' | translate }}</th>
+            <th>{{ 'common.created_at' | translate }}</th>
             <th></th>
           </tr>
         </thead>
@@ -41,19 +42,19 @@
                 <td class="nas-table__muted">{{ item.category?.name ?? '—' }}</td>
                 <td>
                   <nas-status-badge [tone]="item.is_required ? 'success' : 'neutral'">
-                    {{ item.is_required ? 'Required' : 'Optional' }}
+                    {{ (item.is_required ? 'evaluations.is_required' : 'evaluations.optional') | translate }}
                   </nas-status-badge>
                 </td>
                 <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
                 <td class="nas-table__action">
-                  <button type="button" class="row-action-btn" title="Delete" (click)="confirmDelete(item)">
+                  <button type="button" class="row-action-btn" [title]="'common.delete' | translate" (click)="confirmDelete(item)">
                     <i class="pi pi-trash"></i>
                   </button>
                 </td>
               </tr>
             }
             @if (!items().length) {
-              <tr><td colspan="6" class="nas-table__empty">No evaluations found.</td></tr>
+              <tr><td colspan="6" class="nas-table__empty">{{ 'evaluations.no_results' | translate }}</td></tr>
             }
           }
         </tbody>
@@ -62,7 +63,7 @@
 
     @if (total() > perPage) {
       <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
+        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}</span>
         <div class="nas-table-pagination__nav">
           <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
           <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>

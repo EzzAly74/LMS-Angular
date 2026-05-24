@@ -4,6 +4,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -23,7 +24,7 @@ interface Instructor {
 @Component({
   selector: 'app-instructor-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, NasPageHeaderComponent],
+  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, TranslateModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './instructor-list.component.html',
   styleUrl: './instructor-list.component.scss',
@@ -32,6 +33,7 @@ export class InstructorListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private t              = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
 
@@ -69,12 +71,15 @@ export class InstructorListComponent implements OnInit {
 
   confirmDelete(item: Instructor): void {
     this.confirmService.confirm({
-      message: `Delete "${item.name}"?`,
-      header: 'Confirm Delete',
+      message: `${this.t.instant('confirm.delete_message')} (${item.name})`,
+      header:  this.t.instant('instructors.confirm_delete'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.INSTRUCTORS}/${item.id}`).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'Instructor deleted.' }); this.load(); },
+          next: () => {
+            this.messageService.add({ severity: 'success', detail: this.t.instant('instructors.deleted') });
+            this.load();
+          },
         });
       },
     });

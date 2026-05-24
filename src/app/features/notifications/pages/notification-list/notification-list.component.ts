@@ -6,6 +6,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -26,7 +27,7 @@ interface Notification {
   standalone: true,
   imports: [
     CommonModule, FormsModule, DialogModule, SkeletonModule,
-    ConfirmDialogModule, NasPageHeaderComponent,
+    ConfirmDialogModule, TranslateModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notification-list.component.html',
@@ -37,6 +38,7 @@ export class NotificationListComponent implements OnInit {
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private localeService  = inject(LocaleService);
+  private t              = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
 
@@ -110,7 +112,11 @@ export class NotificationListComponent implements OnInit {
         this.saving.set(false);
         this.closeDialog();
         this.load();
-        this.messageService.add({ severity: 'success', summary: 'Sent', detail: 'Notification sent.' });
+        this.messageService.add({
+          severity: 'success',
+          summary:  this.t.instant('common.saved'),
+          detail:   this.t.instant('notifications.sent'),
+        });
       },
       error: () => this.saving.set(false),
     });
@@ -118,13 +124,17 @@ export class NotificationListComponent implements OnInit {
 
   confirmDelete(item: Notification): void {
     this.confirmService.confirm({
-      message: `Delete "${this.display(item.title)}"?`,
-      header: 'Confirm Delete',
+      message: `${this.t.instant('confirm.delete_message')} (${this.display(item.title)})`,
+      header:  this.t.instant('notifications.confirm_delete'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.NOTIFICATIONS}/${item.id}`).subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Notification deleted.' });
+            this.messageService.add({
+              severity: 'success',
+              summary:  this.t.instant('common.deleted'),
+              detail:   this.t.instant('notifications.deleted'),
+            });
             this.load();
           },
         });

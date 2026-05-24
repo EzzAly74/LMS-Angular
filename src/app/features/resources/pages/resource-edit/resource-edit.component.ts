@@ -6,6 +6,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface LmsResource {
   id: number;
@@ -61,13 +62,32 @@ export class ResourceEditComponent implements OnInit {
     { label: 'File/Document',  value: 'file'    as ResourceType },
   ];
 
+  constructor() {
+    // Resource title + qualification name are localized — re-fetch both
+    // on language switch so the form pre-fills with the right copy.
+    withLocaleReload(() => {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) {
+        this.loadQualifications();
+        this.loadResource(id);
+      }
+    });
+  }
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) { this.loading.set(false); return; }
+    this.loadQualifications();
+    this.loadResource(id);
+  }
 
+  private loadQualifications(): void {
     this.api.get<QualOption[]>(API.QUALIFICATIONS_ACTIVE)
       .subscribe({ next: res => this.qualOptions.set(Array.isArray(res.result) ? res.result : []) });
+  }
 
+  private loadResource(id: string): void {
+    this.loading.set(true);
     this.api.get<LmsResource>(`${API.LMS_RESOURCES}/${id}`).subscribe({
       next: res => {
         const r = res.result as LmsResource;

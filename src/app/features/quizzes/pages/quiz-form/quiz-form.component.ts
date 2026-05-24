@@ -24,6 +24,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasStatusBadgeComponent } from '../../../../shared/nas';
 import { QuizzesApiService } from '../../services/quizzes-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
@@ -124,6 +125,18 @@ export class QuizFormComponent implements OnInit, OnDestroy {
 
   readonly totalScore    = signal(0);
   readonly questionCount = signal(0);
+
+  constructor() {
+    // Refetch the quiz + course catalogue when the UI language changes
+    // so titles, instructions and question text come back localized.
+    withLocaleReload(() => {
+      const id = this.quizId();
+      if (id) this.fetchQuiz(id);
+      this.coursesApi.list({ per_page: 200 }).subscribe({
+        next: r => this.courses.set((r.result.data ?? []) as unknown as CourseOpt[]),
+      });
+    });
+  }
 
   /* ── Lifecycle ──────────────────────────────────────────────── */
 

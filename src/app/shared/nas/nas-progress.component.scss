@@ -32,3 +32,14 @@
   min-width: 28px;
   text-align: end;
 }
+
+/* Opt-in tinted-label mode — Figma pairs the bar colour with the trailing
+   percentage label. Only triggers when the host sets `tintValue` (i.e.
+   when `data-tone` lands on the root element). */
+.nas-progress[data-tone] .nas-progress__value {
+  font-weight: var(--nas-weight-semibold, 600);
+}
+.nas-progress[data-tone="success"] .nas-progress__value { color: #0fb86a; }
+.nas-progress[data-tone="info"]    .nas-progress__value { color: #496e91; }
+.nas-progress[data-tone="warning"] .nas-progress__value { color: #f79008; }
+.nas-progress[data-tone="danger"]  .nas-progress__value { color: #f14437; }

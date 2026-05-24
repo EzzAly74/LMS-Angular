@@ -1,66 +1,255 @@
-<div class="nas-page-container">
+<p-toast />
+
+<input
+  #fileInput
+  type="file"
+  class="cert-hidden-file"
+  accept="image/jpeg,image/png,image/webp,application/pdf"
+  (change)="onFileChosen($event)" />
+
+<div class="nas-page-container cert-page">
 
   <nas-page-header
     title="Certificates"
-    subtitle="View certificates issued to learners">
+    subtitle="Manage certificate templates and view issued certificates">
   </nas-page-header>
 
-  <div class="nas-card cert-table-card">
-    <div class="cert-toolbar">
-      <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
-        <input type="text" class="nas-search__input" placeholder="Search certificates..."
-          (input)="onSearch($any($event.target).value)" />
+  <!-- ═══════════════════════════════════════════════════════════════
+       TEMPLATE CARD (empty + with-template states)
+       Figma: 377:10597 (empty) / 376:10149 (with template)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section class="cert-card cert-template-card">
+
+    @if (overviewLoading()) {
+      <div class="cert-template-card__head">
+        <p-skeleton width="240px" height="18px" />
+        <p-skeleton width="320px" height="13px" styleClass="cert-sk-second" />
       </div>
-    </div>
+      <p-skeleton height="44px" styleClass="cert-sk-cta" />
+    } @else {
 
-    <div class="cert-table-wrap">
-      <table class="nas-table">
-        <thead>
-          <tr>
-            <th>Learner</th>
-            <th>Machine Code</th>
-            <th>Course</th>
-            <th>Type</th>
-            <th>Issued</th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (loading()) {
-            @for (s of skeletons; track s) {
-              <tr>@for (c of [1,2,3,4,5]; track c) { <td><p-skeleton height="20px" /></td> }</tr>
-            }
-          } @else {
-            @for (item of items(); track $index) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.user?.name || '—' }}</td>
-                <td class="nas-table__muted">{{ item.user?.machine_code || '—' }}</td>
-                <td>{{ item.course?.title || '—' }}</td>
-                <td>
-                  <nas-status-badge [tone]="item.type === 'exam' ? 'info' : 'success'">
-                    {{ (item.type ?? 'evaluation') | titlecase }}
-                  </nas-status-badge>
-                </td>
-                <td class="nas-table__muted">{{ item.created_at ? (item.created_at | date:'dd MMM yyyy') : '—' }}</td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr><td colspan="5" class="nas-table__empty">No certificates found.</td></tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
+      <header class="cert-template-card__head">
+        <h2 class="cert-template-card__title">
+          {{ template()?.name || 'NAS Standard Certificate' }}
+        </h2>
+        <p class="cert-template-card__subtitle">
+          {{ template()?.description || 'Default template · Auto-fills learner name, course, date, instructor' }}
+        </p>
+      </header>
 
-    @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">{{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}</span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)"><i class="pi pi-chevron-left"></i></button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)"><i class="pi pi-chevron-right"></i></button>
+      <div class="cert-template-card__divider" aria-hidden="true"></div>
+
+      @if (hasTemplate()) {
+        <div class="cert-template-card__stats">
+          <div class="cert-stat">
+            <div class="cert-stat__value">{{ stats().total_issued }}</div>
+            <div class="cert-stat__label">Total Issued</div>
+          </div>
+          <div class="cert-stat">
+            <div class="cert-stat__value">
+              @if (stats().last_issued_at) {
+                {{ stats().last_issued_at | date:'d, MMM yyyy' }}
+              } @else {
+                —
+              }
+            </div>
+            <div class="cert-stat__label">Last Issued</div>
+          </div>
         </div>
-      </div>
-    }
-  </div>
 
+        <div class="cert-template-card__actions">
+          <button
+            type="button"
+            class="cert-btn cert-btn--primary cert-btn--grow"
+            (click)="openPreview()">
+            <nas-icon name="eye" [size]="20" />
+            Preview Template
+          </button>
+          <button
+            type="button"
+            class="cert-replace-btn"
+            [disabled]="uploading()"
+            (click)="triggerUpload(fileInput)">
+            @if (uploading()) {
+              <nas-icon name="spinner-gap" [size]="20" class="cert-spin" />
+              <span>Uploading…</span>
+            } @else {
+              <nas-icon name="repeat" [size]="20" />
+              <span>Replace Template</span>
+            }
+          </button>
+        </div>
+      } @else {
+        <button
+          type="button"
+          class="cert-btn cert-btn--primary cert-btn--block cert-upload-cta"
+          [disabled]="uploading()"
+          (click)="triggerUpload(fileInput)">
+          @if (uploading()) {
+            <nas-icon name="spinner-gap" [size]="20" class="cert-spin" />
+            <span>Uploading…</span>
+          } @else {
+            <nas-icon name="upload-simple" [size]="20" />
+            <span>Upload Template</span>
+          }
+        </button>
+      }
+    }
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ISSUED CERTIFICATES TABLE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section class="cert-issued">
+    <h3 class="cert-issued__heading">Issued Certificates</h3>
+
+    <div class="cert-search">
+      <nas-icon name="magnifying-glass" [size]="20" class="cert-search__icon" />
+      <input
+        type="text"
+        class="cert-search__input"
+        placeholder="Quick search…"
+        (input)="onSearch($any($event.target).value)" />
+    </div>
+
+    <div class="cert-card cert-table-card">
+      <div class="cert-table-wrap">
+        <table class="cert-table">
+          <thead>
+            <tr>
+              <th>Employee's ID</th>
+              <th>Learner</th>
+              <th>Course</th>
+              <th>Issued</th>
+              <th class="cert-table__th--actions"></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @if (issuedLoading()) {
+              @for (s of skeletons; track s) {
+                <tr>
+                  <td><p-skeleton height="14px" width="60px" /></td>
+                  <td><p-skeleton height="14px" width="140px" /></td>
+                  <td><p-skeleton height="14px" width="180px" /></td>
+                  <td><p-skeleton height="14px" width="100px" /></td>
+                  <td><p-skeleton height="20px" width="24px" /></td>
+                </tr>
+              }
+            } @else if (!items().length) {
+              <tr>
+                <td colspan="5" class="cert-table__empty">
+                  <span class="cert-table__empty-icon">
+                    <nas-icon name="tray" [size]="28" />
+                  </span>
+                  <strong>No certificates issued yet</strong>
+                  <span>Once learners complete certificate-enabled courses they’ll appear here.</span>
+                </td>
+              </tr>
+            } @else {
+              @for (item of items(); track rowKey(item)) {
+                <tr class="cert-table__row">
+                  <td class="cert-table__muted">{{ item.employee_id || '—' }}</td>
+                  <td class="cert-table__primary">{{ item.learner_name }}</td>
+                  <td>{{ item.course_title }}</td>
+                  <td class="cert-table__muted">
+                    {{ item.issued_at ? (item.issued_at | date:'d MMM yyyy') : '—' }}
+                  </td>
+                  <td class="cert-table__actions">
+                    <button
+                      type="button"
+                      class="cert-icon-btn"
+                      title="Download certificate"
+                      [disabled]="downloadingKey() === rowKey(item)"
+                      (click)="downloadRow(item)">
+                      @if (downloadingKey() === rowKey(item)) {
+                        <nas-icon name="spinner-gap" [size]="16" class="cert-spin" />
+                      } @else {
+                        <nas-icon name="download-simple" [size]="16" />
+                      }
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (total() > perPage) {
+        <div class="cert-pagination">
+          <span class="cert-pagination__info">
+            {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          </span>
+          <div class="cert-pagination__nav">
+            <button type="button" class="cert-icon-btn"
+                    [disabled]="page === 1" (click)="onPage(page - 1)">
+              <nas-icon name="caret-left" [size]="14" />
+            </button>
+            <button type="button" class="cert-icon-btn"
+                    [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
+              <nas-icon name="caret-right" [size]="14" />
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
 </div>
+
+<!-- ═════════════════════════════════════════════════════════════════
+     PREVIEW TEMPLATE DRAWER  (Figma: 377:11055)
+═══════════════════════════════════════════════════════════════════ -->
+@if (previewOpen()) {
+  <div class="cert-drawer-overlay" (click)="closePreview()"></div>
+
+  <aside class="cert-drawer" role="dialog" aria-label="Preview Template">
+    <header class="cert-drawer__head">
+      <h3 class="cert-drawer__title">Preview Template</h3>
+      <button type="button" class="cert-drawer__close" aria-label="Close" (click)="closePreview()">
+        <nas-icon name="x" [size]="16" />
+      </button>
+    </header>
+
+    <div class="cert-drawer__body">
+      <div class="cert-drawer__canvas">
+        @if (templateBlobLoading() && !templateBlobUrl()) {
+          <div class="cert-drawer__skeleton">
+            <p-skeleton width="100%" height="100%" />
+          </div>
+        } @else if (templateBlobError()) {
+          <div class="cert-drawer__error">
+            <nas-icon name="warning" [size]="20" />
+            <span>Could not load the template preview.</span>
+          </div>
+        } @else if (templateBlobUrl()) {
+          @if (isPdf()) {
+            <iframe
+              class="cert-drawer__pdf"
+              [src]="templateSafeUrl()"
+              title="Template preview"></iframe>
+          } @else {
+            <img
+              class="cert-drawer__image"
+              [src]="templateBlobUrl()"
+              alt="Certificate template preview" />
+          }
+        }
+      </div>
+
+      <div class="cert-drawer__fields">
+        <div class="cert-drawer__fields-title">Auto-filled Fields</div>
+        <ul class="cert-drawer__fields-list">
+          @for (field of autoFields(); track field) {
+            <li>{{ field }}</li>
+          }
+        </ul>
+      </div>
+
+      <p class="cert-drawer__hint">
+        <nas-icon name="info" [size]="16" />
+        <span>The certificate is issued after a learner completes a certificate-enabled course and meets any configured score criteria.</span>
+      </p>
+    </div>
+  </aside>
+}

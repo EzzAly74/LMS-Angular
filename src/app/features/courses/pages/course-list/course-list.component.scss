@@ -58,11 +58,16 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--nas-color-text-muted);
+  color: var(--nas-color-text-strong);
   font-size: var(--nas-size-xs);
   i { color: #f79008; font-size: 13px; }
 
-  &--empty { color: var(--nas-color-text-muted); }
+  /* No reviews yet — dim the star + text so the column still reads as
+     numeric but doesn't compete with rows that have real ratings. */
+  &--empty {
+    color: var(--nas-color-text-muted);
+    i { color: var(--nas-neutral-400); }
+  }
 }
 
 /* ── Row action ──────────────────────────────────────────────────── */
@@ -107,4 +112,39 @@
     &:hover { background: var(--nas-neutral-200); }
     i { font-size: 14px; color: var(--nas-color-text-muted); }
   }
+}
+
+/* ── Edit Course dialog: skeleton + checkbox row ──────────────────── */
+.edit-dialog-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-3);
+
+  &__line {
+    height: 44px;
+    border-radius: var(--nas-radius-md);
+    background: linear-gradient(90deg,
+      var(--nas-neutral-200), var(--nas-neutral-300), var(--nas-neutral-200));
+    background-size: 200% 100%;
+    animation: edit-skel 1.4s linear infinite;
+
+    &:nth-child(1) { width: 100%; }
+    &:nth-child(2) { width: 100%; }
+    &:nth-child(3) { width: 70%; }
+    &:nth-child(4) { width: 90%; }
+  }
+}
+@keyframes edit-skel {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.nas-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-strong);
+  cursor: pointer;
+  user-select: none;
 }

@@ -5,7 +5,7 @@ import {
 import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
@@ -22,18 +22,23 @@ import {
   NasStatusBadgeComponent,
   NasProgressComponent,
   NasAvatarComponent,
+  NasPhotoUploadComponent,
+  CohortAttendanceDrawerComponent,
 } from '../../../../shared/nas';
+import type { NasProgressTone } from '../../../../shared/nas/nas-progress.component';
+import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge.component';
 import { CoursesApiService } from '../../services/courses-api.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import type {
-  CourseDetail, Cohort, CourseLearner, CourseReview,
+  CourseDetail, Cohort, CohortPayload, CohortStatus,
+  CourseLearner, CourseReview,
   CourseModule, ModuleContentType, ModuleLearnerScope, ModulePayload,
   CourseType,
 } from '../../../../core/models/course.types';
 import {
-  mapApiCourseDetail, mapSessionToCohort, mapEnrollmentToLearner,
-  type ApiCourseRaw, type ApiEnrollmentRaw,
+  mapApiCourseDetail, mapEnrollmentToLearner, mapApiCohort,
+  type ApiCourseRaw, type ApiEnrollmentRaw, type ApiCohortRaw,
 } from '../../../../core/utils/course-mapper';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pickLocalized } from '../../../../core/utils/localized';
@@ -54,6 +59,7 @@ type ModuleFilter = 'all' | ModuleContentType;
     DialogModule, DropdownModule, CalendarModule, InputNumberModule, CheckboxModule,
     OverlayPanelModule, ConfirmDialogModule,
     NasStatCardComponent, NasTabsComponent, NasStatusBadgeComponent, NasProgressComponent, NasAvatarComponent,
+    NasPhotoUploadComponent, CohortAttendanceDrawerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-detail.component.html',
@@ -65,6 +71,7 @@ export class CourseDetailComponent implements OnInit {
   private readonly fb         = inject(FormBuilder);
   private readonly route      = inject(ActivatedRoute);
   private readonly toast      = inject(MessageService);
+  private readonly t          = inject(TranslateService);
   private readonly confirm    = inject(ConfirmationService);
 
   constructor() {
@@ -83,6 +90,17 @@ export class CourseDetailComponent implements OnInit {
   showCohort     = signal(false);
   cohortEditMode = signal(false);
   saving         = signal(false);
+
+  /* ── Cohort Attendance drawer state ─────────────────────────────────── */
+  /**
+   * The drawer needs the cohort's `course_sections.id` (NOT the legacy
+   * session-as-cohort id). The Cohort mapper exposes it as `section_id`;
+   * we store both ids + the optimistic name so the drawer header shows
+   * something useful while the API request is in flight.
+   */
+  showAttendance        = signal(false);
+  attendanceCohortId    = signal<number | null>(null);
+  attendanceCohortName  = signal<string>('');
 
   /* ── Edit Course dialog state ─────────────────────────────────────── */
   showEdit          = signal(false);
@@ -111,7 +129,15 @@ export class CourseDetailComponent implements OnInit {
     max_learners:  [30, [Validators.required, Validators.min(1)]],
     certificate:   [true],
     active:        [true],
+    image:         [null as File | null],
   });
+
+  /**
+   * Preview URL bound to the `nas-photo-upload` widget on the Edit dialog.
+   * Starts at the server-side `image` (when present) so admins see the
+   * current photo before they decide to replace it.
+   */
+  editPhotoPreview = signal<string | null>(null);
 
   sectionOptions = computed(() =>
     (this.course()?.sections ?? []).map(s => ({ id: s.id, name: s.name ?? `Section ${s.id}` })),
@@ -138,10 +164,14 @@ export class CourseDetailComponent implements OnInit {
     return (r && r > 0 ? r : 0).toFixed(1);
   });
 
-  /** Completion percent display, falls back to '—' when null. */
+  /**
+   * Completion percent display. The card always renders a numeric value
+   * — even before any lecture progress is recorded — so the stat column
+   * keeps the visual weight Figma calls for instead of an em-dash.
+   */
   completionLabel = computed(() => {
     const p = this.course()?.completion_percent;
-    return p === undefined || p === null ? '—' : `${p}%`;
+    return `${p ?? 0}%`;
   });
 
   /** Human-readable delivery label (Online / Offline / Hybrid / External Link). */
@@ -168,17 +198,22 @@ export class CourseDetailComponent implements OnInit {
     ];
   });
 
+  /**
+   * Cohort dialog form. Bilingual name + capacity + status + dates per
+   * Figma 332:9988 (new) and 332:10708 (edit). All non-name fields are
+   * nullable so admins can defer a final decision until the cohort is
+   * actually scheduled.
+   */
   cohortForm = this.fb.group({
-    section_id: [null as number | null, Validators.required],
-    name:       ['', Validators.required],
-    capacity:   [30, [Validators.required, Validators.min(1)]],
-    status:     ['scheduled', Validators.required],
+    name_en:    ['', [Validators.required, Validators.maxLength(255)]],
+    name_ar:    ['', [Validators.required, Validators.maxLength(255)]],
+    capacity:   [null as number | null, [Validators.min(1), Validators.max(10000)]],
+    status:     [null as CohortStatus | null],
     start_date: [null as Date | null],
     end_date:   [null as Date | null],
-    location:   [''],
   });
 
-  cohortStatusOpts = [
+  cohortStatusOpts: Array<{ id: CohortStatus; name: string }> = [
     { id: 'scheduled', name: 'Scheduled' },
     { id: 'active',    name: 'Active' },
     { id: 'completed', name: 'Completed' },
@@ -260,22 +295,27 @@ export class CourseDetailComponent implements OnInit {
     this.loading.set(true);
     forkJoin({
       course:      this.coursesApi.getById(id),
-      sessions:    this.coursesApi.listSessions(id, { per_page: 100 }),
+      // Cohorts now live on `course_sections` directly. Pulling them in
+      // the same `forkJoin` as the course + enrollments means the detail
+      // page is a single round-trip on load.
+      cohorts:     this.coursesApi.listCohorts(id),
       // Pull every enrollment (online + offline) in a single shot. The
       // endpoint paginates, but for the detail page we want the full list
       // so we ask for a generous per_page. Failures don't block the page.
       enrollments: this.coursesApi.listEnrollments(id, { per_page: 200 }),
     }).subscribe({
-      next: ({ course, sessions, enrollments }) => {
+      next: ({ course, cohorts, enrollments }) => {
         const raw = course.result as unknown as ApiCourseRaw;
         const mapped = mapApiCourseDetail(raw);
-        const cohorts = (sessions.result?.data ?? []).map(mapSessionToCohort);
+        const cohortRows = Array.isArray(cohorts.result)
+          ? (cohorts.result as ApiCohortRaw[]).map(mapApiCohort)
+          : [];
         const rawLearners = (enrollments.result?.data ?? []) as ApiEnrollmentRaw[];
         const learners = rawLearners.map(mapEnrollmentToLearner);
         this.course.set({
           ...mapped,
-          cohorts,
-          cohorts_count:  cohorts.length || mapped.cohorts_count || 0,
+          cohorts:        cohortRows,
+          cohorts_count:  cohortRows.length || mapped.cohorts_count || 0,
           learners,
           // Prefer the actual list length when the server returned rows,
           // otherwise fall back to the scalar count from the detail resource.
@@ -461,7 +501,12 @@ export class CourseDetailComponent implements OnInit {
 
     req$.subscribe({
       next: () => {
-        this.toast.add({ severity: 'success', detail: editing ? 'Module updated' : 'Module added' });
+        this.toast.add({
+          severity: 'success',
+          detail: this.t.instant(
+            editing ? 'course_detail_toasts.module_updated' : 'course_detail_toasts.module_added',
+          ),
+        });
         this.moduleSaving.set(false);
         this.showModule.set(false);
         this.loadModules(id);
@@ -475,13 +520,16 @@ export class CourseDetailComponent implements OnInit {
     const id = this.courseId();
     if (!id) return;
     this.confirm.confirm({
-      message: `Delete module "${this.moduleTitle(m)}"?`,
-      header:  'Delete module',
+      message: this.t.instant('course_detail_toasts.module_delete_message', { name: this.moduleTitle(m) }),
+      header:  this.t.instant('course_detail_toasts.module_delete_title'),
       icon:    'pi pi-exclamation-triangle',
       accept: () => {
         this.coursesApi.deleteModule(id, m.id).subscribe({
           next: () => {
-            this.toast.add({ severity: 'success', detail: 'Module deleted' });
+            this.toast.add({
+              severity: 'success',
+              detail: this.t.instant('course_detail_toasts.module_deleted'),
+            });
             this.loadModules(id);
           },
         });
@@ -536,8 +584,27 @@ export class CourseDetailComponent implements OnInit {
       max_learners:   c.max_learners ?? 30,
       certificate:    !!c.certificate,
       active:         c.status === 'active',
+      image:          null,
     });
+    // Seed the upload widget with whatever photo the server currently has
+    // so the dialog opens in "Replace Photo" mode instead of "Add Photo".
+    this.editPhotoPreview.set(c.image ?? null);
     this.showEdit.set(true);
+  }
+
+  onEditPhotoPicked(file: File): void {
+    this.editForm.patchValue({ image: file });
+    const reader = new FileReader();
+    reader.onload = () => this.editPhotoPreview.set(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  /** Clearing only resets the *pending* replacement; the existing
+   *  server-side image stays until a new file is uploaded (the backend
+   *  update endpoint has no "remove image" path). */
+  onEditPhotoCleared(): void {
+    this.editForm.patchValue({ image: null });
+    this.editPhotoPreview.set(null);
   }
 
   submitEditCourse(): void {
@@ -565,13 +632,19 @@ export class CourseDetailComponent implements OnInit {
     fd.append('max_learners',    String(v.max_learners ?? 30));
     fd.append('certificate',     v.certificate ? '1' : '0');
     fd.append('active',          v.active ? '1' : '0');
+    if (v.image instanceof File) {
+      fd.append('image', v.image);
+    }
 
     this.editSaving.set(true);
     // Laravel can't parse multipart payloads on PUT, so we POST with
     // `_method=PUT` to invoke the update controller action.
     this.api.post(`${API.COURSES}/${id}`, fd).subscribe({
       next: () => {
-        this.toast.add({ severity: 'success', detail: 'Course updated' });
+        this.toast.add({
+          severity: 'success',
+          detail: this.t.instant('course_detail_toasts.course_updated'),
+        });
         this.editSaving.set(false);
         this.showEdit.set(false);
         this.load(id);
@@ -595,13 +668,12 @@ export class CourseDetailComponent implements OnInit {
   }
 
   openAddCohort(): void {
-    const sections = this.sectionOptions();
     this.cohortEditMode.set(false);
     this.activeCohort.set(null);
     this.cohortForm.reset({
-      section_id: sections[0]?.id ?? null,
-      name: '', capacity: 30, status: 'scheduled',
-      start_date: null, end_date: null, location: '',
+      name_en: '', name_ar: '',
+      capacity: 30, status: null,
+      start_date: null, end_date: null,
     });
     this.showCohort.set(true);
   }
@@ -611,13 +683,15 @@ export class CourseDetailComponent implements OnInit {
     this.cohortEditMode.set(true);
     this.activeCohort.set(cohort);
     this.cohortForm.reset({
-      section_id: cohort.section_id ?? this.sectionOptions()[0]?.id ?? null,
-      name:       cohort.name,
-      capacity:   cohort.capacity,
+      // Prefer the dedicated translations from the resource. Fall back
+      // to the localized `name` if the backend hasn't shipped the pair
+      // yet (older cohorts created before this migration).
+      name_en:    cohort.name_en ?? cohort.name ?? '',
+      name_ar:    cohort.name_ar ?? cohort.name ?? '',
+      capacity:   cohort.capacity ?? null,
       status:     cohort.status,
       start_date: cohort.start_date ? new Date(cohort.start_date) : null,
       end_date:   cohort.end_date   ? new Date(cohort.end_date)   : null,
-      location:   '',
     });
     this.showCohort.set(true);
   }
@@ -629,24 +703,29 @@ export class CourseDetailComponent implements OnInit {
 
     this.saving.set(true);
     const v = this.cohortForm.getRawValue();
-    const body = {
-      section_id:   v.section_id!,
-      title:        v.name!,
-      session_date: v.start_date ? this.toIso(v.start_date) : null,
-      time_from:    null,
-      time_to:      null,
-      location:     v.location || null,
+    const body: CohortPayload = {
+      name: {
+        en: (v.name_en ?? '').trim(),
+        ar: (v.name_ar ?? '').trim(),
+      },
+      start_date: v.start_date ? this.toIso(v.start_date) : null,
+      end_date:   v.end_date   ? this.toIso(v.end_date)   : null,
+      capacity:   v.capacity ?? null,
+      status:     v.status ?? null,
     };
 
-    const req = this.cohortEditMode() && this.activeCohort()
-      ? this.coursesApi.updateSession(id, this.activeCohort()!.id, body)
-      : this.coursesApi.createSession(id, body);
+    const editing = this.cohortEditMode() && this.activeCohort();
+    const req = editing
+      ? this.coursesApi.updateCohort(id, this.activeCohort()!.id, body)
+      : this.coursesApi.createCohort(id, body);
 
     req.subscribe({
       next: () => {
         this.toast.add({
           severity: 'success',
-          detail: this.cohortEditMode() ? 'Cohort updated' : 'Cohort created',
+          detail: this.t.instant(
+            editing ? 'course_detail_toasts.cohort_updated' : 'course_detail_toasts.cohort_created',
+          ),
         });
         this.saving.set(false);
         this.showCohort.set(false);
@@ -656,13 +735,27 @@ export class CourseDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * Stepper for the Capacity number field. Mirrors `adjustMaxLearners` on
+   * the Edit Course dialog so admins get the same up/down chevron UX in
+   * both places without dragging in PrimeNG's full p-inputNumber widget.
+   */
+  adjustCohortCapacity(delta: number): void {
+    const current = Number(this.cohortForm.value.capacity ?? 0);
+    const next = Math.max(1, Math.min(10000, current + delta));
+    this.cohortForm.patchValue({ capacity: next });
+  }
+
   deleteCohort(cohort: Cohort, overlay: OverlayPanel): void {
     overlay.hide();
     const id = this.courseId();
     if (!id) return;
-    this.coursesApi.deleteSession(id, cohort.id).subscribe({
+    this.coursesApi.deleteCohort(id, cohort.id).subscribe({
       next: () => {
-        this.toast.add({ severity: 'success', detail: 'Cohort deleted' });
+        this.toast.add({
+          severity: 'success',
+          detail: this.t.instant('course_detail_toasts.cohort_deleted'),
+        });
         this.load(id);
       },
     });
@@ -671,6 +764,18 @@ export class CourseDetailComponent implements OnInit {
   openCohortMenu(ev: Event, cohort: Cohort, overlay: OverlayPanel): void {
     this.activeCohort.set(cohort);
     overlay.toggle(ev);
+  }
+
+  /**
+   * Open the right-edge "Attendance Record" drawer for the given cohort.
+   * Cohort.id is the same as the `course_sections.id` the attendance
+   * endpoint expects, so no extra lookup is needed.
+   */
+  openCohortAttendance(cohort: Cohort, overlay: OverlayPanel): void {
+    overlay.hide();
+    this.attendanceCohortId.set(cohort.id);
+    this.attendanceCohortName.set(cohort.name || '');
+    this.showAttendance.set(true);
   }
 
   private toIso(d: Date): string {
@@ -690,6 +795,31 @@ export class CourseDetailComponent implements OnInit {
     }
   }
 
+  /** Friendly label for the learner status pill ("Not Started" not "not_started"). */
+  learnerStatusLabel(s: CourseLearner['status']): string {
+    switch (s) {
+      case 'completed':   return 'Completed';
+      case 'in_progress': return 'In Progress';
+      case 'not_started': return 'Not Started';
+    }
+  }
+
+  /**
+   * Progress-bar tone — pixel-matched to Figma 321:6791:
+   *   - 100%        → success (#0fb86a, bright green)
+   *   - 50-99%      → info (#496e91, navy "operational-2")
+   *   - 1-49% and 0%→ danger (#f14437, red)
+   *
+   * The percentage text inherits the same tone via the `tintValue` flag
+   * passed to `<nas-progress>` so the colour pairing in the Figma mock
+   * stays consistent for the bar and the trailing label.
+   */
+  learnerProgressTone(p: number): NasProgressTone {
+    if (p >= 100) return 'success';
+    if (p >= 50)  return 'info';
+    return 'danger';
+  }
+
   typeTone(s?: string): 'teal' | 'neutral' | 'success' | 'sky' {
     return s === 'hybrid' ? 'success'
          : s === 'online' ? 'teal'
@@ -697,13 +827,58 @@ export class CourseDetailComponent implements OnInit {
          : 'neutral';
   }
 
-  cohortStatusLabel(s: Cohort['status']): string {
+  /**
+   * Map a stored cohort status to its Figma chip label. `scheduled`
+   * displays as "Up Coming" whenever the start date is in the future
+   * (matches the cohort table mock in node 332:9988); anything else
+   * shows the canonical capitalised label.
+   */
+  cohortStatusLabel(cohort: Cohort): string {
+    const s = cohort.status;
+    if (s === 'scheduled') {
+      const start = cohort.start_date ? new Date(cohort.start_date) : null;
+      const isFuture = start instanceof Date && !isNaN(start.getTime()) && start > new Date();
+      return isFuture ? 'Up Coming' : 'Scheduled';
+    }
     switch (s) {
       case 'completed': return 'Completed';
       case 'active':    return 'Active';
-      case 'upcoming':  return 'Up Coming';
       case 'inactive':  return 'Inactive';
     }
+  }
+
+  /**
+   * Resolved capacity for the "Enrolled / Capacity" cell.
+   *
+   * The Figma cohort table always renders the column as `N / M` (e.g.
+   * "8 / 30"), never a bare enrolled count. When a cohort hasn't had its
+   * own `capacity` set yet — common for cohorts created before the
+   * additive migration landed — we fall back to the course's per-cohort
+   * cap (`max_learners`) so the cell stays informative without faking
+   * data. The chain is:
+   *
+   *   1. `cohort.capacity`     (explicit per-cohort override)
+   *   2. `course.max_learners` (per-course default)
+   *   3. `0`                   (last resort — keeps the slash format)
+   *
+   * Everything in this chain comes straight from the API; nothing here
+   * is hard-coded.
+   */
+  cohortCapacity(cohort: Cohort): number {
+    return cohort.capacity
+        ?? this.course()?.max_learners
+        ?? 0;
+  }
+
+  /** Tone for the cohort status chip — derived the same way as the label. */
+  cohortStatusTone(cohort: Cohort): NasStatusTone {
+    const s = cohort.status;
+    if (s === 'completed' || s === 'active') return 'success';
+    if (s === 'inactive') return 'danger';
+    // scheduled — Up Coming visually = info, plain Scheduled = neutral
+    const start = cohort.start_date ? new Date(cohort.start_date) : null;
+    const isFuture = start instanceof Date && !isNaN(start.getTime()) && start > new Date();
+    return isFuture ? 'info' : 'neutral';
   }
 }
 

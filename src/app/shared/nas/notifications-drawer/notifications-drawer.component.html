@@ -1,0 +1,150 @@
+<p-sidebar
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  position="right"
+  [showCloseIcon]="false"
+  [blockScroll]="true"
+  [dismissible]="true"
+  styleClass="nas-notif-drawer"
+  [style]="{ width: '420px' }">
+
+  <ng-template pTemplate="header">
+    <div class="nd-head">
+      <h2 class="nd-head__title">Notifications</h2>
+      <button type="button" class="nd-head__close" aria-label="Close" (click)="drawer.close()">
+        <nas-icon name="x" [size]="20" />
+      </button>
+    </div>
+  </ng-template>
+
+  <div class="nd-body">
+
+    <!-- ── New Notification (collapsible) ───────────────────────────── -->
+    <section class="nd-card">
+      <button type="button" class="nd-card__head" (click)="toggleComposer()" [attr.aria-expanded]="composerOpen()">
+        <span class="nd-card__title">New Notification</span>
+        <span class="nd-card__toggle">
+          <nas-icon [name]="composerOpen() ? 'minus-circle' : 'plus-circle'" [size]="20" />
+        </span>
+      </button>
+
+      @if (composerOpen()) {
+        <div class="nd-card__body">
+          <label class="nd-field">
+            <span class="nd-field__label">Description</span>
+            <textarea
+              rows="3"
+              class="nd-textarea"
+              placeholder="Brief overview of course objectives..."
+              [ngModel]="description()"
+              (ngModelChange)="description.set($event)"
+              [disabled]="saving()"
+              maxlength="500"></textarea>
+          </label>
+
+          <div class="nd-field">
+            <span class="nd-field__label">Recipients <em class="nd-field__req">*</em></span>
+
+            <div class="nd-recipients-toolbar">
+              <div class="nd-search">
+                <nas-icon name="magnifying-glass" [size]="16" />
+                <input
+                  type="text"
+                  class="nd-search__input"
+                  placeholder="Search recipients..."
+                  [ngModel]="recipientSearch()"
+                  (ngModelChange)="onRecipientSearch($event)"
+                  [disabled]="saving()" />
+              </div>
+
+              <div class="nd-role-tabs">
+                <label class="nd-role-tab" [class.active]="recipientRole() === 'learner'">
+                  <input type="checkbox" [checked]="recipientRole() === 'learner'"
+                    (change)="setRole('learner')" />
+                  <span>Learners</span>
+                </label>
+                <label class="nd-role-tab" [class.active]="recipientRole() === 'instructor'">
+                  <input type="checkbox" [checked]="recipientRole() === 'instructor'"
+                    (change)="setRole('instructor')" />
+                  <span>Instructors</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="nd-recipient-list">
+              <div class="nd-recipient-list__header">{{ recipientRoleLabel() }}</div>
+
+              <label class="nd-recipient-row nd-recipient-row--all">
+                <input type="checkbox"
+                  [checked]="allSelected()"
+                  (change)="toggleAll($any($event.target).checked)"
+                  [disabled]="saving()" />
+                <span>{{ allLabel() }}</span>
+              </label>
+
+              @if (loadingRecipients()) {
+                @for (i of [1,2,3,4]; track i) {
+                  <div class="nd-recipient-row"><p-skeleton height="20px" /></div>
+                }
+              } @else {
+                @for (u of recipients(); track u.id) {
+                  <label class="nd-recipient-row">
+                    <input type="checkbox"
+                      [checked]="isRecipientSelected(u.machine_code)"
+                      (change)="toggleRecipient(u.machine_code, $any($event.target).checked)"
+                      [disabled]="saving() || allSelected() || !u.machine_code" />
+                    <span>{{ u.name }}</span>
+                  </label>
+                }
+                @if (!recipients().length) {
+                  <div class="nd-recipient-empty">No recipients found.</div>
+                }
+              }
+            </div>
+          </div>
+
+          <button type="button" class="nd-send-btn" [disabled]="!canSend()" (click)="send()">
+            @if (saving()) {
+              <nas-icon name="spinner-gap" [size]="18" />
+              <span>Sending…</span>
+            } @else {
+              <span>Send</span>
+            }
+          </button>
+        </div>
+      }
+    </section>
+
+    <!-- ── Recent notifications list ────────────────────────────────── -->
+    <section class="nd-list">
+      @if (loadingList()) {
+        @for (i of [1,2,3]; track i) {
+          <div class="nd-list-item">
+            <p-skeleton height="18px" width="80%" />
+            <p-skeleton height="14px" width="100%" styleClass="mt-2" />
+          </div>
+        }
+      } @else {
+        @for (note of notifications(); track note.id) {
+          <article class="nd-list-item">
+            <div class="nd-list-item__body">
+              <div class="nd-list-item__title">{{ display(note.title) }}</div>
+              @if (display(note.body)) {
+                <div class="nd-list-item__detail">{{ display(note.body) }}</div>
+              }
+            </div>
+            <time class="nd-list-item__time">
+              {{ note.created_at | date:'shortTime' }}
+            </time>
+          </article>
+        }
+        @if (!notifications().length) {
+          <div class="nd-list-empty">
+            <nas-icon name="bell" [size]="32" />
+            <p>No notifications yet</p>
+          </div>
+        }
+      }
+    </section>
+  </div>
+</p-sidebar>

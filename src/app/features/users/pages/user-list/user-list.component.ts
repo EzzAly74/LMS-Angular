@@ -14,7 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminUsersApiService } from '../../services/admin-users-api.service';
@@ -60,6 +60,7 @@ interface UserFormState {
 export class UserListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(AdminUsersApiService);
   private readonly messages = inject(MessageService);
+  private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$  = new Subject<string>();
@@ -297,15 +298,21 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.formOpen.set(false);
         this.messages.add({
           severity: 'success',
-          summary:  'Success',
-          detail:   this.formMode() === 'create' ? 'User created.' : 'User updated.',
+          summary:  this.t.instant('common.success_title'),
+          detail:   this.t.instant(
+            this.formMode() === 'create' ? 'common.created' : 'common.updated',
+          ),
         });
         this.refresh();
       },
       error: (err) => {
         this.formSaving.set(false);
-        const msg = err?.error?.message ?? 'Save failed. Please retry.';
-        this.messages.add({ severity: 'error', summary: 'Error', detail: msg });
+        const msg = err?.error?.message ?? this.t.instant('common.operation_failed');
+        this.messages.add({
+          severity: 'error',
+          summary:  this.t.instant('common.error_title'),
+          detail:   msg,
+        });
       },
     });
   }
@@ -329,8 +336,8 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.deactivateTarget.set(null);
         this.messages.add({
           severity: 'success',
-          summary:  'Done',
-          detail:   `${target.name ?? 'User'} has been deactivated.`,
+          summary:  this.t.instant('common.success_title'),
+          detail:   this.t.instant('users_toasts.deactivated', { name: target.name ?? this.t.instant('common.user_one') }),
         });
         this.refresh();
       },
@@ -338,8 +345,8 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.deactivating.set(false);
         this.messages.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   'Could not deactivate the user. Please retry.',
+          summary:  this.t.instant('common.error_title'),
+          detail:   this.t.instant('users_toasts.deactivate_failed'),
         });
       },
     });

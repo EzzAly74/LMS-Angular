@@ -20,14 +20,14 @@
 
   <!-- ── Reusable data table ─────────────────────────────────────────── -->
   <nas-data-table
-    [columns]="columns"
+    [columns]="columns()"
     [items]="items()"
     [loading]="loading()"
     [total]="total()"
     [perPage]="perPage"
     [page]="page"
     [rowClickable]="true"
-    emptyText="No courses found"
+    [emptyText]="'courses_list.empty_table' | translate"
     emptyIcon="pi pi-book"
     (pageChange)="onPage($event)"
     (rowClick)="goToDetail($any($event))">
@@ -76,16 +76,13 @@
       <nas-progress [value]="row.completion_percent ?? 0" />
     </ng-template>
 
-    <!-- Rating -->
+    <!-- Rating — always renders a numeric value (0.0 placeholder when no
+         reviews are in yet) so the column keeps its visual weight. -->
     <ng-template nasCellTpl="rating" let-row>
-      @if (row.rating != null && row.rating > 0) {
-        <span class="rating-cell">
-          <i class="pi pi-star-fill"></i>
-          <span>{{ row.rating | number:'1.1-1' }}</span>
-        </span>
-      } @else {
-        <span class="rating-cell rating-cell--empty">—</span>
-      }
+      <span class="rating-cell" [class.rating-cell--empty]="!(row.rating > 0)">
+        <i class="pi pi-star-fill"></i>
+        <span>{{ (row.rating ?? 0) | number:'1.1-1' }}</span>
+      </span>
     </ng-template>
 
     <!-- Status -->
@@ -144,7 +141,7 @@
     <div class="nas-form__row">
       <div class="nas-form__field">
         <label>{{ 'add_course.type' | translate }} *</label>
-        <p-dropdown [options]="typeOpts" optionLabel="name" optionValue="id"
+        <p-dropdown [options]="typeOpts()" optionLabel="name" optionValue="id"
                     formControlName="type"
                     [placeholder]="'add_course.select_type' | translate"
                     styleClass="w-full" />
@@ -171,9 +168,9 @@
       <label>{{ 'add_course.issue_certificate' | translate }} *</label>
       <div class="nas-yesno">
         <button type="button" class="nas-yesno__opt" [class.active]="form.value.certificate === true"
-                (click)="form.patchValue({ certificate: true })">Yes</button>
+                (click)="form.patchValue({ certificate: true })">{{ 'common.yes' | translate }}</button>
         <button type="button" class="nas-yesno__opt" [class.active]="form.value.certificate === false"
-                (click)="form.patchValue({ certificate: false })">No</button>
+                (click)="form.patchValue({ certificate: false })">{{ 'common.no' | translate }}</button>
       </div>
     </div>
 
@@ -181,10 +178,21 @@
       <label>{{ 'add_course.review_content' | translate }} *</label>
       <div class="nas-yesno">
         <button type="button" class="nas-yesno__opt" [class.active]="form.value.require_instructor === true"
-                (click)="form.patchValue({ require_instructor: true })">Yes</button>
+                (click)="form.patchValue({ require_instructor: true })">{{ 'common.yes' | translate }}</button>
         <button type="button" class="nas-yesno__opt" [class.active]="form.value.require_instructor === false"
-                (click)="form.patchValue({ require_instructor: false })">No</button>
+                (click)="form.patchValue({ require_instructor: false })">{{ 'common.no' | translate }}</button>
       </div>
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'courses_list.image' | translate }} *</label>
+      <nas-photo-upload
+        [value]="addPhotoPreview()"
+        ratio="100x100"
+        [addLabel]="'courses_list.add_photo' | translate"
+        [replaceLabel]="'courses_list.replace_photo' | translate"
+        (fileSelected)="onAddPhotoPicked($event)"
+        (cleared)="onAddPhotoCleared()" />
     </div>
 
     <nas-locale-input
@@ -236,4 +244,110 @@
       </button>
     </footer>
   </form>
+</p-dialog>
+
+<!-- ── Edit Course modal ─────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="showEditCourse()"
+  (visibleChange)="showEditCourse.set($event)"
+  [modal]="true"
+  [closable]="!editSaving()"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="!editSaving()"
+  styleClass="nas-dialog"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  [header]="'course_detail.edit_course' | translate">
+
+  @if (editLoading()) {
+    <div class="edit-dialog-skeleton">
+      @for (s of [1,2,3,4]; track s) {
+        <div class="edit-dialog-skeleton__line"></div>
+      }
+    </div>
+  } @else {
+    <form [formGroup]="editForm" (ngSubmit)="submitEditCourse()" class="nas-form">
+      <nas-locale-input
+        formControlName="title"
+        [label]="'add_course.course_title' | translate"
+        [required]="true"
+        [placeholderEn]="'add_course.course_title_placeholder' | translate"
+        [placeholderAr]="'add_course.course_title_placeholder' | translate"
+      />
+
+      <div class="nas-form__field">
+        <label>{{ 'courses_list.image' | translate }} *</label>
+        <nas-photo-upload
+          [value]="editPhotoPreview()"
+          ratio="100x100"
+          [addLabel]="'courses_list.add_photo' | translate"
+          [replaceLabel]="'courses_list.replace_photo' | translate"
+          (fileSelected)="onEditPhotoPicked($event)"
+          (cleared)="onEditPhotoCleared()" />
+      </div>
+
+      <nas-locale-input
+        formControlName="description"
+        [label]="'course_detail.description' | translate"
+        [required]="true"
+        [multiline]="true"
+        [placeholderEn]="'add_course.description_placeholder' | translate"
+        [placeholderAr]="'add_course.description_placeholder' | translate"
+      />
+
+      <div class="nas-form__row">
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.delivery_type' | translate }} *</label>
+          <p-dropdown [options]="typeOpts()" optionLabel="name" optionValue="id"
+                      formControlName="type" styleClass="w-full" />
+        </div>
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.category' | translate }} *</label>
+          <p-dropdown [options]="catOptions()" optionLabel="name" optionValue="id"
+                      formControlName="category_id"
+                      [placeholder]="'course_detail.select_category' | translate"
+                      styleClass="w-full" />
+        </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.instructor' | translate }} *</label>
+        <p-dropdown [options]="instOptions()" optionLabel="name" optionValue="id"
+                    formControlName="instructor_id"
+                    [placeholder]="'course_detail.select_instructor' | translate"
+                    styleClass="w-full" />
+      </div>
+
+      <div class="nas-form__row">
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.hours' | translate }} *</label>
+          <p-inputNumber formControlName="hours" [min]="1" [max]="10000" [showButtons]="true" styleClass="w-full" />
+        </div>
+        <div class="nas-form__field">
+          <label>{{ 'course_detail.max_learners_per_cohort' | translate }} *</label>
+          <p-inputNumber formControlName="max_learners" [min]="1" [max]="10000" [showButtons]="true" styleClass="w-full" />
+        </div>
+      </div>
+
+      <label class="nas-checkbox-row">
+        <p-checkbox [binary]="true" formControlName="certificate" />
+        <span>{{ 'course_detail.issue_certificate' | translate }}</span>
+      </label>
+      <label class="nas-checkbox-row">
+        <p-checkbox [binary]="true" formControlName="active" />
+        <span>{{ 'course_detail.active' | translate }}</span>
+      </label>
+
+      <footer class="nas-form__footer">
+        <button type="button" class="nas-btn nas-btn--ghost"
+                (click)="showEditCourse.set(false)" [disabled]="editSaving()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="submit" class="nas-btn nas-btn--primary" [disabled]="editSaving()">
+          @if (editSaving()) { <i class="pi pi-spin pi-spinner"></i> } @else { <i class="pi pi-pencil"></i> }
+          {{ 'course_detail.save_changes' | translate }}
+        </button>
+      </footer>
+    </form>
+  }
 </p-dialog>

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -33,6 +33,7 @@ export class ExamListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private t              = inject(TranslateService);
 
   constructor() {
     withLocaleReload(() => {
@@ -83,10 +84,15 @@ export class ExamListComponent implements OnInit {
 
   confirmDelete(item: Exam): void {
     this.confirmService.confirm({
-      message: `Delete "${item.title}"?`,
+      message: `${this.t.instant('confirm.delete_message')} (${item.title})`,
+      header:  this.t.instant('confirm.delete_title'),
+      icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(courseUrl.exam(this.selectedCourseId!, item.id)).subscribe({
-          next: () => { this.messageService.add({ severity: 'success', detail: 'Deleted.' }); this.load(); },
+          next: () => {
+            this.messageService.add({ severity: 'success', detail: this.t.instant('success.deleted') });
+            this.load();
+          },
         });
       },
     });

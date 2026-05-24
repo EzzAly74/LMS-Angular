@@ -135,7 +135,9 @@
       @case ('cohort') {
         <section class="cohort-tab">
           <header class="cohort-tab__head">
-            <span class="cohort-tab__count">{{ c.cohorts?.length ?? 0 }} cohorts</span>
+            <span class="cohort-tab__count">
+              {{ (c.cohorts?.length ?? 0) }} {{ 'course_detail.cohorts' | translate | lowercase }}
+            </span>
             <button class="nas-cta-btn" (click)="openAddCohort()">
               <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_cohort' | translate }}
             </button>
@@ -159,14 +161,12 @@
                     <td class="nas-table__primary">{{ cohort.name || '—' }}</td>
                     <td>{{ cohort.start_date ? (cohort.start_date | date:'dd MMM yyyy') : '—' }}</td>
                     <td>{{ cohort.end_date ? (cohort.end_date | date:'dd MMM yyyy') : '—' }}</td>
+                    <td>{{ cohort.enrolled }} / {{ cohortCapacity(cohort) }}</td>
                     <td>
-                      @if (cohort.capacity > 0) {
-                        {{ cohort.enrolled }} / {{ cohort.capacity }}
-                      } @else {
-                        {{ cohort.enrolled }}
-                      }
+                      <nas-status-badge [tone]="cohortStatusTone(cohort)" dot>
+                        {{ cohortStatusLabel(cohort) }}
+                      </nas-status-badge>
                     </td>
-                    <td><nas-status-badge [tone]="statusTone(cohort.status)" dot>{{ cohortStatusLabel(cohort.status) }}</nas-status-badge></td>
                     <td class="nas-table__action">
                       <button class="row-action-btn" (click)="openCohortMenu($event, cohort, cohortMenu)">
                         <i class="pi pi-ellipsis-h"></i>
@@ -175,7 +175,9 @@
                   </tr>
                 }
                 @if (!(c.cohorts?.length)) {
-                  <tr><td colspan="6" class="nas-table__empty">No cohorts yet</td></tr>
+                  <tr><td colspan="6" class="nas-table__empty">
+                    {{ 'course_detail.no_cohorts' | translate }}
+                  </td></tr>
                 }
               </tbody>
             </table>
@@ -185,16 +187,16 @@
 
       <!-- LEARNERS TAB -->
       @case ('learners') {
-        <section>
-          <div class="nas-card">
-            <table class="nas-table">
+        <section class="learners-tab">
+          <div class="nas-card learners-card">
+            <table class="nas-table learners-table">
               <thead>
                 <tr>
-                  <th>{{ 'course_detail.learner' | translate }}</th>
-                  <th>{{ 'course_detail.cohort' | translate }}</th>
-                  <th>{{ 'course_detail.progress' | translate }}</th>
-                  <th>{{ 'course_detail.status' | translate }}</th>
-                  <th>{{ 'course_detail.enrolled' | translate }}</th>
+                  <th class="learners-table__col-name">{{ 'course_detail.learner' | translate }}</th>
+                  <th class="learners-table__col-cohort">{{ 'course_detail.cohort' | translate }}</th>
+                  <th class="learners-table__col-progress">{{ 'course_detail.progress' | translate }}</th>
+                  <th class="learners-table__col-status">{{ 'course_detail.status' | translate }}</th>
+                  <th class="learners-table__col-date">{{ 'course_detail.enrolled' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,18 +204,33 @@
                   <tr>
                     <td>
                       <div class="learner-cell">
-                        <nas-avatar size="sm" [name]="l.name" />
-                        <span>{{ l.name }}</span>
+                        <span class="learner-cell__avatar"
+                              [class.learner-cell__avatar--active]="l.status !== 'not_started'">
+                          <nas-avatar size="sm" [name]="l.name" />
+                        </span>
+                        <span class="learner-cell__name">{{ l.name }}</span>
                       </div>
                     </td>
-                    <td>{{ l.cohort_name }}</td>
-                    <td style="min-width: 200px;"><nas-progress [value]="l.progress" /></td>
-                    <td><nas-status-badge [tone]="statusTone(l.status)" dot>{{ l.status | titlecase }}</nas-status-badge></td>
-                    <td>{{ l.enrolled_at | date:'dd MMM yyyy' }}</td>
+                    <td class="learners-table__cohort">{{ l.cohort_name }}</td>
+                    <td class="learners-table__progress">
+                      <nas-progress [value]="l.progress"
+                                    [tone]="learnerProgressTone(l.progress)"
+                                    [tintValue]="true" />
+                    </td>
+                    <td>
+                      <!-- Figma 321:6791 renders status as plain coloured text,
+                           no pill — keep the column visually quiet so the
+                           progress bar carries the row. -->
+                      <span class="learners-table__status"
+                            [attr.data-status]="l.status">
+                        {{ learnerStatusLabel(l.status) }}
+                      </span>
+                    </td>
+                    <td class="learners-table__date">{{ l.enrolled_at | date:'dd MMM yyyy' }}</td>
                   </tr>
                 }
                 @if (!(c.learners?.length)) {
-                  <tr><td colspan="5" class="nas-table__empty">No learners enrolled yet</td></tr>
+                  <tr><td colspan="5" class="nas-table__empty">{{ 'course_detail.no_learners' | translate }}</td></tr>
                 }
               </tbody>
             </table>
@@ -340,40 +357,50 @@
       @case ('ratings') {
         <section class="ratings-tab">
           <header class="ratings-tab__head">
-            {{ c.rating_count }} reviews • {{ c.comments_count }} with comments
+            {{ c.rating_count ?? 0 }} {{ 'course_detail.reviews' | translate }}
+            ·
+            {{ c.comments_count ?? 0 }} {{ 'course_detail.with_comments' | translate }}
           </header>
-          <div class="ratings-tab__list">
-            @for (r of c.reviews ?? []; track r.id) {
-              <article class="nas-card review-card">
-                <header class="review-card__head">
-                  <div class="review-card__user">
-                    <nas-avatar [name]="r.user_name" />
-                    <div>
-                      <div class="review-card__name">{{ r.user_name }}</div>
-                      <div class="review-card__code">{{ r.user_machine_code ?? '' }}</div>
+          @if (c.reviews?.length) {
+            <div class="ratings-tab__list">
+              @for (r of c.reviews ?? []; track r.id) {
+                <article class="nas-card review-card">
+                  <header class="review-card__head">
+                    <div class="review-card__user">
+                      <nas-avatar [name]="r.user_name" />
+                      <div>
+                        <div class="review-card__name">{{ r.user_name }}</div>
+                        @if (r.user_machine_code) {
+                          <div class="review-card__code">{{ r.user_machine_code }}</div>
+                        }
+                      </div>
                     </div>
-                  </div>
-                  <div class="review-card__rating">
-                    @for (i of [1,2,3,4,5]; track i) {
-                      <i class="pi pi-star-fill" [class.dim]="i > r.rating"></i>
-                    }
-                    <span>{{ r.rating }}/5</span>
-                  </div>
-                </header>
-                @if (r.comment) {
-                  <p class="review-card__comment">"{{ r.comment }}"</p>
-                } @else {
-                  <p class="review-card__comment review-card__comment--muted">{{ 'course_detail.no_comments' | translate }}</p>
-                }
-              </article>
-            }
-            @if (!(c.reviews?.length)) {
-              <div class="nas-card placeholder-tab placeholder-tab--soft">
-                <i class="pi pi-star"></i>
-                <h3>No reviews yet</h3>
-              </div>
-            }
-          </div>
+                    <div class="review-card__meta">
+                      <div class="review-card__rating">
+                        @for (i of [1,2,3,4,5]; track i) {
+                          <i class="pi pi-star-fill" [class.dim]="i > r.rating"></i>
+                        }
+                        <span class="review-card__score">{{ r.rating }}/5</span>
+                      </div>
+                      @if (r.created_at) {
+                        <div class="review-card__date">{{ r.created_at | date:'dd MMM yyyy' }}</div>
+                      }
+                    </div>
+                  </header>
+                  @if (r.comment) {
+                    <p class="review-card__comment">"{{ r.comment }}"</p>
+                  } @else {
+                    <p class="review-card__comment review-card__comment--muted">{{ 'course_detail.no_comments' | translate }}</p>
+                  }
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="nas-card ratings-empty">
+              <i class="pi pi-star"></i>
+              <p>{{ 'course_detail.no_reviews_yet' | translate }}</p>
+            </div>
+          }
         </section>
       }
 
@@ -403,69 +430,114 @@
         <button class="row-menu__item" (click)="openEditCohort(cohort, cohortMenu)">
           <i class="pi pi-pencil"></i>{{ 'course_detail.edit_cohort' | translate }}
         </button>
-        <button class="row-menu__item">
+        <button class="row-menu__item" (click)="openCohortAttendance(cohort, cohortMenu)">
           <i class="pi pi-calendar"></i>{{ 'course_detail.view_attendance' | translate }}
         </button>
       </div>
     }
   </p-overlayPanel>
 
-  <!-- ── Cohort modal (Add/Edit) ─────────────────────────────────────── -->
+  <!-- ── Cohort Attendance drawer (Figma 454:42768, 332:11156) ───────── -->
+  <nas-cohort-attendance-drawer
+    [courseId]="courseId()"
+    [cohortId]="attendanceCohortId()"
+    [cohortName]="attendanceCohortName()"
+    [visible]="showAttendance()"
+    (visibleChange)="showAttendance.set($event)" />
+
+  <!-- ── Cohort modal (Add/Edit) ── Figma 332:9988 / 332:10708 ───────── -->
   <p-dialog
     [visible]="showCohort()"
     (visibleChange)="showCohort.set($event)"
     [modal]="true"
-    [closable]="true"
+    [closable]="!saving()"
     [draggable]="false"
     [resizable]="false"
-    [closeOnEscape]="true"
-    styleClass="nas-dialog"
-    [style]="{ width: '460px' }"
+    [closeOnEscape]="!saving()"
+    styleClass="nas-dialog cohort-dialog"
+    [style]="{ width: '460px', maxWidth: '95vw' }"
     [header]="cohortEditMode() ? ('course_detail.edit_cohort' | translate) : ('course_detail.new_cohort' | translate)">
 
-    <form [formGroup]="cohortForm" (ngSubmit)="submitCohort()" class="nas-form">
-      @if (sectionOptions().length) {
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.section' | translate }} *</label>
-          <p-dropdown [options]="sectionOptions()" optionLabel="name" optionValue="id"
-                      formControlName="section_id" styleClass="w-full" />
-        </div>
-      }
+    <form [formGroup]="cohortForm" (ngSubmit)="submitCohort()" class="nas-form cohort-form">
+
       <div class="nas-form__field">
-        <label>{{ 'course_detail.cohort_name' | translate }} *</label>
-        <input class="nas-input" type="text" formControlName="name"
+        <label>{{ 'course_detail.cohort_name_en' | translate }} <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="name_en"
+               [placeholder]="'course_detail.cohort_name_placeholder' | translate" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.cohort_name_ar' | translate }} <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="name_ar"
                [placeholder]="'course_detail.cohort_name_placeholder' | translate" />
       </div>
 
       <div class="nas-form__field">
         <label>{{ 'course_detail.capacity' | translate }}</label>
-        <p-inputNumber formControlName="capacity" [min]="1" [max]="500" [showButtons]="true" styleClass="w-full" />
+        <div class="duration-input">
+          <input type="number" class="duration-input__field"
+                 formControlName="capacity" min="1" max="10000" placeholder="30" />
+          <div class="duration-input__steppers">
+            <button type="button" class="duration-input__step"
+                    [attr.aria-label]="'course_detail.capacity' | translate"
+                    (click)="adjustCohortCapacity(1)">
+              <i class="pi pi-chevron-up"></i>
+            </button>
+            <button type="button" class="duration-input__step"
+                    [attr.aria-label]="'course_detail.capacity' | translate"
+                    (click)="adjustCohortCapacity(-1)">
+              <i class="pi pi-chevron-down"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="nas-form__field">
-        <label>{{ 'course_detail.cohort_status' | translate }}</label>
+        <label>{{ 'course_detail.status' | translate }}</label>
         <p-dropdown [options]="cohortStatusOpts" optionLabel="name" optionValue="id"
-                    formControlName="status" styleClass="w-full" />
+                    formControlName="status" styleClass="w-full"
+                    [placeholder]="'course_detail.cohort_status_placeholder' | translate" />
+        @if (cohortForm.value.status === 'scheduled') {
+          <p class="cohort-form__hint">
+            <i class="pi pi-info-circle"></i>
+            {{ 'course_detail.cohort_status_helper' | translate }}
+          </p>
+        }
       </div>
 
       <div class="nas-form__row">
         <div class="nas-form__field">
           <label>{{ 'course_detail.cohort_start' | translate }}</label>
-          <p-calendar formControlName="start_date" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+          <p-calendar formControlName="start_date" dateFormat="dd/mm/yy"
+                      [showIcon]="true" styleClass="w-full"
+                      placeholder="dd/mm/yyyy" />
         </div>
         <div class="nas-form__field">
           <label>{{ 'course_detail.cohort_end' | translate }}</label>
-          <p-calendar formControlName="end_date" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+          <p-calendar formControlName="end_date" dateFormat="dd/mm/yy"
+                      [showIcon]="true" styleClass="w-full"
+                      placeholder="dd/mm/yyyy" />
         </div>
       </div>
 
       <footer class="nas-form__footer">
-        <button type="button" class="nas-btn nas-btn--ghost" (click)="showCohort.set(false)">
+        <button type="button" class="nas-btn nas-btn--ghost"
+                (click)="showCohort.set(false)" [disabled]="saving()">
           {{ 'common.cancel' | translate }}
         </button>
-        <button type="submit" class="nas-btn nas-btn--primary" [disabled]="saving()">
-          <i class="pi pi-pencil"></i>
-          {{ cohortEditMode() ? ('course_detail.edit_cohort' | translate) : ('course_detail.add_cohort' | translate) }}
+        <button type="submit" class="nas-btn nas-btn--primary"
+                [disabled]="saving() || cohortForm.invalid">
+          @if (saving()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else if (cohortEditMode()) {
+            <i class="pi pi-pencil"></i>
+          } @else {
+            <i class="pi pi-plus-circle"></i>
+          }
+          <span>
+            {{ cohortEditMode() ? ('course_detail.edit_cohort' | translate)
+                                : ('course_detail.add_cohort' | translate) }}
+          </span>
         </button>
       </footer>
     </form>
@@ -641,6 +713,17 @@
         <label>{{ 'course_detail.course_title_ar' | translate }}</label>
         <input class="nas-input" type="text" formControlName="title_ar"
                [placeholder]="'course_detail.course_title_ar' | translate" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'courses_list.image' | translate }} <span class="required">*</span></label>
+        <nas-photo-upload
+          [value]="editPhotoPreview()"
+          ratio="100x100"
+          [addLabel]="'courses_list.add_photo' | translate"
+          [replaceLabel]="'courses_list.replace_photo' | translate"
+          (fileSelected)="onEditPhotoPicked($event)"
+          (cleared)="onEditPhotoCleared()" />
       </div>
 
       <div class="nas-form__field">

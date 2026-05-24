@@ -34,7 +34,8 @@ export const API = {
   NOTIFICATIONS:  `${API_BASE}/notifications`,
   SETTINGS:       `${API_BASE}/settings`,
   ADMIN_SETTINGS: `${API_BASE}/admin/settings`,
-  CERTIFICATES:   `${API_BASE}/certificates`,
+  CERTIFICATES:        `${API_BASE}/certificates`,
+  ADMIN_CERTIFICATES:  `${API_BASE}/admin/certificates`,
   EVALUATIONS:    `${API_BASE}/evaluations`,
   ASSIGNMENTS:    `${API_BASE}/assignments`,
   ADMIN_ASSIGNMENTS: `${API_BASE}/admin/assignments`,
@@ -60,6 +61,17 @@ export const courseUrl = {
   session:     (courseId: number, sessionId: number) =>
     `${API.COURSES}/${courseId}/sessions/${sessionId}`,
   enrollments: (id: number) => `${API.COURSES}/${id}/enrollments`,
+  /**
+   * Cohort = course_section. The Cohort tab CRUDs sections through these
+   * routes; `sessions` (above) is a different concept (one meeting of a
+   * cohort) and is kept around for the module/timetable views.
+   */
+  cohorts:     (id: number) => `${API.COURSES}/${id}/sections`,
+  cohort:      (courseId: number, cohortId: number) =>
+    `${API.COURSES}/${courseId}/sections/${cohortId}`,
+  /** Full attendance rollup for one cohort — drives the right-edge drawer. */
+  cohortAttendance: (courseId: number, cohortId: number) =>
+    `${API.COURSES}/${courseId}/cohorts/${cohortId}/attendance`,
   modules:     (id: number) => `${API.COURSES}/${id}/modules`,
   lectures:    (id: number) => `${API.COURSES}/${id}/lectures`,
   lecture:     (courseId: number, lectureId: number) =>

@@ -6,6 +6,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -28,7 +29,7 @@ interface Qualification {
   standalone: true,
   imports: [
     CommonModule, FormsModule, DialogModule, SkeletonModule,
-    ConfirmDialogModule, NasPageHeaderComponent,
+    ConfirmDialogModule, TranslateModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './qualification-list.component.html',
@@ -39,6 +40,7 @@ export class QualificationListComponent implements OnInit {
   private confirmService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private localeService  = inject(LocaleService);
+  private t              = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
 
@@ -122,8 +124,8 @@ export class QualificationListComponent implements OnInit {
         this.load();
         this.messageService.add({
           severity: 'success',
-          summary: 'Success',
-          detail: this.editingId ? 'Qualification updated.' : 'Qualification created.',
+          summary:  this.t.instant('common.saved'),
+          detail:   this.t.instant('qualifications.saved'),
         });
       },
       error: () => this.saving.set(false),
@@ -140,13 +142,17 @@ export class QualificationListComponent implements OnInit {
   confirmDelete(item: Qualification): void {
     this.activeRow.set(null);
     this.confirmService.confirm({
-      message: `Delete "${item.name_en ?? item.name}"?`,
-      header: 'Confirm Delete',
+      message: `${this.t.instant('confirm.delete_message')} (${item.name_en ?? item.name})`,
+      header:  this.t.instant('qualifications.confirm_delete'),
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.QUALIFICATIONS}/${item.id}`).subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Qualification deleted.' });
+            this.messageService.add({
+              severity: 'success',
+              summary:  this.t.instant('common.deleted'),
+              detail:   this.t.instant('qualifications.deleted'),
+            });
             this.load();
           },
         });

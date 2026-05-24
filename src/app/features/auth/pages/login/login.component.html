@@ -59,7 +59,7 @@
               id="login-password" formControlName="password" [placeholder]="'auth.password' | translate"
               autocomplete="current-password" />
             <button type="button" class="field__eye" (click)="togglePassword()"
-              [attr.aria-label]="'Toggle password visibility'">
+              [attr.aria-label]="'common.toggle_password_visibility' | translate">
               @if (showPassword()) {
               <!-- eye-off -->
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -132,8 +132,8 @@
     <div class="brand-content">
 
       <!-- NAS Logo -->
-      <div class="brand-logo" aria-label="NAS Logo">
-        <img class="logo-wordmark" src="assets/images/nas-logo.png" alt="NAS" />
+      <div class="brand-logo" [attr.aria-label]="'common.brand_logo' | translate">
+        <img class="logo-wordmark" src="assets/images/nas-logo.png" [alt]="'app.title' | translate" />
       </div>
 
       <!-- Tagline -->

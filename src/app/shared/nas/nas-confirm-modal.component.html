@@ -1,0 +1,28 @@
+@if (visible) {
+  <div class="nas-confirm-backdrop" (click)="onBackdropClick()">
+    <div class="nas-confirm-card" role="dialog" aria-modal="true" [attr.aria-label]="title"
+      (click)="$event.stopPropagation()">
+
+      <header class="nas-confirm-card__head">
+        <h2 class="nas-confirm-card__title">{{ title }}</h2>
+        <button type="button" class="nas-confirm-card__close" [disabled]="busy" (click)="onCancel()" aria-label="Close">
+          <nas-icon name="x" [size]="20" />
+        </button>
+      </header>
+
+      <div class="nas-confirm-card__body">
+        <p class="nas-confirm-card__message">{{ message }}</p>
+      </div>
+
+      <footer class="nas-confirm-card__foot">
+        <button type="button" class="nas-confirm-btn nas-confirm-btn--outline"
+          [class.nas-confirm-btn--danger]="danger" [disabled]="busy" (click)="onConfirm()">
+          {{ confirmLabel }}
+        </button>
+        <button type="button" class="nas-confirm-btn nas-confirm-btn--filled" [disabled]="busy" (click)="onCancel()">
+          {{ cancelLabel }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

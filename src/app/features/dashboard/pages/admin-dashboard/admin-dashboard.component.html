@@ -24,7 +24,7 @@
   <!-- ── KPI Row ─────────────────────────────────────────────────── -->
   <section class="kpi-row">
     <nas-stat-card icon="pi pi-users" iconTone="purple" [label]="'dashboard.active_learners' | translate"
-      [value]="data()?.statistics?.active_learners ?? 0" [trend]="'+12% vs last month'" trendDirection="up">
+      [value]="data()?.statistics?.active_learners ?? 0" [trend]="'dashboard.trend_up' | translate:{ pct: '12' }" trendDirection="up">
       <div subline class="kpi-subline">
         <span class="kpi-pill kpi-pill--online">
           <span class="kpi-pill__dot"></span>
@@ -42,7 +42,7 @@
     </nas-stat-card>
 
     <nas-stat-card icon="pi pi-shield" iconTone="green" [label]="'dashboard.average_completion' | translate"
-      [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'" trend="-3% vs last month" trendDirection="down">
+      [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'" [trend]="'dashboard.trend_down' | translate:{ pct: '3' }" trendDirection="down">
     </nas-stat-card>
 
     <nas-stat-card icon="pi pi-users" iconTone="navy" [label]="'dashboard.instructors' | translate"
@@ -59,16 +59,23 @@
           <div class="chart-card__title-row">
             <h2 class="chart-card__title">{{ 'dashboard.enrollment_trend' | translate }}</h2>
             <span class="chart-card__delta">
-              <i class="pi pi-arrow-up"></i> +5%
+              <i class="pi pi-arrow-up"></i> {{ 'dashboard.delta_up' | translate:{ pct: '5' } }}
             </span>
           </div>
           <p class="chart-card__sub">{{ trendTotalEnrollments() }} {{ 'dashboard.enrollments' | translate }}</p>
         </div>
-        <nas-pill-tabs [tabs]="rangeTabs" [activeId]="trendRange()" (activeIdChange)="trendRange.set($any($event))" />
+        <nas-pill-tabs [tabs]="rangeTabs" [activeId]="trendRange()" (activeIdChange)="onRangeChange($any($event))" />
       </header>
 
       <div class="chart-card__chart">
-        <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="280px" />
+        @if (trendIsEmpty()) {
+          <div class="chart-card__empty">
+            <nas-icon name="tray" [size]="32" />
+            <p>{{ 'dashboard.chart_empty' | translate }}</p>
+          </div>
+        } @else {
+          <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="280px" />
+        }
       </div>
     </article>
 
@@ -76,9 +83,9 @@
     <article class="nas-card notif-card">
       <header class="notif-card__head">
         <h2 class="notif-card__title">{{ 'dashboard.notifications' | translate }}</h2>
-        <a routerLink="/admin/notifications" class="notif-card__view-all">
+        <button type="button" class="notif-card__view-all" (click)="notifsDrawer.open()">
           {{ 'dashboard.view_all' | translate }}
-        </a>
+        </button>
       </header>
       <ul class="notif-list">
         @for (note of data()?.notifications ?? []; track $index) {
@@ -145,7 +152,7 @@
           }
           @if (!(data()?.top_courses?.length)) {
           <tr>
-            <td colspan="6" class="nas-table__empty">No courses yet</td>
+            <td colspan="6" class="nas-table__empty">{{ 'dashboard.no_courses_yet' | translate }}</td>
           </tr>
           }
         </tbody>

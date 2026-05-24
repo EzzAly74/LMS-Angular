@@ -38,15 +38,40 @@ export interface CourseSession {
   section?: { id: number; name: string };
 }
 
+/**
+ * Canonical cohort status values stored on the backend. The table chip in
+ * the Cohort tab maps `scheduled` → "Up Coming" when the start_date is in
+ * the future, so the display label diverges from the storage label.
+ */
+export type CohortStatus = 'scheduled' | 'active' | 'completed' | 'inactive';
+
 export interface Cohort {
   id: number;
+  /** Localized display name (already resolved server-side via Accept-Language). */
   name: string;
-  start_date: string;
-  end_date: string;
+  /** Raw bilingual pair so the edit dialog can prefill both inputs. */
+  name_en?: string | null;
+  name_ar?: string | null;
+  start_date: string | null;
+  end_date:   string | null;
   enrolled: number;
-  capacity: number;
-  status: 'completed' | 'active' | 'upcoming' | 'inactive';
+  capacity: number | null;
+  status: CohortStatus;
+  /**
+   * @deprecated — kept for backwards compatibility with the attendance
+   * drawer that currently reads `cohort.section_id`. Equal to `id`.
+   */
   section_id?: number;
+}
+
+/** Payload accepted by POST/PUT /courses/{course}/sections. */
+export interface CohortPayload {
+  /** Bilingual cohort name — backend stores it on the translatable `name` column. */
+  name: LocalizedText;
+  start_date?: string | null;
+  end_date?:   string | null;
+  capacity?:   number | null;
+  status?:     CohortStatus | null;
 }
 
 export interface CourseDetail {
@@ -77,6 +102,8 @@ export interface CourseDetail {
   reviews?: CourseReview[];
   cohorts?: Cohort[];
   learners?: CourseLearner[];
+  /** Fully-qualified URL for the course thumbnail (or null). */
+  image?: string | null;
 }
 
 export interface CourseLearner {
@@ -138,6 +165,65 @@ export interface CourseModule {
   require_completion: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+/* ── Cohort Attendance (drives the right-edge drawer on course detail) ───── */
+
+/** One enrolled learner attached to a cohort session row (absent_learners). */
+export interface CohortAttendanceLearnerRef {
+  id: number;
+  name: string;
+}
+
+/** A session row inside the cohort attendance rollup. */
+export interface CohortAttendanceSession {
+  id: number;
+  /** 1-based chronological position — used as the fallback "Session N" label. */
+  index: number;
+  title: string;
+  date: string | null;
+  time_from: string | null;
+  time_to: string | null;
+  location: string | null;
+  attended_count: number;
+  absent_count: number;
+  total: number;
+  full_attendance: boolean;
+  absent_learners: CohortAttendanceLearnerRef[];
+}
+
+/** One absent session reference attached to a learner row (absent_sessions). */
+export interface CohortAttendanceSessionRef {
+  id: number;
+  index: number;
+  title: string;
+  date: string | null;
+}
+
+/** A learner row inside the cohort attendance rollup. */
+export interface CohortAttendanceLearner {
+  id: number;
+  name: string;
+  machine_code: string | null;
+  department: string | null;
+  total_sessions: number;
+  attended_count: number;
+  absent_count: number;
+  absent_sessions: CohortAttendanceSessionRef[];
+}
+
+/**
+ * Full payload returned by `GET /courses/{course}/cohorts/{cohort}/attendance`.
+ * The shape is built once on the server so the drawer can render its two
+ * tabs (Sessions / Learners) and three filter chips (All / Presence /
+ * Absence) without any extra round-trips.
+ */
+export interface CohortAttendance {
+  cohort:  { id: number; name: string; start_date: string | null; end_date: string | null };
+  course:  { id: number; title: string };
+  totals:  { sessions: number; learners: number; attended: number; absent: number };
+  sessions: CohortAttendanceSession[];
+  learners: CohortAttendanceLearner[];
 }
 
 /** Payload for creating or updating a module via the course-lectures endpoint. */

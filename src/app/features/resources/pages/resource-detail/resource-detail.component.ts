@@ -10,6 +10,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface LmsResource {
   id: number;
@@ -47,9 +48,23 @@ export class ResourceDetailComponent implements OnInit {
 
   editForm = { title: '', content: '', url: '' };
 
+  constructor() {
+    // Refetch the resource (title/content/qualification name are all
+    // localized) whenever the UI language changes.
+    withLocaleReload(() => {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) this.fetch(id);
+    });
+  }
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) { this.loading.set(false); return; }
+    this.fetch(id);
+  }
+
+  private fetch(id: string): void {
+    this.loading.set(true);
     this.api.get<LmsResource>(`${API.LMS_RESOURCES}/${id}`).subscribe({
       next:  res => { this.resource.set(res.result); this.loading.set(false); },
       error: ()  => this.loading.set(false),

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface QualOption {
   id: number;
@@ -43,7 +44,17 @@ export class ResourceAddComponent implements OnInit {
     { label: 'File/Document',  value: 'file'    as ResourceType },
   ];
 
+  constructor() {
+    // Qualifications come back localized — re-pull when the UI language
+    // switches so the dropdown labels match the user's locale.
+    withLocaleReload(() => this.loadQualifications());
+  }
+
   ngOnInit(): void {
+    this.loadQualifications();
+  }
+
+  private loadQualifications(): void {
     this.api.get<QualOption[]>(API.QUALIFICATIONS_ACTIVE).subscribe({
       next: res => this.qualOptions.set(Array.isArray(res.result) ? res.result : []),
     });

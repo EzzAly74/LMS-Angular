@@ -1,96 +1,197 @@
-<p-confirmDialog />
+<div class="nas-page-container cat-page">
 
-<!-- ── Page ──────────────────────────────────────────────────────────── -->
-<div class="nas-page-container">
-
-  <nas-page-header
-    title="Categories"
-    subtitle="Manage course categories">
-  </nas-page-header>
-
-  <div class="nas-card cat-table-card">
-    <div class="cat-toolbar">
-      <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
-        <input
-          type="text"
-          class="nas-search__input"
-          placeholder="Search categories..."
-          (input)="onSearch($any($event.target).value)"
-        />
-      </div>
+  <!-- ── Page header (Figma 379:10759) ──────────────────────────────── -->
+  <header class="cat-page__head">
+    <div class="cat-page__heading">
+      <h1 class="cat-page__title">Categories</h1>
+      <p class="cat-page__subtitle">Organise courses into topic categories</p>
     </div>
+    <button type="button" class="cat-new-btn" (click)="openCreate()">
+      <nas-icon name="plus-circle" [size]="20" />
+      <span>New Category</span>
+    </button>
+  </header>
 
+  <!-- Search bar (above the table, follows existing UX pattern) -->
+  <div class="cat-toolbar">
+    <div class="cat-search">
+      <nas-icon name="magnifying-glass" [size]="16" />
+      <input
+        type="text"
+        class="cat-search__input"
+        placeholder="Search categories..."
+        (input)="onSearch($any($event.target).value)" />
+    </div>
+  </div>
+
+  <!-- ── Table card (Figma 379:10759) ───────────────────────────────── -->
+  <section class="cat-card">
     <div class="cat-table-wrap">
-      <table class="nas-table">
+      <table class="cat-table">
         <thead>
           <tr>
-            <th>Category</th>
-            <th>Courses</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th></th>
+            <th class="cat-table__head">Categories</th>
+            <th class="cat-table__head">Linked Courses</th>
+            <th class="cat-table__head cat-table__head--action"></th>
           </tr>
         </thead>
         <tbody>
           @if (loading()) {
             @for (s of skeletons; track s) {
-              <tr>
-                @for (c of [1,2,3,4,5]; track c) {
-                  <td><p-skeleton height="20px" /></td>
-                }
+              <tr class="cat-table__row">
+                <td><p-skeleton height="20px" width="60%" /></td>
+                <td><p-skeleton height="18px" width="80px" /></td>
+                <td><p-skeleton height="20px" width="32px" /></td>
               </tr>
             }
-          } @else {
+          } @else if (items().length) {
             @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
+              <tr class="cat-table__row">
+                <td class="cat-table__name">{{ item.name }}</td>
                 <td>
-                  <div class="cat-name-cell">
-                    @if (item.logo) {
-                      <img [src]="item.logo" [alt]="item.name" class="cat-logo" />
-                    } @else {
-                      <span class="cat-logo-fallback">{{ item.name.charAt(0).toUpperCase() }}</span>
-                    }
-                    <span class="nas-table__primary">{{ item.name }}</span>
-                  </div>
+                  <span class="cat-pill">{{ item.courses_count ?? 0 }} Courses</span>
                 </td>
-                <td class="nas-table__muted">{{ item.courses_count ?? 0 }}</td>
-                <td>
-                  <nas-status-badge [tone]="item.active ? 'success' : 'neutral'">
-                    {{ item.active ? 'Active' : 'Inactive' }}
-                  </nas-status-badge>
-                </td>
-                <td class="nas-table__muted">{{ item.created_at | date:'mediumDate' }}</td>
-                <td class="nas-table__action">
-                  <button type="button" class="row-action-btn" title="Delete" (click)="confirmDelete(item)">
-                    <i class="pi pi-trash"></i>
+                <td class="cat-table__action">
+                  <button type="button" class="cat-row-menu-btn"
+                    [attr.aria-label]="'Actions for ' + item.name"
+                    (click)="openRowMenu($event, item)">
+                    <nas-icon name="dots-three" [size]="16" />
                   </button>
                 </td>
               </tr>
             }
-            @if (!items().length) {
-              <tr><td colspan="5" class="nas-table__empty">No categories found.</td></tr>
-            }
+          } @else {
+            <tr><td colspan="3" class="cat-table__empty">No categories found.</td></tr>
           }
         </tbody>
       </table>
     </div>
 
     @if (total() > perPage) {
-      <div class="nas-table-pagination">
-        <span class="nas-table-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+      <div class="cat-pagination">
+        <span class="cat-pagination__info">
+          {{ rangeStart() }}–{{ rangeEnd() }} of {{ total() }}
         </span>
-        <div class="nas-table-pagination__nav">
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left"></i>
+        <div class="cat-pagination__nav">
+          <button type="button" class="cat-pagination__btn"
+            [disabled]="page() === 1"
+            (click)="onPage(page() - 1)" aria-label="Previous page">
+            <nas-icon name="caret-left" [size]="16" />
           </button>
-          <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right"></i>
+          <button type="button" class="cat-pagination__btn"
+            [disabled]="page() * perPage >= total()"
+            (click)="onPage(page() + 1)" aria-label="Next page">
+            <nas-icon name="caret-right" [size]="16" />
           </button>
         </div>
       </div>
     }
+  </section>
+</div>
+
+<!-- ── Row actions overlay panel ───────────────────────────────────── -->
+<p-overlayPanel #rowMenu styleClass="cat-row-menu" [showCloseIcon]="false">
+  <ng-template pTemplate>
+    <button type="button" class="cat-row-menu__item"
+      (click)="menuTarget() && openEdit(menuTarget()!)">
+      <nas-icon name="eye" [size]="16" />
+      <span>Edit</span>
+    </button>
+    <button type="button" class="cat-row-menu__item cat-row-menu__item--danger"
+      (click)="menuTarget() && requestDelete(menuTarget()!)">
+      <nas-icon name="trash" [size]="16" />
+      <span>Delete</span>
+    </button>
+  </ng-template>
+</p-overlayPanel>
+
+<!-- ── Create / Edit dialog ────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="$event ? dialogVisible.set(true) : closeDialog()"
+  [modal]="true"
+  [closable]="!saving()"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="cat-dialog"
+  [style]="{ width: '512px' }"
+  appendTo="body">
+
+  <ng-template pTemplate="header">
+    <span class="cat-dialog__title">
+      {{ dialogMode() === 'create' ? 'New Category' : 'Edit Category' }}
+    </span>
+  </ng-template>
+
+  <div class="cat-dialog__body">
+    <div class="cat-field">
+      <label class="cat-field__label" for="cat-name-en">Name (English)</label>
+      <input id="cat-name-en"
+        type="text"
+        class="cat-input"
+        placeholder="e.g. Safety"
+        [(ngModel)]="form.name_en"
+        [disabled]="saving()" />
+    </div>
+
+    <div class="cat-field">
+      <label class="cat-field__label" for="cat-name-ar">Name (Arabic)</label>
+      <input id="cat-name-ar"
+        type="text"
+        class="cat-input"
+        placeholder="e.g. السلامة"
+        dir="rtl"
+        [(ngModel)]="form.name_ar"
+        [disabled]="saving()" />
+    </div>
+
+    <div class="cat-field">
+      <span class="cat-field__label">Logo</span>
+      <div class="cat-logo-row">
+        <div class="cat-logo-thumb">
+          @if (logoPreview()) {
+            <img [src]="logoPreview()!" alt="Logo preview" />
+          } @else {
+            <nas-icon name="image" [size]="24" />
+          }
+        </div>
+        <button type="button" class="cat-logo-btn" (click)="triggerLogoUpload()" [disabled]="saving()">
+          <nas-icon name="upload-simple" [size]="16" />
+          <span>{{ logoPreview() ? 'Replace logo' : 'Upload logo' }}</span>
+        </button>
+        <input #logoInput type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+      </div>
+    </div>
+
+    <label class="cat-toggle">
+      <input type="checkbox" [(ngModel)]="form.active" [disabled]="saving()" />
+      <span>Active</span>
+    </label>
   </div>
 
-</div>
+  <ng-template pTemplate="footer">
+    <button type="button" class="cat-btn cat-btn--ghost" [disabled]="saving()" (click)="closeDialog()">
+      Cancel
+    </button>
+    <button type="button" class="cat-btn cat-btn--primary" [disabled]="!isFormValid || saving()" (click)="save()">
+      @if (saving()) {
+        <nas-icon name="spinner-gap" [size]="16" />
+        <span>Saving…</span>
+      } @else {
+        <span>{{ dialogMode() === 'create' ? 'Create Category' : 'Save Changes' }}</span>
+      }
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Delete confirmation modal ──────────────────────────────────── -->
+<nas-confirm-modal
+  [visible]="confirmDeleteOpen()"
+  title="Delete Category"
+  [message]="deleteMessage()"
+  confirmLabel="Yes, delete"
+  cancelLabel="No, keep it"
+  [danger]="true"
+  [busy]="deleteBusy()"
+  (confirm)="confirmDelete()"
+  (cancel)="cancelDelete()" />

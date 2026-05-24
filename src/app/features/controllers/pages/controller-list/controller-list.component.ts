@@ -15,7 +15,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
 import { ApiService } from '../../../../core/services/api.service';
@@ -81,6 +81,7 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   private readonly rolesApi = inject(AdminRolesApiService);
   private readonly confirm  = inject(ConfirmationService);
   private readonly messages = inject(MessageService);
+  private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$  = new Subject<string>();
@@ -214,15 +215,27 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   submit(): void {
     const f = this.form();
     if (!f.name.trim() || !f.email.trim() || !f.role) {
-      this.messages.add({ severity: 'warn', summary: 'Required', detail: 'Name, email and role are required.' });
+      this.messages.add({
+        severity: 'warn',
+        summary:  this.t.instant('controllers_toasts.required_summary'),
+        detail:   this.t.instant('controllers_toasts.required_message'),
+      });
       return;
     }
     if (this.dialogMode() === 'create' && f.password.length < 8) {
-      this.messages.add({ severity: 'warn', summary: 'Password', detail: 'Password must be at least 8 characters.' });
+      this.messages.add({
+        severity: 'warn',
+        summary:  this.t.instant('controllers_toasts.password_summary'),
+        detail:   this.t.instant('controllers_toasts.password_short'),
+      });
       return;
     }
     if (f.password && f.password !== f.password_confirmation) {
-      this.messages.add({ severity: 'warn', summary: 'Password', detail: 'Passwords do not match.' });
+      this.messages.add({
+        severity: 'warn',
+        summary:  this.t.instant('controllers_toasts.password_summary'),
+        detail:   this.t.instant('controllers_toasts.password_mismatch'),
+      });
       return;
     }
 
@@ -247,15 +260,21 @@ export class ControllerListComponent implements OnInit, OnDestroy {
         this.dialogOpen.set(false);
         this.messages.add({
           severity: 'success',
-          summary:  'Saved',
-          detail:   this.dialogMode() === 'create' ? 'Controller created.' : 'Controller updated.',
+          summary:  this.t.instant('common.saved'),
+          detail:   this.t.instant(
+            this.dialogMode() === 'create' ? 'common.created' : 'common.updated',
+          ),
         });
         this.refresh();
       },
       error: (err) => {
         this.saving.set(false);
-        const detail = err?.error?.message ?? 'Could not save controller.';
-        this.messages.add({ severity: 'error', summary: 'Error', detail });
+        const detail = err?.error?.message ?? this.t.instant('common.operation_failed');
+        this.messages.add({
+          severity: 'error',
+          summary:  this.t.instant('common.error_title'),
+          detail,
+        });
       },
     });
   }
@@ -263,21 +282,29 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   /* ── Delete ───────────────────────────────────────────────────── */
   askDelete(item: Controller): void {
     this.confirm.confirm({
-      header:  'Delete Controller',
-      message: `Delete "${item.name}"? This action cannot be undone.`,
+      header:  this.t.instant('controllers_toasts.delete_title'),
+      message: this.t.instant('confirm.delete_message_title', { title: item.name }),
       icon:    'pi pi-exclamation-triangle',
-      acceptLabel:    'Yes, delete',
-      rejectLabel:    'Cancel',
+      acceptLabel: this.t.instant('common.yes_delete'),
+      rejectLabel: this.t.instant('common.cancel'),
       acceptButtonStyleClass: 'ctrl-btn ctrl-btn--danger',
       rejectButtonStyleClass: 'ctrl-btn ctrl-btn--ghost',
       accept: () => {
         this.api.delete(`${API.ADMIN_CONTROLLERS}/${item.id}`).pipe(takeUntil(this.destroy$)).subscribe({
           next: () => {
-            this.messages.add({ severity: 'success', summary: 'Deleted', detail: `${item.name} removed.` });
+            this.messages.add({
+              severity: 'success',
+              summary:  this.t.instant('common.deleted'),
+              detail:   this.t.instant('controllers_toasts.removed', { name: item.name }),
+            });
             this.refresh();
           },
           error: () => {
-            this.messages.add({ severity: 'error', summary: 'Error', detail: 'Could not delete controller.' });
+            this.messages.add({
+              severity: 'error',
+              summary:  this.t.instant('common.error_title'),
+              detail:   this.t.instant('controllers_toasts.delete_failed'),
+            });
           },
         });
       },

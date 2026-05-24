@@ -3,8 +3,8 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Articles"
-    subtitle="Manage published articles and announcements">
+    [title]="'articles.title' | translate"
+    [subtitle]="'articles.subtitle' | translate">
   </nas-page-header>
 
   <div class="nas-card article-table-card">
@@ -14,7 +14,7 @@
         <input
           type="text"
           class="nas-search__input"
-          placeholder="Search articles..."
+          [placeholder]="'articles.search_placeholder' | translate"
           (input)="onSearch($any($event.target).value)"
         />
       </div>
@@ -24,11 +24,11 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Published</th>
-            <th>Homepage</th>
-            <th>Status</th>
+            <th>{{ 'common.title' | translate }}</th>
+            <th>{{ 'common.type' | translate }}</th>
+            <th>{{ 'articles.published' | translate }}</th>
+            <th>{{ 'articles.homepage' | translate }}</th>
+            <th>{{ 'common.status' | translate }}</th>
             <th></th>
           </tr>
         </thead>
@@ -51,23 +51,23 @@
                 <td class="nas-table__muted">{{ item.date_publish | date:'dd MMM yyyy' }}</td>
                 <td>
                   <nas-status-badge [tone]="item.is_home ? 'teal' : 'neutral'">
-                    {{ item.is_home ? 'Yes' : 'No' }}
+                    {{ (item.is_home ? 'common.yes' : 'common.no') | translate }}
                   </nas-status-badge>
                 </td>
                 <td>
                   <nas-status-badge [tone]="item.active ? 'success' : 'danger'" dot>
-                    {{ item.active ? 'Active' : 'Inactive' }}
+                    {{ (item.active ? 'common.active' : 'common.inactive') | translate }}
                   </nas-status-badge>
                 </td>
                 <td class="nas-table__action">
-                  <button type="button" class="row-action-btn" title="Delete" (click)="confirmDelete(item)">
+                  <button type="button" class="row-action-btn" [title]="'common.delete' | translate" (click)="confirmDelete(item)">
                     <i class="pi pi-trash"></i>
                   </button>
                 </td>
               </tr>
             }
             @if (!items().length) {
-              <tr><td colspan="6" class="nas-table__empty">No articles found.</td></tr>
+              <tr><td colspan="6" class="nas-table__empty">{{ 'articles.no_results' | translate }}</td></tr>
             }
           }
         </tbody>
@@ -77,7 +77,7 @@
     @if (total() > perPage) {
       <div class="nas-table-pagination">
         <span class="nas-table-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="nas-table-pagination__nav">
           <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">

@@ -5,7 +5,8 @@ import { API, courseUrl } from '../../../core/constants/api.constants';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
 import type {
   Course, CourseSession, CreateCoursePayload,
-  CourseModule, ModulePayload,
+  CourseModule, ModulePayload, CohortAttendance,
+  Cohort, CohortPayload,
 } from '../../../core/models/course.types';
 
 @Injectable({ providedIn: 'root' })
@@ -59,6 +60,29 @@ export class CoursesApiService {
     return this.api.delete(courseUrl.session(courseId, sessionId));
   }
 
+  /* ── Cohorts (course_sections) ────────────────────────────────────── */
+
+  /**
+   * List of cohorts for the Cohort tab. Each row already includes
+   * `enrolled_count`, `capacity`, `status`, `start_date`, `end_date`
+   * and the EN/AR name pair, so the table needs no follow-up requests.
+   */
+  listCohorts(courseId: number): Observable<ApiResponse<Cohort[]>> {
+    return this.api.get<Cohort[]>(courseUrl.cohorts(courseId));
+  }
+
+  createCohort(courseId: number, body: CohortPayload): Observable<ApiResponse<Cohort>> {
+    return this.api.post<Cohort>(courseUrl.cohorts(courseId), body);
+  }
+
+  updateCohort(courseId: number, cohortId: number, body: CohortPayload): Observable<ApiResponse<Cohort>> {
+    return this.api.put<Cohort>(courseUrl.cohort(courseId, cohortId), body);
+  }
+
+  deleteCohort(courseId: number, cohortId: number): Observable<ApiResponse<void>> {
+    return this.api.delete(courseUrl.cohort(courseId, cohortId));
+  }
+
   /* ── Modules (course_lectures, surfaced as "Modules" in the admin UI) ── */
 
   /** Flat list of every module belonging to a course, ordered by creation. */
@@ -87,5 +111,21 @@ export class CoursesApiService {
    */
   listEnrollments(courseId: number, params?: Record<string, string | number | undefined>) {
     return this.api.getPaginated<unknown>(courseUrl.enrollments(courseId), params);
+  }
+
+  /* ── Cohort Attendance (powers the right-edge drawer on the detail page) ── */
+
+  /**
+   * One-shot rollup for the cohort attendance drawer. The backend assembles
+   * the full matrix (sessions × learners + per-session absentees +
+   * per-learner absent sessions + totals) so the drawer renders both tabs
+   * and all three filter chips without further round-trips.
+   *
+   * `cohortId` is `course_sections.id` (the offline group / cohort), NOT
+   * the legacy "session-as-cohort" id used elsewhere in the frontend.
+   * Look up via `cohort.section_id` in the `Cohort` mapper.
+   */
+  getCohortAttendance(courseId: number, cohortId: number): Observable<ApiResponse<CohortAttendance>> {
+    return this.api.get<CohortAttendance>(courseUrl.cohortAttendance(courseId, cohortId));
   }
 }

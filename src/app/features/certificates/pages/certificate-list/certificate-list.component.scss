@@ -1,17 +1,499 @@
-.cert-table-card { padding: 0; overflow: hidden; }
-.cert-toolbar { display: flex; align-items: center; gap: var(--nas-space-4); padding: var(--nas-space-4) var(--nas-space-5); border-bottom: 1px solid var(--nas-color-border); }
-.nas-search { position: relative; width: 300px; max-width: 100%;
-  &__icon { position: absolute; inset-inline-start: var(--nas-space-4); top: 50%; transform: translateY(-50%); color: var(--nas-color-text-muted); font-size: 14px; pointer-events: none; }
-  &__input { width: 100%; height: 36px; border: 1px solid var(--nas-color-border); border-radius: var(--nas-radius-full); padding: 0 var(--nas-space-4); padding-inline-start: var(--nas-space-10); font-size: var(--nas-size-xs); background: var(--nas-neutral-200); color: var(--nas-color-text-body); outline: none; transition: border-color var(--transition-speed), background var(--transition-speed); &:focus { border-color: var(--nas-teal-600); background: var(--nas-color-bg-surface); } &::placeholder { color: var(--nas-color-text-muted); } } }
-.cert-table-wrap { overflow-x: auto; }
-.nas-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--nas-size-xs);
-  thead th { text-align: start; font-size: var(--nas-size-2xs); font-weight: var(--nas-weight-medium); color: var(--nas-color-text-muted); background: var(--nas-neutral-200); border-bottom: 1px solid var(--nas-color-border); padding: var(--nas-space-3) var(--nas-space-5); white-space: nowrap; }
-  tbody td { padding: var(--nas-space-4) var(--nas-space-5); border-bottom: 1px solid var(--nas-color-border); color: var(--nas-color-text-body); vertical-align: middle; white-space: nowrap; }
+/* ────────────────────────────────────────────────────────────────
+ * Certificates — 2026 admin redesign
+ *
+ * Figma sources:
+ *   - empty state          → node 377:10597
+ *   - with-template state  → node 376:10149
+ *   - preview drawer       → node 377:11055
+ *
+ * Icons use the shared <nas-icon> Phosphor mask component — no
+ * PrimeIcons anywhere in this feature, per project icon strategy.
+ * ──────────────────────────────────────────────────────────────── */
+
+.cert-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-6);
+}
+
+.cert-hidden-file {
+  display: none;
+}
+
+/* ── Reusable card shell ─────────────────────────────────────── */
+.cert-card {
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TEMPLATE CARD
+   px-16 pt-14 pb-16, gap-13 in Figma; spacing tokens rounded to
+   the nearest var (8/12/16/24).
+═══════════════════════════════════════════════════════════════ */
+.cert-template-card {
+  padding: var(--nas-space-4) var(--nas-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-3);
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+    line-height: 1.25;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 11px;
+    color: var(--nas-color-text-muted);
+    line-height: 1.45;
+  }
+
+  &__divider {
+    height: 1px;
+    width: 100%;
+    background: var(--nas-color-border);
+  }
+
+  &__stats {
+    display: flex;
+    gap: var(--nas-space-10);
+    flex-wrap: wrap;
+    padding-top: var(--nas-space-2);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--nas-space-6);
+    flex-wrap: wrap;
+    padding-top: var(--nas-space-2);
+  }
+}
+
+.cert-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &__value {
+    font-size: 18px;
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+    line-height: 1.2;
+  }
+
+  &__label {
+    font-size: 11px;
+    color: var(--nas-color-text-muted);
+  }
+}
+
+.cert-sk-second { margin-top: var(--nas-space-2); }
+.cert-sk-cta    { margin-top: var(--nas-space-2); }
+
+.cert-upload-cta {
+  margin-top: var(--nas-space-1);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.cert-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  height: 36px;
+  padding: 0 var(--nas-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--nas-radius-md);
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+  transition: background var(--transition-speed), opacity var(--transition-speed), border-color var(--transition-speed);
+
+  &--primary {
+    background: var(--nas-color-text-strong);
+    border-color: var(--nas-color-text-strong);
+    color: var(--nas-color-bg-surface);
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.12),
+      0 2px 5px rgba(103, 110, 118, 0.08);
+
+    &:hover:not([disabled]) { background: #0b1a24; border-color: #0b1a24; }
+  }
+
+  &--block { width: 100%; }
+  &--grow  { flex: 1 1 auto; min-width: 0; }
+
+  &[disabled] { opacity: 0.55; cursor: not-allowed; }
+}
+
+.cert-replace-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  background: var(--nas-color-bg-surface);
+  border: 0;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border-radius: var(--nas-radius-md);
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-teal-600);
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  > span { text-decoration: underline; text-underline-offset: 3px; }
+
+  &:hover:not([disabled]) { color: var(--nas-teal-700); }
+  &[disabled] { opacity: 0.55; cursor: not-allowed; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ISSUED CERTIFICATES
+═══════════════════════════════════════════════════════════════ */
+.cert-issued {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-3);
+
+  &__heading {
+    margin: 0;
+    font-size: 15px;
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+  }
+}
+
+/* Figma: 270px tall (px-12 py-8 gap-10), border + 8px radius. */
+.cert-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--nas-space-3);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  transition: border-color var(--transition-speed);
+
+  &:focus-within { border-color: var(--nas-teal-600); }
+
+  &__icon {
+    color: var(--nas-color-text-muted);
+    flex-shrink: 0;
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+    font-size: var(--nas-size-xs);
+    color: var(--nas-color-text-body);
+    height: 100%;
+    padding: 0;
+
+    &::placeholder { color: var(--nas-color-text-muted); }
+  }
+}
+
+.cert-table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.cert-table-wrap {
+  overflow-x: auto;
+}
+
+.cert-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--nas-size-xs);
+
+  thead th {
+    text-align: start;
+    font-size: 12px;
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-muted);
+    background: var(--nas-neutral-100);
+    border-bottom: 1px solid var(--nas-color-border);
+    padding: var(--nas-space-3) var(--nas-space-5);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: var(--nas-space-4) var(--nas-space-5);
+    border-bottom: 1px solid var(--nas-color-border);
+    color: var(--nas-color-text-body);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
   tbody tr:last-child td { border-bottom: none; }
-  &__row { transition: background var(--transition-speed); &:hover { background: var(--nas-neutral-100); } }
-  &__primary { font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
-  &__muted { color: var(--nas-color-text-muted); }
-  &__empty { text-align: center; padding: var(--nas-space-10); color: var(--nas-color-text-muted); } }
-.nas-table-pagination { display: flex; align-items: center; justify-content: space-between; padding: var(--nas-space-3) var(--nas-space-5); border-top: 1px solid var(--nas-color-border); font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted);
+
+  &__row {
+    transition: background var(--transition-speed);
+    &:hover { background: var(--nas-neutral-100); }
+  }
+
+  &__primary { font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
+  &__muted   { color: var(--nas-color-text-muted); }
+
+  &__th--actions { width: 60px; }
+  &__actions     { width: 60px; text-align: end; }
+
+  &__empty {
+    text-align: center;
+    padding: var(--nas-space-12) var(--nas-space-6);
+    color: var(--nas-color-text-muted);
+
+    .cert-table__empty-icon {
+      display: flex;
+      justify-content: center;
+      margin-bottom: var(--nas-space-3);
+      color: var(--nas-color-text-muted);
+    }
+    strong {
+      display: block;
+      font-size: var(--nas-size-sm);
+      font-weight: var(--nas-weight-semibold);
+      color: var(--nas-color-text-strong);
+      margin-bottom: var(--nas-space-1);
+    }
+    span { display: block; font-size: var(--nas-size-2xs); }
+  }
+}
+
+.cert-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nas-color-text-muted);
+  transition: background var(--transition-speed), color var(--transition-speed);
+
+  &:hover:not([disabled]) {
+    background: var(--nas-neutral-100);
+    color: var(--nas-color-text-strong);
+  }
+  &[disabled] { opacity: 0.45; cursor: not-allowed; }
+}
+
+.cert-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--nas-space-3) var(--nas-space-5);
+  border-top: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-muted);
+
   &__nav { display: flex; gap: var(--nas-space-2); }
-  &__btn { width: 32px; height: 32px; border: 1px solid var(--nas-color-border); border-radius: var(--nas-radius-sm); background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--nas-color-text-muted); transition: background var(--transition-speed); i { font-size: 12px; } &:hover:not([disabled]) { background: var(--nas-neutral-300); color: var(--nas-color-text-strong); } &[disabled] { opacity: 0.4; cursor: not-allowed; } } }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREVIEW DRAWER
+═══════════════════════════════════════════════════════════════ */
+.cert-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 24, 35, 0.32);
+  z-index: 1099;
+  animation: cert-fade 160ms ease-out;
+}
+
+.cert-drawer {
+  position: fixed;
+  top: 0;
+  inset-inline-end: 0;
+  height: 100vh;
+  width: min(720px, 95vw);
+  background: var(--nas-color-bg-surface);
+  border-inline-start: 1px solid var(--nas-color-border);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  z-index: 1100;
+  animation: cert-slide 220ms ease-out;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--nas-space-5) var(--nas-space-6);
+    border-bottom: 1px solid var(--nas-color-border);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--nas-size-sm);
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+  }
+
+  &__close {
+    background: transparent;
+    border: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--nas-radius-sm);
+    cursor: pointer;
+    color: var(--nas-color-text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover { background: var(--nas-neutral-100); color: var(--nas-color-text-strong); }
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: var(--nas-space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--nas-space-4);
+  }
+
+  &__canvas {
+    border: 1px solid var(--nas-color-border);
+    border-radius: var(--nas-radius-md);
+    background:
+      linear-gradient(45deg, var(--nas-neutral-100) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--nas-neutral-100) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--nas-neutral-100) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--nas-neutral-100) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--nas-space-3);
+    min-height: 320px;
+  }
+
+  &__image {
+    max-width: 100%;
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: var(--nas-radius-sm);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+  }
+
+  &__pdf {
+    width: 100%;
+    height: 70vh;
+    border: 0;
+    background: #ffffff;
+    border-radius: var(--nas-radius-sm);
+  }
+
+  &__skeleton {
+    width: 100%;
+    height: 320px;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: var(--nas-space-2);
+    color: var(--nas-state-danger, #c53030);
+    font-size: var(--nas-size-xs);
+    padding: var(--nas-space-4);
+    text-align: center;
+  }
+
+  &__fields {
+    background: rgba(206, 232, 233, 0.45);
+    border: 1px solid rgba(206, 232, 233, 0.9);
+    border-radius: var(--nas-radius-md);
+    padding: var(--nas-space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--nas-space-2);
+  }
+
+  &__fields-title {
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+  }
+
+  &__fields-list {
+    margin: 0;
+    padding-inline-start: var(--nas-space-5);
+    color: var(--nas-color-text-body);
+    font-size: var(--nas-size-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__hint {
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nas-space-2);
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-muted);
+    line-height: 1.45;
+
+    nas-icon { color: var(--nas-teal-600); margin-top: 1px; flex-shrink: 0; }
+  }
+}
+
+/* ── Indeterminate spinner for <nas-icon name="spinner-gap"> ──── */
+.cert-spin {
+  display: inline-flex;
+  animation: cert-spin-rot 0.85s linear infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+@keyframes cert-spin-rot {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes cert-slide {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes cert-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* RTL flips the drawer slide direction. */
+:host-context([dir="rtl"]) .cert-drawer {
+  animation-name: cert-slide-rtl;
+}
+@keyframes cert-slide-rtl {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}

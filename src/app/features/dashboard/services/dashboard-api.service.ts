@@ -28,6 +28,8 @@ export interface DashboardStatistics {
   instructors?: number;
 }
 
+export type DashboardTrendRange = 'week' | 'month' | 'quarter' | 'year';
+
 export interface DashboardData {
   statistics: DashboardStatistics;
   top_courses: Array<{
@@ -42,7 +44,18 @@ export interface DashboardData {
     completion_percent?: number;
     status?: string;
   }>;
-  enrollment_trend?: Array<{ date: string; enrollments: number; completions: number }>;
+  /**
+   * Pre-bucketed enrollment trend matching the requested `range`. Always
+   * returned with labels & zero-filled rows — the chart should never
+   * fabricate or interpolate data on the client.
+   */
+  enrollment_trend?: Array<{
+    date: string;
+    label: string;
+    enrollments: number;
+    completions: number;
+  }>;
+  trend_range?: DashboardTrendRange;
   notifications?: DashboardNotification[];
 }
 
@@ -50,7 +63,13 @@ export interface DashboardData {
 export class DashboardApiService {
   private readonly api = inject(ApiService);
 
-  getSummary(): Observable<ApiResponse<DashboardData>> {
-    return this.api.get<DashboardData>(API.DASHBOARD);
+  /**
+   * Fetch the admin dashboard summary, optionally requesting the chart
+   * range. The backend resolves an unrecognised range to `month`, so the
+   * frontend never has to guess.
+   */
+  getSummary(range?: DashboardTrendRange): Observable<ApiResponse<DashboardData>> {
+    const params = range ? { range } : undefined;
+    return this.api.get<DashboardData>(API.DASHBOARD, params);
   }
 }

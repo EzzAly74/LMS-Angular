@@ -1,4 +1,4 @@
-<div class="nas-progress">
+<div class="nas-progress" [attr.data-tone]="tintValue ? resolvedTone() : null">
   <div class="nas-progress__track">
     <div class="nas-progress__fill"
          [style.width.%]="clamped()"
