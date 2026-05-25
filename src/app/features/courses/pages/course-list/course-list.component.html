@@ -141,7 +141,7 @@
     <div class="nas-form__row">
       <div class="nas-form__field">
         <label>{{ 'add_course.type' | translate }} *</label>
-        <p-dropdown [options]="typeOpts()" optionLabel="name" optionValue="id"
+        <p-dropdown [options]="typeOpts()" optionLabel="value" optionValue="id"
                     formControlName="type"
                     [placeholder]="'add_course.select_type' | translate"
                     styleClass="w-full" />
@@ -298,7 +298,7 @@
       <div class="nas-form__row">
         <div class="nas-form__field">
           <label>{{ 'course_detail.delivery_type' | translate }} *</label>
-          <p-dropdown [options]="typeOpts()" optionLabel="name" optionValue="id"
+          <p-dropdown [options]="typeOpts()" optionLabel="value" optionValue="id"
                       formControlName="type" styleClass="w-full" />
         </div>
         <div class="nas-form__field">

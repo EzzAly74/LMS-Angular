@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ApiService } from '../../../../core/services/api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
@@ -39,6 +40,7 @@ type ResourceType = 'article' | 'link' | 'file';
 })
 export class ResourceEditComponent implements OnInit {
   private api    = inject(ApiService);
+  private enums  = inject(EnumsService);
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -47,20 +49,32 @@ export class ResourceEditComponent implements OnInit {
   resource    = signal<LmsResource | null>(null);
   qualOptions = signal<QualOption[]>([]);
 
+  /**
+   * The type dropdown is bound to the numeric enum id; backend's
+   * `LmsResourceRequest::AcceptsEnumIds` trait normalizes it back to
+   * the string code on the way in.
+   */
   form = {
     title: '',
-    type: 'article' as ResourceType,
+    type: null as number | null,
     content: '',
     url: '',
     file: null as File | null,
     qualification_skill_id: null as number | null,
   };
 
-  typeOptions = [
-    { label: 'Article',        value: 'article' as ResourceType },
-    { label: 'External Link',  value: 'link'    as ResourceType },
-    { label: 'File/Document',  value: 'file'    as ResourceType },
-  ];
+  /** Resource-type dropdown options — backend `resource_type` enum. */
+  typeOptions = this.enums.options('resource_type');
+
+  /** Translate the form's numeric type id back to its string code. */
+  private typeCode(): ResourceType | null {
+    return this.enums.codeForId('resource_type', this.form.type) as ResourceType | null;
+  }
+
+  /** Template helper for the conditional content blocks. */
+  isType(code: ResourceType): boolean {
+    return this.typeCode() === code;
+  }
 
   constructor() {
     // Resource title + qualification name are localized — re-fetch both
@@ -93,11 +107,23 @@ export class ResourceEditComponent implements OnInit {
         const r = res.result as LmsResource;
         this.resource.set(r);
         this.form.title                 = r.title;
-        this.form.type                  = r.type;
+        // Translate the backend's string `type` into the numeric enum id
+        // the dropdown is bound to. Fall through to null if the enum
+        // hasn't loaded yet — `EnumsService` will fill it in shortly,
+        // and the next change-detection cycle picks up the new value.
+        this.form.type                  = this.enums.idForCode('resource_type', r.type);
         this.form.content               = r.content ?? '';
         this.form.url                   = r.url ?? '';
         this.form.qualification_skill_id = r.qualification?.id ?? null;
         this.loading.set(false);
+        // Re-attempt the id-from-code lookup once the enum lands. Covers
+        // the cold-cache path where the resource detail returns before
+        // the enum options finish fetching.
+        if (this.form.type === null) {
+          this.enums.fetchOnce('resource_type').subscribe(opts => {
+            this.form.type = opts.find(o => o.code === r.type)?.id ?? null;
+          });
+        }
       },
       error: () => this.loading.set(false),
     });
@@ -117,12 +143,18 @@ export class ResourceEditComponent implements OnInit {
     const r = this.resource();
     if (!r) return;
 
+    const typeId = this.form.type;
+    const typeCode = this.typeCode();
+    if (!typeCode) return;
+
     this.saving.set(true);
 
-    if (this.form.type === 'file' && this.form.file) {
+    if (typeCode === 'file' && this.form.file) {
       const fd = new FormData();
       fd.append('title', this.form.title);
-      fd.append('type', this.form.type);
+      // Send the numeric enum id — backend trait translates to the
+      // string code before validation.
+      fd.append('type', String(typeId ?? ''));
       fd.append('_method', 'PUT');
       fd.append('file', this.form.file);
       if (this.form.qualification_skill_id != null) {
@@ -135,10 +167,10 @@ export class ResourceEditComponent implements OnInit {
     } else {
       const payload: Record<string, unknown> = {
         title: this.form.title,
-        type:  this.form.type,
+        type:  typeId,
       };
-      if (this.form.type === 'article') payload['content'] = this.form.content;
-      if (this.form.type === 'link')    payload['url']     = this.form.url;
+      if (typeCode === 'article') payload['content'] = this.form.content;
+      if (typeCode === 'link')    payload['url']     = this.form.url;
       if (this.form.qualification_skill_id != null) {
         payload['qualification_skill_id'] = this.form.qualification_skill_id;
       }

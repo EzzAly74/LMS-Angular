@@ -15,6 +15,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ApiService } from '../../../core/services/api.service';
+import { EnumsService } from '../../../core/services/enums.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { API } from '../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../core/utils/with-locale-reload';
@@ -40,7 +41,6 @@ interface UploadResponse {
 }
 
 type CertificateBasis = 'attendance' | 'score' | 'both';
-type LangOption = { label: string; value: string };
 
 /**
  * Platform Settings — pixel-perfect Figma implementation (nodes
@@ -74,6 +74,7 @@ type LangOption = { label: string; value: string };
 })
 export class SettingsComponent implements OnInit {
   private api       = inject(ApiService);
+  private enums     = inject(EnumsService);
   private http      = inject(HttpClient);
   private fb        = inject(FormBuilder);
   private message   = inject(MessageService);
@@ -94,20 +95,22 @@ export class SettingsComponent implements OnInit {
 
   form!: FormGroup;
 
-  /* ── Static dropdown / option data ────────────────────────── */
-  languageOptions: LangOption[] = [
-    { label: 'English', value: 'en' },
-    { label: 'العربية', value: 'ar' },
-  ];
+  /* ── Dropdown / option data — every list is now backend-driven ───── */
 
-  certificateOptions: { id: CertificateBasis; label: string; desc: string }[] = [
-    { id: 'attendance', label: 'platform_settings.basis_attendance',
-      desc: 'platform_settings.basis_attendance_desc' },
-    { id: 'score',      label: 'platform_settings.basis_score',
-      desc: 'platform_settings.basis_score_desc' },
-    { id: 'both',       label: 'platform_settings.basis_both',
-      desc: 'platform_settings.basis_both_desc' },
-  ];
+  /**
+   * Default-language dropdown. The settings table stores the locale
+   * code ("en" / "ar") as a string value, so we bind the dropdown to
+   * `optionValue="code"` and keep the form control as a string.
+   */
+  languageOptions = this.enums.options('locale');
+
+  /**
+   * Certificate-award-basis radio cards. The backend enum ships a
+   * localized `description` per option (because `certificate_basis`
+   * is registered with `desc: true` in `EnumRegistry`), so the cards
+   * render fully without any client-side i18n keys.
+   */
+  certificateOptions = this.enums.options('certificate_basis');
 
   /**
    * Mirrors `form.certificate_award_basis` so Angular signals can react

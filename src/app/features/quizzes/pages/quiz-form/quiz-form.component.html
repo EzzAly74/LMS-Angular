@@ -87,9 +87,9 @@
           <label class="qf-label">Cohort scope <span class="qf-req">*</span></label>
           <p-dropdown
             formControlName="cohort_scope"
-            [options]="scopeOptions"
-            optionLabel="label"
-            optionValue="value"
+            [options]="scopeOptions()"
+            optionLabel="value"
+            optionValue="code"
             placeholder="Select cohort scope"
             styleClass="qf-dropdown"
             [style]="{'width':'100%'}" />
@@ -191,9 +191,9 @@
               <div class="qf-field">
                 <label class="qf-label">Type <span class="qf-req">*</span></label>
                 <p-dropdown
-                  [options]="questionTypeOptions"
-                  optionLabel="label"
-                  optionValue="value"
+                  [options]="questionTypeOptions()"
+                  optionLabel="value"
+                  optionValue="code"
                   [ngModel]="questionType(i)"
                   [ngModelOptions]="{ standalone: true }"
                   (onChange)="changeQuestionType(i, $event.value)"

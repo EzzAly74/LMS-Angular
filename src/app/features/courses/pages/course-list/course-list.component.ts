@@ -16,6 +16,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ApiService } from '../../../../core/services/api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -58,6 +59,7 @@ export class CourseListComponent implements OnInit {
 
   private api            = inject(ApiService);
   private coursesApi     = inject(CoursesApiService);
+  private enums          = inject(EnumsService);
   private fb             = inject(FormBuilder);
   private router         = inject(Router);
   private confirmService = inject(ConfirmationService);
@@ -117,26 +119,28 @@ export class CourseListComponent implements OnInit {
   search  = '';
   private search$ = new Subject<string>();
 
-  /* Type select — labels translated lazily so onLangChange refreshes them. */
-  typeOpts = computed(() => {
-    this.langTick();
-    return [
-      { id: 'online',        name: this.t.instant('courses.online') },
-      { id: 'offline',       name: this.t.instant('courses.offline') },
-      { id: 'hybrid',        name: this.t.instant('courses_list.type_hybrid') },
-      { id: 'external_link', name: this.t.instant('courses_list.type_external_link') },
-    ];
-  });
+  /**
+   * Course-type dropdown options — sourced from the backend `course_type`
+   * enum so labels are localized server-side and stay in sync with the
+   * authoritative list of allowed values.
+   */
+  typeOpts = this.enums.options('course_type');
 
+  /**
+   * Status-pill tabs are driven by the backend `course_status` enum. We
+   * keep the pill `id` as the enum `code` (string) because the table's
+   * `status` query-string filter is still a string column on the
+   * backend. Labels come from the enum service and re-localize on
+   * locale change automatically.
+   */
   tabs = computed<NasPillTab[]>(() => {
-    this.langTick();
-    return [
-      { id: 'all',      label: this.t.instant('courses_list.tab_all'),      count: this.tabCounts()['all']      ?? null },
-      { id: 'pending',  label: this.t.instant('courses_list.tab_pending'),  count: this.tabCounts()['pending']  ?? null },
-      { id: 'active',   label: this.t.instant('courses_list.tab_active'),   count: this.tabCounts()['active']   ?? null },
-      { id: 'upcoming', label: this.t.instant('courses_list.tab_upcoming'), count: this.tabCounts()['upcoming'] ?? null },
-      { id: 'inactive', label: this.t.instant('courses_list.tab_inactive'), count: this.tabCounts()['inactive'] ?? null },
-    ];
+    const opts = this.enums.options('course_status')();
+    const counts = this.tabCounts();
+    return opts.map(o => ({
+      id: o.code,
+      label: o.value,
+      count: counts[o.code as ActiveTab] ?? null,
+    }));
   });
 
   /**
@@ -165,7 +169,7 @@ export class CourseListComponent implements OnInit {
 
   form = this.fb.group({
     title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
-    type:                ['hybrid', Validators.required],
+    type:                [null as number | null, Validators.required],
     category_id:         [null as number | null, Validators.required],
     instructor_id:       [null as number | null, Validators.required],
     certificate:         [true,  Validators.required],
@@ -187,7 +191,7 @@ export class CourseListComponent implements OnInit {
   editForm = this.fb.group({
     title:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
     description:   this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
-    type:          ['hybrid' as CourseType, Validators.required],
+    type:          [null as number | null, Validators.required],
     category_id:   [null as number | null, Validators.required],
     instructor_id: [null as number | null, Validators.required],
     hours:         [1,  [Validators.required, Validators.min(1)]],
@@ -297,7 +301,7 @@ export class CourseListComponent implements OnInit {
     this.editForm.reset({
       title:         { en: '', ar: '' },
       description:   { en: '', ar: '' },
-      type:          'hybrid',
+      type:          null,
       category_id:   null,
       instructor_id: null,
       hours:         1,
@@ -317,7 +321,11 @@ export class CourseListComponent implements OnInit {
         this.editForm.patchValue({
           title:         title,
           description:   desc,
-          type:          (r.course_type as CourseType) ?? 'hybrid',
+          // Translate the backend's string `course_type` into the numeric
+          // enum id the dropdown is bound to. Returns null if the enum
+          // hasn't loaded yet — the patch picks it up after the options
+          // arrive thanks to the dropdown's two-way value resolution.
+          type:          this.enums.idForCode('course_type', r.course_type) ?? null,
           category_id:   r.category?.id ?? null,
           instructor_id: firstInstructor?.id ?? null,
           hours:         r.hours ?? 1,
@@ -393,19 +401,16 @@ export class CourseListComponent implements OnInit {
     const descEn  = (desc.en ?? '').trim();
     const descAr  = (desc.ar ?? '').trim();
 
-    // CourseRequest validates `course_type` ∈ {online, offline}; we keep
-    // the 4-way `type` semantically in the UI and map hybrid/external_link
-    // down to offline for the persisted column — same convention the
-    // detail-page Edit dialog uses.
-    const courseType: 'online' | 'offline' = v.type === 'online' ? 'online' : 'offline';
-
+    // The dropdown is bound to the numeric enum id; CourseRequest's
+    // AcceptsEnumIds trait will translate that back to the string code
+    // ("online"/"offline"/...) before validation runs.
     const fd = new FormData();
     fd.append('_method', 'PUT');
     fd.append('title[en]',       titleEn || titleAr);
     fd.append('title[ar]',       titleAr || titleEn);
     fd.append('description[en]', descEn  || descAr);
     fd.append('description[ar]', descAr  || descEn);
-    fd.append('course_type',     courseType);
+    fd.append('course_type',     String(v.type ?? ''));
     fd.append('category_id',     String(v.category_id ?? ''));
     fd.append('instructors[]',   String(v.instructor_id ?? ''));
     fd.append('hours',           String(v.hours ?? 1));
@@ -451,8 +456,12 @@ export class CourseListComponent implements OnInit {
 
   /* ── Add Course modal ─────────────────────────────────────────────── */
   openAddCourse(): void {
+    // Default the type to "hybrid" when the enum has already been hydrated.
+    // If it hasn't (very first dialog open), the dropdown will simply
+    // start empty and the user picks from the localized list.
+    const defaultType = this.enums.idForCode('course_type', 'hybrid') ?? null;
     this.form.reset({
-      title: { en: '', ar: '' }, type: 'hybrid', category_id: null, instructor_id: null,
+      title: { en: '', ar: '' }, type: defaultType, category_id: null, instructor_id: null,
       certificate: true, require_instructor: true, description: { en: '', ar: '' },
       hours: 1, max_learners: 30, cohort_start: null, cohort_end: null, qualification_ids: [], image: null,
     });
@@ -481,8 +490,9 @@ export class CourseListComponent implements OnInit {
     fd.append('title[ar]', titleAr || titleEn);
     fd.append('description[en]', descEn || descAr);
     fd.append('description[ar]', descAr || descEn);
-    const courseType = (v.type as 'online' | 'offline' | 'hybrid' | 'external_link') ?? 'offline';
-    fd.append('course_type', courseType);
+    // Numeric enum id — CourseRequest's AcceptsEnumIds trait normalizes
+    // this back into the string code expected by the validator.
+    fd.append('course_type', String(v.type ?? ''));
     fd.append('category_id', String(v.category_id!));
     fd.append('hours', String(v.hours ?? 1));
     fd.append('certificate', v.certificate ? '1' : '0');

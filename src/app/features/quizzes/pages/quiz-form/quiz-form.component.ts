@@ -28,6 +28,7 @@ import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasStatusBadgeComponent } from '../../../../shared/nas';
 import { QuizzesApiService } from '../../services/quizzes-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import type {
   Quiz,
   QuizCohortScope,
@@ -39,6 +40,8 @@ import type {
 } from '../../models/quiz.types';
 
 interface CourseOpt { id: number; title: string; }
+
+
 
 interface QuestionGroup {
   type: FormControl<QuizQuestionType>;
@@ -52,8 +55,6 @@ interface QuestionGroup {
   explanation_en: FormControl<string>;
   explanation_ar: FormControl<string>;
 }
-
-interface ScopeOption { label: string; value: QuizCohortScope; }
 
 @Component({
   selector: 'app-quiz-form',
@@ -76,6 +77,7 @@ interface ScopeOption { label: string; value: QuizCohortScope; }
 export class QuizFormComponent implements OnInit, OnDestroy {
   private readonly api        = inject(QuizzesApiService);
   private readonly coursesApi = inject(CoursesApiService);
+  private readonly enums      = inject(EnumsService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly fb         = inject(FormBuilder);
@@ -89,17 +91,19 @@ export class QuizFormComponent implements OnInit, OnDestroy {
   readonly cohortsLoading = signal(false);
   readonly quizId         = signal<number | null>(null);
 
-  readonly scopeOptions: ScopeOption[] = [
-    { label: 'All cohorts',     value: 'all' },
-    { label: 'Specific cohort', value: 'specific' },
-  ];
+  /**
+   * Cohort-scope dropdown — backend `cohort_scope` enum. Bound to the
+   * string `code` so the form control still emits `'all' | 'specific'`
+   * (which is what `QuizSavePayload.cohort_scope` is typed as).
+   */
+  readonly scopeOptions = this.enums.options('cohort_scope');
 
-  readonly questionTypeOptions: { label: string; value: QuizQuestionType }[] = [
-    { label: 'MCQ',           value: 'mcq' },
-    { label: 'Yes / No',      value: 'yes_no' },
-    { label: 'Short Answer',  value: 'open' },
-    { label: 'Reorder',       value: 'reorder' },
-  ];
+  /**
+   * Question-type dropdown — backend `question_type` enum. Same shape
+   * as the others; bound to `code` so the form preserves its string
+   * literal type (mcq / yes_no / open / reorder).
+   */
+  readonly questionTypeOptions = this.enums.options('question_type');
 
   /* ── Form ────────────────────────────────────────────────────── */
 
@@ -428,14 +432,15 @@ export class QuizFormComponent implements OnInit, OnDestroy {
   }
 
   scopeLabel(scope: QuizCohortScope): string {
-    if (scope === 'all') return 'All cohorts';
+    const localized = this.enums.options('cohort_scope')().find(o => o.code === scope)?.value;
+    if (scope === 'all') return localized ?? 'All cohorts';
     const selectedIds = this.form.controls.cohort_ids.value ?? [];
-    if (!selectedIds.length) return 'Specific cohort';
+    if (!selectedIds.length) return localized ?? 'Specific cohort';
     return this.cohorts()
       .filter(c => selectedIds.includes(c.id))
       .map(c => c.title)
       .filter((t): t is string => !!t)
-      .join(', ') || 'Specific cohort';
+      .join(', ') || (localized ?? 'Specific cohort');
   }
 
   toggleCohort(id: number): void {

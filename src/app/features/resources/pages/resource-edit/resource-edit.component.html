@@ -51,16 +51,16 @@
         <div class="re-field">
           <label class="re-field__label">Resource Type <span class="re-field__req">*</span></label>
           <p-dropdown
-            [options]="typeOptions"
+            [options]="typeOptions()"
             [(ngModel)]="form.type"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="value"
+            optionValue="id"
             styleClass="re-dropdown"
           />
         </div>
 
         <!-- Article: Description -->
-        @if (form.type === 'article') {
+        @if (isType('article')) {
           <div class="re-field">
             <label class="re-field__label">Description (English)</label>
             <textarea
@@ -73,7 +73,7 @@
         }
 
         <!-- Link: URL -->
-        @if (form.type === 'link') {
+        @if (isType('link')) {
           <div class="re-field">
             <label class="re-field__label">URL <span class="re-field__req">*</span></label>
             <input
@@ -86,7 +86,7 @@
         }
 
         <!-- File: Upload -->
-        @if (form.type === 'file') {
+        @if (isType('file')) {
           <div class="re-field">
             <label class="re-field__label">Upload File</label>
 

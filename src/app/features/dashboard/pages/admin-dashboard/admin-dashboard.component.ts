@@ -19,6 +19,7 @@ import {
   DashboardTrendRange,
 } from '../../services/dashboard-api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { pickLocalized } from '../../../../core/utils/localized';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -82,6 +83,7 @@ type TrendRange = DashboardTrendRange;
 export class AdminDashboardComponent implements OnInit {
   private dashboardApi = inject(DashboardApiService);
   private locale       = inject(LocaleService);
+  private enums        = inject(EnumsService);
   notifsDrawer         = inject(NotificationsDrawerService);
 
   loading      = signal(true);
@@ -89,12 +91,18 @@ export class AdminDashboardComponent implements OnInit {
   today        = new Date();
 
   trendRange = signal<TrendRange>('month');
-  rangeTabs: NasPillTab[] = [
-    { id: 'week', label: 'Week' },
-    { id: 'month', label: 'Month' },
-    { id: 'quarter', label: 'Quarter' },
-    { id: 'year', label: 'Year' },
-  ];
+
+  /**
+   * Trend chart range tabs — sourced from the backend `dashboard_range`
+   * enum. The tab `id` carries the string code because the API expects
+   * `?range=week|month|quarter|year` as a string filter, not a numeric id.
+   */
+  rangeTabs = computed<NasPillTab[]>(() =>
+    this.enums.options('dashboard_range')().map(o => ({
+      id: o.code,
+      label: o.value,
+    })),
+  );
 
   constructor() {
     withLocaleReload(() => this.load());

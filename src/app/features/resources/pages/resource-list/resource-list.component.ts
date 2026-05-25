@@ -15,8 +15,10 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { computed } from '@angular/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
@@ -53,6 +55,7 @@ interface LmsResource {
 })
 export class ResourceListComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
+  private enums = inject(EnumsService);
   private router = inject(Router);
   private confirm = inject(ConfirmationService);
   private t = inject(TranslateService);
@@ -77,12 +80,19 @@ export class ResourceListComponent implements OnInit, OnDestroy {
   readonly skeletons = [1, 2, 3, 4, 5, 6, 7];
   readonly min = Math.min;
 
-  typeFilterOptions = [
-    { label: 'All Types', value: '' },
-    { label: 'Article', value: 'article' },
-    { label: 'Link', value: 'link' },
-    { label: 'File', value: 'file' },
-  ];
+  /**
+   * Resource-type filter — driven by the backend `resource_type` enum so
+   * the option list stays in sync with what the storage layer accepts.
+   * We bind to the string `code` (not the numeric id) because this
+   * dropdown drives a `?type=…` query-string filter and the backend's
+   * filter clause matches string codes directly.
+   *
+   * "All Types" is a UI-only sentinel (empty string) prepended in front.
+   */
+  typeFilterOptions = computed(() => [
+    { label: this.t.instant('common.all') + ' ' + this.t.instant('common.type') + 's', value: '' },
+    ...this.enums.options('resource_type')().map(o => ({ label: o.value, value: o.code })),
+  ]);
 
   ngOnInit(): void {
     this.search$
@@ -176,5 +186,10 @@ export class ResourceListComponent implements OnInit, OnDestroy {
       : type === 'file'
         ? 'pi pi-file'
         : 'pi pi-book';
+  }
+
+  /** Localized label for the type badge — sourced from the enum cache. */
+  typeLabel(code: string): string {
+    return this.enums.options('resource_type')().find(o => o.code === code)?.value ?? code;
   }
 }

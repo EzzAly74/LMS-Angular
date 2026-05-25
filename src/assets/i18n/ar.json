@@ -665,7 +665,8 @@
     "attendance_sessions_count": "{{count}} جلسة",
     "attendance_absence_heading": "الغياب",
     "attendance_no_data": "لا توجد سجلات حضور لهذه المجموعة بعد.",
-    "attendance_no_results": "لا توجد نتائج مطابقة."
+    "attendance_no_results": "لا توجد نتائج مطابقة.",
+    "up_coming": "قادمة"
   },
   "add_course": {
     "title": "إضافة دورة جديدة",

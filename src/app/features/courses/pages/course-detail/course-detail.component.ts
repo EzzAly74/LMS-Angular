@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy, Component, OnInit,
   computed, inject, signal,
 } from '@angular/core';
-import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -29,6 +29,7 @@ import type { NasProgressTone } from '../../../../shared/nas/nas-progress.compon
 import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge.component';
 import { CoursesApiService } from '../../services/courses-api.service';
 import { ApiService } from '../../../../core/services/api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import type {
   CourseDetail, Cohort, CohortPayload, CohortStatus,
@@ -55,7 +56,7 @@ type ModuleFilter = 'all' | ModuleContentType;
   standalone: true,
   imports: [
     CommonModule, RouterLink, FormsModule, ReactiveFormsModule, TranslateModule,
-    DatePipe, TitleCasePipe,
+    DatePipe,
     DialogModule, DropdownModule, CalendarModule, InputNumberModule, CheckboxModule,
     OverlayPanelModule, ConfirmDialogModule,
     NasStatCardComponent, NasTabsComponent, NasStatusBadgeComponent, NasProgressComponent, NasAvatarComponent,
@@ -68,6 +69,7 @@ type ModuleFilter = 'all' | ModuleContentType;
 export class CourseDetailComponent implements OnInit {
   private readonly coursesApi = inject(CoursesApiService);
   private readonly api        = inject(ApiService);
+  private readonly enums      = inject(EnumsService);
   private readonly fb         = inject(FormBuilder);
   private readonly route      = inject(ActivatedRoute);
   private readonly toast      = inject(MessageService);
@@ -110,19 +112,19 @@ export class CourseDetailComponent implements OnInit {
   /** Cheap-and-cached: only fetched the first time the Edit dialog opens. */
   private lookupsLoaded = false;
 
-  courseTypeOpts: Array<{ id: CourseType; name: string }> = [
-    { id: 'online',        name: 'Online' },
-    { id: 'offline',       name: 'Offline' },
-    { id: 'hybrid',        name: 'Hybrid' },
-    { id: 'external_link', name: 'External Link' },
-  ];
+  /**
+   * Course-type dropdown options — driven by the backend `course_type`
+   * enum so labels localize automatically and the option set stays in
+   * sync with the validator on the server.
+   */
+  courseTypeOpts = this.enums.options('course_type');
 
   editForm = this.fb.group({
     title_en:      ['', [Validators.required, Validators.maxLength(255)]],
     title_ar:      ['', Validators.maxLength(255)],
     description_en:['', Validators.required],
     description_ar:[''],
-    type:          ['hybrid' as CourseType, Validators.required],
+    type:          [null as number | null, Validators.required],
     category_id:   [null as number | null, Validators.required],
     instructor_id: [null as number | null, Validators.required],
     hours:         [1,  [Validators.required, Validators.min(1)]],
@@ -174,16 +176,11 @@ export class CourseDetailComponent implements OnInit {
     return `${p ?? 0}%`;
   });
 
-  /** Human-readable delivery label (Online / Offline / Hybrid / External Link). */
+  /** Localized delivery label — looked up from the `course_type` enum. */
   deliveryLabel = computed(() => {
-    const t = this.course()?.type;
-    switch (t) {
-      case 'online':        return 'Online';
-      case 'offline':       return 'Offline';
-      case 'hybrid':        return 'Hybrid';
-      case 'external_link': return 'External Link';
-      default:              return '—';
-    }
+    const code = this.course()?.type;
+    if (!code) return '—';
+    return this.courseTypeOpts().find(o => o.code === code)?.value ?? '—';
   });
 
   tabs = computed<NasTab[]>(() => {
@@ -208,17 +205,13 @@ export class CourseDetailComponent implements OnInit {
     name_en:    ['', [Validators.required, Validators.maxLength(255)]],
     name_ar:    ['', [Validators.required, Validators.maxLength(255)]],
     capacity:   [null as number | null, [Validators.min(1), Validators.max(10000)]],
-    status:     [null as CohortStatus | null],
+    status:     [null as number | null],
     start_date: [null as Date | null],
     end_date:   [null as Date | null],
   });
 
-  cohortStatusOpts: Array<{ id: CohortStatus; name: string }> = [
-    { id: 'scheduled', name: 'Scheduled' },
-    { id: 'active',    name: 'Active' },
-    { id: 'completed', name: 'Completed' },
-    { id: 'inactive',  name: 'Inactive' },
-  ];
+  /** Cohort-status dropdown — driven by the backend `cohort_status` enum. */
+  cohortStatusOpts = this.enums.options('cohort_status');
 
   /* ── Content tab — modules state ──────────────────────────────────── */
   modules            = signal<CourseModule[]>([]);
@@ -232,17 +225,11 @@ export class CourseDetailComponent implements OnInit {
   /** Selected file for `content_type === 'document'` (pending upload UX). */
   moduleFile         = signal<File | null>(null);
 
-  moduleContentTypeOpts: Array<{ id: ModuleContentType; name: string }> = [
-    { id: 'video',    name: 'Video' },
-    { id: 'document', name: 'Document' },
-    { id: 'article',  name: 'Article' },
-    { id: 'link',     name: 'Link' },
-  ];
+  /** Module content-type dropdown — backend `module_content_type` enum. */
+  moduleContentTypeOpts = this.enums.options('module_content_type');
 
-  learnerScopeOpts: Array<{ id: ModuleLearnerScope; name: string }> = [
-    { id: 'all',    name: 'All cohort' },
-    { id: 'cohort', name: 'Specific Cohort' },
-  ];
+  /** Module learner-scope dropdown — backend `module_learner_scope` enum. */
+  learnerScopeOpts = this.enums.options('module_learner_scope');
 
   /** Cohort dropdown options for the Specific-Cohort scope. */
   cohortDropdownOpts = computed(() =>
@@ -252,8 +239,8 @@ export class CourseDetailComponent implements OnInit {
   moduleForm = this.fb.group({
     title_en:           ['', Validators.required],
     title_ar:           ['', Validators.required],
-    content_type:       ['video' as ModuleContentType, Validators.required],
-    learner_scope:      ['all'  as ModuleLearnerScope, Validators.required],
+    content_type:       [null as number | null, Validators.required],
+    learner_scope:      [null as number | null, Validators.required],
     session_id:         [null as number | null],
     duration_minutes:   [30 as number | null, [Validators.required, Validators.min(0)]],
     video:              [''],
@@ -261,6 +248,23 @@ export class CourseDetailComponent implements OnInit {
     instructions_ar:    [''],
     require_completion: [false],
   });
+
+  /**
+   * Helper for templates that need to compare a form's enum-id value
+   * against a known string code (e.g. "is this module learner_scope ==
+   * 'cohort'?"). Returns null when the enum hasn't loaded yet so callers
+   * can default safely.
+   */
+  enumCode(name: Parameters<EnumsService['codeForId']>[0], id: number | null | undefined): string | null {
+    if (id === null || id === undefined) return null;
+    return this.enums.codeForId(name, id);
+  }
+
+  /** Convenience method — find an option's localized `value` from its `code`. */
+  enumValueFromCode(name: Parameters<EnumsService['options']>[0], code: string | null | undefined): string {
+    if (!code) return '';
+    return this.enums.options(name)().find(o => o.code === code)?.value ?? code;
+  }
 
   /** Filtered list — driven by the chip selection. */
   filteredModules = computed(() => {
@@ -400,9 +404,13 @@ export class CourseDetailComponent implements OnInit {
     this.moduleEditMode.set(false);
     this.activeModule.set(null);
     this.moduleFile.set(null);
+    // Defaults map to the canonical first option per Figma — translate
+    // the codes into enum ids the dropdowns are bound to. Returns null
+    // if the enum hasn't loaded yet; the user can still pick.
     this.moduleForm.reset({
       title_en: '', title_ar: '',
-      content_type: 'video', learner_scope: 'all',
+      content_type:  this.enums.idForCode('module_content_type', 'video'),
+      learner_scope: this.enums.idForCode('module_learner_scope', 'all'),
       session_id: null, duration_minutes: 30, video: '',
       instructions_en: '', instructions_ar: '',
       require_completion: false,
@@ -417,8 +425,8 @@ export class CourseDetailComponent implements OnInit {
     this.moduleForm.reset({
       title_en:           pickLocalized(m.title, 'en'),
       title_ar:           pickLocalized(m.title, 'ar'),
-      content_type:       m.content_type,
-      learner_scope:      m.learner_scope,
+      content_type:       this.enums.idForCode('module_content_type',  m.content_type),
+      learner_scope:      this.enums.idForCode('module_learner_scope', m.learner_scope),
       session_id:         m.session_id ?? null,
       duration_minutes:   m.duration_minutes ?? 30,
       video:              m.video ?? '',
@@ -466,7 +474,12 @@ export class CourseDetailComponent implements OnInit {
     if (!id) return;
 
     const v = this.moduleForm.getRawValue();
-    const contentType = v.content_type as ModuleContentType;
+    // Translate the numeric enum ids back to their string codes — both
+    // because the backend storage column is a varchar and because the
+    // type-payload (`type: 'file' | 'url'`) is derived from the code.
+    const contentTypeCode = this.enums.codeForId('module_content_type',  v.content_type ?? null) as ModuleContentType | null;
+    const learnerScopeCode = this.enums.codeForId('module_learner_scope', v.learner_scope ?? null) as ModuleLearnerScope | null;
+    if (!contentTypeCode || !learnerScopeCode) return;
 
     // Document type currently stores the file *name* in `video` until the
     // file-upload pipeline lands. URL-based types send the typed URL directly.
@@ -484,11 +497,11 @@ export class CourseDetailComponent implements OnInit {
       instructions: (v.instructions_en || v.instructions_ar)
         ? { en: (v.instructions_en ?? '').trim(), ar: (v.instructions_ar ?? '').trim() }
         : null,
-      content_type:       contentType,
-      learner_scope:      v.learner_scope as ModuleLearnerScope,
-      session_id:         v.learner_scope === 'cohort' ? v.session_id ?? null : null,
+      content_type:       contentTypeCode,
+      learner_scope:      learnerScopeCode,
+      session_id:         learnerScopeCode === 'cohort' ? v.session_id ?? null : null,
       duration_minutes:   v.duration_minutes ?? null,
-      type:               contentType === 'document' ? 'file' : 'url',
+      type:               contentTypeCode === 'document' ? 'file' : 'url',
       video:              videoValue,
       require_completion: !!v.require_completion,
     };
@@ -577,7 +590,12 @@ export class CourseDetailComponent implements OnInit {
       title_ar:       c.title ?? '',
       description_en: c.description ?? '',
       description_ar: c.description ?? '',
-      type:           c.type ?? 'hybrid',
+      // The dropdown is bound to the numeric enum id; translate the
+      // backend's string `course_type` accordingly. Falls back to the
+      // "hybrid" default if the lookup misses (e.g. enum not yet loaded).
+      type:           this.enums.idForCode('course_type', c.type ?? null)
+                       ?? this.enums.idForCode('course_type', 'hybrid')
+                       ?? null,
       category_id:    c.category?.id ?? null,
       instructor_id:  c.instructor?.id ?? c.instructors?.[0]?.id ?? null,
       hours:          1,
@@ -613,19 +631,15 @@ export class CourseDetailComponent implements OnInit {
     if (!id || this.editSaving()) return;
 
     const v = this.editForm.getRawValue();
-    // The backend's CourseRequest expects course_type ∈ {online,offline} but
-    // we keep the 4-way `type` semantically in the UI. Map hybrid+external
-    // down to offline for the persisted column — the resource still emits
-    // them on the way out from the legacy `type` mapping.
-    const courseType: 'online' | 'offline' = v.type === 'online' ? 'online' : 'offline';
-
+    // The dropdown is bound to the numeric enum id; CourseRequest's
+    // AcceptsEnumIds trait normalizes it to the string code on the way in.
     const fd = new FormData();
     fd.append('_method', 'PUT');
     fd.append('title[en]',       v.title_en ?? '');
     fd.append('title[ar]',       v.title_ar || (v.title_en ?? ''));
     fd.append('description[en]', v.description_en ?? '');
     fd.append('description[ar]', v.description_ar || (v.description_en ?? ''));
-    fd.append('course_type',     courseType);
+    fd.append('course_type',     String(v.type ?? ''));
     fd.append('category_id',     String(v.category_id ?? ''));
     fd.append('instructors[]',   String(v.instructor_id ?? ''));
     fd.append('hours',           String(v.hours ?? 1));
@@ -689,7 +703,9 @@ export class CourseDetailComponent implements OnInit {
       name_en:    cohort.name_en ?? cohort.name ?? '',
       name_ar:    cohort.name_ar ?? cohort.name ?? '',
       capacity:   cohort.capacity ?? null,
-      status:     cohort.status,
+      // Translate the stored string `status` into the numeric enum id
+      // the dropdown is bound to.
+      status:     this.enums.idForCode('cohort_status', cohort.status ?? null),
       start_date: cohort.start_date ? new Date(cohort.start_date) : null,
       end_date:   cohort.end_date   ? new Date(cohort.end_date)   : null,
     });
@@ -703,6 +719,9 @@ export class CourseDetailComponent implements OnInit {
 
     this.saving.set(true);
     const v = this.cohortForm.getRawValue();
+    // Translate enum id back to its string code. Cohorts are stored with
+    // a string status column, so the API expects the canonical code.
+    const statusCode = this.enums.codeForId('cohort_status', v.status ?? null) as CohortStatus | null;
     const body: CohortPayload = {
       name: {
         en: (v.name_en ?? '').trim(),
@@ -711,7 +730,7 @@ export class CourseDetailComponent implements OnInit {
       start_date: v.start_date ? this.toIso(v.start_date) : null,
       end_date:   v.end_date   ? this.toIso(v.end_date)   : null,
       capacity:   v.capacity ?? null,
-      status:     v.status ?? null,
+      status:     statusCode ?? null,
     };
 
     const editing = this.cohortEditMode() && this.activeCohort();
@@ -795,13 +814,13 @@ export class CourseDetailComponent implements OnInit {
     }
   }
 
-  /** Friendly label for the learner status pill ("Not Started" not "not_started"). */
+  /**
+   * Friendly label for the learner status pill — driven by the
+   * `enrollment_status` backend enum so the wording stays consistent
+   * with the rest of the admin UI and re-localizes on Arabic.
+   */
   learnerStatusLabel(s: CourseLearner['status']): string {
-    switch (s) {
-      case 'completed':   return 'Completed';
-      case 'in_progress': return 'In Progress';
-      case 'not_started': return 'Not Started';
-    }
+    return this.enumValueFromCode('enrollment_status', s);
   }
 
   /**
@@ -831,20 +850,16 @@ export class CourseDetailComponent implements OnInit {
    * Map a stored cohort status to its Figma chip label. `scheduled`
    * displays as "Up Coming" whenever the start date is in the future
    * (matches the cohort table mock in node 332:9988); anything else
-   * shows the canonical capitalised label.
+   * shows the localized label sourced from the `cohort_status` enum.
    */
   cohortStatusLabel(cohort: Cohort): string {
     const s = cohort.status;
     if (s === 'scheduled') {
       const start = cohort.start_date ? new Date(cohort.start_date) : null;
       const isFuture = start instanceof Date && !isNaN(start.getTime()) && start > new Date();
-      return isFuture ? 'Up Coming' : 'Scheduled';
+      if (isFuture) return this.t.instant('course_detail.up_coming');
     }
-    switch (s) {
-      case 'completed': return 'Completed';
-      case 'active':    return 'Active';
-      case 'inactive':  return 'Inactive';
-    }
+    return this.enumValueFromCode('cohort_status', s);
   }
 
   /**

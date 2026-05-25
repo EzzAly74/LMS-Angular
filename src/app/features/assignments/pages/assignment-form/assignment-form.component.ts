@@ -28,6 +28,7 @@ import { MessageService } from 'primeng/api';
 import { NasStatusBadgeComponent } from '../../../../shared/nas';
 import { AssignmentsApiService } from '../../services/assignments-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import type {
   Assignment,
   AssignmentQuestion,
@@ -53,8 +54,6 @@ interface QuestionGroup {
   explanation_ar: FormControl<string>;
 }
 
-interface ScopeOption { label: string; value: AssignmentCohortScope; }
-
 @Component({
   selector: 'app-assignment-form',
   standalone: true,
@@ -76,6 +75,7 @@ interface ScopeOption { label: string; value: AssignmentCohortScope; }
 export class AssignmentFormComponent implements OnInit, OnDestroy {
   private readonly api        = inject(AssignmentsApiService);
   private readonly coursesApi = inject(CoursesApiService);
+  private readonly enums      = inject(EnumsService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly fb         = inject(FormBuilder);
@@ -89,17 +89,11 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   readonly cohortsLoading = signal(false);
   readonly assignmentId = signal<number | null>(null);
 
-  readonly scopeOptions: ScopeOption[] = [
-    { label: 'All cohorts',     value: 'all' },
-    { label: 'Specific cohort', value: 'specific' },
-  ];
+  /** Cohort-scope dropdown — backend `cohort_scope` enum. */
+  readonly scopeOptions = this.enums.options('cohort_scope');
 
-  readonly questionTypeOptions: { label: string; value: AssignmentQuestionType }[] = [
-    { label: 'MCQ',           value: 'mcq' },
-    { label: 'Yes / No',      value: 'yes_no' },
-    { label: 'Open Question', value: 'open' },
-    { label: 'Reorder',       value: 'reorder' },
-  ];
+  /** Question-type dropdown — backend `question_type` enum. */
+  readonly questionTypeOptions = this.enums.options('question_type');
 
   /* ── Form ────────────────────────────────────────────────────── */
 
@@ -432,14 +426,15 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   }
 
   scopeLabel(scope: AssignmentCohortScope): string {
-    if (scope === 'all') return 'All cohorts';
+    const localized = this.enums.options('cohort_scope')().find(o => o.code === scope)?.value;
+    if (scope === 'all') return localized ?? 'All cohorts';
     const selectedIds = this.form.controls.cohort_ids.value ?? [];
-    if (!selectedIds.length) return 'Specific cohort';
+    if (!selectedIds.length) return localized ?? 'Specific cohort';
     return this.cohorts()
       .filter(c => selectedIds.includes(c.id))
       .map(c => c.title)
       .filter((t): t is string => !!t)
-      .join(', ') || 'Specific cohort';
+      .join(', ') || (localized ?? 'Specific cohort');
   }
 
   toggleCohort(id: number): void {

@@ -22,7 +22,7 @@
       />
     </div>
     <p-dropdown
-      [options]="typeFilterOptions"
+      [options]="typeFilterOptions()"
       [(ngModel)]="selectedType"
       optionLabel="label"
       optionValue="value"
@@ -64,7 +64,7 @@
             <div class="res-row__header">
               <span class="res-row__title">{{ item.title }}</span>
               <span class="res-badge" [ngClass]="'res-badge--' + item.type">
-                {{ item.type | titlecase }}
+                {{ typeLabel(item.type) }}
               </span>
               @if (item.qualification?.name) {
                 <span class="res-badge res-badge--qual">{{ item.qualification!.name }}</span>

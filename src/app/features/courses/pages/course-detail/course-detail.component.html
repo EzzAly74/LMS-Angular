@@ -17,8 +17,8 @@
     <header class="detail-header">
       <div class="detail-header__text">
         <div class="detail-header__badges">
-          <nas-status-badge [tone]="typeTone(c.type)">{{ (c.type | titlecase) }}</nas-status-badge>
-          <nas-status-badge [tone]="statusTone(c.status)" dot>{{ c.status | titlecase }}</nas-status-badge>
+          <nas-status-badge [tone]="typeTone(c.type)">{{ enumValueFromCode('course_type', c.type) }}</nas-status-badge>
+          <nas-status-badge [tone]="statusTone(c.status)" dot>{{ enumValueFromCode('course_status', c.status) }}</nas-status-badge>
         </div>
         <h1 class="detail-header__title">{{ c.title }}</h1>
         <div class="detail-header__meta">
@@ -250,38 +250,23 @@
             </button>
           </header>
 
-          <!-- Filter chips -->
+          <!-- Filter chips — driven by the `module_content_type` enum so
+               the chip list and labels track whatever the backend ships. -->
           <div class="modules-filters">
             <label class="modules-filter">
               <p-checkbox [binary]="true"
                           [ngModel]="isFilterActive('all')"
                           (onChange)="toggleModuleFilter('all')" />
-              <span>All</span>
+              <span>{{ 'common.all' | translate }}</span>
             </label>
-            <label class="modules-filter">
-              <p-checkbox [binary]="true"
-                          [ngModel]="isFilterActive('video')"
-                          (onChange)="toggleModuleFilter('video')" />
-              <span>Videos</span>
-            </label>
-            <label class="modules-filter">
-              <p-checkbox [binary]="true"
-                          [ngModel]="isFilterActive('document')"
-                          (onChange)="toggleModuleFilter('document')" />
-              <span>Document</span>
-            </label>
-            <label class="modules-filter">
-              <p-checkbox [binary]="true"
-                          [ngModel]="isFilterActive('article')"
-                          (onChange)="toggleModuleFilter('article')" />
-              <span>Articles</span>
-            </label>
-            <label class="modules-filter">
-              <p-checkbox [binary]="true"
-                          [ngModel]="isFilterActive('link')"
-                          (onChange)="toggleModuleFilter('link')" />
-              <span>Links</span>
-            </label>
+            @for (opt of moduleContentTypeOpts(); track opt.id) {
+              <label class="modules-filter">
+                <p-checkbox [binary]="true"
+                            [ngModel]="isFilterActive($any(opt.code))"
+                            (onChange)="toggleModuleFilter($any(opt.code))" />
+                <span>{{ opt.value }}</span>
+              </label>
+            }
           </div>
 
           <!-- List -->
@@ -312,7 +297,7 @@
                     <div class="module-row__title-line">
                       <span class="module-row__title">{{ moduleTitle(m) }}</span>
                       <nas-status-badge [tone]="moduleChipTone(m.content_type)">
-                        {{ m.content_type | titlecase }}
+                        {{ enumValueFromCode('module_content_type', m.content_type) }}
                       </nas-status-badge>
                     </div>
                     <span class="module-row__sub">{{ moduleSubline(m) }}</span>
@@ -494,10 +479,10 @@
 
       <div class="nas-form__field">
         <label>{{ 'course_detail.status' | translate }}</label>
-        <p-dropdown [options]="cohortStatusOpts" optionLabel="name" optionValue="id"
+        <p-dropdown [options]="cohortStatusOpts()" optionLabel="value" optionValue="id"
                     formControlName="status" styleClass="w-full"
                     [placeholder]="'course_detail.cohort_status_placeholder' | translate" />
-        @if (cohortForm.value.status === 'scheduled') {
+        @if (enumCode('cohort_status', cohortForm.value.status) === 'scheduled') {
           <p class="cohort-form__hint">
             <i class="pi pi-info-circle"></i>
             {{ 'course_detail.cohort_status_helper' | translate }}
@@ -570,17 +555,17 @@
 
       <div class="nas-form__field">
         <label>Content Type <span class="required">*</span></label>
-        <p-dropdown [options]="moduleContentTypeOpts" optionLabel="name" optionValue="id"
+        <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
                     formControlName="content_type" styleClass="w-full" />
       </div>
 
       <div class="nas-form__field">
         <label>Learner scope <span class="required">*</span></label>
-        <p-dropdown [options]="learnerScopeOpts" optionLabel="name" optionValue="id"
+        <p-dropdown [options]="learnerScopeOpts()" optionLabel="value" optionValue="id"
                     formControlName="learner_scope" styleClass="w-full" />
       </div>
 
-      @if (moduleForm.value.learner_scope === 'cohort') {
+      @if (enumCode('module_learner_scope', moduleForm.value.learner_scope) === 'cohort') {
         <div class="nas-form__field">
           <label>Cohort <span class="required">*</span></label>
           @if (cohortDropdownOpts().length) {
@@ -616,7 +601,7 @@
         </div>
       </div>
 
-      @if (moduleForm.value.content_type === 'document') {
+      @if (enumCode('module_content_type', moduleForm.value.content_type) === 'document') {
         <div class="nas-form__field">
           <label>Document <span class="required">*</span></label>
           @if (moduleFile(); as f) {
@@ -735,7 +720,7 @@
       <div class="nas-form__row">
         <div class="nas-form__field">
           <label>{{ 'course_detail.delivery_type' | translate }} <span class="required">*</span></label>
-          <p-dropdown [options]="courseTypeOpts" optionLabel="name" optionValue="id"
+          <p-dropdown [options]="courseTypeOpts()" optionLabel="value" optionValue="id"
                       formControlName="type" styleClass="w-full" />
         </div>
         <div class="nas-form__field">

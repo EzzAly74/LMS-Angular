@@ -665,7 +665,8 @@
     "attendance_sessions_count": "{{count}} Sessions",
     "attendance_absence_heading": "ABSENCE",
     "attendance_no_data": "No attendance records for this cohort yet.",
-    "attendance_no_results": "Nothing matches your search."
+    "attendance_no_results": "Nothing matches your search.",
+    "up_coming": "Up Coming"
   },
   "add_course": {
     "title": "Add New Course",

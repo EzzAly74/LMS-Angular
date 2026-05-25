@@ -46,10 +46,10 @@
             <div class="ps-field">
               <label for="default_language">{{ 'platform_settings.default_language' | translate }}</label>
               <p-dropdown id="default_language"
-                          [options]="languageOptions"
+                          [options]="languageOptions()"
                           formControlName="default_language"
-                          optionLabel="label"
-                          optionValue="value"
+                          optionLabel="value"
+                          optionValue="code"
                           styleClass="ps-dropdown"
                           panelStyleClass="ps-dropdown-panel" />
             </div>
@@ -139,21 +139,21 @@
               {{ 'platform_settings.cert_basis' | translate }} <span class="ps-asterisk">*</span>
             </label>
             <div class="ps-radio-list">
-              @for (opt of certificateOptions; track opt.id) {
+              @for (opt of certificateOptions(); track opt.id) {
                 <label class="ps-radio"
-                       [class.ps-radio--active]="basisSig() === opt.id">
+                       [class.ps-radio--active]="basisSig() === opt.code">
                   <input type="radio" name="cert_basis"
-                         [value]="opt.id"
-                         [checked]="basisSig() === opt.id"
-                         (change)="setBasis(opt.id)" />
+                         [value]="opt.code"
+                         [checked]="basisSig() === opt.code"
+                         (change)="setBasis($any(opt.code))" />
                   <span class="ps-radio__indicator">
-                    @if (basisSig() === opt.id) {
+                    @if (basisSig() === opt.code) {
                       <nas-icon name="check" [size]="10" />
                     }
                   </span>
                   <span class="ps-radio__copy">
-                    <span class="ps-radio__title">{{ opt.label | translate }}</span>
-                    <span class="ps-radio__desc">{{ opt.desc | translate }}</span>
+                    <span class="ps-radio__title">{{ opt.value }}</span>
+                    <span class="ps-radio__desc">{{ opt.description ?? '' }}</span>
                   </span>
                 </label>
               }

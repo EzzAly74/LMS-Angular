@@ -36,16 +36,16 @@
       <div class="ra-field">
         <label class="ra-field__label">Resource Type <span class="ra-field__req">*</span></label>
         <p-dropdown
-          [options]="typeOptions"
+          [options]="typeOptions()"
           [(ngModel)]="form.type"
-          optionLabel="label"
-          optionValue="value"
+          optionLabel="value"
+          optionValue="id"
           styleClass="ra-dropdown"
         />
       </div>
 
       <!-- Article: Description -->
-      @if (form.type === 'article') {
+      @if (isType('article')) {
         <div class="ra-field">
           <label class="ra-field__label">Description (English)</label>
           <textarea
@@ -58,7 +58,7 @@
       }
 
       <!-- Link: URL -->
-      @if (form.type === 'link') {
+      @if (isType('link')) {
         <div class="ra-field">
           <label class="ra-field__label">URL <span class="ra-field__req">*</span></label>
           <input
@@ -71,7 +71,7 @@
       }
 
       <!-- File: Upload -->
-      @if (form.type === 'file') {
+      @if (isType('file')) {
         <div class="ra-field">
           <label class="ra-field__label">Upload File <span class="ra-field__req">*</span></label>
 

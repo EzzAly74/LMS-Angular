@@ -108,7 +108,7 @@
               <p class="rf-color-row__sub">Used on role badges and quick summaries.</p>
 
               <div class="rf-swatches">
-                @for (c of colors; track c) {
+                @for (c of colors(); track c) {
                   <button type="button"
                           class="rf-swatch"
                           [ngClass]="swatchClass(c)"

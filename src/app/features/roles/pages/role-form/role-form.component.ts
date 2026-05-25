@@ -18,6 +18,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminRolesApiService } from '../../services/admin-roles-api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import type {
   AdminRoleColor,
   AdminRoleDetail,
@@ -52,6 +53,7 @@ interface RoleFormState {
 })
 export class RoleFormComponent implements OnInit, OnDestroy {
   private readonly api = inject(AdminRolesApiService);
+  private readonly enums = inject(EnumsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messages = inject(MessageService);
@@ -59,13 +61,16 @@ export class RoleFormComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
-  readonly colors: AdminRoleColor[] = [
-    'teal',
-    'green',
-    'orange',
-    'red',
-    'blue',
-  ];
+  /**
+   * Available role-color swatches — sourced from the backend
+   * `role_color` enum. We only need the string `code` for the swatch
+   * CSS class, but exposing the whole option list makes the localized
+   * tooltip text (`opt.value`) available too.
+   */
+  readonly colorOptions = this.enums.options('role_color');
+  readonly colors = computed<AdminRoleColor[]>(() =>
+    this.colorOptions().map(o => o.code as AdminRoleColor),
+  );
 
   /* ── Mode + identity ─────────────────────────────────────────── */
   readonly editingId = signal<number | null>(null);

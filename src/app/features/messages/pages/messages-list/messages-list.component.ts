@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ApiService } from '../../../../core/services/api.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { MessageService } from 'primeng/api';
@@ -52,6 +53,7 @@ type InboxTab = 'all' | 'unread' | 'sent' | 'resolved';
 })
 export class MessagesListComponent implements OnInit {
   private api  = inject(ApiService);
+  private enums = inject(EnumsService);
   private fb   = inject(FormBuilder);
   private toast = inject(MessageService);
   private t    = inject(TranslateService);
@@ -75,12 +77,20 @@ export class MessagesListComponent implements OnInit {
   perPage = 50;
   readonly skeletonRows = [0, 1, 2, 3, 4];
 
-  tabs = computed<NasPillTab[]>(() => [
-    { id: 'all',      label: 'All' },
-    { id: 'unread',   label: 'Unread' },
-    { id: 'sent',     label: 'Sent',     count: this.total() },
-    { id: 'resolved', label: 'Resolved' },
-  ]);
+  /**
+   * Inbox tab pills — driven by the backend `inbox_tab` enum so labels
+   * are localized and the option set stays in sync with the filter
+   * clauses on the server. The `sent` tab additionally surfaces the
+   * total count.
+   */
+  tabs = computed<NasPillTab[]>(() => {
+    const total = this.total();
+    return this.enums.options('inbox_tab')().map(o => ({
+      id: o.code,
+      label: o.value,
+      count: o.code === 'sent' ? total : undefined,
+    }));
+  });
 
   composeForm = this.fb.group({
     title:          ['', Validators.required],

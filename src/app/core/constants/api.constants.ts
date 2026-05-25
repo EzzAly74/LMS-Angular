@@ -47,6 +47,14 @@ export const API = {
   ADMIN_REPORTS:  `${API_BASE}/admin/reports`,
   ATTENDANCE:     `${API_BASE}/attendance`,
   EXAMS:          `${API_BASE}/exams`,
+  ENUMS:          `${API_BASE}/enums`,
+} as const;
+
+/** One-shot URL builders for the localized dropdown enum endpoints. */
+export const enumUrl = {
+  all:   ()                  => API.ENUMS,
+  names: ()                  => `${API.ENUMS}/names`,
+  byName:(name: string)      => `${API.ENUMS}/${name}`,
 } as const;
 
 /** Course-scoped nested routes */
