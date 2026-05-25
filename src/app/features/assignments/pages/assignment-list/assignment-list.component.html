@@ -5,7 +5,7 @@
      "VIEW ALL" CREATED ASSIGNMENTS MODAL
 ════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="All created assignments"
+  [header]="'assignments.all_assignments' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -19,7 +19,7 @@
     <input
       type="text"
       class="al-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="viewAllSearch"
       (ngModelChange)="onViewAllSearchChange($event)" />
   </div>
@@ -30,7 +30,7 @@
         <p-skeleton height="32px" styleClass="al-modal-row-sk" />
       }
     } @else if (!viewAllItems().length) {
-      <p class="al-modal-empty">No assignments found.</p>
+      <p class="al-modal-empty">{{ 'assignments.no_results' | translate }}</p>
     } @else {
       @for (item of viewAllItems(); track item.id) {
         <label class="al-modal-row" [class.al-modal-row--selected]="viewAllSelected() === item.id">
@@ -48,13 +48,13 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">Cancel</button>
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">{{ 'common.cancel' | translate }}</button>
     <button
       type="button"
       class="nas-btn nas-btn--primary"
       [disabled]="!viewAllSelected()"
       (click)="confirmViewAll()">
-      <i class="pi pi-eye"></i> View Assignment
+      <i class="pi pi-eye"></i> {{ 'assignments.view_assignment' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -63,7 +63,7 @@
      FILTER MODAL (Instructors / Learners / Courses)
 ════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="Filter your results"
+  [header]="'common.filter_results' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -74,9 +74,9 @@
 
   <div class="al-modal-section-label">
     @switch (filter().kind) {
-      @case ('instructors') { Instructors }
-      @case ('learners')    { Learners }
-      @case ('courses')     { Courses }
+      @case ('instructors') { {{ 'assignments.filter_instructors' | translate }} }
+      @case ('learners')    { {{ 'assignments.filter_learners'    | translate }} }
+      @case ('courses')     { {{ 'assignments.filter_courses'     | translate }} }
     }
   </div>
 
@@ -85,7 +85,7 @@
     <input
       type="text"
       class="al-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="filter().query"
       (ngModelChange)="onFilterQuery($event)" />
   </div>
@@ -98,14 +98,14 @@
       </label>
     }
     @if (!filterItems().length) {
-      <p class="al-modal-empty">No results.</p>
+      <p class="al-modal-empty">{{ 'assignments.no_filter_results' | translate }}</p>
     }
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">Clear</button>
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">{{ 'common.reset' | translate }}</button>
     <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
-      <i class="pi pi-filter"></i> Filter
+      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -116,10 +116,10 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Assignments"
-    subtitle="Generate learner assignments, define answer keys, and monitor submissions.">
+    [title]="'assignments.title' | translate"
+    [subtitle]="'assignments.subtitle' | translate">
     <a routerLink="/admin/assignments/new" class="nas-cta-btn">
-      <i class="pi pi-plus-circle"></i> Create Assignment
+      <i class="pi pi-plus-circle"></i> {{ 'assignments.create' | translate }}
     </a>
   </nas-page-header>
 
@@ -127,11 +127,11 @@
   <div class="al-mini-section">
     <div class="al-mini-head">
       <p class="al-mini-head__text">
-        <strong>{{ summary().assignments }}</strong> created assignments
+        <strong>{{ summary().assignments }}</strong> {{ 'assignments.summary_assignments' | translate }}
         <span class="al-mini-head__sep">·</span>
-        for <strong>{{ summary().courses }}</strong> courses
+        {{ 'assignments.summary_for' | translate }} <strong>{{ summary().courses }}</strong> {{ 'assignments.summary_courses' | translate }}
       </p>
-      <button type="button" class="al-view-all-btn" (click)="openViewAll()">View All</button>
+      <button type="button" class="al-view-all-btn" (click)="openViewAll()">{{ 'assignments.view_all' | translate }}</button>
     </div>
 
     <div class="nas-card al-section-card">
@@ -139,12 +139,12 @@
         <table class="al-table">
           <thead>
             <tr>
-              <th>Assignment</th>
-              <th>Course</th>
-              <th>Cohort scope</th>
-              <th>Questions</th>
-              <th>Total score</th>
-              <th>Due</th>
+              <th>{{ 'assignments.col_assignment' | translate }}</th>
+              <th>{{ 'assignments.col_course' | translate }}</th>
+              <th>{{ 'assignments.col_cohort_scope' | translate }}</th>
+              <th>{{ 'assignments.col_questions' | translate }}</th>
+              <th>{{ 'assignments.col_total_score' | translate }}</th>
+              <th>{{ 'assignments.col_due' | translate }}</th>
               <th class="al-table__actions-col"></th>
             </tr>
           </thead>
@@ -158,7 +158,7 @@
                 </tr>
               }
             } @else if (!miniRows().length) {
-              <tr><td colspan="7" class="al-table__empty">No assignments yet. Create your first one.</td></tr>
+              <tr><td colspan="7" class="al-table__empty">{{ 'assignments.empty_mini' | translate }}</td></tr>
             } @else {
               @for (item of miniRows(); track item.id) {
                 <tr class="al-table__row" (click)="editAssignment(item)">
@@ -176,14 +176,14 @@
                     <button
                       type="button"
                       class="al-row-btn"
-                      title="Edit"
+                      [title]="'common.edit' | translate"
                       (click)="editAssignment(item, $event)">
                       <i class="pi pi-pen-to-square"></i>
                     </button>
                     <button
                       type="button"
                       class="al-row-btn al-row-btn--danger"
-                      title="Delete"
+                      [title]="'common.delete' | translate"
                       (click)="confirmDelete(item, $event)">
                       <i class="pi pi-trash"></i>
                     </button>
@@ -205,7 +205,7 @@
         <input
           type="text"
           class="al-search__input"
-          placeholder="Quick search..."
+          [placeholder]="'common.quick_search' | translate"
           [ngModel]="subSearch"
           (ngModelChange)="onSubmissionSearch($event)" />
       </div>
@@ -216,11 +216,11 @@
           class="al-pill-btn"
           [class.al-pill-btn--active]="subInstructorIds.length === 0 && subLearnerIds.length === 0 && subCourseIds.length === 0"
           (click)="clearAllFilters()">
-          All
+          {{ 'common.all' | translate }}
         </button>
 
         <button type="button" class="al-pill-btn" (click)="openFilter('instructors')">
-          Instructors
+          {{ 'assignments.filter_instructors' | translate }}
           @if (filterPillCounts().instructors) {
             <span class="al-pill-btn__count">{{ filterPillCounts().instructors }}</span>
           }
@@ -228,7 +228,7 @@
         </button>
 
         <button type="button" class="al-pill-btn" (click)="openFilter('learners')">
-          Learners
+          {{ 'assignments.filter_learners' | translate }}
           @if (filterPillCounts().learners) {
             <span class="al-pill-btn__count">{{ filterPillCounts().learners }}</span>
           }
@@ -236,7 +236,7 @@
         </button>
 
         <button type="button" class="al-pill-btn" (click)="openFilter('courses')">
-          Courses
+          {{ 'assignments.filter_courses' | translate }}
           @if (filterPillCounts().courses) {
             <span class="al-pill-btn__count">{{ filterPillCounts().courses }}</span>
           }
@@ -246,15 +246,15 @@
         <div class="al-status-checks">
           <label class="al-check">
             <input type="checkbox" [checked]="subStatus === 'all'" (change)="onStatus('all')" />
-            <span>All</span>
+            <span>{{ 'common.all' | translate }}</span>
           </label>
           <label class="al-check">
             <input type="checkbox" [checked]="subStatus === 'pending'" (change)="onStatus(subStatus === 'pending' ? 'all' : 'pending')" />
-            <span>Pending</span>
+            <span>{{ 'assignments.pending' | translate }}</span>
           </label>
           <label class="al-check">
             <input type="checkbox" [checked]="subStatus === 'graded'" (change)="onStatus(subStatus === 'graded' ? 'all' : 'graded')" />
-            <span>Graded</span>
+            <span>{{ 'assignments.graded' | translate }}</span>
           </label>
         </div>
       </div>
@@ -264,14 +264,14 @@
       <table class="al-table">
         <thead>
           <tr>
-            <th>Learner</th>
-            <th>Course</th>
-            <th>Instructor</th>
-            <th>Assignment</th>
-            <th>Cohort</th>
-            <th>Submitted</th>
-            <th>Score</th>
-            <th>Status</th>
+            <th>{{ 'quizzes.learner' | translate }}</th>
+            <th>{{ 'assignments.col_course' | translate }}</th>
+            <th>{{ 'assignments.sub_col_instructor' | translate }}</th>
+            <th>{{ 'assignments.col_assignment' | translate }}</th>
+            <th>{{ 'assignments.sub_col_cohort' | translate }}</th>
+            <th>{{ 'assignments.sub_col_submitted' | translate }}</th>
+            <th>{{ 'assignments.sub_col_score' | translate }}</th>
+            <th>{{ 'assignments.sub_col_status' | translate }}</th>
             <th class="al-table__actions-col"></th>
           </tr>
         </thead>
@@ -285,7 +285,7 @@
               </tr>
             }
           } @else if (!submissions().length) {
-            <tr><td colspan="9" class="al-table__empty">No submissions yet.</td></tr>
+            <tr><td colspan="9" class="al-table__empty">{{ 'assignments.no_submissions' | translate }}</td></tr>
           } @else {
             @for (sub of submissions(); track sub.id) {
               <tr class="al-table__row" (click)="openSubmission(sub)">
@@ -311,14 +311,14 @@
                 </td>
                 <td>
                   <nas-status-badge [tone]="statusTone(sub.status)" [dot]="true">
-                    {{ sub.status === 'graded' ? 'Graded' : 'Pending' }}
+                    {{ (sub.status === 'graded' ? 'assignments.graded' : 'assignments.pending') | translate }}
                   </nas-status-badge>
                 </td>
                 <td class="al-table__actions">
                   <button
                     type="button"
                     class="al-row-btn al-row-btn--view"
-                    title="Review"
+                    [title]="'common.review' | translate"
                     (click)="openSubmission(sub); $event.stopPropagation()">
                     <i class="pi pi-eye"></i>
                   </button>
@@ -333,7 +333,7 @@
     @if (submissionsTotal() > subPerPage) {
       <div class="al-pagination">
         <span class="al-pagination__info">
-          {{ (subPage - 1) * subPerPage + 1 }}–{{ min(subPage * subPerPage, submissionsTotal()) }} of {{ submissionsTotal() }}
+          {{ (subPage - 1) * subPerPage + 1 }}–{{ min(subPage * subPerPage, submissionsTotal()) }} {{ 'common.of' | translate }} {{ submissionsTotal() }}
         </span>
         <div class="al-pagination__nav">
           <button type="button" class="al-pagination__btn" [disabled]="subPage === 1" (click)="onSubPage(subPage - 1)">

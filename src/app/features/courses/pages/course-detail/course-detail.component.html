@@ -9,7 +9,7 @@
     <!-- ── Breadcrumb + title ────────────────────────────────────────── -->
     <nav class="detail-breadcrumb">
       <i class="pi pi-book"></i>
-      <a routerLink="/admin/courses">Courses</a>
+      <a routerLink="/admin/courses">{{ 'courses.title' | translate }}</a>
       <i class="pi pi-chevron-right"></i>
       <span>{{ c.title }}</span>
     </nav>
@@ -29,7 +29,7 @@
             <span class="detail-header__meta-item"><i class="pi pi-shield"></i> {{ c.category!.name }}</span>
           }
           @if (c.updated_at) {
-            <span class="detail-header__meta-item">Updated {{ c.updated_at | date:'dd MMM yyyy' }}</span>
+            <span class="detail-header__meta-item">{{ 'courses_list.updated_at' | translate }} {{ c.updated_at | date:'dd MMM yyyy' }}</span>
           }
         </div>
       </div>
@@ -44,7 +44,7 @@
       <nas-stat-card icon="pi pi-users" iconTone="teal"
                      [label]="'course_detail.enrolled_learners' | translate"
                      [value]="c.enrolled_count ?? 0"
-                     [subline]="(c.cohorts_count ?? 0) + ' Cohorts'"></nas-stat-card>
+                     [subline]="(c.cohorts_count ?? 0) + ' ' + ('course_detail.cohorts' | translate)"></nas-stat-card>
 
       <nas-stat-card icon="pi pi-tag" iconTone="amber"
                      [label]="'course_detail.cohorts' | translate"
@@ -108,6 +108,10 @@
               <div>
                 <dt>{{ 'course_detail.delivery_type' | translate }}</dt>
                 <dd>{{ deliveryLabel() }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'course_detail.level' | translate }}</dt>
+                <dd>{{ levelLabel() }}</dd>
               </div>
               <div>
                 <dt>{{ 'course_detail.certificate' | translate }}</dt>
@@ -246,7 +250,7 @@
           <header class="modules-tab__head">
             <span class="modules-tab__count">{{ modulesHeader() }}</span>
             <button type="button" class="nas-modules-cta" (click)="openAddModule()">
-              <i class="pi pi-plus-circle"></i> Module
+              <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_module' | translate }}
             </button>
           </header>
 
@@ -285,8 +289,8 @@
           } @else if (!filteredModules().length) {
             <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
               <i class="pi pi-folder-open"></i>
-              <h3>No modules yet</h3>
-              <p>Click <strong>+ Module</strong> to add the first content module to this course.</p>
+              <h3>{{ 'course_detail.no_modules' | translate }}</h3>
+              <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
             </article>
           } @else {
             <div class="modules-list">
@@ -303,11 +307,11 @@
                     <span class="module-row__sub">{{ moduleSubline(m) }}</span>
                   </div>
                   <div class="module-row__actions">
-                    <button type="button" class="row-action-btn" title="Edit"
+                    <button type="button" class="row-action-btn" [title]="'common.edit' | translate"
                             (click)="openEditModule(m)">
                       <i class="pi pi-pencil"></i>
                     </button>
-                    <button type="button" class="row-action-btn" title="More"
+                    <button type="button" class="row-action-btn" [title]="'common.more' | translate"
                             (click)="openModuleMenu($event, m, moduleMenu)">
                       <i class="pi pi-ellipsis-h"></i>
                     </button>
@@ -331,8 +335,8 @@
           @if (!(c.qualifications?.length)) {
             <article class="nas-card placeholder-tab placeholder-tab--soft">
               <i class="pi pi-verified"></i>
-              <h3>No qualifications attached</h3>
-              <p>Attach qualifications to grant on course completion.</p>
+              <h3>{{ 'course_detail.no_qualifications' | translate }}</h3>
+              <p>{{ 'course_detail.no_qualifications_hint' | translate }}</p>
             </article>
           }
         </section>
@@ -539,61 +543,65 @@
     [closeOnEscape]="!moduleSaving()"
     styleClass="nas-dialog module-dialog"
     [style]="{ width: '480px', maxWidth: '95vw' }"
-    [header]="moduleEditMode() ? 'Edit Module' : 'New Module'">
+    [header]="(moduleEditMode() ? 'course_detail.edit_module' : 'course_detail.new_module') | translate">
 
     <form [formGroup]="moduleForm" (ngSubmit)="submitModule()" class="nas-form module-form">
 
       <div class="nas-form__field">
-        <label>Module Title (English) <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="title_en" placeholder="Module title in English" />
+        <label>{{ 'course_detail.module_title_en' | translate }} <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="title_en"
+               [placeholder]="'course_detail.module_title_en_placeholder' | translate" />
       </div>
 
       <div class="nas-form__field">
-        <label>Module Title (Arabic) <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="title_ar" placeholder="عنوان الوحدة بالعربية" />
+        <label>{{ 'course_detail.module_title_ar' | translate }} <span class="required">*</span></label>
+        <input class="nas-input" type="text" formControlName="title_ar"
+               [placeholder]="'course_detail.module_title_ar_placeholder' | translate" />
       </div>
 
       <div class="nas-form__field">
-        <label>Content Type <span class="required">*</span></label>
+        <label>{{ 'course_detail.content_type' | translate }} <span class="required">*</span></label>
         <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
                     formControlName="content_type" styleClass="w-full" />
       </div>
 
       <div class="nas-form__field">
-        <label>Learner scope <span class="required">*</span></label>
+        <label>{{ 'course_detail.learner_scope' | translate }} <span class="required">*</span></label>
         <p-dropdown [options]="learnerScopeOpts()" optionLabel="value" optionValue="id"
                     formControlName="learner_scope" styleClass="w-full" />
       </div>
 
       @if (enumCode('module_learner_scope', moduleForm.value.learner_scope) === 'cohort') {
         <div class="nas-form__field">
-          <label>Cohort <span class="required">*</span></label>
+          <label>{{ 'course_detail.cohort' | translate }} <span class="required">*</span></label>
           @if (cohortDropdownOpts().length) {
             <p-dropdown [options]="cohortDropdownOpts()" optionLabel="name" optionValue="id"
-                        formControlName="session_id" placeholder="Select cohort" styleClass="w-full" />
+                        formControlName="session_id"
+                        [placeholder]="'course_detail.select_cohort' | translate"
+                        styleClass="w-full" />
           } @else {
             <div class="module-form__hint module-form__hint--warn">
-              No cohorts yet for this course. Add a cohort first to scope a module to it.
+              {{ 'course_detail.no_cohorts_yet' | translate }}
             </div>
           }
         </div>
       }
 
       <div class="nas-form__field">
-        <label>Approximate Duration <span class="required">*</span></label>
+        <label>{{ 'course_detail.approximate_duration' | translate }} <span class="required">*</span></label>
         <div class="duration-input">
           <input type="number" class="duration-input__field"
                  formControlName="duration_minutes"
                  min="0" max="1000" placeholder="30" />
-          <span class="duration-input__suffix">minutes</span>
+          <span class="duration-input__suffix">{{ 'course_detail.duration_minutes' | translate }}</span>
           <div class="duration-input__steppers">
             <button type="button" class="duration-input__step"
-                    aria-label="Increase duration"
+                    [attr.aria-label]="'course_detail.increase_duration' | translate"
                     (click)="adjustDuration(1)">
               <i class="pi pi-chevron-up"></i>
             </button>
             <button type="button" class="duration-input__step"
-                    aria-label="Decrease duration"
+                    [attr.aria-label]="'course_detail.decrease_duration' | translate"
                     (click)="adjustDuration(-1)">
               <i class="pi pi-chevron-down"></i>
             </button>
@@ -603,7 +611,7 @@
 
       @if (enumCode('module_content_type', moduleForm.value.content_type) === 'document') {
         <div class="nas-form__field">
-          <label>Document <span class="required">*</span></label>
+          <label>{{ 'course_detail.document' | translate }} <span class="required">*</span></label>
           @if (moduleFile(); as f) {
             <div class="module-form__file">
               <i class="pi pi-file-pdf module-form__file-icon"></i>
@@ -620,7 +628,7 @@
               <i class="pi pi-file-pdf module-form__file-icon"></i>
               <div class="module-form__file-meta">
                 <span class="module-form__file-name">{{ moduleForm.value.video }}</span>
-                <span class="module-form__file-sub">Existing file</span>
+                <span class="module-form__file-sub">{{ 'course_detail.existing_file' | translate }}</span>
               </div>
               <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
                 <i class="pi pi-trash"></i>
@@ -631,44 +639,44 @@
               <input type="file" hidden (change)="onModuleFileSelected($event)"
                      accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" />
               <i class="pi pi-cloud-upload"></i>
-              <span>Upload File</span>
+              <span>{{ 'course_detail.upload_file' | translate }}</span>
             </label>
           }
         </div>
       } @else {
         <div class="nas-form__field">
-          <label>Content Link <span class="required">*</span></label>
+          <label>{{ 'course_detail.content_link' | translate }} <span class="required">*</span></label>
           <input class="nas-input" type="url" formControlName="video" placeholder="https://example.com" />
-          <p class="module-form__hint">Use a video URL, article URL, policy document, or trusted external learning resource.</p>
+          <p class="module-form__hint">{{ 'course_detail.content_link_hint' | translate }}</p>
         </div>
       }
 
       <div class="nas-form__field">
-        <label>Instructions (English)</label>
+        <label>{{ 'course_detail.instructions_en' | translate }}</label>
         <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_en"
-                  placeholder="Short instruction learners will see before opening the content."></textarea>
+                  [placeholder]="'course_detail.instructions_placeholder' | translate"></textarea>
       </div>
 
       <div class="nas-form__field">
-        <label>Instructions (Arabic)</label>
+        <label>{{ 'course_detail.instructions_ar' | translate }}</label>
         <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_ar"
-                  placeholder="Short instruction learners will see before opening the content."></textarea>
+                  [placeholder]="'course_detail.instructions_placeholder' | translate"></textarea>
       </div>
 
       <label class="module-form__require">
         <p-checkbox [binary]="true" formControlName="require_completion" />
-        <span>Require completion of this module to continue</span>
+        <span>{{ 'course_detail.require_completion' | translate }}</span>
       </label>
 
       <footer class="nas-form__footer">
         <button type="button" class="nas-btn nas-btn--ghost" (click)="showModule.set(false)" [disabled]="moduleSaving()">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
         <button type="submit" class="nas-btn nas-btn--primary" [disabled]="moduleSaving()">
           @if (moduleSaving()) { <i class="pi pi-spin pi-spinner"></i> }
           @else if (moduleEditMode()) { <i class="pi pi-pencil"></i> }
           @else { <i class="pi pi-plus-circle"></i> }
-          <span>{{ moduleEditMode() ? 'Save Changes' : 'Create Module' }}</span>
+          <span>{{ (moduleEditMode() ? 'course_detail.save_changes' : 'course_detail.create_module') | translate }}</span>
         </button>
       </footer>
     </form>
@@ -688,20 +696,76 @@
     [header]="'course_detail.edit_course' | translate">
 
     <form [formGroup]="editForm" (ngSubmit)="submitEditCourse()" class="nas-form">
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.course_title_en' | translate }} <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="title_en"
-               [placeholder]="'course_detail.course_title_en' | translate" />
+      <!--
+        Field-for-field mirror of the Add Course dialog on the Courses
+        list. The legacy `active` toggle is intentionally absent: cohort
+        dates drive course status on the backend, so showing a manual
+        active flag here would only mislead the admin.
+      -->
+      <nas-locale-input
+        formControlName="title"
+        [label]="'add_course.course_title' | translate"
+        [required]="true"
+        [placeholderEn]="'add_course.course_title_placeholder' | translate"
+        [placeholderAr]="'add_course.course_title_placeholder' | translate"
+      />
+
+      <div class="nas-form__row">
+        <div class="nas-form__field">
+          <label>{{ 'add_course.type' | translate }} *</label>
+          <p-dropdown [options]="courseTypeOpts()" optionLabel="value" optionValue="id"
+                      formControlName="type"
+                      [placeholder]="'add_course.select_type' | translate"
+                      styleClass="w-full" />
+        </div>
+        <div class="nas-form__field">
+          <label>{{ 'add_course.category' | translate }}</label>
+          <p-dropdown [options]="categoryOpts()" optionLabel="name" optionValue="id"
+                      formControlName="category_id"
+                      [placeholder]="'add_course.select_category' | translate"
+                      [showClear]="true"
+                      styleClass="w-full" />
+        </div>
       </div>
 
       <div class="nas-form__field">
-        <label>{{ 'course_detail.course_title_ar' | translate }}</label>
-        <input class="nas-input" type="text" formControlName="title_ar"
-               [placeholder]="'course_detail.course_title_ar' | translate" />
+        <label>{{ 'add_course.level' | translate }} *</label>
+        <p-dropdown [options]="courseLevelOpts()" optionLabel="value" optionValue="id"
+                    formControlName="level"
+                    [placeholder]="'add_course.select_level' | translate"
+                    styleClass="w-full" />
       </div>
 
       <div class="nas-form__field">
-        <label>{{ 'courses_list.image' | translate }} <span class="required">*</span></label>
+        <label>{{ 'add_course.instructor' | translate }} *</label>
+        <p-dropdown [options]="instructorOpts()" optionLabel="name" optionValue="id"
+                    formControlName="instructor_id"
+                    [placeholder]="'add_course.assign_instructor' | translate"
+                    styleClass="w-full" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'add_course.issue_certificate' | translate }} *</label>
+        <div class="nas-yesno">
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.certificate === true"
+                  (click)="editForm.patchValue({ certificate: true })">{{ 'common.yes' | translate }}</button>
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.certificate === false"
+                  (click)="editForm.patchValue({ certificate: false })">{{ 'common.no' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'add_course.review_content' | translate }} *</label>
+        <div class="nas-yesno">
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === true"
+                  (click)="editForm.patchValue({ require_instructor: true })">{{ 'common.yes' | translate }}</button>
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === false"
+                  (click)="editForm.patchValue({ require_instructor: false })">{{ 'common.no' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'courses_list.image' | translate }} *</label>
         <nas-photo-upload
           [value]="editPhotoPreview()"
           ratio="100x100"
@@ -711,77 +775,61 @@
           (cleared)="onEditPhotoCleared()" />
       </div>
 
+      <nas-locale-input
+        formControlName="description"
+        [label]="'add_course.description' | translate"
+        [required]="true"
+        [multiline]="true"
+        [placeholderEn]="'add_course.description_placeholder' | translate"
+        [placeholderAr]="'add_course.description_placeholder' | translate"
+      />
+
       <div class="nas-form__field">
-        <label>{{ 'course_detail.description' | translate }} <span class="required">*</span></label>
-        <textarea class="nas-input nas-textarea" rows="3" formControlName="description_en"
-                  [placeholder]="'course_detail.description' | translate"></textarea>
+        <label>{{ 'add_course.max_learners' | translate }}</label>
+        <p-inputNumber formControlName="max_learners" [min]="1" [max]="500" [showButtons]="true"
+                       styleClass="w-full" />
       </div>
 
       <div class="nas-form__row">
         <div class="nas-form__field">
-          <label>{{ 'course_detail.delivery_type' | translate }} <span class="required">*</span></label>
-          <p-dropdown [options]="courseTypeOpts()" optionLabel="value" optionValue="id"
-                      formControlName="type" styleClass="w-full" />
+          <label>{{ 'add_course.cohort_start' | translate }}</label>
+          <p-calendar formControlName="cohort_start" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+                      [placeholder]="'add_course.cohort_start_placeholder' | translate" />
         </div>
         <div class="nas-form__field">
-          <label>{{ 'course_detail.category' | translate }} <span class="required">*</span></label>
-          <p-dropdown [options]="categoryOpts()" optionLabel="name" optionValue="id"
-                      formControlName="category_id" styleClass="w-full"
-                      [placeholder]="'course_detail.select_category' | translate" />
+          <label>{{ 'add_course.cohort_end' | translate }}</label>
+          <p-calendar formControlName="cohort_end"   dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+                      [placeholder]="'add_course.cohort_end_placeholder' | translate" />
         </div>
       </div>
 
       <div class="nas-form__field">
-        <label>{{ 'course_detail.instructor' | translate }} <span class="required">*</span></label>
-        <p-dropdown [options]="instructorOpts()" optionLabel="name" optionValue="id"
-                    formControlName="instructor_id" styleClass="w-full"
-                    [placeholder]="'course_detail.select_instructor' | translate" />
-      </div>
-
-      <div class="nas-form__row">
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.hours' | translate }} <span class="required">*</span></label>
-          <div class="duration-input">
-            <input type="number" class="duration-input__field"
-                   formControlName="hours" min="1" max="10000" placeholder="1" />
-            <span class="duration-input__suffix">{{ 'course_detail.hours_suffix' | translate }}</span>
-            <div class="duration-input__steppers">
-              <button type="button" class="duration-input__step" aria-label="Increase hours" (click)="adjustHours(1)">
-                <i class="pi pi-chevron-up"></i>
-              </button>
-              <button type="button" class="duration-input__step" aria-label="Decrease hours" (click)="adjustHours(-1)">
-                <i class="pi pi-chevron-down"></i>
-              </button>
-            </div>
+        <label>{{ 'add_course.qualifications_earned' | translate }} <span class="nas-form__field-opt">({{ 'common.optional' | translate }})</span></label>
+        <p class="nas-form__hint">{{ 'add_course.qualifications_hint' | translate }}</p>
+        @if (qualOptions().length === 0) {
+          <div class="nas-checklist nas-checklist--loading">
+            @for (s of [1,2,3,4]; track s) {
+              <p-skeleton height="1.25rem" width="60%" styleClass="mb-2" />
+            }
           </div>
-        </div>
-
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.max_learners_per_cohort' | translate }} <span class="required">*</span></label>
-          <div class="duration-input">
-            <input type="number" class="duration-input__field"
-                   formControlName="max_learners" min="1" max="10000" placeholder="30" />
-            <span class="duration-input__suffix">{{ 'course_detail.learners' | translate }}</span>
-            <div class="duration-input__steppers">
-              <button type="button" class="duration-input__step" aria-label="Increase capacity" (click)="adjustMaxLearners(1)">
-                <i class="pi pi-chevron-up"></i>
-              </button>
-              <button type="button" class="duration-input__step" aria-label="Decrease capacity" (click)="adjustMaxLearners(-1)">
-                <i class="pi pi-chevron-down"></i>
-              </button>
-            </div>
+        } @else {
+          <label class="nas-checklist__select-all">
+            <p-checkbox [binary]="true"
+                        [ngModel]="allQualificationsSelected()"
+                        [ngModelOptions]="{ standalone: true }"
+                        (onChange)="toggleAllQualifications()" />
+            <span>{{ 'common.select_all' | translate }}</span>
+          </label>
+          <div class="nas-checklist">
+            @for (q of qualOptions(); track q.id) {
+              <label class="nas-checklist__item">
+                <p-checkbox [value]="q.id" formControlName="qualification_ids" />
+                <span>{{ q.name }}</span>
+              </label>
+            }
           </div>
-        </div>
+        }
       </div>
-
-      <label class="module-form__require">
-        <p-checkbox [binary]="true" formControlName="certificate" />
-        <span>{{ 'course_detail.issue_certificate' | translate }}</span>
-      </label>
-      <label class="module-form__require">
-        <p-checkbox [binary]="true" formControlName="active" />
-        <span>{{ 'course_detail.active' | translate }}</span>
-      </label>
 
       <footer class="nas-form__footer">
         <button type="button" class="nas-btn nas-btn--ghost" (click)="showEdit.set(false)" [disabled]="editSaving()">

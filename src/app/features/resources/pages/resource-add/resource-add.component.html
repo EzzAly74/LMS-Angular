@@ -4,16 +4,16 @@
   <div class="ra-breadcrumbs">
     <a routerLink="/admin/resources" class="ra-breadcrumbs__link">
       <i class="pi pi-book-open"></i>
-      Resources
+      {{ 'resources.title' | translate }}
     </a>
     <i class="pi pi-chevron-right ra-breadcrumbs__sep"></i>
-    <span class="ra-breadcrumbs__current">New Resource</span>
+    <span class="ra-breadcrumbs__current">{{ 'resources.new_resource' | translate }}</span>
   </div>
 
   <!-- Page heading -->
   <div class="ra-heading">
-    <h1 class="ra-heading__title">New Resource</h1>
-    <p class="ra-heading__sub">Publish a new learning resource for employees — article, external link, or file</p>
+    <h1 class="ra-heading__title">{{ 'resources.new_resource' | translate }}</h1>
+    <p class="ra-heading__sub">{{ 'resources.subtitle_create' | translate }}</p>
   </div>
 
   <div class="ra-layout">
@@ -23,18 +23,18 @@
 
       <!-- Title -->
       <div class="ra-field">
-        <label class="ra-field__label">Title <span class="ra-field__req">*</span></label>
+        <label class="ra-field__label">{{ 'resources.title_label' | translate }} <span class="ra-field__req">*</span></label>
         <input
           type="text"
           [(ngModel)]="form.title"
-          placeholder="Resource title"
+          [placeholder]="'resources.title_placeholder' | translate"
           class="ra-input"
         />
       </div>
 
       <!-- Resource Type -->
       <div class="ra-field">
-        <label class="ra-field__label">Resource Type <span class="ra-field__req">*</span></label>
+        <label class="ra-field__label">{{ 'resources.resource_type' | translate }} <span class="ra-field__req">*</span></label>
         <p-dropdown
           [options]="typeOptions()"
           [(ngModel)]="form.type"
@@ -47,10 +47,10 @@
       <!-- Article: Description -->
       @if (isType('article')) {
         <div class="ra-field">
-          <label class="ra-field__label">Description (English)</label>
+          <label class="ra-field__label">{{ 'resources.description_en' | translate }}</label>
           <textarea
             [(ngModel)]="form.content"
-            placeholder="Brief description of this resource…"
+            [placeholder]="'resources.description_placeholder' | translate"
             rows="5"
             class="ra-textarea"
           ></textarea>
@@ -60,7 +60,7 @@
       <!-- Link: URL -->
       @if (isType('link')) {
         <div class="ra-field">
-          <label class="ra-field__label">URL <span class="ra-field__req">*</span></label>
+          <label class="ra-field__label">{{ 'resources.url' | translate }} <span class="ra-field__req">*</span></label>
           <input
             type="url"
             [(ngModel)]="form.url"
@@ -73,13 +73,13 @@
       <!-- File: Upload -->
       @if (isType('file')) {
         <div class="ra-field">
-          <label class="ra-field__label">Upload File <span class="ra-field__req">*</span></label>
+          <label class="ra-field__label">{{ 'resources.upload_file' | translate }} <span class="ra-field__req">*</span></label>
 
           <label class="ra-dropzone">
             <i class="pi pi-upload ra-dropzone__icon"></i>
             <div class="ra-dropzone__text">
-              <span>Drag &amp; drop or <strong class="ra-dropzone__browse">browse file</strong></span>
-              <span class="ra-dropzone__hint">PDF, DOCX, XLSX, PPTX · Max: 50 MB</span>
+              <span>{{ 'resources.drag_drop' | translate }} <strong class="ra-dropzone__browse">{{ 'resources.browse_file' | translate }}</strong></span>
+              <span class="ra-dropzone__hint">{{ 'resources.file_hint' | translate }}</span>
             </div>
             <input
               type="file"
@@ -102,30 +102,30 @@
 
     <!-- Sidebar -->
     <div class="ra-card ra-card--side">
-      <p class="ra-side__heading">Publishing</p>
+      <p class="ra-side__heading">{{ 'resources.publishing' | translate }}</p>
 
       <!-- Qualification -->
       <div class="ra-field">
         <label class="ra-field__label">
-          Linked Qualification
-          <span class="ra-field__opt">(optional)</span>
+          {{ 'resources.linked_qualification' | translate }}
+          <span class="ra-field__opt">({{ 'common.optional' | translate }})</span>
         </label>
         <p-dropdown
           [options]="qualOptions()"
           [(ngModel)]="form.qualification_skill_id"
           optionLabel="name"
           optionValue="id"
-          placeholder="Qualification"
+          [placeholder]="'resources.qualification_placeholder' | translate"
           [showClear]="true"
           [filter]="true"
           styleClass="ra-dropdown"
         />
-        <p class="ra-side__hint">Surfaces this resource in the relevant qualification view</p>
+        <p class="ra-side__hint">{{ 'resources.qualification_hint' | translate }}</p>
       </div>
 
       <!-- Actions -->
       <div class="ra-actions">
-        <button type="button" class="ra-btn ra-btn--cancel" (click)="cancel()">Cancel</button>
+        <button type="button" class="ra-btn ra-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
         <button
           type="button"
           class="ra-btn ra-btn--save"
@@ -133,7 +133,7 @@
           (click)="submit()"
         >
           <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : 'pi-plus-circle'"></i>
-          Add Resource
+          {{ 'resources.add' | translate }}
         </button>
       </div>
     </div>

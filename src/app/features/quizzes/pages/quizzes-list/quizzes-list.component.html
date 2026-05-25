@@ -5,7 +5,7 @@
      "VIEW ALL" CREATED QUIZZES MODAL
 ════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="All created quizzes"
+  [header]="'quizzes.all_created' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -19,7 +19,7 @@
     <input
       type="text"
       class="ql-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="viewAllSearch"
       (ngModelChange)="onViewAllSearchChange($event)" />
   </div>
@@ -30,7 +30,7 @@
         <p-skeleton height="32px" styleClass="ql-modal-row-sk" />
       }
     } @else if (!viewAllItems().length) {
-      <p class="ql-modal-empty">No quizzes found.</p>
+      <p class="ql-modal-empty">{{ 'quizzes.no_results' | translate }}</p>
     } @else {
       @for (item of viewAllItems(); track item.id) {
         <label class="ql-modal-row" [class.ql-modal-row--selected]="viewAllSelected() === item.id">
@@ -48,13 +48,13 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">Cancel</button>
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">{{ 'common.cancel' | translate }}</button>
     <button
       type="button"
       class="nas-btn nas-btn--primary"
       [disabled]="!viewAllSelected()"
       (click)="confirmViewAll()">
-      <i class="pi pi-eye"></i> View Quiz
+      <i class="pi pi-eye"></i> {{ 'quizzes.view_quiz' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -63,7 +63,7 @@
      FILTER MODAL (Instructors / Learners / Courses)
 ════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="Filter your results"
+  [header]="'common.filter_results' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -74,9 +74,9 @@
 
   <div class="ql-modal-section-label">
     @switch (filter().kind) {
-      @case ('instructors') { Instructors }
-      @case ('learners')    { Learners }
-      @case ('courses')     { Courses }
+      @case ('instructors') { {{ 'quizzes.filter_instructors' | translate }} }
+      @case ('learners')    { {{ 'quizzes.filter_learners'    | translate }} }
+      @case ('courses')     { {{ 'quizzes.filter_courses'     | translate }} }
     }
   </div>
 
@@ -85,7 +85,7 @@
     <input
       type="text"
       class="ql-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="filter().query"
       (ngModelChange)="onFilterQuery($event)" />
   </div>
@@ -98,14 +98,14 @@
       </label>
     }
     @if (!filterItems().length) {
-      <p class="ql-modal-empty">No results.</p>
+      <p class="ql-modal-empty">{{ 'quizzes.no_filter_results' | translate }}</p>
     }
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">Clear</button>
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">{{ 'common.reset' | translate }}</button>
     <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
-      <i class="pi pi-filter"></i> Filter
+      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -116,10 +116,10 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Quizzes"
-    subtitle="Generate learner quizzes, define answer keys, and monitor submissions.">
+    [title]="'quizzes.title' | translate"
+    [subtitle]="'quizzes.subtitle' | translate">
     <a routerLink="/admin/quizzes/new" class="nas-cta-btn">
-      <i class="pi pi-plus-circle"></i> Create Quiz
+      <i class="pi pi-plus-circle"></i> {{ 'quizzes.create' | translate }}
     </a>
   </nas-page-header>
 
@@ -127,11 +127,11 @@
   <div class="ql-mini-section">
     <div class="ql-mini-head">
       <p class="ql-mini-head__text">
-        <strong>{{ summary().quizzes }}</strong> created quizzes
+        <strong>{{ summary().quizzes }}</strong> {{ 'quizzes.summary_quizzes' | translate }}
         <span class="ql-mini-head__sep">·</span>
-        for <strong>{{ summary().courses }}</strong> courses
+        {{ 'quizzes.summary_for' | translate }} <strong>{{ summary().courses }}</strong> {{ 'quizzes.summary_courses' | translate }}
       </p>
-      <button type="button" class="ql-view-all-btn" (click)="openViewAll()">View All</button>
+      <button type="button" class="ql-view-all-btn" (click)="openViewAll()">{{ 'quizzes.view_all' | translate }}</button>
     </div>
 
     <div class="nas-card ql-section-card">
@@ -139,12 +139,12 @@
         <table class="ql-table">
           <thead>
             <tr>
-              <th>Quiz</th>
-              <th>Course</th>
-              <th>Cohort scope</th>
-              <th>Questions</th>
-              <th>Total score</th>
-              <th>Due</th>
+              <th>{{ 'quizzes.col_quiz' | translate }}</th>
+              <th>{{ 'quizzes.col_course' | translate }}</th>
+              <th>{{ 'quizzes.col_cohort_scope' | translate }}</th>
+              <th>{{ 'quizzes.col_questions' | translate }}</th>
+              <th>{{ 'quizzes.col_total_score' | translate }}</th>
+              <th>{{ 'quizzes.col_due' | translate }}</th>
               <th class="ql-table__actions-col"></th>
             </tr>
           </thead>
@@ -158,7 +158,7 @@
                 </tr>
               }
             } @else if (!miniRows().length) {
-              <tr><td colspan="7" class="ql-table__empty">No quizzes yet. Create your first one.</td></tr>
+              <tr><td colspan="7" class="ql-table__empty">{{ 'quizzes.empty_mini' | translate }}</td></tr>
             } @else {
               @for (item of miniRows(); track item.id) {
                 <tr class="ql-table__row" (click)="editQuiz(item)">
@@ -176,14 +176,14 @@
                     <button
                       type="button"
                       class="ql-row-btn"
-                      title="Edit"
+                      [title]="'common.edit' | translate"
                       (click)="editQuiz(item, $event)">
                       <i class="pi pi-pen-to-square"></i>
                     </button>
                     <button
                       type="button"
                       class="ql-row-btn ql-row-btn--danger"
-                      title="Delete"
+                      [title]="'common.delete' | translate"
                       (click)="confirmDelete(item, $event)">
                       <i class="pi pi-trash"></i>
                     </button>
@@ -205,7 +205,7 @@
         <input
           type="text"
           class="ql-search__input"
-          placeholder="Quick search..."
+          [placeholder]="'common.quick_search' | translate"
           [ngModel]="subSearch"
           (ngModelChange)="onSubmissionSearch($event)" />
       </div>
@@ -216,11 +216,11 @@
           class="ql-pill-btn"
           [class.ql-pill-btn--active]="subInstructorIds.length === 0 && subLearnerIds.length === 0 && subCourseIds.length === 0"
           (click)="clearAllFilters()">
-          All
+          {{ 'common.all' | translate }}
         </button>
 
         <button type="button" class="ql-pill-btn" (click)="openFilter('instructors')">
-          Instructors
+          {{ 'quizzes.filter_instructors' | translate }}
           @if (filterPillCounts().instructors) {
             <span class="ql-pill-btn__count">{{ filterPillCounts().instructors }}</span>
           }
@@ -228,7 +228,7 @@
         </button>
 
         <button type="button" class="ql-pill-btn" (click)="openFilter('learners')">
-          Learners
+          {{ 'quizzes.filter_learners' | translate }}
           @if (filterPillCounts().learners) {
             <span class="ql-pill-btn__count">{{ filterPillCounts().learners }}</span>
           }
@@ -236,7 +236,7 @@
         </button>
 
         <button type="button" class="ql-pill-btn" (click)="openFilter('courses')">
-          Courses
+          {{ 'quizzes.filter_courses' | translate }}
           @if (filterPillCounts().courses) {
             <span class="ql-pill-btn__count">{{ filterPillCounts().courses }}</span>
           }
@@ -246,15 +246,15 @@
         <div class="ql-status-checks">
           <label class="ql-check">
             <input type="checkbox" [checked]="subStatus === 'all'" (change)="onStatus('all')" />
-            <span>All</span>
+            <span>{{ 'common.all' | translate }}</span>
           </label>
           <label class="ql-check">
             <input type="checkbox" [checked]="subStatus === 'pending'" (change)="onStatus(subStatus === 'pending' ? 'all' : 'pending')" />
-            <span>Pending</span>
+            <span>{{ 'quizzes.pending' | translate }}</span>
           </label>
           <label class="ql-check">
             <input type="checkbox" [checked]="subStatus === 'graded'" (change)="onStatus(subStatus === 'graded' ? 'all' : 'graded')" />
-            <span>Graded</span>
+            <span>{{ 'quizzes.graded' | translate }}</span>
           </label>
         </div>
       </div>
@@ -264,14 +264,14 @@
       <table class="ql-table">
         <thead>
           <tr>
-            <th>Learner</th>
-            <th>Course</th>
-            <th>Instructor</th>
-            <th>Quiz</th>
-            <th>Cohort</th>
-            <th>Submitted</th>
-            <th>Score</th>
-            <th>Status</th>
+            <th>{{ 'quizzes.learner' | translate }}</th>
+            <th>{{ 'quizzes.col_course' | translate }}</th>
+            <th>{{ 'quizzes.sub_col_instructor' | translate }}</th>
+            <th>{{ 'quizzes.col_quiz' | translate }}</th>
+            <th>{{ 'quizzes.sub_col_cohort' | translate }}</th>
+            <th>{{ 'quizzes.sub_col_submitted' | translate }}</th>
+            <th>{{ 'quizzes.sub_col_score' | translate }}</th>
+            <th>{{ 'quizzes.sub_col_status' | translate }}</th>
             <th class="ql-table__actions-col"></th>
           </tr>
         </thead>
@@ -285,7 +285,7 @@
               </tr>
             }
           } @else if (!submissions().length) {
-            <tr><td colspan="9" class="ql-table__empty">No submissions yet.</td></tr>
+            <tr><td colspan="9" class="ql-table__empty">{{ 'quizzes.no_submissions' | translate }}</td></tr>
           } @else {
             @for (sub of submissions(); track sub.id) {
               <tr class="ql-table__row" (click)="openSubmission(sub)">
@@ -315,14 +315,14 @@
                 </td>
                 <td>
                   <nas-status-badge [tone]="statusTone(sub.status)" [dot]="true">
-                    {{ sub.status === 'graded' ? 'Graded' : 'Pending' }}
+                    {{ (sub.status === 'graded' ? 'quizzes.graded' : 'quizzes.pending') | translate }}
                   </nas-status-badge>
                 </td>
                 <td class="ql-table__actions">
                   <button
                     type="button"
                     class="ql-row-btn ql-row-btn--view"
-                    title="Review"
+                    [title]="'common.review' | translate"
                     (click)="openSubmission(sub); $event.stopPropagation()">
                     <i class="pi pi-eye"></i>
                   </button>
@@ -337,7 +337,7 @@
     @if (submissionsTotal() > subPerPage) {
       <div class="ql-pagination">
         <span class="ql-pagination__info">
-          {{ (subPage - 1) * subPerPage + 1 }}–{{ min(subPage * subPerPage, submissionsTotal()) }} of {{ submissionsTotal() }}
+          {{ (subPage - 1) * subPerPage + 1 }}–{{ min(subPage * subPerPage, submissionsTotal()) }} {{ 'common.of' | translate }} {{ submissionsTotal() }}
         </span>
         <div class="ql-pagination__nav">
           <button type="button" class="ql-pagination__btn" [disabled]="subPage === 1" (click)="onSubPage(subPage - 1)">

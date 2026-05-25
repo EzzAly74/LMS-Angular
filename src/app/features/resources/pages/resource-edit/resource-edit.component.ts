@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -33,7 +34,7 @@ type ResourceType = 'article' | 'link' | 'file';
 @Component({
   selector: 'app-resource-edit',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, DropdownModule, SkeletonModule],
+  imports: [CommonModule, RouterLink, FormsModule, DropdownModule, SkeletonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './resource-edit.component.html',
   styleUrl: './resource-edit.component.scss',

@@ -6,18 +6,18 @@
   <header class="rf-header">
     <nav class="rf-breadcrumb" aria-label="breadcrumb">
       <i class="pi pi-shield rf-breadcrumb__icon"></i>
-      <a [routerLink]="['/admin/roles']">Roles</a>
+      <a [routerLink]="['/admin/roles']">{{ 'roles.title' | translate }}</a>
       <i class="pi pi-chevron-right rf-breadcrumb__sep"></i>
-      <span>{{ mode() === 'create' ? 'Create Role' : 'Edit Role' }}</span>
+      <span>{{ (mode() === 'create' ? 'roles.create_role' : 'roles.edit_role') | translate }}</span>
     </nav>
 
     <div class="rf-header__row">
       <div>
         <h1 class="rf-header__title">
-          {{ mode() === 'create' ? 'Create Role' : 'Edit Role' }}
+          {{ (mode() === 'create' ? 'roles.create_role' : 'roles.edit_role') | translate }}
         </h1>
         <p class="rf-header__sub">
-          Name the role and choose the dashboard views it can access.
+          {{ 'roles.form_subtitle' | translate }}
         </p>
       </div>
 
@@ -25,7 +25,7 @@
         <button type="button" class="rf-btn rf-btn--ghost"
                 [disabled]="saving()"
                 (click)="cancel()">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
         <button type="button" class="rf-btn rf-btn--primary"
                 [disabled]="!canSubmit()"
@@ -35,7 +35,7 @@
           } @else {
             <i class="pi pi-check-circle"></i>
           }
-          {{ mode() === 'create' ? 'Create Role' : 'Save Changes' }}
+          {{ (mode() === 'create' ? 'roles.create_role' : 'common.save_changes') | translate }}
         </button>
       </div>
     </div>
@@ -50,51 +50,51 @@
       <!-- Role Identity card -->
       <section class="rf-card">
         <header class="rf-card__head">
-          <h2 class="rf-card__title">Role Identity</h2>
+          <h2 class="rf-card__title">{{ 'roles.role_identity' | translate }}</h2>
           <p class="rf-card__sub">
-            Keep the role clear enough for admins to assign it confidently.
+            {{ 'roles.role_identity_sub' | translate }}
           </p>
         </header>
 
         <div class="rf-card__body">
           <div class="rf-field-grid">
             <div class="rf-field">
-              <label>Role Name (English) <span class="rf-req">*</span></label>
+              <label>{{ 'roles.role_name_en' | translate }} <span class="rf-req">*</span></label>
               <input type="text"
                      class="rf-input"
-                     placeholder="e.g. Compliance Viewer"
+                     [placeholder]="'roles.role_name_en_placeholder' | translate"
                      [ngModel]="form().name_en"
                      (ngModelChange)="updateField('name_en', $event)"
                      name="name_en" />
             </div>
 
             <div class="rf-field">
-              <label>Description (English) <span class="rf-opt">optional</span></label>
+              <label>{{ 'roles.description_en' | translate }} <span class="rf-opt">{{ 'roles.optional' | translate }}</span></label>
               <input type="text"
                      class="rf-input"
-                     placeholder="What this role is for"
+                     [placeholder]="'roles.description_en_placeholder' | translate"
                      [ngModel]="form().description_en"
                      (ngModelChange)="updateField('description_en', $event)"
                      name="description_en" />
             </div>
 
             <div class="rf-field">
-              <label>Role Name (Arabic) <span class="rf-req">*</span></label>
+              <label>{{ 'roles.role_name_ar' | translate }} <span class="rf-req">*</span></label>
               <input type="text"
                      class="rf-input"
                      dir="rtl"
-                     placeholder="مثال: مراجع الامتثال"
+                     [placeholder]="'roles.role_name_ar_placeholder' | translate"
                      [ngModel]="form().name_ar"
                      (ngModelChange)="updateField('name_ar', $event)"
                      name="name_ar" />
             </div>
 
             <div class="rf-field">
-              <label>Description (Arabic) <span class="rf-opt">optional</span></label>
+              <label>{{ 'roles.description_ar' | translate }} <span class="rf-opt">{{ 'roles.optional' | translate }}</span></label>
               <input type="text"
                      class="rf-input"
                      dir="rtl"
-                     placeholder="ما الغرض من هذا الدور"
+                     [placeholder]="'roles.description_ar_placeholder' | translate"
                      [ngModel]="form().description_ar"
                      (ngModelChange)="updateField('description_ar', $event)"
                      name="description_ar" />
@@ -104,8 +104,8 @@
           <!-- Role color + Badge preview -->
           <div class="rf-color-row">
             <div class="rf-color-row__col">
-              <h3 class="rf-color-row__title">Role Color</h3>
-              <p class="rf-color-row__sub">Used on role badges and quick summaries.</p>
+              <h3 class="rf-color-row__title">{{ 'roles.role_color' | translate }}</h3>
+              <p class="rf-color-row__sub">{{ 'roles.role_color_sub' | translate }}</p>
 
               <div class="rf-swatches">
                 @for (c of colors(); track c) {
@@ -124,9 +124,9 @@
             </div>
 
             <div class="rf-color-row__preview">
-              <span class="rf-preview-label">Badge preview</span>
+              <span class="rf-preview-label">{{ 'roles.badge_preview' | translate }}</span>
               <span class="rf-badge" [ngClass]="badgePreviewClass()">
-                {{ form().name_en.trim() || 'New Role' }}
+                {{ form().name_en.trim() || ('roles.new_role' | translate) }}
               </span>
             </div>
           </div>
@@ -137,15 +137,15 @@
       <section class="rf-card">
         <header class="rf-card__head rf-card__head--row">
           <div>
-            <h2 class="rf-card__title">Dashboard Views</h2>
+            <h2 class="rf-card__title">{{ 'roles.dashboard_views' | translate }}</h2>
             <p class="rf-card__sub">
-              Choose the pages this role can view in the dashboard.
+              {{ 'roles.views_sub' | translate }}
             </p>
           </div>
 
           <div class="rf-card__head-actions">
-            <button type="button" class="rf-link" (click)="selectAll()">Select all views</button>
-            <button type="button" class="rf-link rf-link--muted" (click)="clearAll()">Clear all views</button>
+            <button type="button" class="rf-link" (click)="selectAll()">{{ 'roles.select_all_views' | translate }}</button>
+            <button type="button" class="rf-link rf-link--muted" (click)="clearAll()">{{ 'roles.clear_all_views' | translate }}</button>
           </div>
         </header>
 
@@ -156,12 +156,12 @@
                [class.rf-status--success]="!noneSelected()">
             <i class="pi" [ngClass]="noneSelected() ? 'pi-exclamation-triangle' : 'pi-check-circle'"></i>
             <div>
-              <strong>{{ selectedCount() }} of {{ totalViews() }} dashboard views selected</strong>
+              <strong>{{ 'roles.views_selected' | translate:{ selected: selectedCount(), total: totalViews() } }}</strong>
               <p>
                 @if (noneSelected()) {
-                  New roles start with no access until views are checked.
+                  {{ 'roles.views_warning' | translate }}
                 } @else {
-                  Members of this role will be able to access the checked views.
+                  {{ 'roles.views_success' | translate }}
                 }
               </p>
             </div>
@@ -182,9 +182,9 @@
 
                   <div class="rf-group__actions">
                     <button type="button" class="rf-link"
-                            (click)="selectGroup(g.group.items)">Select Group</button>
+                            (click)="selectGroup(g.group.items)">{{ 'roles.select_group' | translate }}</button>
                     <button type="button" class="rf-link rf-link--muted"
-                            (click)="clearGroup(g.group.items)">Clear Group</button>
+                            (click)="clearGroup(g.group.items)">{{ 'roles.clear_group' | translate }}</button>
                   </div>
                 </header>
 
@@ -208,20 +208,20 @@
 
     <!-- ── RIGHT (sticky summary) ──────────────────────────── -->
     <aside class="rf-summary">
-      <span class="rf-summary__eyebrow">Role Summary</span>
-      <h2 class="rf-summary__title">{{ form().name_en.trim() || 'New Role' }}</h2>
+      <span class="rf-summary__eyebrow">{{ 'roles.role_summary' | translate }}</span>
+      <h2 class="rf-summary__title">{{ form().name_en.trim() || ('roles.new_role' | translate) }}</h2>
       <p class="rf-summary__desc">
-        {{ form().description_en.trim() || 'No description added yet.' }}
+        {{ form().description_en.trim() || ('roles.no_description' | translate) }}
       </p>
 
       <div class="rf-summary__status"
            [class.rf-summary__status--warning]="noneSelected()"
            [class.rf-summary__status--success]="!noneSelected()">
-        <strong>{{ selectedCount() }} dashboard views selected</strong>
+        <strong>{{ 'roles.dashboard_views_selected' | translate:{ count: selectedCount() } }}</strong>
         @if (noneSelected()) {
-          <p>This role has no dashboard access until you check at least one view.</p>
+          <p>{{ 'roles.summary_warning' | translate }}</p>
         } @else {
-          <p>Members of this role can access {{ selectedCount() }} of {{ totalViews() }} dashboard pages.</p>
+          <p>{{ 'roles.summary_success' | translate:{ selected: selectedCount(), total: totalViews() } }}</p>
         }
       </div>
 

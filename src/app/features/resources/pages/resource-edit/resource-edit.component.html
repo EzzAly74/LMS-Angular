@@ -4,16 +4,16 @@
   <div class="re-breadcrumbs">
     <a routerLink="/admin/resources" class="re-breadcrumbs__link">
       <i class="pi pi-book-open"></i>
-      Resources
+      {{ 'resources.title' | translate }}
     </a>
     <i class="pi pi-chevron-right re-breadcrumbs__sep"></i>
-    <span class="re-breadcrumbs__current">Edit Resource</span>
+    <span class="re-breadcrumbs__current">{{ 'resources.edit_resource' | translate }}</span>
   </div>
 
   <!-- Page heading -->
   <div class="re-heading">
-    <h1 class="re-heading__title">Edit Resource</h1>
-    <p class="re-heading__sub">Edit a learning resource for employees — article, external link, or file</p>
+    <h1 class="re-heading__title">{{ 'resources.edit_resource' | translate }}</h1>
+    <p class="re-heading__sub">{{ 'resources.subtitle_edit' | translate }}</p>
   </div>
 
   @if (loading()) {
@@ -29,7 +29,7 @@
       </div>
     </div>
   } @else if (!resource()) {
-    <div class="re-not-found">Resource not found.</div>
+    <div class="re-not-found">{{ 'resources.not_found' | translate }}</div>
   } @else {
     <div class="re-layout">
 
@@ -38,18 +38,18 @@
 
         <!-- Title -->
         <div class="re-field">
-          <label class="re-field__label">Title <span class="re-field__req">*</span></label>
+          <label class="re-field__label">{{ 'resources.title_label' | translate }} <span class="re-field__req">*</span></label>
           <input
             type="text"
             [(ngModel)]="form.title"
-            placeholder="Resource title"
+            [placeholder]="'resources.title_placeholder' | translate"
             class="re-input"
           />
         </div>
 
         <!-- Resource Type -->
         <div class="re-field">
-          <label class="re-field__label">Resource Type <span class="re-field__req">*</span></label>
+          <label class="re-field__label">{{ 'resources.resource_type' | translate }} <span class="re-field__req">*</span></label>
           <p-dropdown
             [options]="typeOptions()"
             [(ngModel)]="form.type"
@@ -62,10 +62,10 @@
         <!-- Article: Description -->
         @if (isType('article')) {
           <div class="re-field">
-            <label class="re-field__label">Description (English)</label>
+            <label class="re-field__label">{{ 'resources.description_en' | translate }}</label>
             <textarea
               [(ngModel)]="form.content"
-              placeholder="Brief description of this resource…"
+              [placeholder]="'resources.description_placeholder' | translate"
               rows="5"
               class="re-textarea"
             ></textarea>
@@ -75,7 +75,7 @@
         <!-- Link: URL -->
         @if (isType('link')) {
           <div class="re-field">
-            <label class="re-field__label">URL <span class="re-field__req">*</span></label>
+            <label class="re-field__label">{{ 'resources.url' | translate }} <span class="re-field__req">*</span></label>
             <input
               type="url"
               [(ngModel)]="form.url"
@@ -88,7 +88,7 @@
         <!-- File: Upload -->
         @if (isType('file')) {
           <div class="re-field">
-            <label class="re-field__label">Upload File</label>
+            <label class="re-field__label">{{ 'resources.upload_file' | translate }}</label>
 
             @if (resource()?.file_name && !form.file) {
               <div class="re-current-file">
@@ -100,7 +100,7 @@
                   rel="noopener"
                   class="re-current-file__link"
                 >
-                  <i class="pi pi-external-link"></i> View
+                  <i class="pi pi-external-link"></i> {{ 'resources.view' | translate }}
                 </a>
               </div>
             }
@@ -108,8 +108,8 @@
             <label class="re-dropzone">
               <i class="pi pi-upload re-dropzone__icon"></i>
               <div class="re-dropzone__text">
-                <span>Drag &amp; drop or <strong class="re-dropzone__browse">browse file</strong></span>
-                <span class="re-dropzone__hint">PDF, DOCX, XLSX, PPTX · Max: 50 MB</span>
+                <span>{{ 'resources.drag_drop' | translate }} <strong class="re-dropzone__browse">{{ 'resources.browse_file' | translate }}</strong></span>
+                <span class="re-dropzone__hint">{{ 'resources.file_hint' | translate }}</span>
               </div>
               <input
                 type="file"
@@ -132,30 +132,30 @@
 
       <!-- Sidebar -->
       <div class="re-card re-card--side">
-        <p class="re-side__heading">Publishing</p>
+        <p class="re-side__heading">{{ 'resources.publishing' | translate }}</p>
 
         <!-- Qualification -->
         <div class="re-field">
           <label class="re-field__label">
-            Linked Qualification
-            <span class="re-field__opt">(optional)</span>
+            {{ 'resources.linked_qualification' | translate }}
+            <span class="re-field__opt">({{ 'common.optional' | translate }})</span>
           </label>
           <p-dropdown
             [options]="qualOptions()"
             [(ngModel)]="form.qualification_skill_id"
             optionLabel="name"
             optionValue="id"
-            placeholder="Qualification"
+            [placeholder]="'resources.qualification_placeholder' | translate"
             [showClear]="true"
             [filter]="true"
             styleClass="re-dropdown"
           />
-          <p class="re-side__hint">Surfaces this resource in the relevant qualification view</p>
+          <p class="re-side__hint">{{ 'resources.qualification_hint' | translate }}</p>
         </div>
 
         <!-- Actions -->
         <div class="re-actions">
-          <button type="button" class="re-btn re-btn--cancel" (click)="cancel()">Cancel</button>
+          <button type="button" class="re-btn re-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
           <button
             type="button"
             class="re-btn re-btn--save"
@@ -163,7 +163,7 @@
             (click)="save()"
           >
             <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : 'pi-floppy-disk'"></i>
-            Save Changes
+            {{ 'common.save_changes' | translate }}
           </button>
         </div>
       </div>

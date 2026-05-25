@@ -3,12 +3,12 @@
   <!-- ── Page header (Figma 379:10759) ──────────────────────────────── -->
   <header class="cat-page__head">
     <div class="cat-page__heading">
-      <h1 class="cat-page__title">Categories</h1>
-      <p class="cat-page__subtitle">Organise courses into topic categories</p>
+      <h1 class="cat-page__title">{{ 'categories.title' | translate }}</h1>
+      <p class="cat-page__subtitle">{{ 'categories.subtitle' | translate }}</p>
     </div>
     <button type="button" class="cat-new-btn" (click)="openCreate()">
       <nas-icon name="plus-circle" [size]="20" />
-      <span>New Category</span>
+      <span>{{ 'categories.new_category' | translate }}</span>
     </button>
   </header>
 
@@ -19,7 +19,7 @@
       <input
         type="text"
         class="cat-search__input"
-        placeholder="Search categories..."
+        [placeholder]="'categories.search_placeholder' | translate"
         (input)="onSearch($any($event.target).value)" />
     </div>
   </div>
@@ -30,8 +30,8 @@
       <table class="cat-table">
         <thead>
           <tr>
-            <th class="cat-table__head">Categories</th>
-            <th class="cat-table__head">Linked Courses</th>
+            <th class="cat-table__head">{{ 'categories.title' | translate }}</th>
+            <th class="cat-table__head">{{ 'categories.linked_courses' | translate }}</th>
             <th class="cat-table__head cat-table__head--action"></th>
           </tr>
         </thead>
@@ -49,11 +49,11 @@
               <tr class="cat-table__row">
                 <td class="cat-table__name">{{ item.name }}</td>
                 <td>
-                  <span class="cat-pill">{{ item.courses_count ?? 0 }} Courses</span>
+                  <span class="cat-pill">{{ item.courses_count ?? 0 }} {{ 'categories.courses_word' | translate }}</span>
                 </td>
                 <td class="cat-table__action">
                   <button type="button" class="cat-row-menu-btn"
-                    [attr.aria-label]="'Actions for ' + item.name"
+                    [attr.aria-label]="'common.actions_for' | translate:{ name: item.name }"
                     (click)="openRowMenu($event, item)">
                     <nas-icon name="dots-three" [size]="16" />
                   </button>
@@ -61,7 +61,7 @@
               </tr>
             }
           } @else {
-            <tr><td colspan="3" class="cat-table__empty">No categories found.</td></tr>
+            <tr><td colspan="3" class="cat-table__empty">{{ 'categories.no_results' | translate }}</td></tr>
           }
         </tbody>
       </table>
@@ -70,17 +70,17 @@
     @if (total() > perPage) {
       <div class="cat-pagination">
         <span class="cat-pagination__info">
-          {{ rangeStart() }}–{{ rangeEnd() }} of {{ total() }}
+          {{ rangeStart() }}–{{ rangeEnd() }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="cat-pagination__nav">
           <button type="button" class="cat-pagination__btn"
             [disabled]="page() === 1"
-            (click)="onPage(page() - 1)" aria-label="Previous page">
+            (click)="onPage(page() - 1)" [attr.aria-label]="'common.previous' | translate">
             <nas-icon name="caret-left" [size]="16" />
           </button>
           <button type="button" class="cat-pagination__btn"
             [disabled]="page() * perPage >= total()"
-            (click)="onPage(page() + 1)" aria-label="Next page">
+            (click)="onPage(page() + 1)" [attr.aria-label]="'common.next' | translate">
             <nas-icon name="caret-right" [size]="16" />
           </button>
         </div>
@@ -95,12 +95,12 @@
     <button type="button" class="cat-row-menu__item"
       (click)="menuTarget() && openEdit(menuTarget()!)">
       <nas-icon name="eye" [size]="16" />
-      <span>Edit</span>
+      <span>{{ 'common.edit' | translate }}</span>
     </button>
     <button type="button" class="cat-row-menu__item cat-row-menu__item--danger"
       (click)="menuTarget() && requestDelete(menuTarget()!)">
       <nas-icon name="trash" [size]="16" />
-      <span>Delete</span>
+      <span>{{ 'common.delete' | translate }}</span>
     </button>
   </ng-template>
 </p-overlayPanel>
@@ -119,45 +119,45 @@
 
   <ng-template pTemplate="header">
     <span class="cat-dialog__title">
-      {{ dialogMode() === 'create' ? 'New Category' : 'Edit Category' }}
+      {{ (dialogMode() === 'create' ? 'categories.new_category' : 'categories.edit') | translate }}
     </span>
   </ng-template>
 
   <div class="cat-dialog__body">
     <div class="cat-field">
-      <label class="cat-field__label" for="cat-name-en">Name (English)</label>
+      <label class="cat-field__label" for="cat-name-en">{{ 'categories.name_en' | translate }}</label>
       <input id="cat-name-en"
         type="text"
         class="cat-input"
-        placeholder="e.g. Safety"
+        [placeholder]="'categories.name_en_placeholder' | translate"
         [(ngModel)]="form.name_en"
         [disabled]="saving()" />
     </div>
 
     <div class="cat-field">
-      <label class="cat-field__label" for="cat-name-ar">Name (Arabic)</label>
+      <label class="cat-field__label" for="cat-name-ar">{{ 'categories.name_ar' | translate }}</label>
       <input id="cat-name-ar"
         type="text"
         class="cat-input"
-        placeholder="e.g. السلامة"
+        [placeholder]="'categories.name_ar_placeholder' | translate"
         dir="rtl"
         [(ngModel)]="form.name_ar"
         [disabled]="saving()" />
     </div>
 
     <div class="cat-field">
-      <span class="cat-field__label">Logo</span>
+      <span class="cat-field__label">{{ 'categories.logo' | translate }}</span>
       <div class="cat-logo-row">
         <div class="cat-logo-thumb">
           @if (logoPreview()) {
-            <img [src]="logoPreview()!" alt="Logo preview" />
+            <img [src]="logoPreview()!" [alt]="'categories.logo_preview_alt' | translate" />
           } @else {
             <nas-icon name="image" [size]="24" />
           }
         </div>
         <button type="button" class="cat-logo-btn" (click)="triggerLogoUpload()" [disabled]="saving()">
           <nas-icon name="upload-simple" [size]="16" />
-          <span>{{ logoPreview() ? 'Replace logo' : 'Upload logo' }}</span>
+          <span>{{ (logoPreview() ? 'categories.replace_logo' : 'categories.upload_logo') | translate }}</span>
         </button>
         <input #logoInput type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
       </div>
@@ -165,20 +165,20 @@
 
     <label class="cat-toggle">
       <input type="checkbox" [(ngModel)]="form.active" [disabled]="saving()" />
-      <span>Active</span>
+      <span>{{ 'common.active' | translate }}</span>
     </label>
   </div>
 
   <ng-template pTemplate="footer">
     <button type="button" class="cat-btn cat-btn--ghost" [disabled]="saving()" (click)="closeDialog()">
-      Cancel
+      {{ 'common.cancel' | translate }}
     </button>
     <button type="button" class="cat-btn cat-btn--primary" [disabled]="!isFormValid || saving()" (click)="save()">
       @if (saving()) {
         <nas-icon name="spinner-gap" [size]="16" />
-        <span>Saving…</span>
+        <span>{{ 'common.saving' | translate }}</span>
       } @else {
-        <span>{{ dialogMode() === 'create' ? 'Create Category' : 'Save Changes' }}</span>
+        <span>{{ (dialogMode() === 'create' ? 'categories.create' : 'common.save_changes') | translate }}</span>
       }
     </button>
   </ng-template>
@@ -187,10 +187,10 @@
 <!-- ── Delete confirmation modal ──────────────────────────────────── -->
 <nas-confirm-modal
   [visible]="confirmDeleteOpen()"
-  title="Delete Category"
+  [title]="'categories.delete_title' | translate"
   [message]="deleteMessage()"
-  confirmLabel="Yes, delete"
-  cancelLabel="No, keep it"
+  [confirmLabel]="'common.yes_delete' | translate"
+  [cancelLabel]="'categories.no_keep' | translate"
   [danger]="true"
   [busy]="deleteBusy()"
   (confirm)="confirmDelete()"

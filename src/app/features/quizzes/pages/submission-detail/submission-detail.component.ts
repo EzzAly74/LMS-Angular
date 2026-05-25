@@ -152,10 +152,10 @@ export class SubmissionDetailComponent implements OnInit, OnDestroy {
 
   questionTypeLabel(type: QuizQuestionType | undefined): string {
     switch (type) {
-      case 'mcq':     return 'MCQ';
-      case 'yes_no':  return 'Yes / No';
-      case 'open':    return 'Open Question';
-      case 'reorder': return 'Reorder';
+      case 'mcq':     return this.t.instant('quiz_types.mcq');
+      case 'yes_no':  return this.t.instant('quiz_types.yes_no');
+      case 'open':    return this.t.instant('quiz_types.open');
+      case 'reorder': return this.t.instant('quiz_types.reorder');
       default:        return '';
     }
   }

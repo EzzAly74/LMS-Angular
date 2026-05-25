@@ -13,6 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { NasShimmerComponent } from './nas-shimmer.component';
 
 /**
@@ -47,7 +48,7 @@ export interface NasTableColumn {
 @Component({
   selector: 'nas-data-table',
   standalone: true,
-  imports: [CommonModule, NasShimmerComponent],
+  imports: [CommonModule, TranslateModule, NasShimmerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nas-data-table.component.html',
   styleUrl:    './nas-data-table.component.scss',
@@ -61,7 +62,7 @@ export class NasDataTableComponent<T = unknown> implements AfterContentInit {
   @Input() page            = 1;
   @Input() paginated       = true;
   @Input() rowClickable    = false;
-  @Input() emptyText       = 'No records found';
+  @Input() emptyText       = 'common.no_records';
   @Input() emptyIcon       = 'pi pi-inbox';
   @Input() skeletonRows    = 6;
   /** custom CSS class applied to outer card */

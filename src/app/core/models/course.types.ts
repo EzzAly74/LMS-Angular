@@ -3,6 +3,12 @@ import type { LocalizedText } from './localized.types';
 export type CourseStatus = 'active' | 'pending' | 'upcoming' | 'inactive';
 export type CourseType   = 'online' | 'offline' | 'hybrid' | 'external_link';
 export type ApiCourseType = 'online' | 'offline';
+/**
+ * Course difficulty level — mirrors the backend `course_level` enum.
+ * Surfaced on the Add/Edit Course form and the Course Settings card
+ * (Figma 281:9544 / 313:13591).
+ */
+export type CourseLevel = 'beginner' | 'intermediate' | 'professional';
 
 export interface Course {
   id: number;
@@ -16,6 +22,7 @@ export interface Course {
   rating?: number;
   type?: CourseType;
   course_type?: ApiCourseType;
+  level?: CourseLevel | null;
   status?: CourseStatus;
   active?: boolean;
   updated_at?: string;
@@ -93,6 +100,7 @@ export interface CourseDetail {
   certificate?: boolean;
   certificate_pass_percent?: number;
   delivery_type?: string;
+  level?: CourseLevel | null;
   created_at?: string;
   max_learners?: number;
   updated_at?: string;

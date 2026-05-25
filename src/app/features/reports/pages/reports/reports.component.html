@@ -1,7 +1,7 @@
 <div class="nas-page-container">
   <nas-page-header
-    title="Reports"
-    subtitle="Generate and export compliance and learning reports">
+    [title]="'reports.title' | translate"
+    [subtitle]="'reports.subtitle' | translate">
     <button
       type="button"
       class="rp-export-all-btn"
@@ -12,7 +12,7 @@
       } @else {
         <i class="pi pi-upload"></i>
       }
-      Export All
+      {{ 'common.export_all' | translate }}
     </button>
   </nas-page-header>
 
@@ -41,7 +41,7 @@
           </div>
 
           <div class="rp-card__meta">
-            Last generated:
+            {{ 'reports.last_generated' | translate }}:
             <strong>{{ card.last_generated_at ? (card.last_generated_at | date:'dd MMM yyyy') : '—' }}</strong>
           </div>
 
@@ -54,7 +54,7 @@
               @if (isDownloading(card.key, 'csv')) {
                 <i class="pi pi-spin pi-spinner"></i>
               }
-              Export CSV
+              {{ 'reports.export_csv' | translate }}
             </button>
             <button
               type="button"
@@ -64,7 +64,7 @@
               @if (isDownloading(card.key, 'xlsx')) {
                 <i class="pi pi-spin pi-spinner"></i>
               }
-              Export Excel
+              {{ 'reports.export_excel' | translate }}
             </button>
           </div>
         </div>
@@ -76,8 +76,8 @@
   <div class="rp-preview">
     <div class="rp-preview__head">
       <div class="rp-preview__head-text">
-        <div class="rp-preview__title">Preview: Compliance by Job Title</div>
-        <div class="rp-preview__sub">Live data snapshot — export for the full dataset</div>
+        <div class="rp-preview__title">{{ 'reports.preview_compliance_title' | translate }}</div>
+        <div class="rp-preview__sub">{{ 'reports.preview_subtitle' | translate }}</div>
       </div>
       <button
         type="button"
@@ -89,7 +89,7 @@
         } @else {
           <i class="pi pi-upload"></i>
         }
-        Export CSV
+        {{ 'reports.export_csv' | translate }}
       </button>
     </div>
 
@@ -98,11 +98,11 @@
         <table class="rp-table">
           <thead>
             <tr>
-              <th>Role</th>
-              <th>Department</th>
-              <th class="rp-table__num">Learners</th>
-              <th class="rp-table__num">Qualified</th>
-              <th class="rp-table__bar">Compliance %</th>
+              <th>{{ 'reports.col_role' | translate }}</th>
+              <th>{{ 'reports.col_department' | translate }}</th>
+              <th class="rp-table__num">{{ 'reports.col_learners' | translate }}</th>
+              <th class="rp-table__num">{{ 'reports.col_qualified' | translate }}</th>
+              <th class="rp-table__bar">{{ 'reports.col_compliance' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -115,7 +115,7 @@
                 </tr>
               }
             } @else if (!preview().length) {
-              <tr><td colspan="5" class="rp-table__empty">No data available.</td></tr>
+              <tr><td colspan="5" class="rp-table__empty">{{ 'common.no_data' | translate }}</td></tr>
             } @else {
               @for (row of preview(); track row.role) {
                 <tr class="rp-table__row">

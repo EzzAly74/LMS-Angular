@@ -24,7 +24,8 @@
   <!-- ── KPI Row ─────────────────────────────────────────────────── -->
   <section class="kpi-row">
     <nas-stat-card icon="pi pi-users" iconTone="purple" [label]="'dashboard.active_learners' | translate"
-      [value]="data()?.statistics?.active_learners ?? 0" [trend]="'dashboard.trend_up' | translate:{ pct: '12' }" trendDirection="up">
+      [value]="data()?.statistics?.active_learners ?? 0" [trend]="'dashboard.trend_up' | translate:{ pct: '12' }"
+      trendDirection="up">
       <div subline class="kpi-subline">
         <span class="kpi-pill kpi-pill--online">
           <span class="kpi-pill__dot"></span>
@@ -42,7 +43,8 @@
     </nas-stat-card>
 
     <nas-stat-card icon="pi pi-shield" iconTone="green" [label]="'dashboard.average_completion' | translate"
-      [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'" [trend]="'dashboard.trend_down' | translate:{ pct: '3' }" trendDirection="down">
+      [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'"
+      [trend]="'dashboard.trend_down' | translate:{ pct: '3' }" trendDirection="down">
     </nas-stat-card>
 
     <nas-stat-card icon="pi pi-users" iconTone="navy" [label]="'dashboard.instructors' | translate"
@@ -69,12 +71,12 @@
 
       <div class="chart-card__chart">
         @if (trendIsEmpty()) {
-          <div class="chart-card__empty">
-            <nas-icon name="tray" [size]="32" />
-            <p>{{ 'dashboard.chart_empty' | translate }}</p>
-          </div>
+        <div class="chart-card__empty">
+          <nas-icon name="tray" [size]="32" />
+          <p>{{ 'dashboard.chart_empty' | translate }}</p>
+        </div>
         } @else {
-          <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="280px" />
+        <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="280px" />
         }
       </div>
     </article>
@@ -89,20 +91,21 @@
       </header>
       <ul class="notif-list">
         @for (note of data()?.notifications ?? []; track $index) {
-        <li class="notif-item" [class.notif-item--unread]="$index < 2">
+        @if($index < 2) { <li class="notif-item" [class.notif-item--unread]="$index < 2">
           <span class="notif-item__dot" [class.notif-item__dot--unread]="$index < 2"></span>
           <div class="notif-item__body">
             <div class="notif-item__title">{{ notificationTitle(note) }}</div>
             <div class="notif-item__detail">{{ notificationDetail(note) }}</div>
           </div>
-          @if (note.time) {
-            <div class="notif-item__time">{{ note.time }}</div>
+          @if (notificationTime(note); as t) {
+          <div class="notif-item__time">{{ t }}</div>
           }
-        </li>
-        }
-        @if (!(data()?.notifications?.length)) {
+          </li>
+          }
+          }
+          @if (!(data()?.notifications?.length)) {
           <li class="notif-item notif-item--empty">{{ 'dashboard.no_notifications' | translate }}</li>
-        }
+          }
       </ul>
     </article>
   </section>
@@ -140,7 +143,7 @@
             </td>
             <td>
               <nas-status-badge [tone]="statusTone(c.status)" [dot]="true">
-                {{ (c.status ?? 'active') | titlecase }}
+                {{ statusLabelKey(c.status) | translate }}
               </nas-status-badge>
             </td>
             <td class="nas-table__action">

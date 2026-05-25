@@ -5,7 +5,7 @@
      ADD / EDIT CONTROLLER DIALOG
 ═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [header]="dialogMode() === 'create' ? 'Add Controller' : 'Edit Controller'"
+  [header]="(dialogMode() === 'create' ? 'controllers.add' : 'controllers.edit') | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -18,11 +18,11 @@
   <form class="ctrl-form" (ngSubmit)="submit()" autocomplete="off">
 
     <div class="ctrl-form__field">
-      <label>Full Name <span class="ctrl-form__req">*</span></label>
+      <label>{{ 'controllers.full_name' | translate }} <span class="ctrl-form__req">*</span></label>
       <input
         type="text"
         class="ctrl-input"
-        placeholder="e.g. Sarah Operator"
+        [placeholder]="'controllers.name_placeholder' | translate"
         [ngModel]="form().name"
         (ngModelChange)="updateForm('name', $event)"
         name="name"
@@ -30,7 +30,7 @@
     </div>
 
     <div class="ctrl-form__field">
-      <label>Email Address <span class="ctrl-form__req">*</span></label>
+      <label>{{ 'auth.email_address' | translate }} <span class="ctrl-form__req">*</span></label>
       <input
         type="email"
         class="ctrl-input"
@@ -41,7 +41,7 @@
     </div>
 
     <div class="ctrl-form__field">
-      <label>Role <span class="ctrl-form__req">*</span></label>
+      <label>{{ 'controllers.role' | translate }} <span class="ctrl-form__req">*</span></label>
 
       <div class="ctrl-select-wrap">
         <select
@@ -50,7 +50,7 @@
           (ngModelChange)="updateForm('role', $event)"
           name="role">
           <option value="" disabled>
-            {{ roleOptions().length ? 'Select a role' : 'Loading roles…' }}
+            {{ (roleOptions().length ? 'users.select_role' : 'common.loading_roles') | translate }}
           </option>
           @for (opt of roleOptions(); track opt.id) {
             <option [value]="opt.machine_name">{{ roleLabel(opt) }}</option>
@@ -70,9 +70,9 @@
 
     <div class="ctrl-form__field">
       <label>
-        Password
+        {{ 'auth.password' | translate }}
         @if (dialogMode() === 'edit') {
-          <span class="ctrl-form__hint">(leave blank to keep current)</span>
+          <span class="ctrl-form__hint">{{ 'controllers.password_keep_hint' | translate }}</span>
         } @else {
           <span class="ctrl-form__req">*</span>
         }
@@ -82,7 +82,7 @@
           [type]="showPwd() ? 'text' : 'password'"
           class="ctrl-input"
           autocomplete="new-password"
-          placeholder="At least 8 characters"
+          [placeholder]="'controllers.password_min_placeholder' | translate"
           [ngModel]="form().password"
           (ngModelChange)="updateForm('password', $event)"
           name="password"
@@ -90,27 +90,27 @@
           minlength="8" />
         <button type="button" class="ctrl-pwd-toggle"
                 (click)="togglePwd()"
-                [attr.aria-label]="showPwd() ? 'Hide password' : 'Show password'">
+                [attr.aria-label]="'common.toggle_password_visibility' | translate">
           <i class="pi" [ngClass]="showPwd() ? 'pi-eye-slash' : 'pi-eye'"></i>
         </button>
       </div>
     </div>
 
     <div class="ctrl-form__field">
-      <label>Confirm Password</label>
+      <label>{{ 'controllers.confirm_password' | translate }}</label>
       <div class="ctrl-pwd-wrap">
         <input
           [type]="showConfirm() ? 'text' : 'password'"
           class="ctrl-input"
           autocomplete="new-password"
-          placeholder="Re-enter the password"
+          [placeholder]="'controllers.password_confirm_placeholder' | translate"
           [ngModel]="form().password_confirmation"
           (ngModelChange)="updateForm('password_confirmation', $event)"
           name="password_confirmation"
           [required]="dialogMode() === 'create' || !!form().password" />
         <button type="button" class="ctrl-pwd-toggle"
                 (click)="toggleConfirm()"
-                [attr.aria-label]="showConfirm() ? 'Hide password' : 'Show password'">
+                [attr.aria-label]="'common.toggle_password_visibility' | translate">
           <i class="pi" [ngClass]="showConfirm() ? 'pi-eye-slash' : 'pi-eye'"></i>
         </button>
       </div>
@@ -120,7 +120,7 @@
   <ng-template pTemplate="footer">
     <button type="button" class="ctrl-btn ctrl-btn--ghost"
             [disabled]="saving()" (click)="closeDialog()">
-      Cancel
+      {{ 'common.cancel' | translate }}
     </button>
     <button type="button" class="ctrl-btn ctrl-btn--primary"
             [disabled]="saving()" (click)="submit()">
@@ -129,7 +129,7 @@
       } @else {
         <i class="pi pi-check-circle"></i>
       }
-      {{ dialogMode() === 'create' ? 'Create Controller' : 'Save Changes' }}
+      {{ (dialogMode() === 'create' ? 'controllers.create' : 'common.save_changes') | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -140,10 +140,10 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Controllers"
-    subtitle="Manage portal administrators and the roles they operate under.">
+    [title]="'controllers.title' | translate"
+    [subtitle]="'controllers.subtitle' | translate">
     <button type="button" class="ctrl-add-btn" (click)="openCreate()">
-      <i class="pi pi-plus"></i> Add Controller
+      <i class="pi pi-plus"></i> {{ 'controllers.add' | translate }}
     </button>
   </nas-page-header>
 
@@ -153,7 +153,7 @@
     <input
       type="text"
       class="ctrl-search__input"
-      placeholder="Search controllers by name or email…"
+      [placeholder]="'controllers.search_placeholder' | translate"
       (input)="onSearch($any($event.target).value)" />
   </div>
 
@@ -163,9 +163,9 @@
       <table class="ctrl-table">
         <thead>
           <tr>
-            <th>Controller</th>
-            <th>Role</th>
-            <th>Date Added</th>
+            <th>{{ 'controllers.col_name' | translate }}</th>
+            <th>{{ 'controllers.role' | translate }}</th>
+            <th>{{ 'controllers.date_added' | translate }}</th>
             <th class="ctrl-table__th--actions"></th>
           </tr>
         </thead>
@@ -192,8 +192,8 @@
             <tr>
               <td colspan="4" class="ctrl-table__empty">
                 <i class="pi pi-users ctrl-table__empty-icon"></i>
-                <strong>No controllers found</strong>
-                <span>Try adjusting your search, or add a new controller.</span>
+                <strong>{{ 'controllers.no_results' | translate }}</strong>
+                <span>{{ 'controllers.no_results_hint' | translate }}</span>
               </td>
             </tr>
           } @else {
@@ -222,7 +222,7 @@
                   } @else {
                     <span class="ctrl-badge ctrl-badge--muted">
                       <span class="ctrl-badge__dot"></span>
-                      Unassigned
+                      {{ 'controllers.unassigned' | translate }}
                     </span>
                   }
                 </td>
@@ -233,11 +233,11 @@
 
                 <td class="ctrl-table__actions">
                   <button type="button" class="ctrl-icon-btn"
-                          title="Edit" (click)="openEdit(item)">
+                          [title]="'common.edit' | translate" (click)="openEdit(item)">
                     <i class="pi pi-pencil"></i>
                   </button>
                   <button type="button" class="ctrl-icon-btn ctrl-icon-btn--danger"
-                          title="Delete" (click)="askDelete(item)">
+                          [title]="'common.delete' | translate" (click)="askDelete(item)">
                     <i class="pi pi-trash"></i>
                   </button>
                 </td>
@@ -251,7 +251,7 @@
     @if (total() > perPage) {
       <div class="ctrl-pagination">
         <span class="ctrl-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="ctrl-pagination__nav">
           <button type="button" class="ctrl-icon-btn"

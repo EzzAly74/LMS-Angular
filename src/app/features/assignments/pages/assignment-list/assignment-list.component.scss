@@ -109,7 +109,9 @@
     height: 36px;
     border: 1px solid var(--nas-color-border);
     border-radius: var(--nas-radius-full);
-    padding: 0 var(--nas-space-4) 0 var(--nas-space-10);
+    padding-block: 0;
+    padding-inline-start: var(--nas-space-10);
+    padding-inline-end: var(--nas-space-4);
     font-size: var(--nas-size-xs);
     background: var(--nas-neutral-200);
     color: var(--nas-color-text-body);
@@ -123,6 +125,9 @@
     &::placeholder { color: var(--nas-color-text-muted); }
   }
 }
+
+[dir="rtl"] .al-search__icon.pi-search,
+[dir="rtl"] .al-search__icon { transform: translateY(-50%); }
 
 /* ── Filter pills row ────────────────────────────────────────── */
 .al-filter-row {
@@ -369,7 +374,9 @@
     height: 36px;
     border: 1px solid var(--nas-color-border);
     border-radius: var(--nas-radius-full);
-    padding: 0 var(--nas-space-4) 0 var(--nas-space-10);
+    padding-block: 0;
+    padding-inline-start: var(--nas-space-10);
+    padding-inline-end: var(--nas-space-4);
     font-size: var(--nas-size-xs);
     background: var(--nas-neutral-200);
     color: var(--nas-color-text-body);
@@ -379,6 +386,9 @@
     &:focus { border-color: var(--nas-teal-600); }
   }
 }
+
+[dir="rtl"] .al-modal-search__icon.pi-search,
+[dir="rtl"] .al-modal-search__icon { transform: translateY(-50%); }
 
 .al-modal-section-label {
   font-size: var(--nas-size-xs);

@@ -3,6 +3,7 @@ import type {
   Course,
   CourseDetail,
   CourseLearner,
+  CourseLevel,
   CourseStatus,
   CourseType,
   Cohort,
@@ -32,7 +33,8 @@ export interface ApiCourseRaw {
   updated_at?: string;
   hours?: number;
   language?: string;
-  level?: string;
+  /** Backend `course_level` enum code — beginner | intermediate | professional. */
+  level?: CourseLevel | string | null;
   price?: number;
   currency?: string;
   max_learners?: number;
@@ -93,6 +95,22 @@ export function mapCourseType(ct?: ApiCourseType | CourseType): CourseType {
   }
 }
 
+/**
+ * Lock a raw level value to one of the three canonical buckets. Returns
+ * `null` for unknown / missing values so the UI can render an em-dash
+ * instead of fabricating a default.
+ */
+export function mapCourseLevel(level?: string | null): CourseLevel | null {
+  switch (level) {
+    case 'beginner':
+    case 'intermediate':
+    case 'professional':
+      return level;
+    default:
+      return null;
+  }
+}
+
 export function mapCourseStatus(status?: string, active?: boolean): CourseStatus {
   switch (status) {
     case 'active':
@@ -121,6 +139,7 @@ export function mapApiCourseListItem(raw: ApiCourseRaw): Course {
     users_count:        raw.users_count ?? 0,
     completion_percent: raw.completion_percent,
     rating:             raw.rating,
+    level:              mapCourseLevel(raw.level as string | null | undefined),
     updated_at:         raw.updated_at ?? raw.created_at,
   };
 }
@@ -145,6 +164,7 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
     certificate:              raw.certificate,
     certificate_pass_percent: raw.certificate_pass_percent,
     delivery_type:            displayName(raw.course_type, LOCALE, ''),
+    level:                    mapCourseLevel(raw.level as string | null | undefined),
     max_learners:             raw.max_learners,
     created_at:               raw.created_at,
     updated_at:               raw.updated_at ?? raw.created_at,

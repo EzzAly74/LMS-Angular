@@ -10,8 +10,8 @@
 <div class="nas-page-container cert-page">
 
   <nas-page-header
-    title="Certificates"
-    subtitle="Manage certificate templates and view issued certificates">
+    [title]="'certificates.title' | translate"
+    [subtitle]="'certificates.subtitle' | translate">
   </nas-page-header>
 
   <!-- ═══════════════════════════════════════════════════════════════
@@ -30,10 +30,10 @@
 
       <header class="cert-template-card__head">
         <h2 class="cert-template-card__title">
-          {{ template()?.name || 'NAS Standard Certificate' }}
+          {{ template()?.name || ('certificates.default_template_name' | translate) }}
         </h2>
         <p class="cert-template-card__subtitle">
-          {{ template()?.description || 'Default template · Auto-fills learner name, course, date, instructor' }}
+          {{ template()?.description || ('certificates.default_template_desc' | translate) }}
         </p>
       </header>
 
@@ -43,7 +43,7 @@
         <div class="cert-template-card__stats">
           <div class="cert-stat">
             <div class="cert-stat__value">{{ stats().total_issued }}</div>
-            <div class="cert-stat__label">Total Issued</div>
+            <div class="cert-stat__label">{{ 'certificates.total_issued' | translate }}</div>
           </div>
           <div class="cert-stat">
             <div class="cert-stat__value">
@@ -53,7 +53,7 @@
                 —
               }
             </div>
-            <div class="cert-stat__label">Last Issued</div>
+            <div class="cert-stat__label">{{ 'certificates.last_issued' | translate }}</div>
           </div>
         </div>
 
@@ -63,7 +63,7 @@
             class="cert-btn cert-btn--primary cert-btn--grow"
             (click)="openPreview()">
             <nas-icon name="eye" [size]="20" />
-            Preview Template
+            {{ 'certificates.preview_template' | translate }}
           </button>
           <button
             type="button"
@@ -72,10 +72,10 @@
             (click)="triggerUpload(fileInput)">
             @if (uploading()) {
               <nas-icon name="spinner-gap" [size]="20" class="cert-spin" />
-              <span>Uploading…</span>
+              <span>{{ 'common.uploading' | translate }}</span>
             } @else {
               <nas-icon name="repeat" [size]="20" />
-              <span>Replace Template</span>
+              <span>{{ 'certificates.replace_template' | translate }}</span>
             }
           </button>
         </div>
@@ -87,10 +87,10 @@
           (click)="triggerUpload(fileInput)">
           @if (uploading()) {
             <nas-icon name="spinner-gap" [size]="20" class="cert-spin" />
-            <span>Uploading…</span>
+            <span>{{ 'common.uploading' | translate }}</span>
           } @else {
             <nas-icon name="upload-simple" [size]="20" />
-            <span>Upload Template</span>
+            <span>{{ 'certificates.upload_template' | translate }}</span>
           }
         </button>
       }
@@ -101,14 +101,14 @@
        ISSUED CERTIFICATES TABLE
   ═══════════════════════════════════════════════════════════════ -->
   <section class="cert-issued">
-    <h3 class="cert-issued__heading">Issued Certificates</h3>
+    <h3 class="cert-issued__heading">{{ 'certificates.issued_certificates' | translate }}</h3>
 
     <div class="cert-search">
       <nas-icon name="magnifying-glass" [size]="20" class="cert-search__icon" />
       <input
         type="text"
         class="cert-search__input"
-        placeholder="Quick search…"
+        [placeholder]="'common.quick_search' | translate"
         (input)="onSearch($any($event.target).value)" />
     </div>
 
@@ -117,10 +117,10 @@
         <table class="cert-table">
           <thead>
             <tr>
-              <th>Employee's ID</th>
-              <th>Learner</th>
-              <th>Course</th>
-              <th>Issued</th>
+              <th>{{ 'certificates.employee_id' | translate }}</th>
+              <th>{{ 'quizzes.learner' | translate }}</th>
+              <th>{{ 'common.course' | translate }}</th>
+              <th>{{ 'certificates.issued' | translate }}</th>
               <th class="cert-table__th--actions"></th>
             </tr>
           </thead>
@@ -142,8 +142,8 @@
                   <span class="cert-table__empty-icon">
                     <nas-icon name="tray" [size]="28" />
                   </span>
-                  <strong>No certificates issued yet</strong>
-                  <span>Once learners complete certificate-enabled courses they’ll appear here.</span>
+                  <strong>{{ 'certificates.no_issued' | translate }}</strong>
+                  <span>{{ 'certificates.no_issued_hint' | translate }}</span>
                 </td>
               </tr>
             } @else {
@@ -159,7 +159,7 @@
                     <button
                       type="button"
                       class="cert-icon-btn"
-                      title="Download certificate"
+                      [title]="'certificates.download' | translate"
                       [disabled]="downloadingKey() === rowKey(item)"
                       (click)="downloadRow(item)">
                       @if (downloadingKey() === rowKey(item)) {
@@ -179,7 +179,7 @@
       @if (total() > perPage) {
         <div class="cert-pagination">
           <span class="cert-pagination__info">
-            {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+            {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
           </span>
           <div class="cert-pagination__nav">
             <button type="button" class="cert-icon-btn"
@@ -203,10 +203,10 @@
 @if (previewOpen()) {
   <div class="cert-drawer-overlay" (click)="closePreview()"></div>
 
-  <aside class="cert-drawer" role="dialog" aria-label="Preview Template">
+  <aside class="cert-drawer" role="dialog" [attr.aria-label]="'certificates.preview_template' | translate">
     <header class="cert-drawer__head">
-      <h3 class="cert-drawer__title">Preview Template</h3>
-      <button type="button" class="cert-drawer__close" aria-label="Close" (click)="closePreview()">
+      <h3 class="cert-drawer__title">{{ 'certificates.preview_template' | translate }}</h3>
+      <button type="button" class="cert-drawer__close" [attr.aria-label]="'common.close' | translate" (click)="closePreview()">
         <nas-icon name="x" [size]="16" />
       </button>
     </header>
@@ -220,25 +220,25 @@
         } @else if (templateBlobError()) {
           <div class="cert-drawer__error">
             <nas-icon name="warning" [size]="20" />
-            <span>Could not load the template preview.</span>
+            <span>{{ 'certificates.preview_load_failed' | translate }}</span>
           </div>
         } @else if (templateBlobUrl()) {
           @if (isPdf()) {
             <iframe
               class="cert-drawer__pdf"
               [src]="templateSafeUrl()"
-              title="Template preview"></iframe>
+              [title]="'certificates.template_preview_alt' | translate"></iframe>
           } @else {
             <img
               class="cert-drawer__image"
               [src]="templateBlobUrl()"
-              alt="Certificate template preview" />
+              [alt]="'certificates.template_preview_alt' | translate" />
           }
         }
       </div>
 
       <div class="cert-drawer__fields">
-        <div class="cert-drawer__fields-title">Auto-filled Fields</div>
+        <div class="cert-drawer__fields-title">{{ 'certificates.auto_filled_fields' | translate }}</div>
         <ul class="cert-drawer__fields-list">
           @for (field of autoFields(); track field) {
             <li>{{ field }}</li>
@@ -248,7 +248,7 @@
 
       <p class="cert-drawer__hint">
         <nas-icon name="info" [size]="16" />
-        <span>The certificate is issued after a learner completes a certificate-enabled course and meets any configured score criteria.</span>
+        <span>{{ 'certificates.issuance_hint' | translate }}</span>
       </p>
     </div>
   </aside>

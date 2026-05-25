@@ -196,9 +196,20 @@ html, body {
   .p-datatable .p-datatable-thead > tr > th,
   .p-datatable .p-datatable-tbody > tr > td { text-align: right; }
   .p-inputtext { text-align: right; }
-  .pi { transform: scaleX(-1); }
-  .pi-search, .pi-times, .pi-check, .pi-info-circle,
-  .pi-exclamation-triangle, .pi-spin, .pi-spinner { transform: none; }
+  /* Mirror ONLY directional icons (chevrons / angles / arrows / carets).
+     Other glyphs keep their natural orientation, and component-level
+     `transform: translateY(-50%)` for vertically-centred icons survives. */
+  .pi-chevron-left, .pi-chevron-right,
+  .pi-chevron-circle-left, .pi-chevron-circle-right,
+  .pi-angle-left, .pi-angle-right,
+  .pi-angle-double-left, .pi-angle-double-right,
+  .pi-arrow-left, .pi-arrow-right,
+  .pi-arrow-circle-left, .pi-arrow-circle-right,
+  .pi-caret-left, .pi-caret-right,
+  .pi-step-backward, .pi-step-forward,
+  .pi-step-backward-alt, .pi-step-forward-alt {
+    transform: scaleX(-1);
+  }
 }
 
 /* ── Typography utilities (NAS scale) ──────────────────────────────────────── */
@@ -475,6 +486,33 @@ input[type="number"]::-webkit-outer-spin-button {
     transition: background var(--transition-speed);
 
     &:last-child { border-bottom: none; }
+    &:hover { background: var(--nas-neutral-200); }
+  }
+
+  // Loading state — drops the border-box framing so the skeleton
+  // rectangles don't read as a real checklist with empty rows.
+  &--loading {
+    border: none;
+    padding: var(--nas-space-2) 0;
+  }
+
+  // Master "select all" toggle that sits ABOVE the checklist box so
+  // its tick state visually separates from the per-row checkboxes.
+  &__select-all {
+    display: flex;
+    align-items: center;
+    gap: var(--nas-space-3);
+    padding: 10px var(--nas-space-3);
+    margin-bottom: var(--nas-space-2);
+    border: 1px dashed var(--nas-color-border);
+    border-radius: var(--nas-radius-md);
+    cursor: pointer;
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+    background: var(--nas-neutral-100);
+    transition: background var(--transition-speed);
+
     &:hover { background: var(--nas-neutral-200); }
   }
 }

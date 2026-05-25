@@ -1,4 +1,4 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import {
@@ -17,6 +17,15 @@ export class LocaleService {
    * Emits the new locale whenever the user switches language.
    * List/detail components subscribe to this and re-fetch with the
    * new `Accept-Language` header so the UI never displays stale text.
+   *
+   * NOTE: We emit imperatively from `switch()` rather than from an
+   * `effect()` that tracks the `locale` signal. The previous
+   * effect-based version had a subtle scheduling issue: depending on
+   * when the service was first instantiated relative to the toggle
+   * click, the captured `previous` closure value could miss the
+   * transition entirely and the subject never fired — which is why
+   * "no network requests after language switch" was happening on
+   * some sessions. Imperative emit makes it deterministic.
    */
   private readonly _changes$ = new Subject<SupportedLocale>();
   readonly changes$: Observable<SupportedLocale> = this._changes$.asObservable();
@@ -24,19 +33,19 @@ export class LocaleService {
   constructor(private translate: TranslateService) {
     translate.addLangs([...SUPPORTED_LOCALES]);
     translate.setDefaultLang(DEFAULT_LOCALE);
-
-    let previous: SupportedLocale | null = null;
-    effect(() => {
-      const next = this.locale();
-      this.applyLocale(next);
-      if (previous !== null && previous !== next) this._changes$.next(next);
-      previous = next;
-    });
+    // Apply the saved/default locale once at bootstrap so the
+    // <html lang/dir> attributes and ngx-translate are in sync from
+    // first paint — but do NOT emit `changes$` here (it would fire
+    // before any subscriber is attached, and is semantically a
+    // "user changed language" signal, not "app booted").
+    this.applyLocale(this.locale());
   }
 
   switch(locale: SupportedLocale): void {
+    if (this.locale() === locale) return;
     this.locale.set(locale);
-    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    this.applyLocale(locale);
+    this._changes$.next(locale);
   }
 
   get dir(): 'ltr' | 'rtl' {

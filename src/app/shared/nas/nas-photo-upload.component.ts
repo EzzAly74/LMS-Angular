@@ -43,7 +43,7 @@ import { NasIconComponent } from './nas-icon.component';
           }
 
           <div class="photo-upload__formats">{{ formats }}</div>
-          <div class="photo-upload__max">{{ maxLabel }}</div>
+          <div class="photo-upload__max">{{ maxLabel | translate }}</div>
         </div>
 
         <button type="button" class="photo-upload__cta" (click)="$event.preventDefault(); openPicker($event)">
@@ -70,7 +70,7 @@ export class NasPhotoUploadComponent {
   @Input() value: string | null = null;
   @Input() ratio?: string;
   @Input() formats = 'PNG, JPG, JPEG, WEBP, SVG, GIF';
-  @Input() maxLabel = 'Max, file size: 3MB';
+  @Input() maxLabel = 'common.max_file_size_3mb';
   @Input() accept = 'image/png,image/jpeg,image/webp,image/svg+xml,image/gif';
   /**
    * Optional overrides for the CTA button label. Lets callers (e.g. the

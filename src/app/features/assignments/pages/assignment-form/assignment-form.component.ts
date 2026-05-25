@@ -20,6 +20,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject, forkJoin, takeUntil, startWith } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -65,6 +66,7 @@ interface QuestionGroup {
     DropdownModule,
     SkeletonModule,
     ToastModule,
+    TranslateModule,
     NasStatusBadgeComponent,
   ],
   providers: [MessageService],
@@ -123,12 +125,17 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   constructor() {
     // Refetch the form + lookups whenever the UI locale changes so the
     // server returns localized titles/instructions in the new language.
+    // Also reload cohorts for the currently selected course so the
+    // "specific cohort" picker labels follow the new locale (was a
+    // gap on the create path with a course preselected).
     withLocaleReload(() => {
       const id = this.assignmentId();
       if (id) this.fetchAssignment(id);
       this.coursesApi.list({ per_page: 200 }).subscribe({
         next: r => this.courses.set((r.result.data ?? []) as unknown as CourseOpt[]),
       });
+      const courseId = this.form.controls.course_id.value;
+      if (courseId) this.loadCohorts(courseId);
     });
   }
 

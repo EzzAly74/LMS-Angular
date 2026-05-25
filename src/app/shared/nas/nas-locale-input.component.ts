@@ -7,6 +7,7 @@ import {
   booleanAttribute,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import type { LocalizedText } from '../../core/models/localized.types';
 
 const EMPTY: LocalizedText = { en: '', ar: '' };
@@ -14,6 +15,7 @@ const EMPTY: LocalizedText = { en: '', ar: '' };
 @Component({
   selector: 'nas-locale-input',
   standalone: true,
+  imports: [TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nas-locale-input.component.html',
   styleUrl:    './nas-locale-input.component.scss',

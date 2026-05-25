@@ -43,7 +43,7 @@ export class AdminUsersApiService {
   }
 
   create(payload: AdminUserStorePayload): Observable<ApiResponse<AdminUserDetail>> {
-    return this.api.post<AdminUserDetail>(API.ADMIN_USERS, payload);
+    return this.api.post<AdminUserDetail>(API.ADMIN_USERS, this.toBody(payload));
   }
 
   update(
@@ -51,7 +51,40 @@ export class AdminUsersApiService {
     id: number,
     payload: AdminUserUpdatePayload,
   ): Observable<ApiResponse<AdminUserDetail>> {
-    return this.api.put<AdminUserDetail>(`${API.ADMIN_USERS}/${source}/${id}`, payload);
+    const body = this.toBody(payload);
+    // Multipart payloads can't ride on PUT in Laravel; tunnel through
+    // POST with `_method=PUT` whenever we're sending FormData so the
+    // avatar upload still hits AdminUserController::update().
+    if (body instanceof FormData) {
+      body.append('_method', 'PUT');
+      return this.api.post<AdminUserDetail>(`${API.ADMIN_USERS}/${source}/${id}`, body);
+    }
+    return this.api.put<AdminUserDetail>(`${API.ADMIN_USERS}/${source}/${id}`, body);
+  }
+
+  /**
+   * Serialise a store/update payload. Falls back to a plain JSON object
+   * when no image is attached so we don't pay the multipart overhead on
+   * every CRUD call.
+   */
+  private toBody(payload: AdminUserStorePayload | AdminUserUpdatePayload): FormData | Record<string, unknown> {
+    if (!payload || !('image' in payload) || !(payload.image instanceof File)) {
+      const { image: _ignored, ...rest } = (payload ?? {}) as AdminUserStorePayload;
+      return rest as Record<string, unknown>;
+    }
+
+    const fd = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (value instanceof File) {
+        fd.append(key, value);
+      } else if (typeof value === 'boolean') {
+        fd.append(key, value ? '1' : '0');
+      } else {
+        fd.append(key, String(value));
+      }
+    });
+    return fd;
   }
 
   deactivate(source: AdminUserSource, id: number): Observable<ApiResponse<AdminUserDetail>> {

@@ -59,7 +59,12 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
   readonly min = Math.min;
 
   constructor() {
-    withLocaleReload(() => this.refresh());
+    // Reload primary list AND filter-modal lookups (roles,
+    // instructors, admins) on EN ↔ AR switch.
+    withLocaleReload(() => {
+      this.refresh();
+      this.loadLookups();
+    });
   }
 
   /* ── Data ────────────────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -15,6 +15,7 @@ import { NasConfirmModalComponent } from '../../shared/nas/nas-confirm-modal.com
 import { NasIconComponent } from '../../shared/nas/nas-icon.component';
 import { NotificationsDrawerComponent } from '../../shared/nas/notifications-drawer/notifications-drawer.component';
 import { NotificationsDrawerService } from '../../shared/nas/notifications-drawer/notifications-drawer.service';
+import { withLocaleReload } from '../../core/utils/with-locale-reload';
 
 @Component({
   selector: 'app-admin-layout',
@@ -40,6 +41,15 @@ export class AdminLayoutComponent {
   auth            = inject(AuthService);
   router          = inject(Router);
   notifsDrawer    = inject(NotificationsDrawerService);
+  private t       = inject(TranslateService);
+
+  /** Bumped on every locale switch so `computed()` derivations that read
+   *  `TranslateService.instant()` (not signal-tracked) re-evaluate. */
+  private langTick = signal(0);
+
+  constructor() {
+    withLocaleReload(() => this.langTick.update(v => v + 1));
+  }
 
   sidebarCollapsed = signal(false);
   logoutConfirmOpen = signal(false);
@@ -78,7 +88,76 @@ export class AdminLayoutComponent {
 
 
   searchTerm       = signal('');
+  searchOpen       = signal(false);
   expandedGroups   = signal<Record<string, boolean>>({ 'nav.learning': true });
+
+  /** Visible-to-current-admin nav items flattened to leaf rows that own a
+   *  concrete `route`. Used to drive the navbar quick-search dropdown. */
+  private flatNavItems = computed(() => {
+    const groups = this.navGroups();
+    const out: { label: string; route: string; icon: string; parent?: string }[] = [];
+    for (const group of groups) {
+      for (const item of group.items) {
+        if (item.children?.length) {
+          for (const child of item.children) {
+            if (child.route) {
+              out.push({ label: child.label, route: child.route, icon: child.icon, parent: item.label });
+            }
+          }
+        } else if (item.route) {
+          out.push({ label: item.label, route: item.route, icon: item.icon });
+        }
+      }
+    }
+    return out;
+  });
+
+  /** Localised sidebar items that match the current search term. Empty
+   *  while the term is blank so the dropdown stays closed. */
+  searchMatches = computed(() => {
+    this.langTick();
+    const raw = this.searchTerm().trim().toLowerCase();
+    if (!raw) return [];
+    return this.flatNavItems()
+      .map(item => ({
+        ...item,
+        translatedLabel: this.t.instant(item.label) as string,
+        translatedParent: item.parent ? (this.t.instant(item.parent) as string) : '',
+      }))
+      .filter(m =>
+        m.translatedLabel.toLowerCase().includes(raw) ||
+        (m.translatedParent && m.translatedParent.toLowerCase().includes(raw)),
+      )
+      .slice(0, 8);
+  });
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.searchOpen.set(term.trim().length > 0);
+  }
+
+  onSearchFocus(): void {
+    if (this.searchTerm().trim().length > 0) this.searchOpen.set(true);
+  }
+
+  /** Close the dropdown after the click outside settles. Uses a small
+   *  delay so a click on a match item still fires before close. */
+  onSearchBlur(): void {
+    setTimeout(() => this.searchOpen.set(false), 150);
+  }
+
+  /** Enter → navigate to the top match. */
+  submitSearch(): void {
+    const top = this.searchMatches()[0];
+    if (top) this.navigateMatch(top.route);
+  }
+
+  /** Click on a match row → navigate + reset the search bar. */
+  navigateMatch(route: string): void {
+    this.searchTerm.set('');
+    this.searchOpen.set(false);
+    this.router.navigateByUrl(route);
+  }
 
   private currentUrl = toSignal(
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)),

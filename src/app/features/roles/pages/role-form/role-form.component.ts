@@ -114,7 +114,14 @@ export class RoleFormComponent implements OnInit, OnDestroy {
   });
 
   constructor() {
-    withLocaleReload(() => this.loadCatalog());
+    // Reload permission catalog AND, when editing, the current role
+    // detail (its description fields are MaybeLocalized on the
+    // backend) so EN ↔ AR switches refresh both surfaces.
+    withLocaleReload(() => {
+      this.loadCatalog();
+      const id = this.editingId();
+      if (id !== null) this.loadRole(id);
+    });
   }
 
   /* ── Lifecycle ───────────────────────────────────────────────── */

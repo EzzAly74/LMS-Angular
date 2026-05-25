@@ -5,10 +5,10 @@
   <!-- ── Breadcrumb ─────────────────────────────────────────── -->
   <div class="asd-breadcrumb">
     <a routerLink="/admin/quizzes" class="asd-breadcrumb__link">
-      <i class="pi pi-book"></i> Quizzes
+      <i class="pi pi-book"></i> {{ 'quizzes.title' | translate }}
     </a>
     <i class="pi pi-angle-right asd-breadcrumb__sep"></i>
-    <span class="asd-breadcrumb__current">View details</span>
+    <span class="asd-breadcrumb__current">{{ 'quizzes.view_details' | translate }}</span>
   </div>
 
   @if (loading()) {
@@ -24,12 +24,12 @@
   <div class="asd-titlebar">
     <div class="asd-titlebar__left">
       <div class="asd-title-row">
-        <h1 class="asd-title">{{ d.quiz?.title ?? 'Submission' }}</h1>
+        <h1 class="asd-title">{{ d.quiz?.title ?? ('quizzes.submission' | translate) }}</h1>
         <nas-status-badge [tone]="statusBadgeTone()">
-          {{ d.quiz?.status === 'active' ? 'Active' : 'Draft' }}
+          {{ (d.quiz?.status === 'active' ? 'quizzes.active' : 'quizzes.draft') | translate }}
         </nas-status-badge>
         @if (d.quiz?.cohort_scope === 'all') {
-          <nas-status-badge tone="teal">Hybrid</nas-status-badge>
+          <nas-status-badge tone="teal">{{ 'quizzes.hybrid' | translate }}</nas-status-badge>
         }
       </div>
       <p class="asd-subtitle">
@@ -43,11 +43,11 @@
         }
         @if (d.submitted_at) {
           <span class="asd-subtitle__sep">·</span>
-          <span>Updated {{ d.submitted_at | date:'dd MMM yyyy' }}</span>
+          <span>{{ 'quizzes.updated' | translate }} {{ d.submitted_at | date:'dd MMM yyyy' }}</span>
         }
       </p>
     </div>
-    <button type="button" class="asd-back-btn" (click)="back()">Back to Quizzes</button>
+    <button type="button" class="asd-back-btn" (click)="back()">{{ 'quizzes.back_to_quizzes' | translate }}</button>
   </div>
 
   <!-- ── Stat cards ────────────────────────────────────────── -->
@@ -57,17 +57,17 @@
         @if (d.score_percent !== null) { {{ d.score_percent }}% }
         @else { — }
       </div>
-      <div class="asd-stat__label">Published Score</div>
+      <div class="asd-stat__label">{{ 'quizzes.published_score' | translate }}</div>
     </div>
     <div class="nas-card asd-stat">
       <div class="asd-stat__value">
         {{ d.total_score ?? 0 }} / {{ d.max_score }}
       </div>
-      <div class="asd-stat__label">Question Points</div>
+      <div class="asd-stat__label">{{ 'quizzes.question_points' | translate }}</div>
     </div>
     <div class="nas-card asd-stat">
       <div class="asd-stat__value">{{ questionRows().length }}</div>
-      <div class="asd-stat__label">Questions</div>
+      <div class="asd-stat__label">{{ 'quizzes.questions' | translate }}</div>
     </div>
   </div>
 
@@ -77,7 +77,7 @@
       <div class="nas-card asd-question">
         <div class="asd-question__head">
           <h3 class="asd-question__title">
-            Question {{ row.position }}:
+            {{ 'quizzes.question_label' | translate }} {{ row.position }}:
             <span class="asd-question__type">
               <nas-status-badge tone="teal">{{ questionTypeLabel(row.answer.question?.type) }}</nas-status-badge>
             </span>
@@ -104,7 +104,7 @@
                 </span>
                 <span class="asd-option__label">{{ opt }}</span>
                 @if (isCorrectOption(row.answer, opt)) {
-                  <span class="asd-option__tag asd-option__tag--correct">Correct</span>
+                  <span class="asd-option__tag asd-option__tag--correct">{{ 'quizzes.correct' | translate }}</span>
                 }
               </div>
             }
@@ -122,9 +122,9 @@
                 <span class="asd-option__radio" [class.asd-option__radio--filled]="yesNoLearner(row.answer) === val">
                   @if (yesNoLearner(row.answer) === val) { <i class="pi pi-check"></i> }
                 </span>
-                <span class="asd-option__label">{{ val === 'yes' ? 'Yes' : 'No' }}</span>
+                <span class="asd-option__label">{{ (val === 'yes' ? 'quizzes.yes' : 'quizzes.no') | translate }}</span>
                 @if (isYesNoCorrect(row.answer, $any(val))) {
-                  <span class="asd-option__tag asd-option__tag--correct">Correct</span>
+                  <span class="asd-option__tag asd-option__tag--correct">{{ 'quizzes.correct' | translate }}</span>
                 }
               </div>
             }
@@ -134,14 +134,14 @@
         <!-- ── Open Question ─────────────────────────────── -->
         @if (row.answer.question?.type === 'open') {
           <div class="asd-open">
-            <label class="asd-open__label">Learner answer</label>
+            <label class="asd-open__label">{{ 'quizzes.learner_answer' | translate }}</label>
             <div class="asd-open__answer">{{ openAnswerText(row.answer) || '—' }}</div>
 
-            <label class="asd-open__label">Answer key</label>
+            <label class="asd-open__label">{{ 'quizzes.answer_key' | translate }}</label>
             <div class="asd-open__key">{{ row.answer.question?.correct_answer_en || '—' }}</div>
 
             @if (editingAnswerId() === row.answer.id) {
-              <a class="asd-open__edit-link">Update learner score</a>
+              <a class="asd-open__edit-link">{{ 'quizzes.update_learner_score' | translate }}</a>
               <div class="asd-open__editor">
                 <input
                   type="number"
@@ -150,32 +150,32 @@
                   [max]="row.answer.question?.score ?? 0"
                   [ngModel]="editingScore()"
                   (ngModelChange)="editingScore.set($event)"
-                  [placeholder]="'Out of ' + (row.answer.question?.score ?? 0)" />
+                  [placeholder]="'quizzes.out_of' | translate:{ score: (row.answer.question?.score ?? 0) }" />
                 <textarea
                   class="asd-open__feedback"
                   rows="2"
                   [ngModel]="editingFeedback()"
                   (ngModelChange)="editingFeedback.set($event)"
-                  placeholder="Feedback for the learner (optional)"></textarea>
+                  [placeholder]="'quizzes.feedback_placeholder' | translate"></textarea>
                 <div class="asd-open__editor-actions">
-                  <button type="button" class="asd-btn asd-btn--ghost" (click)="cancelEdit()">Cancel</button>
+                  <button type="button" class="asd-btn asd-btn--ghost" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
                   <button
                     type="button"
                     class="asd-btn asd-btn--primary"
                     [disabled]="savingAnswerId() === row.answer.id"
                     (click)="saveEdit(row.answer)">
                     @if (savingAnswerId() === row.answer.id) { <i class="pi pi-spin pi-spinner"></i> }
-                    Update
+                    {{ 'quizzes.update' | translate }}
                   </button>
                 </div>
               </div>
             } @else {
               <button type="button" class="asd-open__edit-btn" (click)="startEdit(row.answer)">
-                <i class="pi pi-pen-to-square"></i> Edit
+                <i class="pi pi-pen-to-square"></i> {{ 'common.edit' | translate }}
               </button>
               @if (row.answer.feedback) {
                 <div class="asd-open__feedback-shown">
-                  <strong>Feedback:</strong> {{ row.answer.feedback }}
+                  <strong>{{ 'quizzes.feedback_label' | translate }}</strong> {{ row.answer.feedback }}
                 </div>
               }
             }
@@ -186,7 +186,7 @@
         @if (row.answer.question?.type === 'reorder') {
           <div class="asd-reorder">
             <div class="asd-reorder__group">
-              <div class="asd-reorder__label">Learner order</div>
+              <div class="asd-reorder__label">{{ 'quizzes.learner_order' | translate }}</div>
               <div class="asd-reorder__list">
                 @if (!learnerOrder(row.answer).length) {
                   <div class="asd-reorder__item asd-reorder__item--empty">—</div>
@@ -198,7 +198,7 @@
               </div>
             </div>
             <div class="asd-reorder__group">
-              <div class="asd-reorder__label">Correct order</div>
+              <div class="asd-reorder__label">{{ 'quizzes.correct_order' | translate }}</div>
               <div class="asd-reorder__list">
                 @for (item of correctOrder(row.answer); track $index) {
                   <div class="asd-reorder__item asd-reorder__item--correct">{{ item }}</div>
@@ -210,7 +210,7 @@
 
         @if (row.answer.question?.explanation_en) {
           <div class="asd-explanation">
-            <strong>Explanation:</strong> {{ row.answer.question?.explanation_en }}
+            <strong>{{ 'quizzes.explanation_label' | translate }}</strong> {{ row.answer.question?.explanation_en }}
           </div>
         }
       </div>
@@ -219,7 +219,7 @@
     @if (!questionRows().length) {
       <div class="nas-card asd-empty">
         <i class="pi pi-info-circle"></i>
-        <p>This submission has no answers yet.</p>
+        <p>{{ 'quizzes.no_answers' | translate }}</p>
       </div>
     }
   </div>

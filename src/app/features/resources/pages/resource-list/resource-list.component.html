@@ -1,11 +1,11 @@
 <div class="nas-page-container" (click)="closeMenu()">
 
   <nas-page-header
-    title="Resources"
-    subtitle="Learning materials and references available to all employees">
+    [title]="'resources.title' | translate"
+    [subtitle]="'resources.subtitle' | translate">
     <a routerLink="/admin/resources/add" class="nas-cta-btn">
       <i class="pi pi-plus-circle"></i>
-      New Resource
+      {{ 'resources.new_resource' | translate }}
     </a>
   </nas-page-header>
 
@@ -17,7 +17,7 @@
         type="text"
         [(ngModel)]="search"
         (ngModelChange)="onSearchInput()"
-        placeholder="Search resources..."
+        [placeholder]="'resources.search_placeholder' | translate"
         class="res-filters__search-input"
       />
     </div>
@@ -48,7 +48,7 @@
     } @else if (!items().length) {
       <div class="res-empty">
         <i class="pi pi-book res-empty__icon"></i>
-        <p>No resources found.</p>
+        <p>{{ 'resources.no_results' | translate }}</p>
       </div>
     } @else {
       @for (item of items(); track item.id) {
@@ -74,7 +74,7 @@
               <p class="res-row__desc">{{ item.content || item.url }}</p>
             }
             <p class="res-row__meta">
-              Added by <strong>{{ item.created_by_name || 'Admin' }}</strong>
+              {{ 'resources.added_by' | translate }} <strong>{{ item.created_by_name || ('dashboard.admin' | translate) }}</strong>
               &nbsp;&middot;&nbsp;{{ item.created_at | date:'dd MMM yyyy' }}
             </p>
           </div>
@@ -86,14 +86,14 @@
               class="res-menu-btn"
               [class.res-menu-btn--active]="openMenuId() === item.id"
               (click)="toggleMenu(item.id, $event)"
-              [attr.aria-label]="'Options for ' + item.title"
+              [attr.aria-label]="'common.options_for' | translate:{ name: item.title }"
             >
               <i class="pi pi-ellipsis-h"></i>
             </button>
             @if (openMenuId() === item.id) {
               <div class="res-menu-dropdown">
                 <button type="button" class="res-menu-item" (click)="editResource(item.id)">
-                  <i class="pi pi-pencil"></i> Edit
+                  <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
                 </button>
                 <button
                   type="button"
@@ -101,7 +101,7 @@
                   [disabled]="deleting() === item.id"
                   (click)="confirmDelete(item, $event)"
                 >
-                  <i class="pi pi-trash"></i> Delete
+                  <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
                 </button>
               </div>
             }
@@ -117,7 +117,7 @@
   @if (total() > perPage) {
     <div class="nas-table-pagination">
       <span class="nas-table-pagination__info">
-        {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+        {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
       </span>
       <div class="nas-table-pagination__nav">
         <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">

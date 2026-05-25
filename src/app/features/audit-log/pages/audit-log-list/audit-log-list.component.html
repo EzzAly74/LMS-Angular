@@ -4,7 +4,7 @@
      INSTRUCTORS SUB-FILTER MODAL
 ═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="Filter your results"
+  [header]="'common.filter_results' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -13,14 +13,14 @@
   (visibleChange)="closeInstructorModal()"
   styleClass="nas-dialog al-filter-dialog">
 
-  <div class="al-modal-label">Instructors</div>
+  <div class="al-modal-label">{{ 'nav.instructors' | translate }}</div>
 
   <div class="al-modal-search">
     <i class="pi pi-search al-modal-search__icon"></i>
     <input
       type="text"
       class="al-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="instructorModal().query"
       (ngModelChange)="onInstructorQuery($event)" />
   </div>
@@ -36,16 +36,16 @@
       </label>
     }
     @if (!filteredInstructorOptions().length) {
-      <p class="al-modal-empty">No instructors match your search.</p>
+      <p class="al-modal-empty">{{ 'audit_log.no_instructors_match' | translate }}</p>
     }
   </div>
 
   <ng-template pTemplate="footer">
     <button type="button" class="al-btn al-btn--ghost" (click)="clearInstructorSelection()">
-      Clear
+      {{ 'common.reset' | translate }}
     </button>
     <button type="button" class="al-btn al-btn--primary" (click)="applyInstructorFilter()">
-      <i class="pi pi-filter"></i> Filter
+      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -56,8 +56,8 @@
 <div class="nas-page-container">
 
   <nas-page-header
-    title="Audit Log"
-    subtitle="Immutable record of all admin and instructor platform actions">
+    [title]="'audit_log.title' | translate"
+    [subtitle]="'audit_log.subtitle' | translate">
     <button
       type="button"
       class="al-export-btn"
@@ -68,7 +68,7 @@
       } @else {
         <i class="pi pi-upload"></i>
       }
-      Export Log
+      {{ 'audit_log.export_log' | translate }}
     </button>
   </nas-page-header>
 
@@ -78,7 +78,7 @@
     <input
       type="text"
       class="al-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="search"
       (ngModelChange)="onSearch($event)" />
   </div>
@@ -90,7 +90,7 @@
       class="al-pill"
       [class.al-pill--active]="activeTab() === 'all'"
       (click)="setTab('all')">
-      All
+      {{ 'common.all' | translate }}
     </button>
 
     <button
@@ -98,7 +98,7 @@
       class="al-pill"
       [class.al-pill--active]="activeTab() === 'admin'"
       (click)="setTab('admin')">
-      Admin
+      {{ 'dashboard.admin' | translate }}
       <i class="pi pi-chevron-down"></i>
     </button>
 
@@ -107,7 +107,7 @@
       class="al-pill"
       [class.al-pill--active]="activeTab() === 'instructor'"
       (click)="openInstructorModal()">
-      Instructors
+      {{ 'nav.instructors' | translate }}
       @if (instructorTabCount()) {
         <span class="al-pill__count">{{ instructorTabCount() }}</span>
       }
@@ -121,11 +121,11 @@
       <table class="al-table">
         <thead>
           <tr>
-            <th>Timestamp</th>
-            <th>Actor</th>
-            <th>Action</th>
-            <th>Entity</th>
-            <th>IP Address</th>
+            <th>{{ 'audit_log.timestamp' | translate }}</th>
+            <th>{{ 'audit_log.actor' | translate }}</th>
+            <th>{{ 'audit_log.action' | translate }}</th>
+            <th>{{ 'audit_log.entity' | translate }}</th>
+            <th>{{ 'audit_log.ip' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -141,7 +141,7 @@
             <tr>
               <td colspan="5" class="al-table__empty">
                 <i class="pi pi-shield"></i>
-                No audit log entries match the current filters.
+                {{ 'audit_log.no_results' | translate }}
               </td>
             </tr>
           } @else {
@@ -180,7 +180,7 @@
     @if (total() > perPage) {
       <div class="al-pagination">
         <span class="al-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="al-pagination__nav">
           <button
@@ -204,6 +204,6 @@
 
   <!-- ── Footer disclosure (Figma) ──────────────────────────── -->
   <p class="al-footnote">
-    Audit log entries are immutable and retained for 12 months per platform policy.
+    {{ 'audit_log.retention_note' | translate }}
   </p>
 </div>

@@ -58,7 +58,14 @@ export class MessagesListComponent implements OnInit {
   private toast = inject(MessageService);
   private t    = inject(TranslateService);
 
-  constructor() { withLocaleReload(() => this.load()); }
+  constructor() {
+    // Reload the messages list AND the compose recipient picker
+    // (user names render localized) on every language switch.
+    withLocaleReload(() => {
+      this.load();
+      this.loadUsers();
+    });
+  }
 
   items     = signal<MessageItem[]>([]);
   total     = signal(0);

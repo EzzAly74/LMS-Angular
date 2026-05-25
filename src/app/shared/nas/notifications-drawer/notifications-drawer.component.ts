@@ -13,13 +13,14 @@ import { FormsModule } from '@angular/forms';
 import { SidebarModule } from 'primeng/sidebar';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { NasIconComponent } from '../nas-icon.component';
 import { NotificationsDrawerService } from './notifications-drawer.service';
 import { ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
 import { LocaleService } from '../../../core/services/locale.service';
+import { withLocaleReload } from '../../../core/utils/with-locale-reload';
 import {
   pickLocalized,
   type MaybeLocalized,
@@ -79,7 +80,12 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
   private readonly messages = inject(MessageService);
   private readonly localeSvc = inject(LocaleService);
+  private readonly t = inject(TranslateService);
   readonly drawer = inject(NotificationsDrawerService);
+
+  /** Bumped on every locale switch so `computed()` re-evaluates labels
+   *  derived from `t.instant()`, which is not signal-tracked. */
+  private readonly langTick = signal(0);
 
   /** Two-way bound to the p-sidebar `[(visible)]`. */
   visible = false;
@@ -109,13 +115,19 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   /* ── Derived ──────────────────────────────────────────────────────── */
-  recipientRoleLabel = computed(() =>
-    this.recipientRole() === 'learner' ? 'LEARNERS' : 'INSTRUCTORS',
-  );
+  recipientRoleLabel = computed(() => {
+    this.langTick();
+    return this.recipientRole() === 'learner'
+      ? this.t.instant('notifications.learners_upper')
+      : this.t.instant('notifications.instructors_upper');
+  });
 
-  allLabel = computed(() =>
-    this.recipientRole() === 'learner' ? 'All Learners' : 'All Instructors',
-  );
+  allLabel = computed(() => {
+    this.langTick();
+    return this.recipientRole() === 'learner'
+      ? this.t.instant('notifications.all_learners')
+      : this.t.instant('notifications.all_instructors');
+  });
 
   canSend = computed(() => {
     if (this.saving()) return false;
@@ -136,6 +148,18 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
       },
       { allowSignalWrites: true },
     );
+
+    // Re-fetch both panels whenever the user toggles EN ↔ AR while the
+    // drawer is open. The drawer can stay open across a language switch
+    // (the language toggle lives in the same top bar), so without this
+    // hook the notification list + recipient picker would render stale
+    // translations until the user closed and re-opened the drawer.
+    withLocaleReload(() => {
+      this.langTick.update(v => v + 1);
+      if (!this.drawer.isOpen()) return;
+      this.loadList();
+      this.loadRecipients();
+    });
   }
 
   ngOnInit(): void {

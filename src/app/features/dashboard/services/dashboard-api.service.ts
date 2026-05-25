@@ -4,13 +4,21 @@ import { ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
 import { ApiResponse } from '../../../core/models/api-response.model';
 
+/**
+ * One row in the dashboard's "recent notifications" card. Mirrors the
+ * `public_notifications` table (same source as the notifications drawer
+ * and `/api/v1/notifications`) so a single admin store powers both
+ * surfaces — no synthetic, locale-baked entries are ever emitted.
+ */
 export interface DashboardNotification {
-  title?: string;
-  detail?: string;
-  message?: string;
-  meta?: string;
-  time?: string;
-  type?: 'critical' | 'warning' | 'info';
+  id?: number;
+  /** Translatable JSON column (`{ ar, en }`) — never a baked string. */
+  title?: { ar?: string; en?: string } | string;
+  /** Translatable JSON column (`{ ar, en }`) — never a baked string. */
+  body?: { ar?: string; en?: string } | string;
+  for_public?: boolean;
+  /** ISO-8601 timestamp; the UI derives the relative chip. */
+  created_at?: string | null;
 }
 
 export interface DashboardStatistics {

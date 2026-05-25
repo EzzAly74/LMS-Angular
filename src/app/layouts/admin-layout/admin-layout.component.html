@@ -155,10 +155,42 @@
         <i class="pi pi-search nas-search__icon"></i>
         <input
           type="text"
-          [(ngModel)]="searchTerm"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearch($event)"
+          (focus)="onSearchFocus()"
+          (blur)="onSearchBlur()"
+          (keydown.enter)="submitSearch()"
+          (keydown.escape)="searchOpen.set(false)"
           class="nas-search__input"
-          placeholder="Quick search..."
+          [placeholder]="'common.quick_search' | translate"
+          autocomplete="off"
         />
+
+        @if (searchOpen()) {
+          <div class="nas-search__menu" role="listbox">
+            @if (searchMatches().length) {
+              @for (m of searchMatches(); track m.route) {
+                <button type="button"
+                        class="nas-search__menu-item"
+                        role="option"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="navigateMatch(m.route)">
+                  <i class="pi pi-arrow-right nas-search__menu-icon"></i>
+                  <span class="nas-search__menu-label">
+                    {{ m.translatedLabel }}
+                    @if (m.translatedParent) {
+                      <span class="nas-search__menu-parent">· {{ m.translatedParent }}</span>
+                    }
+                  </span>
+                </button>
+              }
+            } @else {
+              <div class="nas-search__menu-empty">
+                {{ 'common.no_results_for' | translate }} "{{ searchTerm() }}"
+              </div>
+            }
+          </div>
+        }
       </div>
 
       <div class="nas-header__actions">

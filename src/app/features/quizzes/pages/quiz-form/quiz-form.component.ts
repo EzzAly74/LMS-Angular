@@ -24,6 +24,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasStatusBadgeComponent } from '../../../../shared/nas';
 import { QuizzesApiService } from '../../services/quizzes-api.service';
@@ -67,6 +68,7 @@ interface QuestionGroup {
     DropdownModule,
     SkeletonModule,
     ToastModule,
+    TranslateModule,
     NasStatusBadgeComponent,
   ],
   providers: [MessageService],
@@ -133,12 +135,17 @@ export class QuizFormComponent implements OnInit, OnDestroy {
   constructor() {
     // Refetch the quiz + course catalogue when the UI language changes
     // so titles, instructions and question text come back localized.
+    // Also reload cohorts for the currently selected course so the
+    // "specific cohort" picker labels follow the new locale (was a
+    // gap on the create path with a course preselected).
     withLocaleReload(() => {
       const id = this.quizId();
       if (id) this.fetchQuiz(id);
       this.coursesApi.list({ per_page: 200 }).subscribe({
         next: r => this.courses.set((r.result.data ?? []) as unknown as CourseOpt[]),
       });
+      const courseId = this.form.controls.course_id.value;
+      if (courseId) this.loadCohorts(courseId);
     });
   }
 

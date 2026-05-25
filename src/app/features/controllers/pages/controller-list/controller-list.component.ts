@@ -87,7 +87,13 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   private readonly search$  = new Subject<string>();
 
   constructor() {
-    withLocaleReload(() => this.refresh());
+    // Reload controllers list AND localized role dropdown options
+    // on EN ↔ AR switch — the role names + chip labels come from a
+    // separate endpoint that wasn't being refreshed.
+    withLocaleReload(() => {
+      this.refresh();
+      this.loadRoles();
+    });
   }
 
   /* ── State ───────────────────────────────────────────────────── */

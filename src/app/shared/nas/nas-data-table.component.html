@@ -53,7 +53,7 @@
           <tr>
             <td [attr.colspan]="columns.length" class="nas-table__empty">
               <i [class]="emptyIcon"></i>
-              <p>{{ emptyText }}</p>
+              <p>{{ emptyText | translate }}</p>
             </td>
           </tr>
         }
@@ -64,7 +64,7 @@
   @if (paginated && !loading && total > perPage) {
     <div class="nas-table-pagination">
       <span class="nas-table-pagination__info">
-        {{ from }}–{{ to }} of {{ total }}
+        {{ from }}–{{ to }} {{ 'common.of' | translate }} {{ total }}
       </span>
       <div class="nas-table-pagination__nav">
         <button type="button"

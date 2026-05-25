@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -21,12 +22,13 @@ import { AdminUsersApiService } from '../../services/admin-users-api.service';
 import type {
   AdminUserDetail,
   AdminUserListItem,
-  AdminUserRole,
+  AdminUserRoleKey,
   AdminUserRoleOption,
   AdminUserSource,
   AdminUserStatus,
   AdminUserSummary,
 } from '../../models/user.types';
+import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload.component';
 
 type RoleTab = 'all' | 'admin' | 'instructor';
 
@@ -36,8 +38,11 @@ interface UserFormState {
   name_en: string;
   name_ar: string;
   email: string;
-  role: AdminUserRole | '';
-  job_title: string;
+  role: AdminUserRoleKey | '';
+  /** Local preview / pending upload. `null` means "no avatar". */
+  image: File | null;
+  /** Existing server-side URL — drives the "Replace Photo" UX. */
+  imagePreview: string | null;
 }
 
 @Component({
@@ -47,10 +52,12 @@ interface UserFormState {
     CommonModule,
     FormsModule,
     DialogModule,
+    DropdownModule,
     SkeletonModule,
     ToastModule,
     TranslateModule,
     NasPageHeaderComponent,
+    NasPhotoUploadComponent,
   ],
   providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,7 +76,13 @@ export class UserListComponent implements OnInit, OnDestroy {
   readonly min = Math.min;
 
   constructor() {
-    withLocaleReload(() => this.refresh());
+    // Reload primary table AND filter-modal lookups (instructors,
+    // job titles, role options) on EN ↔ AR switch — otherwise the
+    // instructor sub-filter modal renders old-locale names.
+    withLocaleReload(() => {
+      this.refresh();
+      this.loadLookups();
+    });
   }
 
   /* ── Data ────────────────────────────────────────────────────── */
@@ -93,7 +106,6 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   /* ── Lookups ─────────────────────────────────────────────────── */
   readonly lookupInstructors = signal<Array<{ id: number; name: string; email: string | null }>>([]);
-  readonly lookupJobTitles   = signal<string[]>([]);
   readonly roleOptions       = signal<AdminUserRoleOption[]>([]);
 
   /* ── Row action menu (kebab) ─────────────────────────────────── */
@@ -185,7 +197,6 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.api.filterOptions().subscribe({
       next: res => {
         this.lookupInstructors.set(res.result.instructors ?? []);
-        this.lookupJobTitles.set(res.result.job_titles   ?? []);
         this.roleOptions.set(res.result.roles            ?? []);
       },
     });
@@ -261,7 +272,8 @@ export class UserListComponent implements OnInit, OnDestroy {
       name_ar:   user.name_ar ?? '',
       email:     user.email ?? '',
       role:      user.role_key ?? 'learner',
-      job_title: user.job_title ?? '',
+      image:        null,
+      imagePreview: user.image ?? null,
     });
     this.formOpen.set(true);
   }
@@ -284,8 +296,11 @@ export class UserListComponent implements OnInit, OnDestroy {
       name_en:   f.name_en.trim(),
       name_ar:   f.name_ar.trim(),
       email:     f.email.trim(),
-      role:      f.role as AdminUserRole,
-      job_title: f.job_title.trim() || null,
+      role:      f.role as AdminUserRoleKey,
+      // Only send the image field when the admin actually picked a new
+      // file. Omitting the key keeps the request as JSON and avoids
+      // accidentally clearing the avatar on edit.
+      ...(f.image instanceof File ? { image: f.image } : {}),
     };
 
     const obs = this.formMode() === 'create'
@@ -412,9 +427,9 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   statusLabel(s: AdminUserStatus | null | undefined): string {
     switch (s) {
-      case 'inactive':    return 'Inactive';
-      case 'deactivated': return 'Deactivated';
-      default:            return 'Active';
+      case 'inactive':    return this.t.instant('common.inactive');
+      case 'deactivated': return this.t.instant('users.deactivated_status');
+      default:            return this.t.instant('common.active');
     }
   }
 
@@ -433,8 +448,31 @@ export class UserListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /* ── Avatar upload ──────────────────────────────────────────── */
+  /**
+   * Cache the picked file in the form state and surface a data-URL
+   * preview so the swap is visible immediately. The upload itself is
+   * deferred to `submitForm()` which posts it as multipart/form-data.
+   */
+  onPhotoPicked(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => this.form.update(f => ({
+      ...f,
+      image:        file,
+      imagePreview: reader.result as string,
+    }));
+    reader.readAsDataURL(file);
+  }
+
+  onPhotoCleared(): void {
+    this.form.update(f => ({ ...f, image: null, imagePreview: null }));
+  }
+
   /* ── Internals ──────────────────────────────────────────────── */
   private emptyForm(): UserFormState {
-    return { id: null, source: null, name_en: '', name_ar: '', email: '', role: '', job_title: '' };
+    return {
+      id: null, source: null, name_en: '', name_ar: '', email: '',
+      role: '', image: null, imagePreview: null,
+    };
   }
 }

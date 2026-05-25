@@ -10,8 +10,8 @@
 
   <ng-template pTemplate="header">
     <div class="nd-head">
-      <h2 class="nd-head__title">Notifications</h2>
-      <button type="button" class="nd-head__close" aria-label="Close" (click)="drawer.close()">
+      <h2 class="nd-head__title">{{ 'notifications.title' | translate }}</h2>
+      <button type="button" class="nd-head__close" [attr.aria-label]="'notifications.close' | translate" (click)="drawer.close()">
         <nas-icon name="x" [size]="20" />
       </button>
     </div>
@@ -22,7 +22,7 @@
     <!-- ── New Notification (collapsible) ───────────────────────────── -->
     <section class="nd-card">
       <button type="button" class="nd-card__head" (click)="toggleComposer()" [attr.aria-expanded]="composerOpen()">
-        <span class="nd-card__title">New Notification</span>
+        <span class="nd-card__title">{{ 'notifications.new_notification' | translate }}</span>
         <span class="nd-card__toggle">
           <nas-icon [name]="composerOpen() ? 'minus-circle' : 'plus-circle'" [size]="20" />
         </span>
@@ -31,11 +31,11 @@
       @if (composerOpen()) {
         <div class="nd-card__body">
           <label class="nd-field">
-            <span class="nd-field__label">Description</span>
+            <span class="nd-field__label">{{ 'notifications.description' | translate }}</span>
             <textarea
               rows="3"
               class="nd-textarea"
-              placeholder="Brief overview of course objectives..."
+              [placeholder]="'notifications.description_placeholder' | translate"
               [ngModel]="description()"
               (ngModelChange)="description.set($event)"
               [disabled]="saving()"
@@ -43,7 +43,7 @@
           </label>
 
           <div class="nd-field">
-            <span class="nd-field__label">Recipients <em class="nd-field__req">*</em></span>
+            <span class="nd-field__label">{{ 'notifications.recipients' | translate }} <em class="nd-field__req">*</em></span>
 
             <div class="nd-recipients-toolbar">
               <div class="nd-search">
@@ -51,7 +51,7 @@
                 <input
                   type="text"
                   class="nd-search__input"
-                  placeholder="Search recipients..."
+                  [placeholder]="'notifications.search_recipients' | translate"
                   [ngModel]="recipientSearch()"
                   (ngModelChange)="onRecipientSearch($event)"
                   [disabled]="saving()" />
@@ -61,12 +61,12 @@
                 <label class="nd-role-tab" [class.active]="recipientRole() === 'learner'">
                   <input type="checkbox" [checked]="recipientRole() === 'learner'"
                     (change)="setRole('learner')" />
-                  <span>Learners</span>
+                  <span>{{ 'notifications.learners' | translate }}</span>
                 </label>
                 <label class="nd-role-tab" [class.active]="recipientRole() === 'instructor'">
                   <input type="checkbox" [checked]="recipientRole() === 'instructor'"
                     (change)="setRole('instructor')" />
-                  <span>Instructors</span>
+                  <span>{{ 'notifications.instructors' | translate }}</span>
                 </label>
               </div>
             </div>
@@ -97,7 +97,7 @@
                   </label>
                 }
                 @if (!recipients().length) {
-                  <div class="nd-recipient-empty">No recipients found.</div>
+                  <div class="nd-recipient-empty">{{ 'notifications.no_recipients' | translate }}</div>
                 }
               }
             </div>
@@ -106,9 +106,9 @@
           <button type="button" class="nd-send-btn" [disabled]="!canSend()" (click)="send()">
             @if (saving()) {
               <nas-icon name="spinner-gap" [size]="18" />
-              <span>Sending…</span>
+              <span>{{ 'notifications.sending' | translate }}</span>
             } @else {
-              <span>Send</span>
+              <span>{{ 'notifications.send' | translate }}</span>
             }
           </button>
         </div>
@@ -141,7 +141,7 @@
         @if (!notifications().length) {
           <div class="nd-list-empty">
             <nas-icon name="bell" [size]="32" />
-            <p>No notifications yet</p>
+            <p>{{ 'notifications.no_yet' | translate }}</p>
           </div>
         }
       }

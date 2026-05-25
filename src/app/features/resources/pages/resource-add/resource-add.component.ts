@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
+import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -16,7 +17,7 @@ interface QualOption {
 @Component({
   selector: 'app-resource-add',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, DropdownModule],
+  imports: [CommonModule, RouterLink, FormsModule, DropdownModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './resource-add.component.html',
   styleUrl: './resource-add.component.scss',

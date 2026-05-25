@@ -88,7 +88,7 @@
     <!-- Status -->
     <ng-template nasCellTpl="status" let-row>
       <nas-status-badge [tone]="statusTone(row.status)">
-        {{ row.status === 'upcoming' ? 'Up Coming' : (row.status | titlecase) }}
+        {{ statusLabel(row.status) }}
       </nas-status-badge>
     </ng-template>
 
@@ -157,6 +157,14 @@
     </div>
 
     <div class="nas-form__field">
+      <label>{{ 'add_course.level' | translate }} *</label>
+      <p-dropdown [options]="levelOpts()" optionLabel="value" optionValue="id"
+                  formControlName="level"
+                  [placeholder]="'add_course.select_level' | translate"
+                  styleClass="w-full" />
+    </div>
+
+    <div class="nas-form__field">
       <label>{{ 'add_course.instructor' | translate }} *</label>
       <p-dropdown [options]="instOptions()" optionLabel="name" optionValue="id"
                   formControlName="instructor_id"
@@ -213,25 +221,42 @@
     <div class="nas-form__row">
       <div class="nas-form__field">
         <label>{{ 'add_course.cohort_start' | translate }}</label>
-        <p-calendar formControlName="cohort_start" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+        <p-calendar formControlName="cohort_start" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+                    [placeholder]="'add_course.cohort_start_placeholder' | translate" />
       </div>
       <div class="nas-form__field">
         <label>{{ 'add_course.cohort_end' | translate }}</label>
-        <p-calendar formControlName="cohort_end"   dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+        <p-calendar formControlName="cohort_end"   dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+                    [placeholder]="'add_course.cohort_end_placeholder' | translate" />
       </div>
     </div>
 
     <div class="nas-form__field">
-      <label>{{ 'add_course.qualifications_earned' | translate }} <span class="nas-form__field-opt">(optional)</span></label>
+      <label>{{ 'add_course.qualifications_earned' | translate }} <span class="nas-form__field-opt">({{ 'common.optional' | translate }})</span></label>
       <p class="nas-form__hint">{{ 'add_course.qualifications_hint' | translate }}</p>
-      <div class="nas-checklist">
-        @for (q of qualOptions(); track q.id) {
-          <label class="nas-checklist__item">
-            <p-checkbox [value]="q.id" formControlName="qualification_ids" />
-            <span>{{ q.name }}</span>
-          </label>
-        }
-      </div>
+      @if (qualOptions().length === 0) {
+        <div class="nas-checklist nas-checklist--loading">
+          @for (s of [1,2,3,4]; track s) {
+            <p-skeleton height="1.25rem" width="60%" styleClass="mb-2" />
+          }
+        </div>
+      } @else {
+        <label class="nas-checklist__select-all">
+          <p-checkbox [binary]="true"
+                      [ngModel]="allQualificationsSelected('add')"
+                      [ngModelOptions]="{ standalone: true }"
+                      (onChange)="toggleAllQualifications('qualification_ids', 'add')" />
+          <span>{{ 'common.select_all' | translate }}</span>
+        </label>
+        <div class="nas-checklist">
+          @for (q of qualOptions(); track q.id) {
+            <label class="nas-checklist__item">
+              <p-checkbox [value]="q.id" formControlName="qualification_ids" />
+              <span>{{ q.name }}</span>
+            </label>
+          }
+        </div>
+      }
     </div>
 
     <footer class="nas-form__footer">
@@ -267,6 +292,13 @@
     </div>
   } @else {
     <form [formGroup]="editForm" (ngSubmit)="submitEditCourse()" class="nas-form">
+      <!--
+        Field-for-field mirror of the Add Course form above so the two
+        dialogs read like the same screen. Differences kept intentionally
+        minimal: photo preview source, button copy. The course `active`
+        toggle is gone — cohort dates now drive course status on the
+        backend (see CourseSectionResource + CourseResource).
+      -->
       <nas-locale-input
         formControlName="title"
         [label]="'add_course.course_title' | translate"
@@ -274,6 +306,60 @@
         [placeholderEn]="'add_course.course_title_placeholder' | translate"
         [placeholderAr]="'add_course.course_title_placeholder' | translate"
       />
+
+      <div class="nas-form__row">
+        <div class="nas-form__field">
+          <label>{{ 'add_course.type' | translate }} *</label>
+          <p-dropdown [options]="typeOpts()" optionLabel="value" optionValue="id"
+                      formControlName="type"
+                      [placeholder]="'add_course.select_type' | translate"
+                      styleClass="w-full" />
+        </div>
+        <div class="nas-form__field">
+          <label>{{ 'add_course.category' | translate }}</label>
+          <p-dropdown [options]="catOptions()" optionLabel="name" optionValue="id"
+                      formControlName="category_id"
+                      [placeholder]="'add_course.select_category' | translate"
+                      [showClear]="true"
+                      styleClass="w-full" />
+        </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'add_course.level' | translate }} *</label>
+        <p-dropdown [options]="levelOpts()" optionLabel="value" optionValue="id"
+                    formControlName="level"
+                    [placeholder]="'add_course.select_level' | translate"
+                    styleClass="w-full" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'add_course.instructor' | translate }} *</label>
+        <p-dropdown [options]="instOptions()" optionLabel="name" optionValue="id"
+                    formControlName="instructor_id"
+                    [placeholder]="'add_course.assign_instructor' | translate"
+                    styleClass="w-full" />
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'add_course.issue_certificate' | translate }} *</label>
+        <div class="nas-yesno">
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.certificate === true"
+                  (click)="editForm.patchValue({ certificate: true })">{{ 'common.yes' | translate }}</button>
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.certificate === false"
+                  (click)="editForm.patchValue({ certificate: false })">{{ 'common.no' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'add_course.review_content' | translate }} *</label>
+        <div class="nas-yesno">
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === true"
+                  (click)="editForm.patchValue({ require_instructor: true })">{{ 'common.yes' | translate }}</button>
+          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === false"
+                  (click)="editForm.patchValue({ require_instructor: false })">{{ 'common.no' | translate }}</button>
+        </div>
+      </div>
 
       <div class="nas-form__field">
         <label>{{ 'courses_list.image' | translate }} *</label>
@@ -288,55 +374,59 @@
 
       <nas-locale-input
         formControlName="description"
-        [label]="'course_detail.description' | translate"
+        [label]="'add_course.description' | translate"
         [required]="true"
         [multiline]="true"
         [placeholderEn]="'add_course.description_placeholder' | translate"
         [placeholderAr]="'add_course.description_placeholder' | translate"
       />
 
+      <div class="nas-form__field">
+        <label>{{ 'add_course.max_learners' | translate }}</label>
+        <p-inputNumber formControlName="max_learners" [min]="1" [max]="500" [showButtons]="true"
+                       styleClass="w-full" />
+      </div>
+
       <div class="nas-form__row">
         <div class="nas-form__field">
-          <label>{{ 'course_detail.delivery_type' | translate }} *</label>
-          <p-dropdown [options]="typeOpts()" optionLabel="value" optionValue="id"
-                      formControlName="type" styleClass="w-full" />
+          <label>{{ 'add_course.cohort_start' | translate }}</label>
+          <p-calendar formControlName="cohort_start" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+                      [placeholder]="'add_course.cohort_start_placeholder' | translate" />
         </div>
         <div class="nas-form__field">
-          <label>{{ 'course_detail.category' | translate }} *</label>
-          <p-dropdown [options]="catOptions()" optionLabel="name" optionValue="id"
-                      formControlName="category_id"
-                      [placeholder]="'course_detail.select_category' | translate"
-                      styleClass="w-full" />
+          <label>{{ 'add_course.cohort_end' | translate }}</label>
+          <p-calendar formControlName="cohort_end"   dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+                      [placeholder]="'add_course.cohort_end_placeholder' | translate" />
         </div>
       </div>
 
       <div class="nas-form__field">
-        <label>{{ 'course_detail.instructor' | translate }} *</label>
-        <p-dropdown [options]="instOptions()" optionLabel="name" optionValue="id"
-                    formControlName="instructor_id"
-                    [placeholder]="'course_detail.select_instructor' | translate"
-                    styleClass="w-full" />
+        <label>{{ 'add_course.qualifications_earned' | translate }} <span class="nas-form__field-opt">({{ 'common.optional' | translate }})</span></label>
+        <p class="nas-form__hint">{{ 'add_course.qualifications_hint' | translate }}</p>
+        @if (qualOptions().length === 0) {
+          <div class="nas-checklist nas-checklist--loading">
+            @for (s of [1,2,3,4]; track s) {
+              <p-skeleton height="1.25rem" width="60%" styleClass="mb-2" />
+            }
+          </div>
+        } @else {
+          <label class="nas-checklist__select-all">
+            <p-checkbox [binary]="true"
+                        [ngModel]="allQualificationsSelected('edit')"
+                        [ngModelOptions]="{ standalone: true }"
+                        (onChange)="toggleAllQualifications('qualification_ids', 'edit')" />
+            <span>{{ 'common.select_all' | translate }}</span>
+          </label>
+          <div class="nas-checklist">
+            @for (q of qualOptions(); track q.id) {
+              <label class="nas-checklist__item">
+                <p-checkbox [value]="q.id" formControlName="qualification_ids" />
+                <span>{{ q.name }}</span>
+              </label>
+            }
+          </div>
+        }
       </div>
-
-      <div class="nas-form__row">
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.hours' | translate }} *</label>
-          <p-inputNumber formControlName="hours" [min]="1" [max]="10000" [showButtons]="true" styleClass="w-full" />
-        </div>
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.max_learners_per_cohort' | translate }} *</label>
-          <p-inputNumber formControlName="max_learners" [min]="1" [max]="10000" [showButtons]="true" styleClass="w-full" />
-        </div>
-      </div>
-
-      <label class="nas-checkbox-row">
-        <p-checkbox [binary]="true" formControlName="certificate" />
-        <span>{{ 'course_detail.issue_certificate' | translate }}</span>
-      </label>
-      <label class="nas-checkbox-row">
-        <p-checkbox [binary]="true" formControlName="active" />
-        <span>{{ 'course_detail.active' | translate }}</span>
-      </label>
 
       <footer class="nas-form__footer">
         <button type="button" class="nas-btn nas-btn--ghost"

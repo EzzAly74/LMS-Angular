@@ -7,7 +7,15 @@
  * served by routes/apis/admin-users.php.
  */
 
+/**
+ * Bucketed system roles that route to a dedicated person table.
+ * The dropdown itself is dynamic (sourced from the `roles` table) so a
+ * persisted user may carry a custom role key outside this enum — that's
+ * why we widen the contract with `(string & {})` below.
+ */
 export type AdminUserRole   = 'admin' | 'instructor' | 'learner';
+/** Any machine-name returned by the dynamic `/admin/users/filter-options` endpoint. */
+export type AdminUserRoleKey = AdminUserRole | (string & {});
 export type AdminUserStatus = 'active' | 'inactive' | 'deactivated';
 export type AdminUserSource = 'user' | 'instructor' | 'admin';
 export type LearnerType     = 'online' | 'offline' | 'hybrid';
@@ -26,9 +34,14 @@ export interface AdminUserListItem {
   phone: string | null;
   machine_code: string | null;
   department_name: string | null;
-  job_title: string | null;
+  /**
+   * Fully-qualified avatar URL (resolved server-side via `HasFile`)
+   * or `null` when the row has no image. Replaces the legacy
+   * single-letter "initial" placeholder on the avatar circle.
+   */
+  image: string | null;
   role: string;
-  role_key: AdminUserRole;
+  role_key: AdminUserRoleKey;
   status: AdminUserStatus;
   last_active_at: string | null;
   compliance_pct: number | null;
@@ -48,26 +61,29 @@ export interface AdminUserSummary {
 }
 
 export interface AdminUserRoleOption {
-  key:   AdminUserRole;
+  /** Machine name from the `roles` table (admin guard). */
+  key:   AdminUserRoleKey;
+  /** Bilingual display label resolved server-side via `Accept-Language`. */
   label: string;
+  /** Live count of people attached to the role (bucketed or pivoted). */
   count: number;
 }
 
 export interface AdminUserFilterOptions {
   roles:       AdminUserRoleOption[];
   instructors: Array<{ id: number; name: string; email: string | null }>;
-  job_titles:  string[];
 }
 
 export interface AdminUserStorePayload {
   name_en: string;
   name_ar: string;
   email: string;
-  role: AdminUserRole;
-  job_title?: string | null;
+  role: AdminUserRoleKey;
   department_name?: string | null;
   phone?: string | null;
   learner_type?: LearnerType | null;
+  /** Optional avatar upload. Sent as multipart/form-data when present. */
+  image?: File | null;
 }
 
 export type AdminUserUpdatePayload = Partial<AdminUserStorePayload & {

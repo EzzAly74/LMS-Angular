@@ -58,7 +58,13 @@ export class RatingsListComponent implements OnInit, OnDestroy {
   readonly min = Math.min;
 
   constructor() {
-    withLocaleReload(() => this.refresh());
+    // Reload primary list AND filter-modal lookups (instructors,
+    // learners, courses) on EN ↔ AR switch so the filter modal
+    // doesn't keep old-language names cached.
+    withLocaleReload(() => {
+      this.refresh();
+      this.loadLookups();
+    });
   }
 
   /* ── Data ────────────────────────────────────────────────────── */

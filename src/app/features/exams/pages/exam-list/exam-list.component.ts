@@ -36,7 +36,12 @@ export class ExamListComponent implements OnInit {
   private t              = inject(TranslateService);
 
   constructor() {
+    // Refetch BOTH the course dropdown (localized course titles) AND the
+    // currently selected course's exams whenever the user toggles EN ↔ AR.
+    // The previous version only reloaded exams, so the course picker
+    // stayed in the old language until a hard reload.
     withLocaleReload(() => {
+      this.loadCourses();
       if (this.selectedCourseId) this.load();
     });
   }
@@ -54,6 +59,11 @@ export class ExamListComponent implements OnInit {
   readonly min = Math.min;
 
   ngOnInit(): void {
+    this.loadCourses();
+  }
+
+  private loadCourses(): void {
+    this.coursesLoading.set(true);
     this.api.getPaginated<CourseOption>(API.COURSES, { per_page: 200 }).subscribe({
       next:  res => { this.courses.set(res.result.data); this.coursesLoading.set(false); },
       error: ()  => this.coursesLoading.set(false),

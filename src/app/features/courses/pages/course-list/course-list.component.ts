@@ -14,6 +14,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
@@ -46,7 +47,7 @@ type ActiveTab = 'all' | 'pending' | 'active' | 'upcoming' | 'inactive';
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslateModule,
     OverlayPanelModule, ConfirmDialogModule, DialogModule,
-    DropdownModule, CalendarModule, InputNumberModule, CheckboxModule,
+    DropdownModule, CalendarModule, InputNumberModule, CheckboxModule, SkeletonModule,
     NasPageHeaderComponent, NasPillTabsComponent, NasStatusBadgeComponent, NasProgressComponent,
     NasLocaleInputComponent, NasDataTableComponent, NasCellTplDirective, NasPhotoUploadComponent,
   ],
@@ -70,17 +71,56 @@ export class CourseListComponent implements OnInit {
   private selectOptionsLoaded = false;
 
   constructor() {
+    // Warm the Add/Edit Course dropdown lookups (categories,
+    // instructors, qualifications) on page mount instead of on first
+    // dialog open. The qualifications endpoint can return ~hundreds
+    // of rows and the user perceives an empty checklist for a moment
+    // when the fetch only fires when the dialog opens — preloading
+    // makes the dialog feel instant.
+    this.loadSelectOptions();
+
     withLocaleReload(() => {
       this.langTick.update(v => v + 1);
       this.load();
       this.loadTabCounts();
-      // Only re-fetch the modal lookups if they were already consumed —
-      // avoids 3 extra network calls every time the locale changes for
-      // pages where the user never opens the Add-Course dialog.
-      if (this.selectOptionsLoaded) {
-        this.loadSelectOptions();
+      // Re-fetch dropdown lookups on locale switch so the labels
+      // (category names, instructor names, qualification names)
+      // refresh too. Safe because the eager-load above guarantees
+      // `selectOptionsLoaded` is true by the time this runs.
+      this.loadSelectOptions();
+      // If the Edit-Course dialog is open over the list when the user
+      // toggles the language, re-fetch the canonical course detail so
+      // the dialog reflects the new locale (description/title fall back
+      // through `toLocalized`, but category/instructor labels and any
+      // pre-translated server-rendered fields would otherwise stay
+      // stale until the user closes and reopens the dialog).
+      const openEditId = this.editingId();
+      if (this.showEditCourse() && openEditId !== null) {
+        this.refetchEditingCourse(openEditId);
       }
     });
+  }
+
+  /**
+   * Master "Select all" toggle for the qualifications checklist on
+   * the Add/Edit Course dialogs. We accept the FormControl name so a
+   * single helper drives every dialog instance instead of writing
+   * three near-identical handlers.
+   */
+  toggleAllQualifications(controlName: 'qualification_ids', form: 'add' | 'edit'): void {
+    const fg = form === 'add' ? this.form : this.editForm;
+    const current = (fg.get(controlName)?.value ?? []) as number[];
+    const all = this.qualOptions().map(q => q.id);
+    const allSelected = all.length > 0 && current.length === all.length;
+    fg.patchValue({ qualification_ids: allSelected ? [] : all });
+  }
+
+  /** Whether every qualification is checked on the given dialog. */
+  allQualificationsSelected(form: 'add' | 'edit'): boolean {
+    const fg = form === 'add' ? this.form : this.editForm;
+    const current = (fg.value.qualification_ids ?? []) as number[];
+    const total   = this.qualOptions().length;
+    return total > 0 && current.length === total;
   }
 
   items     = signal<Course[]>([]);
@@ -125,6 +165,12 @@ export class CourseListComponent implements OnInit {
    * authoritative list of allowed values.
    */
   typeOpts = this.enums.options('course_type');
+  /**
+   * Difficulty level dropdown — driven by the backend `course_level` enum
+   * (beginner / intermediate / professional). Labels localize via
+   * `Accept-Language` so we never bake strings into the client.
+   */
+  levelOpts = this.enums.options('course_level');
 
   /**
    * Status-pill tabs are driven by the backend `course_status` enum. We
@@ -171,6 +217,7 @@ export class CourseListComponent implements OnInit {
     title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
     type:                [null as number | null, Validators.required],
     category_id:         [null as number | null, Validators.required],
+    level:               [null as number | null, Validators.required],
     instructor_id:       [null as number | null, Validators.required],
     certificate:         [true,  Validators.required],
     require_instructor:  [true,  Validators.required],
@@ -188,17 +235,29 @@ export class CourseListComponent implements OnInit {
    * the identical experience whether they edit from the list or from the
    * course detail page.
    */
+  /**
+   * Edit Course form — kept in perfect lockstep with the Add Course
+   * `form` group above so the two dialogs surface the same fields in
+   * the same order. The course `active` flag is intentionally absent;
+   * status is now derived from cohort dates on the backend, so an
+   * admin can never accidentally take a live cohort offline by ticking
+   * a checkbox.
+   */
   editForm = this.fb.group({
-    title:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
-    description:   this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
-    type:          [null as number | null, Validators.required],
-    category_id:   [null as number | null, Validators.required],
-    instructor_id: [null as number | null, Validators.required],
-    hours:         [1,  [Validators.required, Validators.min(1)]],
-    max_learners:  [30, [Validators.required, Validators.min(1)]],
-    certificate:   [true],
-    active:        [true],
-    image:         [null as File | null],
+    title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
+    type:                [null as number | null, Validators.required],
+    category_id:         [null as number | null, Validators.required],
+    level:               [null as number | null, Validators.required],
+    instructor_id:       [null as number | null, Validators.required],
+    certificate:         [true,  Validators.required],
+    require_instructor:  [true,  Validators.required],
+    description:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
+    hours:               [1, [Validators.required, Validators.min(1)]],
+    max_learners:        [30, [Validators.required, Validators.min(1)]],
+    cohort_start:        [null as Date | null],
+    cohort_end:          [null as Date | null],
+    qualification_ids:   [[] as number[]],
+    image:               [null as File | null],
   });
 
   ngOnInit(): void {
@@ -299,39 +358,79 @@ export class CourseListComponent implements OnInit {
 
     // Reset to a sane skeleton in case the previous edit left stale state.
     this.editForm.reset({
-      title:         { en: '', ar: '' },
-      description:   { en: '', ar: '' },
-      type:          null,
-      category_id:   null,
-      instructor_id: null,
-      hours:         1,
-      max_learners:  30,
-      certificate:   true,
-      active:        true,
-      image:         null,
+      title:              { en: '', ar: '' },
+      description:        { en: '', ar: '' },
+      type:               null,
+      category_id:        null,
+      level:              null,
+      instructor_id:      null,
+      certificate:        true,
+      require_instructor: true,
+      hours:              1,
+      max_learners:       30,
+      cohort_start:       null,
+      cohort_end:         null,
+      qualification_ids:  [],
+      image:              null,
     });
 
-    this.coursesApi.getById(course.id).subscribe({
+    this.refetchEditingCourse(course.id);
+  }
+
+  /**
+   * (Re)load the canonical course detail and patch the Edit Course form.
+   * Extracted so the constructor's `withLocaleReload` hook can re-prime
+   * the open dialog with locale-aware data without duplicating logic.
+   */
+  private refetchEditingCourse(id: number): void {
+    this.editLoading.set(true);
+    this.coursesApi.getById(id).subscribe({
       next: res => {
         const r = res.result as unknown as ApiCourseRaw;
         const title = this.toLocalized(r.title);
         const desc  = this.toLocalized(r.description);
         const firstInstructor = r.instructors?.[0] ?? r.instructor ?? null;
 
+        // Pull the qualification ids off the detail payload so the
+        // chip-list pre-selects whatever was saved last time.
+        const qualIds: number[] = Array.isArray(r.qualification_skills)
+          ? r.qualification_skills
+              .map((q) => Number((q as { id?: number }).id))
+              .filter((id) => Number.isFinite(id))
+          : [];
+
+        // First cohort dates (when present) seed the cohort_start /
+        // cohort_end pickers — mirrors the Add dialog's hint that the
+        // very first cohort can be created inline with the course.
+        const cohortStartRaw = (r as { sections?: Array<{ start_date?: string | null }> })
+          .sections?.[0]?.start_date ?? null;
+        const cohortEndRaw   = (r as { sections?: Array<{ end_date?: string | null }> })
+          .sections?.[0]?.end_date ?? null;
+
         this.editForm.patchValue({
-          title:         title,
-          description:   desc,
+          title:              title,
+          description:        desc,
           // Translate the backend's string `course_type` into the numeric
           // enum id the dropdown is bound to. Returns null if the enum
           // hasn't loaded yet — the patch picks it up after the options
           // arrive thanks to the dropdown's two-way value resolution.
-          type:          this.enums.idForCode('course_type', r.course_type) ?? null,
-          category_id:   r.category?.id ?? null,
-          instructor_id: firstInstructor?.id ?? null,
-          hours:         r.hours ?? 1,
-          max_learners:  r.max_learners ?? 30,
-          certificate:   !!r.certificate,
-          active:        r.status ? r.status === 'active' : !!r.active,
+          type:               this.enums.idForCode('course_type', r.course_type) ?? null,
+          category_id:        r.category?.id ?? null,
+          // Same numeric-id-vs-string-code trick as `course_type` — the
+          // backend stores the canonical lowercase code, the dropdown
+          // binds to the dense numeric id from the enums service.
+          level:              this.enums.idForCode('course_level', (r.level ?? null) as string | null) ?? null,
+          instructor_id:      firstInstructor?.id ?? null,
+          certificate:        !!r.certificate,
+          // The backend doesn't currently track an explicit "review
+          // content" flag — default to true and let the admin opt out
+          // explicitly. (Wire to a real column when the API adds one.)
+          require_instructor: true,
+          hours:              r.hours ?? 1,
+          max_learners:       r.max_learners ?? 30,
+          cohort_start:       cohortStartRaw ? new Date(cohortStartRaw) : null,
+          cohort_end:         cohortEndRaw   ? new Date(cohortEndRaw)   : null,
+          qualification_ids:  qualIds,
         });
         // The detail endpoint resolves `image` to a fully-qualified URL via
         // CourseDetailResource — wire it straight into the upload widget so
@@ -412,11 +511,28 @@ export class CourseListComponent implements OnInit {
     fd.append('description[ar]', descAr  || descEn);
     fd.append('course_type',     String(v.type ?? ''));
     fd.append('category_id',     String(v.category_id ?? ''));
+    if (v.level !== null && v.level !== undefined) {
+      fd.append('level',         String(v.level));
+    }
     fd.append('instructors[]',   String(v.instructor_id ?? ''));
     fd.append('hours',           String(v.hours ?? 1));
     fd.append('max_learners',    String(v.max_learners ?? 30));
     fd.append('certificate',     v.certificate ? '1' : '0');
-    fd.append('active',          v.active ? '1' : '0');
+    // Cohort calendar — same wire format as Add Course. Sending empty
+    // strings explicitly so the backend can distinguish "admin
+    // cleared the date" from "admin didn't touch it" when needed.
+    if (v.cohort_start instanceof Date) {
+      fd.append('cohort_start', this.toIso(v.cohort_start));
+    }
+    if (v.cohort_end instanceof Date) {
+      fd.append('cohort_end',   this.toIso(v.cohort_end));
+    }
+    // Qualifications: mirror the Add dialog wire format
+    // (`qualification_skill_ids[]`). Filter out duplicates so the PUT
+    // payload is deterministic.
+    Array.from(new Set(v.qualification_ids ?? [])).forEach((qid: number) =>
+      fd.append('qualification_skill_ids[]', String(qid)),
+    );
     if (v.image instanceof File) {
       fd.append('image', v.image);
     }
@@ -460,8 +576,9 @@ export class CourseListComponent implements OnInit {
     // If it hasn't (very first dialog open), the dropdown will simply
     // start empty and the user picks from the localized list.
     const defaultType = this.enums.idForCode('course_type', 'hybrid') ?? null;
+    const defaultLevel = this.enums.idForCode('course_level', 'beginner') ?? null;
     this.form.reset({
-      title: { en: '', ar: '' }, type: defaultType, category_id: null, instructor_id: null,
+      title: { en: '', ar: '' }, type: defaultType, category_id: null, level: defaultLevel, instructor_id: null,
       certificate: true, require_instructor: true, description: { en: '', ar: '' },
       hours: 1, max_learners: 30, cohort_start: null, cohort_end: null, qualification_ids: [], image: null,
     });
@@ -494,9 +611,23 @@ export class CourseListComponent implements OnInit {
     // this back into the string code expected by the validator.
     fd.append('course_type', String(v.type ?? ''));
     fd.append('category_id', String(v.category_id!));
+    if (v.level !== null && v.level !== undefined) {
+      fd.append('level',     String(v.level));
+    }
     fd.append('hours', String(v.hours ?? 1));
     fd.append('certificate', v.certificate ? '1' : '0');
     fd.append('instructors[]', String(v.instructor_id!));
+    // Cohort calendar: when the admin picks dates inline with the
+    // course we ship them as ISO strings so the backend can spin up
+    // the first cohort row alongside the course. Both fields are
+    // optional — courses can ship without a cohort and have one
+    // added later from the Course Detail page.
+    if (v.cohort_start instanceof Date) {
+      fd.append('cohort_start', this.toIso(v.cohort_start));
+    }
+    if (v.cohort_end instanceof Date) {
+      fd.append('cohort_end',   this.toIso(v.cohort_end));
+    }
     (v.qualification_ids ?? []).forEach((id: number) => fd.append('qualification_skill_ids[]', String(id)));
     if (v.image) fd.append('image', v.image);
     this.coursesApi.create(fd).subscribe({
@@ -532,6 +663,16 @@ export class CourseListComponent implements OnInit {
     }
   }
 
+  statusLabel(status: CourseStatus | undefined): string {
+    switch (status) {
+      case 'active':   return this.t.instant('common.active');
+      case 'pending':  return this.t.instant('courses.status_pending');
+      case 'upcoming': return this.t.instant('courses.status_upcoming');
+      case 'inactive': return this.t.instant('common.inactive');
+      default:         return '';
+    }
+  }
+
   typeTone(type: CourseType | undefined): NasStatusTone {
     switch (type) {
       case 'online':        return 'teal';
@@ -544,6 +685,12 @@ export class CourseListComponent implements OnInit {
 
   typeLabel(type: CourseType | undefined): string {
     if (!type) return '';
-    return type === 'external_link' ? 'External Link' : type.charAt(0).toUpperCase() + type.slice(1);
+    switch (type) {
+      case 'online':        return this.t.instant('courses.type_online');
+      case 'offline':       return this.t.instant('courses.type_offline');
+      case 'hybrid':        return this.t.instant('courses.type_hybrid');
+      case 'external_link': return this.t.instant('courses.type_external_link');
+      default:              return '';
+    }
   }
 }

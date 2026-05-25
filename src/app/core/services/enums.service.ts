@@ -15,6 +15,7 @@ import { ApiResponse } from '../models/api-response.model';
 export type EnumName =
   | 'course_type'
   | 'course_status'
+  | 'course_level'
   | 'cohort_status'
   | 'module_content_type'
   | 'module_learner_scope'

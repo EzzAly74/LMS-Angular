@@ -2,7 +2,7 @@
 
   <div class="nas-locale-input__group">
     <label class="nas-locale-input__label" [attr.for]="inputId + '-en'">
-      {{ label }} (English)
+      {{ label }} ({{ 'common.english' | translate }})
       @if (required) { <span class="nas-locale-input__req">*</span> }
     </label>
     @if (multiline) {
@@ -30,7 +30,7 @@
 
   <div class="nas-locale-input__group">
     <label class="nas-locale-input__label" [attr.for]="inputId + '-ar'">
-      {{ label }} (Arabic)
+      {{ label }} ({{ 'common.arabic' | translate }})
       @if (required) { <span class="nas-locale-input__req">*</span> }
     </label>
     @if (multiline) {

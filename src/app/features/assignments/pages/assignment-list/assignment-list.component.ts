@@ -78,7 +78,14 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
   readonly min = Math.min;
 
   constructor() {
-    withLocaleReload(() => this.refresh());
+    // Reload every locale-dependent payload — primary table, filter-modal
+    // lookups, and the cached learners list — so a EN ↔ AR switch never
+    // leaves stale text on screen.
+    withLocaleReload(() => {
+      this.refresh();
+      this.loadLookups();
+      this.learners.set([]);
+    });
   }
 
   /* ── Mini-table (top 5 created assignments) ──────────────────── */
@@ -384,11 +391,11 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
   /* ── Helpers ─────────────────────────────────────────────────── */
 
   cohortPillLabel(item: AssignmentListItem): string {
-    if (item.cohort_scope === 'all') return 'All cohorts';
+    if (item.cohort_scope === 'all') return this.t.instant('assignments.cohort_scope_all');
     const titles = (item.cohorts ?? [])
       .map(c => c.title)
       .filter((t): t is string => !!t);
-    return titles.length ? titles.join(', ') : 'Specific cohorts';
+    return titles.length ? titles.join(', ') : this.t.instant('assignments.cohort_scope_specific');
   }
 
   cohortPillTone(scope: AssignmentListItem['cohort_scope']): 'teal' | 'warning' {

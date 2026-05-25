@@ -5,18 +5,18 @@
   <!-- ── Breadcrumb + title bar ──────────────────────────────── -->
   <div class="qf-breadcrumb">
     <a routerLink="/admin/quizzes" class="qf-breadcrumb__link">
-      <i class="pi pi-book"></i> Quizzes
+      <i class="pi pi-book"></i> {{ 'quizzes.title' | translate }}
     </a>
     <i class="pi pi-angle-right qf-breadcrumb__sep"></i>
     <span class="qf-breadcrumb__current">
-      {{ quizId() ? 'Edit Quiz' : 'Create Quiz' }}
+      {{ (quizId() ? 'quizzes.form_title_edit' : 'quizzes.create') | translate }}
     </span>
   </div>
 
   <div class="qf-titlebar">
-    <h1 class="qf-title">{{ quizId() ? 'Edit Quiz' : 'Generate Quiz' }}</h1>
+    <h1 class="qf-title">{{ (quizId() ? 'quizzes.form_title_edit' : 'quizzes.form_title_create') | translate }}</h1>
     <div class="qf-titlebar__actions">
-      <button type="button" class="qf-btn qf-btn--ghost" (click)="cancel()">Cancel</button>
+      <button type="button" class="qf-btn qf-btn--ghost" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
       <button
         type="button"
         class="qf-btn qf-btn--primary"
@@ -24,7 +24,7 @@
         (click)="publish()">
         @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
         @else { <i class="pi pi-send"></i> }
-        {{ quizId() ? 'Save Changes' : 'Publish Quiz' }}
+        {{ (quizId() ? 'common.save_changes' : 'quizzes.publish') | translate }}
       </button>
     </div>
   </div>
@@ -44,64 +44,64 @@
 
       <!-- ── General card ─────────────────────────────────── -->
       <div class="nas-card qf-card">
-        <h2 class="qf-card__title">General</h2>
+        <h2 class="qf-card__title">{{ 'quizzes.form_general' | translate }}</h2>
 
         <div class="qf-field">
-          <label class="qf-label">Quiz title (English) <span class="qf-req">*</span></label>
+          <label class="qf-label">{{ 'quizzes.form_title_en' | translate }} <span class="qf-req">*</span></label>
           <input
             type="text"
             formControlName="title"
             class="qf-input"
-            placeholder="e.g. Safety readiness assessment" />
+            [placeholder]="'quizzes.form_title_en_placeholder' | translate" />
           @if (form.controls.title.touched && form.controls.title.invalid) {
-            <span class="qf-err">Title is required.</span>
+            <span class="qf-err">{{ 'quizzes.form_title_required' | translate }}</span>
           }
         </div>
 
         <div class="qf-field">
-          <label class="qf-label">Quiz title (Arabic)</label>
+          <label class="qf-label">{{ 'quizzes.form_title_ar' | translate }}</label>
           <input
             type="text"
             formControlName="title_ar"
             class="qf-input"
             dir="rtl"
-            placeholder="مثال: تقييم الجاهزية للسلامة" />
+            [placeholder]="'quizzes.form_title_ar_placeholder' | translate" />
         </div>
 
         <div class="qf-field">
-          <label class="qf-label">Course <span class="qf-req">*</span></label>
+          <label class="qf-label">{{ 'quizzes.form_course' | translate }} <span class="qf-req">*</span></label>
           <p-dropdown
             formControlName="course_id"
             [options]="courses()"
             optionLabel="title"
             optionValue="id"
-            placeholder="Select a course"
+            [placeholder]="'quizzes.form_select_course' | translate"
             styleClass="qf-dropdown"
             [style]="{'width':'100%'}" />
           @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
-            <span class="qf-err">Course is required.</span>
+            <span class="qf-err">{{ 'quizzes.form_course_required' | translate }}</span>
           }
         </div>
 
         <div class="qf-field">
-          <label class="qf-label">Cohort scope <span class="qf-req">*</span></label>
+          <label class="qf-label">{{ 'quizzes.form_cohort_scope' | translate }} <span class="qf-req">*</span></label>
           <p-dropdown
             formControlName="cohort_scope"
             [options]="scopeOptions()"
             optionLabel="value"
             optionValue="code"
-            placeholder="Select cohort scope"
+            [placeholder]="'quizzes.form_select_scope' | translate"
             styleClass="qf-dropdown"
             [style]="{'width':'100%'}" />
         </div>
 
         @if (form.controls.cohort_scope.value === 'specific') {
           <div class="qf-field">
-            <label class="qf-label">Cohorts <span class="qf-req">*</span></label>
+            <label class="qf-label">{{ 'quizzes.form_cohorts' | translate }} <span class="qf-req">*</span></label>
             @if (cohortsLoading()) {
-              <p class="qf-hint">Loading cohorts…</p>
+              <p class="qf-hint">{{ 'quizzes.form_loading_cohorts' | translate }}</p>
             } @else if (!cohorts().length) {
-              <p class="qf-hint">No cohorts available for this course.</p>
+              <p class="qf-hint">{{ 'quizzes.form_no_cohorts' | translate }}</p>
             } @else {
               <div class="qf-cohort-list">
                 @for (cohort of cohorts(); track cohort.id) {
@@ -119,7 +119,7 @@
         }
 
         <div class="qf-field">
-          <label class="qf-label">Due date</label>
+          <label class="qf-label">{{ 'quizzes.form_due_date' | translate }}</label>
           <input
             type="date"
             formControlName="due_date"
@@ -128,31 +128,31 @@
         </div>
 
         <div class="qf-field">
-          <label class="qf-label">Learner instructions (English)</label>
+          <label class="qf-label">{{ 'quizzes.form_instructions_en' | translate }}</label>
           <textarea
             formControlName="instructions_en"
             rows="3"
             class="qf-textarea"
-            placeholder="Explain what learners should complete before submitting."></textarea>
+            [placeholder]="'quizzes.form_instructions_placeholder' | translate"></textarea>
         </div>
 
         <div class="qf-field">
-          <label class="qf-label">Learner instructions (Arabic)</label>
+          <label class="qf-label">{{ 'quizzes.form_instructions_ar' | translate }}</label>
           <textarea
             formControlName="instructions_ar"
             rows="3"
             class="qf-textarea"
             dir="rtl"
-            placeholder="اشرح للمستخدمين ما يجب إكماله قبل التسليم."></textarea>
+            [placeholder]="'quizzes.form_instructions_placeholder' | translate"></textarea>
         </div>
       </div>
 
       <!-- ── Questions card ───────────────────────────────── -->
       <div class="nas-card qf-card">
         <div class="qf-card__header">
-          <h2 class="qf-card__title">Questions</h2>
+          <h2 class="qf-card__title">{{ 'quizzes.form_questions' | translate }}</h2>
           <button type="button" class="qf-btn qf-btn--primary qf-btn--sm" (click)="addQuestion()">
-            <i class="pi pi-plus-circle"></i> Add Question
+            <i class="pi pi-plus-circle"></i> {{ 'quizzes.form_add_question' | translate }}
           </button>
         </div>
 
@@ -162,34 +162,34 @@
               <div class="qf-question__num">{{ i + 1 }}</div>
               @if (questions.length > 1) {
                 <button type="button" class="qf-question__remove" (click)="removeQuestion(i)">
-                  <i class="pi pi-minus-circle"></i> Remove
+                  <i class="pi pi-minus-circle"></i> {{ 'quizzes.form_remove' | translate }}
                 </button>
               }
             </div>
 
             <div class="qf-row qf-row--cols2">
               <div class="qf-field">
-                <label class="qf-label">Question (English) <span class="qf-req">*</span></label>
+                <label class="qf-label">{{ 'quizzes.form_question_en' | translate }} <span class="qf-req">*</span></label>
                 <input
                   type="text"
                   formControlName="question_en"
                   class="qf-input"
-                  placeholder="Question" />
+                  [placeholder]="'quizzes.form_question_placeholder' | translate" />
               </div>
               <div class="qf-field">
-                <label class="qf-label">Question (Arabic)</label>
+                <label class="qf-label">{{ 'quizzes.form_question_ar' | translate }}</label>
                 <input
                   type="text"
                   formControlName="question_ar"
                   class="qf-input"
                   dir="rtl"
-                  placeholder="سؤال" />
+                  [placeholder]="'quizzes.form_question_placeholder' | translate" />
               </div>
             </div>
 
             <div class="qf-row qf-row--cols2">
               <div class="qf-field">
-                <label class="qf-label">Type <span class="qf-req">*</span></label>
+                <label class="qf-label">{{ 'quizzes.form_type' | translate }} <span class="qf-req">*</span></label>
                 <p-dropdown
                   [options]="questionTypeOptions()"
                   optionLabel="value"
@@ -201,7 +201,7 @@
                   [style]="{'width':'100%'}" />
               </div>
               <div class="qf-field">
-                <label class="qf-label">Score <span class="qf-req">*</span></label>
+                <label class="qf-label">{{ 'quizzes.form_score' | translate }} <span class="qf-req">*</span></label>
                 <input
                   type="number"
                   formControlName="score"
@@ -214,8 +214,7 @@
             @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
               <div class="qf-field">
                 <label class="qf-label">
-                  @if (questionType(i) === 'mcq') { MCQ Options (English) }
-                  @else { Items to reorder (English) }
+                  {{ (questionType(i) === 'mcq' ? 'quizzes.form_mcq_options_en' : 'quizzes.form_reorder_items_en') | translate }}
                   <span class="qf-req">*</span>
                 </label>
                 <div class="qf-options" formArrayName="options_en">
@@ -225,7 +224,7 @@
                         type="text"
                         [formControlName]="j"
                         class="qf-input"
-                        [placeholder]="(questionType(i) === 'mcq' ? 'Option ' : 'Order ') + (j + 1)" />
+                        [placeholder]="((questionType(i) === 'mcq' ? 'quizzes.form_option' : 'quizzes.form_order') | translate) + ' ' + (j + 1)" />
                       @if (optionsEn(i).length > 2) {
                         <button type="button" class="qf-option-remove" (click)="removeOption(i, 'en', j)">
                           <i class="pi pi-times"></i>
@@ -235,14 +234,13 @@
                   }
                 </div>
                 <button type="button" class="qf-option-add" (click)="addOption(i, 'en')">
-                  <i class="pi pi-plus-circle"></i> Add Option
+                  <i class="pi pi-plus-circle"></i> {{ 'quizzes.form_add_option' | translate }}
                 </button>
               </div>
 
               <div class="qf-field">
                 <label class="qf-label">
-                  @if (questionType(i) === 'mcq') { MCQ Options (Arabic) }
-                  @else { Items to reorder (Arabic) }
+                  {{ (questionType(i) === 'mcq' ? 'quizzes.form_mcq_options_ar' : 'quizzes.form_reorder_items_ar') | translate }}
                 </label>
                 <div class="qf-options" formArrayName="options_ar">
                   @for (opt of optionsAr(i).controls; track $index; let j = $index) {
@@ -252,7 +250,7 @@
                         [formControlName]="j"
                         class="qf-input"
                         dir="rtl"
-                        [placeholder]="(questionType(i) === 'mcq' ? 'خيار ' : 'ترتيب ') + (j + 1)" />
+                        [placeholder]="((questionType(i) === 'mcq' ? 'quizzes.form_option' : 'quizzes.form_order') | translate) + ' ' + (j + 1)" />
                       @if (optionsAr(i).length > 2) {
                         <button type="button" class="qf-option-remove" (click)="removeOption(i, 'ar', j)">
                           <i class="pi pi-times"></i>
@@ -262,7 +260,7 @@
                   }
                 </div>
                 <button type="button" class="qf-option-add" (click)="addOption(i, 'ar')">
-                  <i class="pi pi-plus-circle"></i> إضافة خيار
+                  <i class="pi pi-plus-circle"></i> {{ 'quizzes.form_add_option' | translate }}
                 </button>
               </div>
             }
@@ -272,48 +270,46 @@
               <div class="qf-row qf-row--cols2">
                 <div class="qf-field">
                   <label class="qf-label">
-                    @if (questionType(i) === 'reorder') { Correct order (English) }
-                    @else { Correct answer / grading key (English) }
+                    {{ (questionType(i) === 'reorder' ? 'quizzes.form_correct_order_en' : 'quizzes.form_correct_answer_en') | translate }}
                     <span class="qf-req">*</span>
                   </label>
                   <input
                     type="text"
                     formControlName="correct_answer_en"
                     class="qf-input"
-                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : 'Answer'" />
+                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : ('quizzes.form_answer_placeholder' | translate)" />
                 </div>
                 <div class="qf-field">
                   <label class="qf-label">
-                    @if (questionType(i) === 'reorder') { Correct order (Arabic) }
-                    @else { Correct answer / grading key (Arabic) }
+                    {{ (questionType(i) === 'reorder' ? 'quizzes.form_correct_order_ar' : 'quizzes.form_correct_answer_ar') | translate }}
                   </label>
                   <input
                     type="text"
                     formControlName="correct_answer_ar"
                     class="qf-input"
                     dir="rtl"
-                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : 'الإجابة'" />
+                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : ('quizzes.form_answer_placeholder' | translate)" />
                 </div>
               </div>
             }
 
             <div class="qf-row qf-row--cols2">
               <div class="qf-field">
-                <label class="qf-label">Explanation for learner feedback (English)</label>
+                <label class="qf-label">{{ 'quizzes.form_explanation_en' | translate }}</label>
                 <textarea
                   formControlName="explanation_en"
                   rows="2"
                   class="qf-textarea"
-                  placeholder="Optional explanation shown after grading"></textarea>
+                  [placeholder]="'quizzes.form_explanation_placeholder' | translate"></textarea>
               </div>
               <div class="qf-field">
-                <label class="qf-label">Explanation for learner feedback (Arabic)</label>
+                <label class="qf-label">{{ 'quizzes.form_explanation_ar' | translate }}</label>
                 <textarea
                   formControlName="explanation_ar"
                   rows="2"
                   class="qf-textarea"
                   dir="rtl"
-                  placeholder="شرح اختياري يظهر بعد التصحيح"></textarea>
+                  [placeholder]="'quizzes.form_explanation_placeholder' | translate"></textarea>
               </div>
             </div>
           </div>
@@ -325,27 +321,27 @@
     <!-- ── Right sidebar (publish summary) ──────────────────── -->
     <aside class="qf-sidebar">
       <div class="nas-card qf-summary">
-        <h3 class="qf-summary__title">PUBLISH SUMMARY</h3>
+        <h3 class="qf-summary__title">{{ 'quizzes.form_publish_summary' | translate }}</h3>
 
         <div class="qf-summary__row">
-          <span class="qf-summary__label">Scope</span>
+          <span class="qf-summary__label">{{ 'quizzes.form_scope' | translate }}</span>
           <nas-status-badge [tone]="scopePillTone(form.controls.cohort_scope.value)">
             {{ scopeLabel(form.controls.cohort_scope.value) }}
           </nas-status-badge>
         </div>
 
         <div class="qf-summary__row">
-          <span class="qf-summary__label">Questions</span>
+          <span class="qf-summary__label">{{ 'quizzes.form_questions' | translate }}</span>
           <span class="qf-summary__value">{{ questionCount() }}</span>
         </div>
 
         <div class="qf-summary__row">
-          <span class="qf-summary__label">Total score</span>
+          <span class="qf-summary__label">{{ 'quizzes.form_total_score' | translate }}</span>
           <span class="qf-summary__value qf-summary__value--large">{{ totalScore() }}</span>
         </div>
 
         <div class="qf-summary__row qf-summary__row--col">
-          <label class="qf-label" for="passScore">Pass score</label>
+          <label class="qf-label" for="passScore">{{ 'quizzes.form_pass_score' | translate }}</label>
           <input
             id="passScore"
             type="number"
@@ -357,8 +353,8 @@
       </div>
 
       <div class="qf-rule">
-        <h4 class="qf-rule__title">Business rule</h4>
-        <p>Quizzes are published directly to learners once the answer keys and scores are complete.</p>
+        <h4 class="qf-rule__title">{{ 'quizzes.form_business_rule' | translate }}</h4>
+        <p>{{ 'quizzes.form_business_rule_text' | translate }}</p>
       </div>
     </aside>
 

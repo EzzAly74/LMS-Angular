@@ -4,7 +4,7 @@
      ADD / EDIT USER MODAL
 ═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [header]="formMode() === 'create' ? 'Add New User' : 'Edit User'"
+  [header]="(formMode() === 'create' ? 'users.add_new' : 'users.edit_user') | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -16,22 +16,22 @@
 
   <form class="ul-form" (ngSubmit)="submitForm()" autocomplete="off">
     <div class="ul-form__field">
-      <label>Full Name (English) <span class="ul-form__req">*</span></label>
+      <label>{{ 'users.full_name_en' | translate }} <span class="ul-form__req">*</span></label>
       <input
         type="text"
         class="ul-input"
-        placeholder="e.g. Sara Al-Mansouri"
+        [placeholder]="'users.name_en_placeholder' | translate"
         [ngModel]="form().name_en"
         (ngModelChange)="updateForm('name_en', $event)"
         name="name_en" />
     </div>
 
     <div class="ul-form__field">
-      <label>Full Name (Arabic) <span class="ul-form__req">*</span></label>
+      <label>{{ 'users.full_name_ar' | translate }} <span class="ul-form__req">*</span></label>
       <input
         type="text"
         class="ul-input"
-        placeholder="مثال: سارة المنصوري"
+        [placeholder]="'users.name_ar_placeholder' | translate"
         dir="rtl"
         [ngModel]="form().name_ar"
         (ngModelChange)="updateForm('name_ar', $event)"
@@ -39,52 +39,40 @@
     </div>
 
     <div class="ul-form__field">
-      <label>Email Address <span class="ul-form__req">*</span></label>
+      <label>{{ 'auth.email_address' | translate }} <span class="ul-form__req">*</span></label>
       <input
         type="email"
         class="ul-input"
-        placeholder="e.g. Name@mail.com"
+        [placeholder]="'users.email_placeholder' | translate"
         [ngModel]="form().email"
         (ngModelChange)="updateForm('email', $event)"
         name="email" />
     </div>
 
     <div class="ul-form__field">
-      <label>Role <span class="ul-form__req">*</span></label>
-      <div class="ul-select-wrap">
-        <select
-          class="ul-input ul-select"
-          [ngModel]="form().role"
-          (ngModelChange)="updateForm('role', $event)"
-          name="role">
-          <option value="" disabled>
-            {{ roleOptions().length ? 'Select a role' : 'Loading roles…' }}
-          </option>
-          @for (opt of roleOptions(); track opt.key) {
-            <option [value]="opt.key">{{ opt.label }}</option>
-          }
-        </select>
-        <i class="pi pi-chevron-down ul-select__chevron"></i>
-      </div>
+      <label>{{ 'users.role' | translate }} <span class="ul-form__req">*</span></label>
+      <p-dropdown
+        [options]="roleOptions()"
+        optionLabel="label"
+        optionValue="key"
+        [ngModel]="form().role"
+        (ngModelChange)="updateForm('role', $event)"
+        name="role"
+        [placeholder]="(roleOptions().length ? 'users.select_role' : 'common.loading_roles') | translate"
+        [filter]="false"
+        appendTo="body"
+        styleClass="ul-dropdown w-full" />
     </div>
 
     <div class="ul-form__field">
-      <label>Job Role</label>
-      <div class="ul-select-wrap">
-        <input
-          type="text"
-          class="ul-input"
-          placeholder="e.g. HR"
-          list="ul-job-title-options"
-          [ngModel]="form().job_title"
-          (ngModelChange)="updateForm('job_title', $event)"
-          name="job_title" />
-        <datalist id="ul-job-title-options">
-          @for (jt of lookupJobTitles(); track jt) {
-            <option [value]="jt"></option>
-          }
-        </datalist>
-      </div>
+      <label>{{ 'users.image_optional' | translate }}</label>
+      <nas-photo-upload
+        [value]="form().imagePreview"
+        ratio="100x100"
+        [addLabel]="'users.add_photo' | translate"
+        [replaceLabel]="'users.replace_photo' | translate"
+        (fileSelected)="onPhotoPicked($event)"
+        (cleared)="onPhotoCleared()" />
     </div>
   </form>
 
@@ -94,7 +82,7 @@
       class="ul-btn ul-btn--ghost"
       [disabled]="formSaving()"
       (click)="closeForm()">
-      Cancel
+      {{ 'common.cancel' | translate }}
     </button>
     <button
       type="button"
@@ -106,7 +94,7 @@
       } @else {
         <i class="pi pi-plus"></i>
       }
-      {{ formMode() === 'create' ? 'Add User' : 'Save Changes' }}
+      {{ (formMode() === 'create' ? 'users.add_user' : 'common.save_changes') | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -115,7 +103,7 @@
      INSTRUCTORS SUB-FILTER MODAL
 ═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  header="Filter your results"
+  [header]="'common.filter_results' | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -124,14 +112,14 @@
   (visibleChange)="closeInstructorModal()"
   styleClass="nas-dialog ul-filter-dialog">
 
-  <div class="ul-modal-label">Instructors</div>
+  <div class="ul-modal-label">{{ 'nav.instructors' | translate }}</div>
 
   <div class="ul-modal-search">
     <i class="pi pi-search ul-modal-search__icon"></i>
     <input
       type="text"
       class="ul-modal-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       [ngModel]="instructorModal().query"
       (ngModelChange)="onInstructorQuery($event)" />
   </div>
@@ -144,14 +132,14 @@
       </label>
     }
     @if (!filteredInstructorOptions().length) {
-      <p class="ul-modal-empty">No instructors match your search.</p>
+      <p class="ul-modal-empty">{{ 'users.no_instructors_match' | translate }}</p>
     }
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="ul-btn ul-btn--ghost" (click)="clearInstructorSelection()">Clear</button>
+    <button type="button" class="ul-btn ul-btn--ghost" (click)="clearInstructorSelection()">{{ 'common.reset' | translate }}</button>
     <button type="button" class="ul-btn ul-btn--primary" (click)="applyInstructorFilter()">
-      <i class="pi pi-filter"></i> Filter
+      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -160,7 +148,7 @@
      DEACTIVATE CONFIRMATION
 ═══════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [header]="deactivateTarget() ? 'Deactivate ' + (deactivateTarget()!.name ?? 'user') : ''"
+  [header]="deactivateTarget() ? ('users.deactivate_title' | translate:{ name: (deactivateTarget()!.name ?? '') }) : ''"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -170,8 +158,7 @@
   styleClass="nas-dialog ul-confirm-dialog">
 
   <p class="ul-confirm__body">
-    Are you sure you want to deactivate
-    <strong>{{ deactivateTarget()?.name ?? 'this user' }}</strong>'s account?
+    {{ 'users.deactivate_confirm' | translate }}
   </p>
 
   <ng-template pTemplate="footer">
@@ -180,14 +167,14 @@
       class="ul-btn ul-btn--ghost"
       [disabled]="deactivating()"
       (click)="confirmDeactivate()">
-      Yes, Deactivate
+      {{ 'common.yes_deactivate' | translate }}
     </button>
     <button
       type="button"
       class="ul-btn ul-btn--primary"
       [disabled]="deactivating()"
       (click)="cancelDeactivate()">
-      No, Keep it
+      {{ 'common.no_keep_it' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -199,14 +186,18 @@
   <div class="ul-drawer-overlay" (click)="closeProfile()"></div>
   <aside class="ul-drawer">
     <header class="ul-drawer__header">
-      <h3>User Profile</h3>
+      <h3>{{ 'users.profile_title' | translate }}</h3>
       <button type="button" class="ul-icon-btn" (click)="closeProfile()">
         <i class="pi pi-times"></i>
       </button>
     </header>
 
     <div class="ul-drawer__identity">
-      <div class="ul-avatar ul-avatar--lg">{{ profile()!.avatar_initial }}</div>
+      @if (profile()!.image) {
+        <img class="ul-avatar ul-avatar--lg ul-avatar--photo" [src]="profile()!.image" alt="" />
+      } @else {
+        <div class="ul-avatar ul-avatar--lg">{{ profile()!.avatar_initial }}</div>
+      }
       <div>
         <div class="ul-drawer__name">{{ profile()!.name }}</div>
         @if (profile()!.email) {
@@ -217,25 +208,21 @@
 
     <dl class="ul-drawer__fields">
       <div class="ul-drawer__row">
-        <dt>Role</dt>
+        <dt>{{ 'users.role' | translate }}</dt>
         <dd>
           <span [class]="roleBadgeClass(profile()!.role_key)">{{ profile()!.role }}</span>
         </dd>
       </div>
       <div class="ul-drawer__row">
-        <dt>Job Role</dt>
-        <dd>{{ profile()!.job_title || '—' }}</dd>
-      </div>
-      <div class="ul-drawer__row">
-        <dt>Enrolled Courses</dt>
+        <dt>{{ 'users.enrolled_courses' | translate }}</dt>
         <dd>{{ profile()!.enrolled_courses_count }}</dd>
       </div>
       <div class="ul-drawer__row">
-        <dt>Last Active</dt>
+        <dt>{{ 'users.last_active' | translate }}</dt>
         <dd>{{ profile()!.last_active_at ? (profile()!.last_active_at | date:'dd MMM') : '—' }}</dd>
       </div>
       <div class="ul-drawer__row">
-        <dt>Status</dt>
+        <dt>{{ 'users.status' | translate }}</dt>
         <dd>
           <span class="u-status" [class]="statusTone(profile()!.status)">
             {{ statusLabel(profile()!.status) }}
@@ -245,9 +232,9 @@
     </dl>
 
     <footer class="ul-drawer__footer">
-      <button type="button" class="ul-btn ul-btn--ghost" (click)="closeProfile()">Cancel</button>
+      <button type="button" class="ul-btn ul-btn--ghost" (click)="closeProfile()">{{ 'common.cancel' | translate }}</button>
       <button type="button" class="ul-btn ul-btn--primary" (click)="editFromProfile()">
-        <i class="pi pi-pencil"></i> Edit Profile
+        <i class="pi pi-pencil"></i> {{ 'users.edit_profile' | translate }}
       </button>
     </footer>
   </aside>
@@ -259,11 +246,11 @@
 <div class="nas-page-container" (click)="closeMenu()">
 
   <nas-page-header
-    title="Users"
-    subtitle="Manage Admin, instructors, and access across the organisation">
+    [title]="'users.title' | translate"
+    [subtitle]="'users.subtitle' | translate">
     <button type="button" class="ul-btn ul-btn--primary ul-add-btn" (click)="openCreateForm()">
       <i class="pi pi-plus-circle"></i>
-      Add User
+      {{ 'users.add_user' | translate }}
     </button>
   </nas-page-header>
 
@@ -275,7 +262,7 @@
       } @else {
         <div class="ul-kpi-card__value">{{ summary().total_users }}</div>
       }
-      <div class="ul-kpi-card__label">Total Users</div>
+      <div class="ul-kpi-card__label">{{ 'users.total_users' | translate }}</div>
     </div>
 
     <div class="ul-kpi-card">
@@ -284,7 +271,7 @@
       } @else {
         <div class="ul-kpi-card__value">{{ summary().instructors }}</div>
       }
-      <div class="ul-kpi-card__label">Instructors</div>
+      <div class="ul-kpi-card__label">{{ 'nav.instructors' | translate }}</div>
     </div>
 
     <div class="ul-kpi-card">
@@ -293,7 +280,7 @@
       } @else {
         <div class="ul-kpi-card__value">{{ summary().admins }}</div>
       }
-      <div class="ul-kpi-card__label">Admin</div>
+      <div class="ul-kpi-card__label">{{ 'users.admins' | translate }}</div>
     </div>
 
     <div class="ul-kpi-card">
@@ -302,7 +289,7 @@
       } @else {
         <div class="ul-kpi-card__value">{{ visibleStatusKpi() }}</div>
       }
-      <div class="ul-kpi-card__label">Inactive</div>
+      <div class="ul-kpi-card__label">{{ 'common.inactive' | translate }}</div>
     </div>
   </div>
 
@@ -312,7 +299,7 @@
     <input
       type="text"
       class="ul-search__input"
-      placeholder="Quick search..."
+      [placeholder]="'common.quick_search' | translate"
       (input)="onSearch($any($event.target).value)" />
   </div>
 
@@ -322,7 +309,7 @@
       class="ul-pill"
       [class.ul-pill--active]="activeTab() === 'all'"
       (click)="setTab('all')">
-      All
+      {{ 'common.all' | translate }}
     </button>
 
     <button
@@ -330,7 +317,7 @@
       class="ul-pill"
       [class.ul-pill--active]="activeTab() === 'admin'"
       (click)="setTab('admin')">
-      Admin
+      {{ 'dashboard.admin' | translate }}
       <i class="pi pi-chevron-down"></i>
     </button>
 
@@ -339,7 +326,7 @@
       class="ul-pill"
       [class.ul-pill--active]="activeTab() === 'instructor'"
       (click)="openInstructorModal()">
-      Instructors
+      {{ 'nav.instructors' | translate }}
       @if (instructorIds.length) {
         <span class="ul-pill__count">{{ instructorIds.length }}</span>
       }
@@ -353,12 +340,11 @@
       <table class="ul-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Job Role</th>
-            <th>Compliance</th>
-            <th>Status</th>
-            <th>Last Active</th>
+            <th>{{ 'users.name' | translate }}</th>
+            <th>{{ 'users.role' | translate }}</th>
+            <th>{{ 'users.compliance' | translate }}</th>
+            <th>{{ 'users.status' | translate }}</th>
+            <th>{{ 'users.last_active' | translate }}</th>
             <th class="ul-table__action-head"></th>
           </tr>
         </thead>
@@ -366,16 +352,16 @@
           @if (loading()) {
             @for (s of skeletonRows; track s) {
               <tr>
-                @for (c of [1,2,3,4,5,6,7]; track c) {
+                @for (c of [1,2,3,4,5,6]; track c) {
                   <td><p-skeleton height="14px" /></td>
                 }
               </tr>
             }
           } @else if (!items().length) {
             <tr>
-              <td colspan="7" class="ul-table__empty">
+              <td colspan="6" class="ul-table__empty">
                 <i class="pi pi-users"></i>
-                <span>No users found.</span>
+                <span>{{ 'users.no_results' | translate }}</span>
               </td>
             </tr>
           } @else {
@@ -383,7 +369,11 @@
               <tr class="ul-row" (click)="openProfile(user)">
                 <td>
                   <div class="ul-name-cell">
-                    <div class="ul-avatar">{{ user.avatar_initial }}</div>
+                    @if (user.image) {
+                      <img class="ul-avatar ul-avatar--photo" [src]="user.image" alt="" />
+                    } @else {
+                      <div class="ul-avatar">{{ user.avatar_initial }}</div>
+                    }
                     <div>
                       <div class="ul-name-cell__title">{{ user.name }}</div>
                       <div class="ul-name-cell__email">{{ user.email || user.machine_code || '—' }}</div>
@@ -393,7 +383,6 @@
                 <td>
                   <span [class]="roleBadgeClass(user.role_key)">{{ user.role }}</span>
                 </td>
-                <td class="ul-cell-muted">{{ user.job_title || '—' }}</td>
                 <td class="ul-cell-pct" [class]="complianceTone(user.compliance_pct)">
                   @if (user.has_compliance) {
                     {{ user.compliance_pct }}%
@@ -413,9 +402,9 @@
                   </button>
                   @if (menuOpenKey() === user.composite_id) {
                     <div class="ul-row-menu" (click)="$event.stopPropagation()">
-                      <button type="button" (click)="openProfile(user)">View Profile</button>
-                      <button type="button" (click)="openEditForm(user)">Edit</button>
-                      <button type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">Deactivate</button>
+                      <button type="button" (click)="openProfile(user)">{{ 'users.view_profile' | translate }}</button>
+                      <button type="button" (click)="openEditForm(user)">{{ 'common.edit' | translate }}</button>
+                      <button type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">{{ 'common.deactivate' | translate }}</button>
                     </div>
                   }
                 </td>
@@ -429,7 +418,7 @@
     @if (total() > perPage) {
       <div class="ul-pagination">
         <span class="ul-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} of {{ total() }}
+          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
         </span>
         <div class="ul-pagination__nav">
           <button type="button" class="ul-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">

@@ -5,18 +5,18 @@
   <!-- ── Breadcrumb + title bar ──────────────────────────────── -->
   <div class="af-breadcrumb">
     <a routerLink="/admin/assignments" class="af-breadcrumb__link">
-      <i class="pi pi-book"></i> Assignments
+      <i class="pi pi-book"></i> {{ 'assignments.title' | translate }}
     </a>
     <i class="pi pi-angle-right af-breadcrumb__sep"></i>
     <span class="af-breadcrumb__current">
-      {{ assignmentId() ? 'Edit Assignment' : 'Create Assignment' }}
+      {{ (assignmentId() ? 'assignments.form_title_edit' : 'assignments.create') | translate }}
     </span>
   </div>
 
   <div class="af-titlebar">
-    <h1 class="af-title">{{ assignmentId() ? 'Edit Assignment' : 'Generate Assignment' }}</h1>
+    <h1 class="af-title">{{ (assignmentId() ? 'assignments.form_title_edit' : 'assignments.form_title_create') | translate }}</h1>
     <div class="af-titlebar__actions">
-      <button type="button" class="af-btn af-btn--ghost" (click)="cancel()">Cancel</button>
+      <button type="button" class="af-btn af-btn--ghost" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
       <button
         type="button"
         class="af-btn af-btn--primary"
@@ -24,7 +24,7 @@
         (click)="publish()">
         @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
         @else { <i class="pi pi-send"></i> }
-        {{ assignmentId() ? 'Save Changes' : 'Publish Assignment' }}
+        {{ (assignmentId() ? 'common.save_changes' : 'assignments.publish') | translate }}
       </button>
     </div>
   </div>
@@ -44,64 +44,64 @@
 
       <!-- ── General card ─────────────────────────────────── -->
       <div class="nas-card af-card">
-        <h2 class="af-card__title">General</h2>
+        <h2 class="af-card__title">{{ 'assignments.form_general' | translate }}</h2>
 
         <div class="af-field">
-          <label class="af-label">Assignment title (English) <span class="af-req">*</span></label>
+          <label class="af-label">{{ 'assignments.form_title_en' | translate }} <span class="af-req">*</span></label>
           <input
             type="text"
             formControlName="title"
             class="af-input"
-            placeholder="e.g. Safety readiness assessment" />
+            [placeholder]="'assignments.form_title_en_placeholder' | translate" />
           @if (form.controls.title.touched && form.controls.title.invalid) {
-            <span class="af-err">Title is required.</span>
+            <span class="af-err">{{ 'assignments.form_title_required' | translate }}</span>
           }
         </div>
 
         <div class="af-field">
-          <label class="af-label">Assignment title (Arabic)</label>
+          <label class="af-label">{{ 'assignments.form_title_ar' | translate }}</label>
           <input
             type="text"
             formControlName="title_ar"
             class="af-input"
             dir="rtl"
-            placeholder="مثال: تقييم الجاهزية للسلامة" />
+            [placeholder]="'assignments.form_title_ar_placeholder' | translate" />
         </div>
 
         <div class="af-field">
-          <label class="af-label">Course <span class="af-req">*</span></label>
+          <label class="af-label">{{ 'assignments.form_course' | translate }} <span class="af-req">*</span></label>
           <p-dropdown
             formControlName="course_id"
             [options]="courses()"
             optionLabel="title"
             optionValue="id"
-            placeholder="Select a course"
+            [placeholder]="'assignments.form_select_course' | translate"
             styleClass="af-dropdown"
             [style]="{'width':'100%'}" />
           @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
-            <span class="af-err">Course is required.</span>
+            <span class="af-err">{{ 'assignments.form_course_required' | translate }}</span>
           }
         </div>
 
         <div class="af-field">
-          <label class="af-label">Cohort scope <span class="af-req">*</span></label>
+          <label class="af-label">{{ 'assignments.form_cohort_scope' | translate }} <span class="af-req">*</span></label>
           <p-dropdown
             formControlName="cohort_scope"
             [options]="scopeOptions()"
             optionLabel="value"
             optionValue="code"
-            placeholder="Select cohort scope"
+            [placeholder]="'assignments.form_select_scope' | translate"
             styleClass="af-dropdown"
             [style]="{'width':'100%'}" />
         </div>
 
         @if (form.controls.cohort_scope.value === 'specific') {
           <div class="af-field">
-            <label class="af-label">Cohorts <span class="af-req">*</span></label>
+            <label class="af-label">{{ 'assignments.form_cohorts' | translate }} <span class="af-req">*</span></label>
             @if (cohortsLoading()) {
-              <p class="af-hint">Loading cohorts…</p>
+              <p class="af-hint">{{ 'assignments.form_loading_cohorts' | translate }}</p>
             } @else if (!cohorts().length) {
-              <p class="af-hint">No cohorts available for this course.</p>
+              <p class="af-hint">{{ 'assignments.form_no_cohorts' | translate }}</p>
             } @else {
               <div class="af-cohort-list">
                 @for (cohort of cohorts(); track cohort.id) {
@@ -119,7 +119,7 @@
         }
 
         <div class="af-field">
-          <label class="af-label">Due date</label>
+          <label class="af-label">{{ 'assignments.form_due_date' | translate }}</label>
           <input
             type="date"
             formControlName="due_date"
@@ -128,31 +128,31 @@
         </div>
 
         <div class="af-field">
-          <label class="af-label">Learner instructions (English)</label>
+          <label class="af-label">{{ 'assignments.form_instructions_en' | translate }}</label>
           <textarea
             formControlName="instructions_en"
             rows="3"
             class="af-textarea"
-            placeholder="Explain what learners should complete before submitting."></textarea>
+            [placeholder]="'assignments.form_instructions_placeholder' | translate"></textarea>
         </div>
 
         <div class="af-field">
-          <label class="af-label">Learner instructions (Arabic)</label>
+          <label class="af-label">{{ 'assignments.form_instructions_ar' | translate }}</label>
           <textarea
             formControlName="instructions_ar"
             rows="3"
             class="af-textarea"
             dir="rtl"
-            placeholder="اشرح للمستخدمين ما يجب إكماله قبل التسليم."></textarea>
+            [placeholder]="'assignments.form_instructions_placeholder' | translate"></textarea>
         </div>
       </div>
 
       <!-- ── Questions card ───────────────────────────────── -->
       <div class="nas-card af-card">
         <div class="af-card__header">
-          <h2 class="af-card__title">Questions</h2>
+          <h2 class="af-card__title">{{ 'assignments.form_questions' | translate }}</h2>
           <button type="button" class="af-btn af-btn--primary af-btn--sm" (click)="addQuestion()">
-            <i class="pi pi-plus-circle"></i> Add Question
+            <i class="pi pi-plus-circle"></i> {{ 'assignments.form_add_question' | translate }}
           </button>
         </div>
 
@@ -162,34 +162,34 @@
               <div class="af-question__num">{{ i + 1 }}</div>
               @if (questions.length > 1) {
                 <button type="button" class="af-question__remove" (click)="removeQuestion(i)">
-                  <i class="pi pi-minus-circle"></i> Remove
+                  <i class="pi pi-minus-circle"></i> {{ 'assignments.form_remove' | translate }}
                 </button>
               }
             </div>
 
             <div class="af-row af-row--cols2">
               <div class="af-field">
-                <label class="af-label">Question (English) <span class="af-req">*</span></label>
+                <label class="af-label">{{ 'assignments.form_question_en' | translate }} <span class="af-req">*</span></label>
                 <input
                   type="text"
                   formControlName="question_en"
                   class="af-input"
-                  placeholder="Question" />
+                  [placeholder]="'assignments.form_question_placeholder' | translate" />
               </div>
               <div class="af-field">
-                <label class="af-label">Question (Arabic)</label>
+                <label class="af-label">{{ 'assignments.form_question_ar' | translate }}</label>
                 <input
                   type="text"
                   formControlName="question_ar"
                   class="af-input"
                   dir="rtl"
-                  placeholder="سؤال" />
+                  [placeholder]="'assignments.form_question_placeholder' | translate" />
               </div>
             </div>
 
             <div class="af-row af-row--cols2">
               <div class="af-field">
-                <label class="af-label">Type <span class="af-req">*</span></label>
+                <label class="af-label">{{ 'assignments.form_type' | translate }} <span class="af-req">*</span></label>
                 <p-dropdown
                   [options]="questionTypeOptions()"
                   optionLabel="value"
@@ -201,7 +201,7 @@
                   [style]="{'width':'100%'}" />
               </div>
               <div class="af-field">
-                <label class="af-label">Score <span class="af-req">*</span></label>
+                <label class="af-label">{{ 'assignments.form_score' | translate }} <span class="af-req">*</span></label>
                 <input
                   type="number"
                   formControlName="score"
@@ -214,8 +214,7 @@
             @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
               <div class="af-field">
                 <label class="af-label">
-                  @if (questionType(i) === 'mcq') { MCQ Options (English) }
-                  @else { Items to reorder (English) }
+                  {{ (questionType(i) === 'mcq' ? 'assignments.form_mcq_options_en' : 'assignments.form_reorder_items_en') | translate }}
                   <span class="af-req">*</span>
                 </label>
                 <div class="af-options" formArrayName="options_en">
@@ -225,7 +224,7 @@
                         type="text"
                         [formControlName]="j"
                         class="af-input"
-                        [placeholder]="(questionType(i) === 'mcq' ? 'Option ' : 'Order ') + (j + 1)" />
+                        [placeholder]="((questionType(i) === 'mcq' ? 'assignments.form_option' : 'assignments.form_order') | translate) + ' ' + (j + 1)" />
                       @if (optionsEn(i).length > 2) {
                         <button type="button" class="af-option-remove" (click)="removeOption(i, 'en', j)">
                           <i class="pi pi-times"></i>
@@ -235,14 +234,13 @@
                   }
                 </div>
                 <button type="button" class="af-option-add" (click)="addOption(i, 'en')">
-                  <i class="pi pi-plus-circle"></i> Add Option
+                  <i class="pi pi-plus-circle"></i> {{ 'assignments.form_add_option' | translate }}
                 </button>
               </div>
 
               <div class="af-field">
                 <label class="af-label">
-                  @if (questionType(i) === 'mcq') { MCQ Options (Arabic) }
-                  @else { Items to reorder (Arabic) }
+                  {{ (questionType(i) === 'mcq' ? 'assignments.form_mcq_options_ar' : 'assignments.form_reorder_items_ar') | translate }}
                 </label>
                 <div class="af-options" formArrayName="options_ar">
                   @for (opt of optionsAr(i).controls; track $index; let j = $index) {
@@ -252,7 +250,7 @@
                         [formControlName]="j"
                         class="af-input"
                         dir="rtl"
-                        [placeholder]="(questionType(i) === 'mcq' ? 'خيار ' : 'ترتيب ') + (j + 1)" />
+                        [placeholder]="((questionType(i) === 'mcq' ? 'assignments.form_option' : 'assignments.form_order') | translate) + ' ' + (j + 1)" />
                       @if (optionsAr(i).length > 2) {
                         <button type="button" class="af-option-remove" (click)="removeOption(i, 'ar', j)">
                           <i class="pi pi-times"></i>
@@ -262,7 +260,7 @@
                   }
                 </div>
                 <button type="button" class="af-option-add" (click)="addOption(i, 'ar')">
-                  <i class="pi pi-plus-circle"></i> إضافة خيار
+                  <i class="pi pi-plus-circle"></i> {{ 'assignments.form_add_option' | translate }}
                 </button>
               </div>
             }
@@ -272,48 +270,46 @@
               <div class="af-row af-row--cols2">
                 <div class="af-field">
                   <label class="af-label">
-                    @if (questionType(i) === 'reorder') { Correct order (English) }
-                    @else { Correct answer / grading key (English) }
+                    {{ (questionType(i) === 'reorder' ? 'assignments.form_correct_order_en' : 'assignments.form_correct_answer_en') | translate }}
                     <span class="af-req">*</span>
                   </label>
                   <input
                     type="text"
                     formControlName="correct_answer_en"
                     class="af-input"
-                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : 'Answer'" />
+                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : ('assignments.form_answer_placeholder' | translate)" />
                 </div>
                 <div class="af-field">
                   <label class="af-label">
-                    @if (questionType(i) === 'reorder') { Correct order (Arabic) }
-                    @else { Correct answer / grading key (Arabic) }
+                    {{ (questionType(i) === 'reorder' ? 'assignments.form_correct_order_ar' : 'assignments.form_correct_answer_ar') | translate }}
                   </label>
                   <input
                     type="text"
                     formControlName="correct_answer_ar"
                     class="af-input"
                     dir="rtl"
-                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : 'الإجابة'" />
+                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : ('assignments.form_answer_placeholder' | translate)" />
                 </div>
               </div>
             }
 
             <div class="af-row af-row--cols2">
               <div class="af-field">
-                <label class="af-label">Explanation for learner feedback (English)</label>
+                <label class="af-label">{{ 'assignments.form_explanation_en' | translate }}</label>
                 <textarea
                   formControlName="explanation_en"
                   rows="2"
                   class="af-textarea"
-                  placeholder="Optional explanation shown after grading"></textarea>
+                  [placeholder]="'assignments.form_explanation_placeholder' | translate"></textarea>
               </div>
               <div class="af-field">
-                <label class="af-label">Explanation for learner feedback (Arabic)</label>
+                <label class="af-label">{{ 'assignments.form_explanation_ar' | translate }}</label>
                 <textarea
                   formControlName="explanation_ar"
                   rows="2"
                   class="af-textarea"
                   dir="rtl"
-                  placeholder="شرح اختياري يظهر بعد التصحيح"></textarea>
+                  [placeholder]="'assignments.form_explanation_placeholder' | translate"></textarea>
               </div>
             </div>
           </div>
@@ -325,27 +321,27 @@
     <!-- ── Right sidebar (publish summary) ──────────────────── -->
     <aside class="af-sidebar">
       <div class="nas-card af-summary">
-        <h3 class="af-summary__title">PUBLISH SUMMARY</h3>
+        <h3 class="af-summary__title">{{ 'assignments.form_publish_summary' | translate }}</h3>
 
         <div class="af-summary__row">
-          <span class="af-summary__label">Scope</span>
+          <span class="af-summary__label">{{ 'assignments.form_scope' | translate }}</span>
           <nas-status-badge [tone]="scopePillTone(form.controls.cohort_scope.value)">
             {{ scopeLabel(form.controls.cohort_scope.value) }}
           </nas-status-badge>
         </div>
 
         <div class="af-summary__row">
-          <span class="af-summary__label">Questions</span>
+          <span class="af-summary__label">{{ 'assignments.form_questions' | translate }}</span>
           <span class="af-summary__value">{{ questionCount() }}</span>
         </div>
 
         <div class="af-summary__row">
-          <span class="af-summary__label">Total score</span>
+          <span class="af-summary__label">{{ 'assignments.form_total_score' | translate }}</span>
           <span class="af-summary__value af-summary__value--large">{{ totalScore() }}</span>
         </div>
 
         <div class="af-summary__row af-summary__row--col">
-          <label class="af-label" for="passScore">Pass score</label>
+          <label class="af-label" for="passScore">{{ 'assignments.form_pass_score' | translate }}</label>
           <input
             id="passScore"
             type="number"
@@ -357,8 +353,8 @@
       </div>
 
       <div class="af-rule">
-        <h4 class="af-rule__title">Business rule</h4>
-        <p>Assignments are published directly to learners once the answer keys and scores are complete.</p>
+        <h4 class="af-rule__title">{{ 'assignments.form_business_rule' | translate }}</h4>
+        <p>{{ 'assignments.form_business_rule_text' | translate }}</p>
       </div>
     </aside>
 

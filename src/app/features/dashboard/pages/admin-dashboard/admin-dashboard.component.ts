@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -84,6 +84,7 @@ export class AdminDashboardComponent implements OnInit {
   private dashboardApi = inject(DashboardApiService);
   private locale       = inject(LocaleService);
   private enums        = inject(EnumsService);
+  private t            = inject(TranslateService);
   notifsDrawer         = inject(NotificationsDrawerService);
 
   loading      = signal(true);
@@ -232,22 +233,54 @@ export class AdminDashboardComponent implements OnInit {
     return pickLocalized(i.name, this.uiLocale, '—') || '—';
   }
 
-  /** Notification card — title fallback chain. */
+  /**
+   * Notification card — localised title pulled straight from the
+   * translatable `title` JSON column of `public_notifications`. The
+   * dashboard endpoint never bakes a locale-resolved string anymore.
+   */
   notificationTitle(n: DashboardNotification): string {
-    return (
-      pickLocalized(n.title, this.uiLocale, '') ||
-      n.message ||
-      '—'
-    );
+    return pickLocalized(n.title as never, this.uiLocale, '') || '—';
   }
 
-  /** Notification card — detail fallback chain. */
+  /** Notification card — localised body. */
   notificationDetail(n: DashboardNotification): string {
-    return (
-      pickLocalized(n.detail, this.uiLocale, '') ||
-      n.meta ||
-      ''
+    return pickLocalized(n.body as never, this.uiLocale, '') || '';
+  }
+
+  /**
+   * Relative-time chip ("just now", "today", "yesterday", "n days ago").
+   * Derived from `created_at` on the client so the server never emits an
+   * English label. Uses the i18n `dashboard.relative_time.*` dictionary
+   * and depends on `langTick` for re-evaluation on locale toggle.
+   */
+  notificationTime(n: DashboardNotification): string {
+    if (!n.created_at) return '';
+    const created = new Date(n.created_at);
+    if (Number.isNaN(created.getTime())) return '';
+
+    const diffMs = Date.now() - created.getTime();
+    const diffMin = Math.floor(diffMs / 60_000);
+    const diffHr = Math.floor(diffMs / 3_600_000);
+
+    const startOf = (d: Date) => {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    };
+    const dayDiff = Math.floor(
+      (startOf(new Date()).getTime() - startOf(created).getTime()) /
+        86_400_000,
     );
+
+    if (diffMin < 1) return this.t.instant('dashboard.relative_time.just_now');
+    if (diffMin < 60) return this.t.instant('dashboard.relative_time.minutes_ago', { n: diffMin });
+    if (dayDiff < 1)  return this.t.instant('dashboard.relative_time.hours_ago', { n: diffHr });
+    if (dayDiff === 1) return this.t.instant('dashboard.relative_time.yesterday');
+    if (dayDiff < 7)   return this.t.instant('dashboard.relative_time.days_ago', { n: dayDiff });
+    return new Intl.DateTimeFormat(this.uiLocale === 'ar' ? 'ar-EG' : 'en-GB', {
+      day: '2-digit',
+      month: 'short',
+    }).format(created);
   }
 
   statusTone(
@@ -266,6 +299,26 @@ export class AdminDashboardComponent implements OnInit {
         return 'danger';
       default:
         return 'neutral';
+    }
+  }
+
+  /**
+   * Translation key for a status code. Returned as a key (not a
+   * resolved string) so the template can pipe through `| translate`
+   * and stay reactive to locale changes without needing a manual
+   * lang-tick signal. Keys match the Courses list so the dashboard
+   * badge and the Courses table read the same way.
+   */
+  statusLabelKey(status: string | undefined | null): string {
+    switch ((status ?? '').toLowerCase()) {
+      case 'active':   return 'common.active';
+      case 'inactive': return 'common.inactive';
+      case 'pending':  return 'courses.status_pending';
+      case 'upcoming':
+      case 'up_coming':
+      case 'up coming':
+                       return 'courses.status_upcoming';
+      default:         return '';
     }
   }
 

@@ -224,7 +224,7 @@
             <label>{{ 'platform_settings.image' | translate }}</label>
             <nas-photo-upload
               [value]="filePreviews()['about_image']"
-              maxLabel="Max, file size: 2MB"
+              maxLabel="common.max_file_size_2mb"
               (fileSelected)="onFilePicked('about_image', $event)"
               (cleared)="onFileCleared('about_image')" />
           </div>
