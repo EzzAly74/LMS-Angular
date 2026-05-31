@@ -228,10 +228,10 @@
 <!-- ── Logout confirmation popup (Figma 453:37969) ────────────────── -->
 <nas-confirm-modal
   [visible]="logoutConfirmOpen()"
-  title="Log Out"
-  message="Are you sure you want to logout?"
-  confirmLabel="Yes, logout"
-  cancelLabel="No, Keep it logged in"
+  [title]="'nav.logout_title' | translate"
+  [message]="'nav.logout_message' | translate"
+  [confirmLabel]="'nav.logout_confirm' | translate"
+  [cancelLabel]="'nav.logout_cancel' | translate"
   (confirm)="confirmLogout()"
   (cancel)="cancelLogout()"
 />
