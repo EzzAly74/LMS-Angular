@@ -22,5 +22,14 @@ export const routes: Routes = [
       ),
   },
 
+  // ── Mobile sandbox (isolated, non-production) ─────────────────────
+  // Single parent route into src/mobile-sandbox. The whole folder + this
+  // entry can be deleted later with zero impact on the real app.
+  {
+    path: 'test-mobile',
+    loadChildren: () =>
+      import('../mobile-sandbox/sandbox.routes').then((m) => m.SANDBOX_ROUTES),
+  },
+
   { path: '**', redirectTo: 'auth/login' },
 ];
