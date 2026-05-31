@@ -556,6 +556,131 @@ input[type="number"]::-webkit-outer-spin-button {
   .p-dialog-content { padding: var(--nas-space-5); }
 }
 
+/* ── Live Passcode dialog (dashboard · Figma 515:35489) ─────────────── */
+.p-dialog.passcode-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  .p-dialog-header {
+    padding: 16px 24px 17px;
+    border-bottom: 1px solid #e6e7e8;
+    background: #ffffff;
+  }
+  .p-dialog-content { padding: 0; background: #ffffff; }
+  .p-dialog-footer {
+    padding: 17px 24px 16px;
+    border-top: 1px solid #e6e7e8;
+    background: #fafafa;
+    margin: 0;
+  }
+}
+
+.passcode-modal__title {
+  margin: 0;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  color: #171819;
+}
+
+.passcode-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 0;
+}
+
+.passcode-modal__digits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 35px 10px;
+  direction: ltr;
+}
+
+.passcode-modal__digit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 51px;
+  height: 59px;
+  border: 1.5px solid #0c2427;
+  border-radius: 12px;
+  background: #fafafa;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  color: #000000;
+}
+
+.passcode-modal__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 13px 0 20px;
+  border-top: 1px solid #e6e7e8;
+}
+
+.passcode-modal__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  dt {
+    width: 80px;
+    flex-shrink: 0;
+    margin: 0;
+    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 18px;
+    color: #676e76;
+  }
+  dd {
+    margin: 0;
+    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 21px;
+    color: #171819;
+  }
+}
+
+.passcode-modal__date {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #d5f2f0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 14.4px;
+  color: #171819;
+}
+
+.passcode-modal__done {
+  flex: 1 0 0;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #0c2427;
+  color: #fffbf7;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16.8px;
+  cursor: pointer;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    0 2px 5px 0 rgba(140, 140, 140, 0.08);
+  transition: background 0.15s ease;
+
+  &:hover { background: #0a1d20; }
+}
+
 /* ── Animations ────────────────────────────────────────────────────────────── */
 @keyframes nasFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .page-container { animation: nasFadeIn .2s ease; }

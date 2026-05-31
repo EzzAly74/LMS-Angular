@@ -14,6 +14,7 @@ export const API = {
   ADMINS:              `${API_BASE}/admins`,
   ADMIN_CONTROLLERS:   `${API_BASE}/admin/controllers`,
   DASHBOARD:      `${API_BASE}/dashboard`,
+  DASHBOARD_PASSCODE: `${API_BASE}/dashboard/passcode`,
   JOB_TITLES:     `${API_BASE}/job-titles`,
   QUALIFICATIONS: `${API_BASE}/qualification-skills`,
   RATINGS:        `${API_BASE}/ratings`,

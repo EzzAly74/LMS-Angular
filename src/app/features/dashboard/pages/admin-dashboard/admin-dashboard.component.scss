@@ -1,7 +1,7 @@
 /* ── Greeting ────────────────────────────────────────────────────── */
 .dashboard-greeting {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--nas-space-4);

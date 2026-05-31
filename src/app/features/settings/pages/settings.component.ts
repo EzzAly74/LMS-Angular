@@ -119,6 +119,13 @@ export class SettingsComponent implements OnInit {
   basisSig = signal<CertificateBasis>('attendance');
   showMinScore = computed(() => this.basisSig() === 'score' || this.basisSig() === 'both');
 
+  /**
+   * Mirrors `form.course_attendance_enabled` so the Yes/No segmented control
+   * can drive its active state through a signal (Forms values aren't reactive
+   * to `computed()` on their own).
+   */
+  attendanceSig = signal(true);
+
   constructor() {
     // Refetch platform settings whenever the user switches UI language so
     // bilingual fields (about_*, banner_description, why_us, etc.) come
@@ -132,6 +139,8 @@ export class SettingsComponent implements OnInit {
       platform_name:             [''],
       default_language:          ['en'],
       default_cohort_size:       [30],
+      course_attendance_enabled: [true],
+      passcode_reset_seconds:    [30],
       course_ratings_enabled:    [true],
       abnormal_rating_threshold: [30],
       certificate_award_basis:   ['attendance' as CertificateBasis],
@@ -176,10 +185,15 @@ export class SettingsComponent implements OnInit {
     const basis = (map['certificate_award_basis'] ?? 'attendance') as CertificateBasis;
     this.basisSig.set(basis);
 
+    const attendanceEnabled = this.boolValue(map['course_attendance_enabled'], true);
+    this.attendanceSig.set(attendanceEnabled);
+
     this.form.patchValue({
       platform_name:             map['platform_name']             ?? '',
       default_language:          map['default_language']          ?? 'en',
       default_cohort_size:       this.numericValue(map['default_cohort_size'], 30),
+      course_attendance_enabled: attendanceEnabled,
+      passcode_reset_seconds:    this.numericValue(map['passcode_reset_seconds'], 30),
       course_ratings_enabled:    this.boolValue(map['course_ratings_enabled'], true),
       abnormal_rating_threshold: this.numericValue(map['abnormal_rating_threshold'], 30),
       certificate_award_basis:   basis,
@@ -196,6 +210,11 @@ export class SettingsComponent implements OnInit {
   setBasis(id: CertificateBasis): void {
     this.basisSig.set(id);
     this.form.get('certificate_award_basis')?.setValue(id);
+  }
+
+  setAttendance(enabled: boolean): void {
+    this.attendanceSig.set(enabled);
+    this.form.get('course_attendance_enabled')?.setValue(enabled);
   }
 
   /* ── Save ────────────────────────────────────────────────── */
@@ -217,6 +236,8 @@ export class SettingsComponent implements OnInit {
       put('platform_name',             f.platform_name);
       put('default_language',          f.default_language);
       put('default_cohort_size',       f.default_cohort_size);
+      put('course_attendance_enabled', f.course_attendance_enabled ? '1' : '0');
+      put('passcode_reset_seconds',    f.passcode_reset_seconds);
       put('course_ratings_enabled',    f.course_ratings_enabled ? '1' : '0');
       put('abnormal_rating_threshold', f.abnormal_rating_threshold);
       put('certificate_award_basis',   f.certificate_award_basis);
@@ -279,7 +300,8 @@ export class SettingsComponent implements OnInit {
   }
 
   /* ── Stepper handlers ─────────────────────────────────── */
-  adjust(field: 'default_cohort_size' | 'abnormal_rating_threshold' | 'min_passing_score',
+  adjust(field: 'default_cohort_size' | 'abnormal_rating_threshold' | 'min_passing_score'
+              | 'passcode_reset_seconds',
          delta: number): void {
     const ctrl = this.form.get(field);
     if (!ctrl) return;

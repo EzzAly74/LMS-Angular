@@ -7,6 +7,7 @@
         {{ greeting() | translate }}, {{ 'dashboard.admin' | translate }}
       </h1>
       <p class="dashboard-greeting__date">{{ today | date:'fullDate' }}</p>
+      <app-passcode-widget />
     </div>
     <button type="button" class="dashboard-add-btn" routerLink="/admin/courses">
       <i class="pi pi-plus-circle"></i>

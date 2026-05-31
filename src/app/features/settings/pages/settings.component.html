@@ -57,12 +57,12 @@
         </div>
       </section>
 
-      <!-- ─────────────── 2. Enrolment & Learning ─────────────── -->
+      <!-- ─────────────── 2. Enrolment & Attendance ─────────────── -->
       <section class="nas-card ps-card">
         <header class="ps-card__head">
-          <h2 class="ps-card__title">{{ 'platform_settings.enrolment_learning' | translate }}</h2>
+          <h2 class="ps-card__title">{{ 'platform_settings.enrolment_attendance' | translate }}</h2>
         </header>
-        <div class="ps-card__body">
+        <div class="ps-card__body ps-card__body--stack">
           <div class="ps-grid ps-grid--2">
             <div class="ps-field">
               <label for="default_cohort_size">{{ 'platform_settings.default_cohort_size' | translate }}</label>
@@ -87,6 +87,53 @@
             </div>
             <div></div>
           </div>
+
+          <!-- Course Attendance — Yes/No segmented control -->
+          <div class="ps-row ps-row--between">
+            <div>
+              <div class="ps-row__title">{{ 'platform_settings.course_attendance' | translate }}</div>
+              <div class="ps-row__sub">{{ 'platform_settings.course_attendance_sub' | translate }}</div>
+            </div>
+            <div class="ps-segment" role="group">
+              <button type="button" class="ps-segment__btn"
+                      [class.ps-segment__btn--active]="attendanceSig()"
+                      (click)="setAttendance(true)">
+                {{ 'common.yes' | translate }}
+              </button>
+              <button type="button" class="ps-segment__btn"
+                      [class.ps-segment__btn--active]="!attendanceSig()"
+                      (click)="setAttendance(false)">
+                {{ 'common.no' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Passcode reset interval — only when the passcode rotates (Course Attendance = No) -->
+          @if (!attendanceSig()) {
+            <div class="ps-field ps-field--half">
+              <label for="passcode_reset_seconds">{{ 'platform_settings.passcode_reset_each' | translate }}</label>
+              <div class="ps-number ps-number--unit">
+                <input id="passcode_reset_seconds" type="number" min="0" inputmode="numeric"
+                       class="ps-input ps-input--unit"
+                       formControlName="passcode_reset_seconds" />
+                <div class="ps-number__suffix">
+                  <span class="ps-unit">{{ 'platform_settings.seconds' | translate }}</span>
+                  <div class="ps-number__steppers ps-number__steppers--static">
+                    <button type="button" class="ps-number__step"
+                            (click)="adjust('passcode_reset_seconds', +1)"
+                            tabindex="-1">
+                      <nas-icon name="caret-up" [size]="12" />
+                    </button>
+                    <button type="button" class="ps-number__step"
+                            (click)="adjust('passcode_reset_seconds', -1)"
+                            tabindex="-1">
+                      <nas-icon name="caret-down" [size]="12" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
         </div>
       </section>
 

@@ -701,6 +701,14 @@ https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=332-11156&m=dev
 https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=454-38012&m=dev
 https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=454-38946&m=dev
 
+- Passcode
+
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=515-36954&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=515-35959&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=515-37969&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=515-35489&m=dev
+https://www.figma.com/design/JnNkT9eeYmRiDOuapW4RKf/LMS?node-id=515-34995&m=dev
+
 You MUST:
 
 - Inspect ALL screens

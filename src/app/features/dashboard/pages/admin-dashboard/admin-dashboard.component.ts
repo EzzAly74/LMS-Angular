@@ -31,6 +31,7 @@ import {
   NasIconComponent,
 } from '../../../../shared/nas';
 import { NotificationsDrawerService } from '../../../../shared/nas/notifications-drawer/notifications-drawer.service';
+import { PasscodeWidgetComponent } from '../../components/passcode-widget/passcode-widget.component';
 
 interface KpiStats {
   active_learners: number;
@@ -75,6 +76,7 @@ type TrendRange = DashboardTrendRange;
     NasProgressComponent,
     NasPillTabsComponent,
     NasIconComponent,
+    PasscodeWidgetComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-dashboard.component.html',

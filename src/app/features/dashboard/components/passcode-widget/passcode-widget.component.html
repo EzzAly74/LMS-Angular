@@ -1,0 +1,89 @@
+<!-- ── Passcode widget (idle / live / ended) — instructors only ────── -->
+@if (available()) {
+<div class="passcode" [attr.data-state]="state()">
+  @if (state() === 'idle') {
+    <p class="passcode__label">{{ 'dashboard.passcode_session_live_q' | translate }}</p>
+    <button
+      type="button"
+      class="passcode__generate"
+      [disabled]="generating() || !canGenerate()"
+      (click)="generate()">
+      <nas-icon name="repeat" [size]="20" />
+      <span>{{ 'dashboard.passcode_generate' | translate }}</span>
+    </button>
+    @if (!canGenerate()) {
+      <p class="passcode__hint">{{ 'dashboard.passcode_no_live_session' | translate }}</p>
+    }
+  } @else {
+    <p class="passcode__label">{{ 'dashboard.passcode_label' | translate }}</p>
+    <div class="passcode__row">
+      <button
+        type="button"
+        class="passcode__digits"
+        [class.passcode__digits--clickable]="state() === 'live'"
+        (click)="openModal()">
+        @for (d of digits(); track $index) {
+          <span class="passcode__digit">{{ d }}</span>
+        }
+      </button>
+
+      @if (state() === 'ended') {
+        <span class="passcode__ended">{{ 'dashboard.passcode_session_ended' | translate }}</span>
+      }
+    </div>
+  }
+</div>
+}
+
+<!-- ── Live Passcode modal (Figma 515:35489) ───────────────────────── -->
+<p-dialog
+  [visible]="modalOpen()"
+  (visibleChange)="$event ? modalOpen.set(true) : closeModal()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="passcode-dialog"
+  [style]="{ width: '512px' }"
+  appendTo="body">
+  <ng-template pTemplate="header">
+    <h2 class="passcode-modal__title">{{ 'dashboard.passcode_modal_title' | translate }}</h2>
+  </ng-template>
+
+  @if (passcode(); as code) {
+  <div class="passcode-modal__body">
+    <div class="passcode-modal__digits">
+      @for (d of digits(); track $index) {
+        <span class="passcode-modal__digit">{{ d }}</span>
+      }
+    </div>
+
+    <dl class="passcode-modal__meta">
+      <div class="passcode-modal__meta-row">
+        <dt>{{ 'dashboard.passcode_date' | translate }}</dt>
+        <dd>
+          @if (session()?.date) {
+            <span class="passcode-modal__date">{{ session()!.date | date:'d MMM, y' }}</span>
+          } @else {
+            <span class="passcode-modal__date">—</span>
+          }
+        </dd>
+      </div>
+      <div class="passcode-modal__meta-row">
+        <dt>{{ 'dashboard.passcode_cohort' | translate }}</dt>
+        <dd>{{ session()?.cohort_name || '—' }}</dd>
+      </div>
+      <div class="passcode-modal__meta-row">
+        <dt>{{ 'dashboard.passcode_session' | translate }}</dt>
+        <dd>{{ session()?.number ?? '—' }}</dd>
+      </div>
+    </dl>
+  </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="passcode-modal__done" (click)="closeModal()">
+      {{ 'dashboard.passcode_done' | translate }}
+    </button>
+  </ng-template>
+</p-dialog>

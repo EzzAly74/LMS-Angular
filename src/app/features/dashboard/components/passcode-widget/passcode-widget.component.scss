@@ -1,0 +1,111 @@
+/* ── Passcode widget (dashboard header) ──────────────────────────── */
+:host {
+  display: block;
+  margin-top: var(--nas-space-3);
+}
+
+.passcode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__label {
+    margin: 0;
+    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 21px;
+    color: #676e76;
+  }
+
+  &__row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__hint {
+    margin: 0;
+    max-width: 320px;
+    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8c8c8c;
+  }
+}
+
+/* Generate Passcode button (idle state) */
+.passcode__generate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  min-width: 180px;
+  height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #0c2427;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0c2427;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16.8px;
+  cursor: pointer;
+  box-shadow:
+    0 1px 1px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(103, 110, 118, 0.16),
+    0 2px 5px 0 rgba(103, 110, 118, 0.08);
+  transition: background var(--transition-speed, 0.15s) ease;
+
+  &:hover:not(:disabled) { background: #f5f5f5; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  nas-icon { color: #0c2427; }
+}
+
+/* Digit boxes (live / ended state) — numbers are always LTR */
+.passcode__digits {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  direction: ltr;
+
+  &--clickable { cursor: pointer; }
+}
+
+.passcode__digit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 48px;
+  border: 1.22px solid #cfd0d1;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 19.5px;
+  color: #000000;
+}
+
+/* "Session ended" badge */
+.passcode__ended {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #f14437;
+  border-radius: 8px;
+  color: #f14437;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16.8px;
+  white-space: nowrap;
+}

@@ -213,6 +213,72 @@
   }
 }
 
+/* ── Yes/No segmented control (Course Attendance) ─────────────── */
+.ps-segment {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 2px;
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-400);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(140, 140, 140, 0.08);
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &__btn {
+    min-width: 78px;
+    height: 28px;
+    padding: 0 var(--nas-space-4);
+    border: 0;
+    border-radius: var(--nas-radius-md);
+    background: transparent;
+    color: var(--nas-color-text-strong);
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-medium);
+    cursor: pointer;
+    transition: background var(--transition-speed), color var(--transition-speed);
+
+    &--active {
+      background: var(--nas-essential-cta);
+      color: #75DEFF;
+    }
+  }
+}
+
+/* ── Number input with trailing unit pill (Passcode reset) ────── */
+.ps-number--unit {
+  .ps-input--unit { padding-inline-end: 116px; }
+
+  .ps-number__suffix {
+    position: absolute;
+    inset-inline-end: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--nas-space-2);
+  }
+}
+
+.ps-unit {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--nas-neutral-200, #f5f5f5);
+  color: var(--nas-color-text-muted);
+  font-size: var(--nas-size-3xs);
+  font-weight: var(--nas-weight-medium);
+  white-space: nowrap;
+}
+
+.ps-number__steppers--static {
+  position: static;
+  inset-inline-end: auto;
+  top: auto;
+}
+
 /* ── Toggle row (Course Ratings) ──────────────────────────────── */
 .ps-row {
   display: flex;
