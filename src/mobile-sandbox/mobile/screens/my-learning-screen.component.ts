@@ -190,11 +190,32 @@ type Sheet = 'none' | 'attendance' | 'present' | 'rating';
           <div class="rating-q">Share your thoughts on the course material, structure, or instructor</div>
           <div class="faces">
             @for (f of faces; track f.value) {
-              <button type="button" class="face" [class.is-on]="ratingValue() === f.value" (click)="ratingValue.set(f.value)">{{ f.emoji }}</button>
+              <button type="button" class="face" [class.is-on]="ratingValue() === f.value" (click)="onPickRating(f.value)">{{ f.emoji }}</button>
             }
           </div>
+
+          <!-- Comment — required when the chosen rating is at/below the
+               backend cutoff (rating_comment_required_at_or_below = 3).
+               Optional for higher ratings, but always submitted. -->
+          @if (ratingValue() > 0) {
+            <label class="rating-comment-label">
+              Comment
+              @if (commentRequired()) { <span class="rating-comment-req">*</span> }
+            </label>
+            <textarea
+              class="rating-comment"
+              rows="3"
+              [value]="ratingComment()"
+              (input)="ratingComment.set($any($event.target).value)"
+              [placeholder]="commentRequired()
+                ? 'Tell us what could be better (required for this rating)'
+                : 'Add an optional comment'"></textarea>
+          }
+
           @if (markError()) { <div class="otp-err">{{ markError() }}</div> }
-          <button type="button" class="rating-submit" [disabled]="ratingValue() === 0 || marking()" (click)="submitRating()">Submit</button>
+          <button type="button" class="rating-submit"
+                  [disabled]="!canSubmitRating()"
+                  (click)="submitRating()">Submit</button>
         </div>
       }
     }
@@ -282,6 +303,10 @@ type Sheet = 'none' | 'attendance' | 'present' | 'rating';
       .faces { display: flex; justify-content: space-between; margin-bottom: 18px; }
       .face { width: 48px; height: 48px; border-radius: 50%; border: 0; background: #f3f4f6; font-size: 24px; cursor: pointer; transition: transform .1s; }
       .face.is-on { background: #fff3d6; transform: scale(1.12); box-shadow: 0 0 0 2px #f5a623; }
+      .rating-comment-label { display: block; font-size: 13px; font-weight: 600; color: #171819; margin: 4px 0 6px; }
+      .rating-comment-req { color: #d92d20; margin-inline-start: 2px; }
+      .rating-comment { width: 100%; box-sizing: border-box; border: 1px solid #d7dade; border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; color: #171819; resize: vertical; margin-bottom: 14px; }
+      .rating-comment:focus { outline: none; border-color: #0c2427; }
       .rating-submit { width: 100%; height: 50px; border: 0; border-radius: 12px; background: #e9ebed; color: #9aa0a6; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
       .rating-submit:not(:disabled) { background: #0c2427; color: #fff; }
 
@@ -317,6 +342,15 @@ export class MyLearningScreenComponent implements OnInit {
   readonly marking = signal(false);
   readonly markError = signal<string | null>(null);
   readonly ratingValue = signal(0);
+  readonly ratingComment = signal('');
+
+  /**
+   * Ratings at or below this value require a written comment — mirrors
+   * the backend `rating_comment_required_at_or_below` setting (seeded
+   * to 3). Kept as a constant here so the sandbox enforces the same
+   * rule client-side instead of relying on the 422 round-trip.
+   */
+  private readonly commentRequiredAtOrBelow = 3;
 
   readonly faces = [
     { value: 1, emoji: '😔' },
@@ -412,17 +446,40 @@ export class MyLearningScreenComponent implements OnInit {
   openRating(c: ActiveCourse): void {
     this.current.set(c);
     this.ratingValue.set(0);
+    this.ratingComment.set('');
     this.markError.set(null);
     this.sheet.set('rating');
   }
 
+  onPickRating(value: number): void {
+    this.ratingValue.set(value);
+    this.markError.set(null);
+  }
+
+  /** Whether a comment is mandatory for the currently-selected rating. */
+  commentRequired(): boolean {
+    const r = this.ratingValue();
+    return r > 0 && r <= this.commentRequiredAtOrBelow;
+  }
+
+  /** Submit gating: needs a rating, and a comment when the rating is low. */
+  canSubmitRating(): boolean {
+    if (this.marking() || this.ratingValue() === 0) return false;
+    if (this.commentRequired() && this.ratingComment().trim() === '') return false;
+    return true;
+  }
+
   async submitRating(): Promise<void> {
     const c = this.current();
-    if (!c || this.ratingValue() === 0) return;
+    if (!c || !this.canSubmitRating()) return;
     this.marking.set(true);
     this.markError.set(null);
+    const comment = this.ratingComment().trim();
     try {
-      const { call } = await this.data.rate(c.id, { rating: this.ratingValue() });
+      const { call } = await this.data.rate(c.id, {
+        rating: this.ratingValue(),
+        ...(comment !== '' ? { comment } : {}),
+      });
       this.apiResult.emit(call);
       if (call.ok) {
         this.closeSheet();
