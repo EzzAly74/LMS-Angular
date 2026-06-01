@@ -5,177 +5,189 @@
 @import "primeflex/primeflex.css";
 
 /* ── Fonts ──────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Almarai:wght@400;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Almarai:wght@400;700;800&display=swap");
 
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
   /* Layout */
-  --sidebar-width:           260px;
+  --sidebar-width: 260px;
   --sidebar-width-collapsed: 72px;
-  --header-height:           64px;
-  --transition-speed:        0.2s;
+  --header-height: 64px;
+  --transition-speed: 0.2s;
 
   /* NAS Design System ─ Deep Teal ramp (primary) */
-  --nas-teal-100:  #F2FBFA;
-  --nas-teal-200:  #D5F2F0;
-  --nas-teal-300:  #AAE5E1;
-  --nas-teal-400:  #78D0CE;
-  --nas-teal-500:  #4CB4B5;
-  --nas-teal-600:  #339699;
-  --nas-teal-700:  #26787B;
-  --nas-teal-800:  #225F63;
-  --nas-teal-900:  #1F4C50;
-  --nas-teal-950:  #1E4043;
-  --nas-teal-1000: #0C2427;
+  --nas-teal-100: #f2fbfa;
+  --nas-teal-200: #d5f2f0;
+  --nas-teal-300: #aae5e1;
+  --nas-teal-400: #78d0ce;
+  --nas-teal-500: #4cb4b5;
+  --nas-teal-600: #339699;
+  --nas-teal-700: #26787b;
+  --nas-teal-800: #225f63;
+  --nas-teal-900: #1f4c50;
+  --nas-teal-950: #1e4043;
+  --nas-teal-1000: #0c2427;
   --nas-teal-1000-08: rgba(12, 36, 39, 0.08);
   --nas-teal-1000-16: rgba(12, 36, 39, 0.16);
 
   /* NAS Design System ─ Accent Sky ramp */
-  --nas-sky-100: #F1FCFF;
-  --nas-sky-200: #EAFAFF;
-  --nas-sky-300: #D4F5FF;
-  --nas-sky-400: #75DEFF;
-  --nas-sky-500: #69C8E6;
-  --nas-sky-600: #5EB2CC;
-  --nas-sky-700: #58A7BF;
+  --nas-sky-100: #f1fcff;
+  --nas-sky-200: #eafaff;
+  --nas-sky-300: #d4f5ff;
+  --nas-sky-400: #75deff;
+  --nas-sky-500: #69c8e6;
+  --nas-sky-600: #5eb2cc;
+  --nas-sky-700: #58a7bf;
   --nas-sky-800: #468599;
   --nas-sky-900: #356473;
-  --nas-sky-1000: #294E59;
+  --nas-sky-1000: #294e59;
   --nas-sky-400-08: rgba(117, 222, 255, 0.08);
   --nas-sky-400-16: rgba(117, 222, 255, 0.16);
   --nas-sky-400-24: rgba(117, 222, 255, 0.24);
 
   /* NAS Design System ─ Essential colors */
-  --nas-essential-background: #FDFDFD;
-  --nas-essential-text:       #171819;
-  --nas-essential-cta:        #0C2427;
-  --nas-essential-additional: #0C2427;
+  --nas-essential-background: #fdfdfd;
+  --nas-essential-text: #171819;
+  --nas-essential-cta: #0c2427;
+  --nas-essential-additional: #0c2427;
 
   /* NAS Design System ─ Neutral (Grey) */
-  --nas-neutral-0:    #FFFFFF;
-  --nas-neutral-50:   #FAFAFA;
-  --nas-neutral-100:  #FFFBF7;
-  --nas-neutral-200:  #FCFCFC;
-  --nas-neutral-300:  #F5F5F5;
-  --nas-neutral-400:  #E6E7E8;
-  --nas-neutral-500:  #CFD0D1;
-  --nas-neutral-600:  #B8B9BA;
-  --nas-neutral-700:  #8C8C8C;
-  --nas-neutral-750:  #676E76;
-  --nas-neutral-800:  #595959;
-  --nas-neutral-900:  #454545;
+  --nas-neutral-0: #ffffff;
+  --nas-neutral-50: #fafafa;
+  --nas-neutral-100: #fffbf7;
+  --nas-neutral-200: #fcfcfc;
+  --nas-neutral-300: #f5f5f5;
+  --nas-neutral-400: #e6e7e8;
+  --nas-neutral-500: #cfd0d1;
+  --nas-neutral-600: #b8b9ba;
+  --nas-neutral-700: #8c8c8c;
+  --nas-neutral-750: #676e76;
+  --nas-neutral-800: #595959;
+  --nas-neutral-900: #454545;
   --nas-neutral-1000: #171819;
   --nas-neutral-2000: #000000;
-  --nas-neutral-700-08:  rgba(140, 140, 140, 0.08);
-  --nas-neutral-750-08:  rgba(103, 110, 118, 0.08);
-  --nas-neutral-750-16:  rgba(103, 110, 118, 0.16);
+  --nas-neutral-700-08: rgba(140, 140, 140, 0.08);
+  --nas-neutral-750-08: rgba(103, 110, 118, 0.08);
+  --nas-neutral-750-16: rgba(103, 110, 118, 0.16);
   --nas-neutral-2000-12: rgba(0, 0, 0, 0.12);
   --nas-neutral-2000-64: rgba(0, 0, 0, 0.64);
 
   /* NAS Design System ─ Status colors */
-  --nas-status-green-50:      #E7F8F0;
-  --nas-status-green-500:     #0FB86A;
-  --nas-status-green-500-08:  rgba(15, 184, 106, 0.08);
-  --nas-status-green-500-16:  rgba(15, 184, 106, 0.16);
-  --nas-status-green-500-40:  rgba(15, 184, 106, 0.4);
+  --nas-status-green-50: #e7f8f0;
+  --nas-status-green-500: #0fb86a;
+  --nas-status-green-500-08: rgba(15, 184, 106, 0.08);
+  --nas-status-green-500-16: rgba(15, 184, 106, 0.16);
+  --nas-status-green-500-40: rgba(15, 184, 106, 0.4);
 
-  --nas-status-red-50:        #FDECEA;
-  --nas-status-red-500:       #F14437;
-  --nas-status-red-500-08:    rgba(241, 68, 55, 0.08);
-  --nas-status-red-500-16:    rgba(241, 68, 55, 0.16);
+  --nas-status-red-50: #fdecea;
+  --nas-status-red-500: #f14437;
+  --nas-status-red-500-08: rgba(241, 68, 55, 0.08);
+  --nas-status-red-500-16: rgba(241, 68, 55, 0.16);
 
-  --nas-status-amber-50:      #FEF4E6;
-  --nas-status-amber-500:     #F79008;
-  --nas-status-amber-500-08:  rgba(247, 144, 8, 0.08);
-  --nas-status-amber-500-16:  rgba(247, 144, 8, 0.16);
+  --nas-status-amber-50: #fef4e6;
+  --nas-status-amber-500: #f79008;
+  --nas-status-amber-500-08: rgba(247, 144, 8, 0.08);
+  --nas-status-amber-500-16: rgba(247, 144, 8, 0.16);
 
-  --nas-status-blue-50:       #E8F1FE;
-  --nas-status-blue-500:      #2E7CF6;
-  --nas-status-blue-500-08:   rgba(46, 124, 246, 0.08);
-  --nas-status-blue-500-16:   rgba(46, 124, 246, 0.16);
+  --nas-status-blue-50: #e8f1fe;
+  --nas-status-blue-500: #2e7cf6;
+  --nas-status-blue-500-08: rgba(46, 124, 246, 0.08);
+  --nas-status-blue-500-16: rgba(46, 124, 246, 0.16);
 
   /* Semantic role aliases */
-  --nas-color-bg-app:       var(--nas-essential-background);
-  --nas-color-bg-surface:   var(--nas-neutral-0);
-  --nas-color-bg-muted:     var(--nas-neutral-300);
-  --nas-color-bg-sidebar:   var(--nas-essential-cta);
-  --nas-color-text-strong:  var(--nas-essential-text);
-  --nas-color-text-body:    var(--nas-neutral-900);
-  --nas-color-text-muted:   var(--nas-neutral-750);
-  --nas-color-text-subtle:  var(--nas-neutral-700);
-  --nas-color-text-onDark:  #FCFCFC;
-  --nas-color-onDark-soft:  rgba(255, 255, 255, 0.18);
-  --nas-color-onDark-translucent: rgba(255, 255, 255, 0.30);
-  --nas-color-border:       var(--nas-neutral-400);
-  --nas-color-border-strong:var(--nas-neutral-500);
-  --nas-color-accent:       var(--nas-teal-600);
+  --nas-color-bg-app: var(--nas-essential-background);
+  --nas-color-bg-surface: var(--nas-neutral-0);
+  --nas-color-bg-muted: var(--nas-neutral-300);
+  --nas-color-bg-sidebar: var(--nas-essential-cta);
+  --nas-color-text-strong: var(--nas-essential-text);
+  --nas-color-text-body: var(--nas-neutral-900);
+  --nas-color-text-muted: var(--nas-neutral-750);
+  --nas-color-text-subtle: var(--nas-neutral-700);
+  --nas-color-text-onDark: #fcfcfc;
+  --nas-color-onDark-soft: rgba(255, 255, 255, 0.18);
+  --nas-color-onDark-translucent: rgba(255, 255, 255, 0.3);
+  --nas-color-border: var(--nas-neutral-400);
+  --nas-color-border-strong: var(--nas-neutral-500);
+  --nas-color-accent: var(--nas-teal-600);
 
   /* NAS Design System ─ Typography */
-  --nas-font-en: 'Fira Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
-  --nas-font-ar: 'Almarai', "Segoe UI", Tahoma, sans-serif;
-  --nas-font:    var(--nas-font-en);
+  --nas-font-en: "Fira Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nas-font-ar: "Almarai", "Segoe UI", Tahoma, sans-serif;
+  --nas-font: var(--nas-font-en);
 
   /* Font weights */
   --nas-weight-regular: 400;
-  --nas-weight-medium:  500;
-  --nas-weight-semibold:600;
-  --nas-weight-bold:    700;
+  --nas-weight-medium: 500;
+  --nas-weight-semibold: 600;
+  --nas-weight-bold: 700;
 
   /* Font sizes */
-  --nas-size-3xs:  10px;
-  --nas-size-2xs:  12px;
-  --nas-size-xs:   14px;
-  --nas-size-s:    16px;
-  --nas-size-m:    18px;
-  --nas-size-l:    20px;
-  --nas-size-xl:   24px;
-  --nas-size-2xl:  32px;
-  --nas-size-3xl:  48px;
+  --nas-size-3xs: 10px;
+  --nas-size-2xs: 12px;
+  --nas-size-xs: 14px;
+  --nas-size-s: 16px;
+  --nas-size-m: 18px;
+  --nas-size-l: 20px;
+  --nas-size-xl: 24px;
+  --nas-size-2xl: 32px;
+  --nas-size-3xl: 48px;
 
   /* Line heights */
-  --nas-height-3xs:  12px;
-  --nas-height-2xs:  14.4px;
-  --nas-height-xs:   16.8px;
-  --nas-height-s:    19.2px;
-  --nas-height-m:    21.6px;
-  --nas-height-l:    24px;
-  --nas-height-xl:   28.8px;
-  --nas-height-2xl:  38.8px;
+  --nas-height-3xs: 12px;
+  --nas-height-2xs: 14.4px;
+  --nas-height-xs: 16.8px;
+  --nas-height-s: 19.2px;
+  --nas-height-m: 21.6px;
+  --nas-height-l: 24px;
+  --nas-height-xl: 28.8px;
+  --nas-height-2xl: 38.8px;
 
   /* Spacing scale */
-  --nas-space-1:  4px;
-  --nas-space-2:  8px;
-  --nas-space-3:  12px;
-  --nas-space-4:  16px;
-  --nas-space-5:  20px;
-  --nas-space-6:  24px;
-  --nas-space-8:  32px;
+  --nas-space-1: 4px;
+  --nas-space-2: 8px;
+  --nas-space-3: 12px;
+  --nas-space-4: 16px;
+  --nas-space-5: 20px;
+  --nas-space-6: 24px;
+  --nas-space-8: 32px;
   --nas-space-10: 40px;
   --nas-space-12: 48px;
 
   /* Radius */
-  --nas-radius-xs:  4px;
-  --nas-radius-sm:  6px;
-  --nas-radius-md:  8px;
-  --nas-radius-lg:  12px;
-  --nas-radius-xl:  16px;
+  --nas-radius-xs: 4px;
+  --nas-radius-sm: 6px;
+  --nas-radius-md: 8px;
+  --nas-radius-lg: 12px;
+  --nas-radius-xl: 16px;
   --nas-radius-2xl: 20px;
   --nas-radius-full: 9999px;
 
   /* Shadows */
   --nas-shadow-xs: 0 1px 2px 0 rgba(12, 36, 39, 0.05);
-  --nas-shadow-sm: 0 1px 3px 0 rgba(12, 36, 39, 0.08), 0 1px 2px -1px rgba(12, 36, 39, 0.08);
-  --nas-shadow-md: 0 4px 6px -1px rgba(12, 36, 39, 0.08), 0 2px 4px -2px rgba(12, 36, 39, 0.06);
-  --nas-shadow-lg: 0 10px 24px -8px rgba(12, 36, 39, 0.12), 0 4px 6px -4px rgba(12, 36, 39, 0.06);
-  --nas-shadow-xl: 0 20px 32px -12px rgba(12, 36, 39, 0.16), 0 8px 16px -8px rgba(12, 36, 39, 0.08);
+  --nas-shadow-sm:
+    0 1px 3px 0 rgba(12, 36, 39, 0.08), 0 1px 2px -1px rgba(12, 36, 39, 0.08);
+  --nas-shadow-md:
+    0 4px 6px -1px rgba(12, 36, 39, 0.08), 0 2px 4px -2px rgba(12, 36, 39, 0.06);
+  --nas-shadow-lg:
+    0 10px 24px -8px rgba(12, 36, 39, 0.12),
+    0 4px 6px -4px rgba(12, 36, 39, 0.06);
+  --nas-shadow-xl:
+    0 20px 32px -12px rgba(12, 36, 39, 0.16),
+    0 8px 16px -8px rgba(12, 36, 39, 0.08);
   --nas-shadow-sidebar: 0 16px 22px rgba(0, 0, 0, 0.07);
-  --nas-shadow-card: 0 1px 2px 0 rgba(12, 36, 39, 0.04), 0 0 1px 0 rgba(12, 36, 39, 0.08);
+  --nas-shadow-card:
+    0 1px 2px 0 rgba(12, 36, 39, 0.04), 0 0 1px 0 rgba(12, 36, 39, 0.08);
 }
 
 /* ── Reset & base ──────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -189,38 +201,91 @@ html, body {
 }
 
 /* ── RTL support ───────────────────────────────────────────────────────────── */
-[dir="rtl"], [dir="rtl"] body {
+[dir="rtl"],
+[dir="rtl"] body {
   font-family: var(--nas-font-ar);
 }
 [dir="rtl"] {
   .p-datatable .p-datatable-thead > tr > th,
-  .p-datatable .p-datatable-tbody > tr > td { text-align: right; }
-  .p-inputtext { text-align: right; }
+  .p-datatable .p-datatable-tbody > tr > td {
+    text-align: right;
+  }
+  .p-inputtext {
+    text-align: right;
+  }
   /* Mirror ONLY directional icons (chevrons / angles / arrows / carets).
      Other glyphs keep their natural orientation, and component-level
      `transform: translateY(-50%)` for vertically-centred icons survives. */
-  .pi-chevron-left, .pi-chevron-right,
-  .pi-chevron-circle-left, .pi-chevron-circle-right,
-  .pi-angle-left, .pi-angle-right,
-  .pi-angle-double-left, .pi-angle-double-right,
-  .pi-arrow-left, .pi-arrow-right,
-  .pi-arrow-circle-left, .pi-arrow-circle-right,
-  .pi-caret-left, .pi-caret-right,
-  .pi-step-backward, .pi-step-forward,
-  .pi-step-backward-alt, .pi-step-forward-alt {
+  .pi-chevron-left,
+  .pi-chevron-right,
+  .pi-chevron-circle-left,
+  .pi-chevron-circle-right,
+  .pi-angle-left,
+  .pi-angle-right,
+  .pi-angle-double-left,
+  .pi-angle-double-right,
+  .pi-arrow-left,
+  .pi-arrow-right,
+  .pi-arrow-circle-left,
+  .pi-arrow-circle-right,
+  .pi-caret-left,
+  .pi-caret-right,
+  .pi-step-backward,
+  .pi-step-forward,
+  .pi-step-backward-alt,
+  .pi-step-forward-alt {
     transform: scaleX(-1);
   }
 }
 
 /* ── Typography utilities (NAS scale) ──────────────────────────────────────── */
-.nas-heading-1 { font-size: var(--nas-size-xl);  line-height: var(--nas-height-xl);  font-weight: var(--nas-weight-bold);     color: var(--nas-color-text-strong); }
-.nas-heading-2 { font-size: var(--nas-size-l);   line-height: var(--nas-height-l);   font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
-.nas-heading-3 { font-size: var(--nas-size-m);   line-height: var(--nas-height-m);   font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
-.nas-display   { font-size: var(--nas-size-2xl); line-height: var(--nas-height-2xl); font-weight: var(--nas-weight-bold);     color: var(--nas-color-text-strong); }
-.nas-body      { font-size: var(--nas-size-xs);  line-height: var(--nas-height-xs);  color: var(--nas-color-text-body); }
-.nas-body-strong { font-size: var(--nas-size-xs); line-height: var(--nas-height-xs); font-weight: var(--nas-weight-medium); color: var(--nas-color-text-body); }
-.nas-caption   { font-size: var(--nas-size-2xs); line-height: var(--nas-height-2xs); color: var(--nas-color-text-muted); }
-.nas-overline  { font-size: var(--nas-size-3xs); line-height: var(--nas-height-3xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--nas-color-text-muted); }
+.nas-heading-1 {
+  font-size: var(--nas-size-xl);
+  line-height: var(--nas-height-xl);
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+}
+.nas-heading-2 {
+  font-size: var(--nas-size-l);
+  line-height: var(--nas-height-l);
+  font-weight: var(--nas-weight-semibold);
+  color: var(--nas-color-text-strong);
+}
+.nas-heading-3 {
+  font-size: var(--nas-size-m);
+  line-height: var(--nas-height-m);
+  font-weight: var(--nas-weight-semibold);
+  color: var(--nas-color-text-strong);
+}
+.nas-display {
+  font-size: var(--nas-size-2xl);
+  line-height: var(--nas-height-2xl);
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+}
+.nas-body {
+  font-size: var(--nas-size-xs);
+  line-height: var(--nas-height-xs);
+  color: var(--nas-color-text-body);
+}
+.nas-body-strong {
+  font-size: var(--nas-size-xs);
+  line-height: var(--nas-height-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-body);
+}
+.nas-caption {
+  font-size: var(--nas-size-2xs);
+  line-height: var(--nas-height-2xs);
+  color: var(--nas-color-text-muted);
+}
+.nas-overline {
+  font-size: var(--nas-size-3xs);
+  line-height: var(--nas-height-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nas-color-text-muted);
+}
 
 /* ── Page scaffold utilities ───────────────────────────────────────────────── */
 .nas-page-container {
@@ -228,7 +293,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: var(--nas-space-6);
-  animation: nasFadeIn .2s ease;
+  animation: nasFadeIn 0.2s ease;
 }
 .nas-card {
   background: var(--nas-color-bg-surface);
@@ -238,8 +303,12 @@ html, body {
 }
 
 /* ── PrimeNG overrides (NAS-themed) ────────────────────────────────────────── */
-.p-card .p-card-body  { padding: var(--nas-space-5); }
-.p-button.p-button-sm { font-size: var(--nas-size-2xs); }
+.p-card .p-card-body {
+  padding: var(--nas-space-5);
+}
+.p-button.p-button-sm {
+  font-size: var(--nas-size-2xs);
+}
 
 /* PrimeNG button -> NAS dark CTA */
 .p-button {
@@ -248,18 +317,25 @@ html, body {
   color: var(--nas-color-text-onDark);
   font-weight: var(--nas-weight-medium);
   border-radius: var(--nas-radius-md);
-  &:enabled:hover { background: var(--nas-teal-900); border-color: var(--nas-teal-900); }
+  &:enabled:hover {
+    background: var(--nas-teal-900);
+    border-color: var(--nas-teal-900);
+  }
   &.p-button-outlined {
     background: transparent;
     color: var(--nas-essential-cta);
     border-color: var(--nas-color-border-strong);
-    &:enabled:hover { background: var(--nas-neutral-300); }
+    &:enabled:hover {
+      background: var(--nas-neutral-300);
+    }
   }
   &.p-button-text {
     background: transparent;
     color: var(--nas-essential-cta);
     border-color: transparent;
-    &:enabled:hover { background: var(--nas-neutral-300); }
+    &:enabled:hover {
+      background: var(--nas-neutral-300);
+    }
   }
 }
 
@@ -271,11 +347,15 @@ html, body {
   border-color: var(--nas-color-border);
   font-size: var(--nas-size-xs);
   color: var(--nas-color-text-body);
-  background: var(--nas-color-bg-surface);
   box-sizing: border-box;
 
-  &::placeholder { color: var(--nas-color-text-muted); }
-  &:enabled:focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+  &::placeholder {
+    color: var(--nas-color-text-muted);
+  }
+  &:enabled:focus {
+    border-color: var(--nas-teal-600);
+    box-shadow: 0 0 0 3px var(--nas-teal-200);
+  }
 }
 
 .p-dropdown {
@@ -284,7 +364,10 @@ html, body {
   border-color: var(--nas-color-border);
   background: var(--nas-color-bg-surface);
 
-  &.p-focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+  &.p-focus {
+    border-color: var(--nas-teal-600);
+    box-shadow: 0 0 0 3px var(--nas-teal-200);
+  }
 
   .p-dropdown-label {
     display: flex;
@@ -292,9 +375,15 @@ html, body {
     padding: 0 var(--nas-space-3);
     font-size: var(--nas-size-xs);
     color: var(--nas-color-text-body);
-    &.p-placeholder { color: var(--nas-color-text-muted); }
+    &.p-placeholder {
+      color: var(--nas-color-text-muted);
+    }
   }
-  .p-dropdown-trigger { padding: 0 var(--nas-space-2); width: auto; color: var(--nas-color-text-muted); }
+  .p-dropdown-trigger {
+    padding: 0 var(--nas-space-2);
+    width: auto;
+    color: var(--nas-color-text-muted);
+  }
 }
 
 .p-multiselect {
@@ -303,16 +392,25 @@ html, body {
   border-color: var(--nas-color-border);
   background: var(--nas-color-bg-surface);
 
-  &.p-focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+  &.p-focus {
+    border-color: var(--nas-teal-600);
+    box-shadow: 0 0 0 3px var(--nas-teal-200);
+  }
 
   .p-multiselect-label {
     display: flex;
     align-items: center;
     padding: 0 var(--nas-space-3);
     font-size: var(--nas-size-xs);
-    &.p-placeholder { color: var(--nas-color-text-muted); }
+    &.p-placeholder {
+      color: var(--nas-color-text-muted);
+    }
   }
-  .p-multiselect-trigger { padding: 0 var(--nas-space-2); width: auto; color: var(--nas-color-text-muted); }
+  .p-multiselect-trigger {
+    padding: 0 var(--nas-space-2);
+    width: auto;
+    color: var(--nas-color-text-muted);
+  }
 }
 
 .p-calendar {
@@ -328,7 +426,9 @@ html, body {
     width: 44px;
     border-radius: 0 var(--nas-radius-md) var(--nas-radius-md) 0;
     flex-shrink: 0;
-    .p-button-icon { font-size: 14px; }
+    .p-button-icon {
+      font-size: 14px;
+    }
   }
 }
 
@@ -341,7 +441,10 @@ html, body {
   .p-inputnumber-input {
     flex: 1;
     border-radius: var(--nas-radius-md);
-    &:enabled:focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+    &:enabled:focus {
+      border-color: var(--nas-teal-600);
+      box-shadow: 0 0 0 3px var(--nas-teal-200);
+    }
   }
 
   .p-inputnumber-button-group,
@@ -370,10 +473,17 @@ input[type="number"]::-webkit-outer-spin-button {
   border-radius: 4px;
   border-color: var(--nas-color-border);
   background: var(--nas-color-bg-surface);
-  transition: background var(--transition-speed), border-color var(--transition-speed);
+  transition:
+    background var(--transition-speed),
+    border-color var(--transition-speed);
 
-  &.p-highlight { background: var(--nas-essential-cta); border-color: var(--nas-essential-cta); }
-  .p-checkbox-icon { font-size: 10px; }
+  &.p-highlight {
+    background: var(--nas-essential-cta);
+    border-color: var(--nas-essential-cta);
+  }
+  .p-checkbox-icon {
+    font-size: 10px;
+  }
 }
 
 /* ── NAS Form primitives (global) ────────────────────────────────────────── */
@@ -399,7 +509,9 @@ input[type="number"]::-webkit-outer-spin-button {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--nas-space-3);
-  @media (max-width: 540px) { grid-template-columns: 1fr; }
+  @media (max-width: 540px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .nas-form__hint {
@@ -434,12 +546,23 @@ input[type="number"]::-webkit-outer-spin-button {
   color: var(--nas-color-text-body);
   outline: none;
   box-sizing: border-box;
-  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+  transition:
+    border-color var(--transition-speed),
+    box-shadow var(--transition-speed);
 
-  &::placeholder { color: var(--nas-color-text-muted); }
-  &:focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+  &::placeholder {
+    color: var(--nas-color-text-muted);
+  }
+  &:focus {
+    border-color: var(--nas-teal-600);
+    box-shadow: 0 0 0 3px var(--nas-teal-200);
+  }
 }
-.nas-input--area { height: auto; padding: var(--nas-space-3); resize: vertical; }
+.nas-input--area {
+  height: auto;
+  padding: var(--nas-space-3);
+  resize: vertical;
+}
 
 .nas-yesno {
   display: inline-flex;
@@ -458,9 +581,13 @@ input[type="number"]::-webkit-outer-spin-button {
     color: var(--nas-color-text-muted);
     cursor: pointer;
     min-width: 72px;
-    transition: background var(--transition-speed), color var(--transition-speed);
+    transition:
+      background var(--transition-speed),
+      color var(--transition-speed);
 
-    &:hover:not(.active) { color: var(--nas-color-text-strong); }
+    &:hover:not(.active) {
+      color: var(--nas-color-text-strong);
+    }
     &.active {
       background: var(--nas-essential-cta);
       color: var(--nas-color-text-onDark);
@@ -485,8 +612,12 @@ input[type="number"]::-webkit-outer-spin-button {
     color: var(--nas-color-text-body);
     transition: background var(--transition-speed);
 
-    &:last-child { border-bottom: none; }
-    &:hover { background: var(--nas-neutral-200); }
+    &:last-child {
+      border-bottom: none;
+    }
+    &:hover {
+      background: var(--nas-neutral-200);
+    }
   }
 
   // Loading state — drops the border-box framing so the skeleton
@@ -513,7 +644,9 @@ input[type="number"]::-webkit-outer-spin-button {
     background: var(--nas-neutral-100);
     transition: background var(--transition-speed);
 
-    &:hover { background: var(--nas-neutral-200); }
+    &:hover {
+      background: var(--nas-neutral-200);
+    }
   }
 }
 
@@ -528,22 +661,34 @@ input[type="number"]::-webkit-outer-spin-button {
   font-weight: var(--nas-weight-medium);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background var(--transition-speed), color var(--transition-speed);
+  transition:
+    background var(--transition-speed),
+    color var(--transition-speed);
 
-  i { font-size: 14px; }
+  i {
+    font-size: 14px;
+  }
 
   &--primary {
     background: var(--nas-essential-cta);
     color: var(--nas-color-text-onDark);
-    &:hover:not([disabled]) { background: var(--nas-teal-900); }
+    &:hover:not([disabled]) {
+      background: var(--nas-teal-900);
+    }
   }
   &--ghost {
     background: transparent;
     color: var(--nas-color-text-body);
     border-color: var(--nas-color-border);
-    &:hover:not([disabled]) { background: var(--nas-neutral-200); }
+    &:hover:not([disabled]) {
+      background: var(--nas-neutral-200);
+    }
   }
-  &[disabled], &:disabled { opacity: .6; cursor: not-allowed; }
+  &[disabled],
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .nas-dialog {
@@ -553,7 +698,9 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: var(--nas-size-m);
     font-weight: var(--nas-weight-semibold);
   }
-  .p-dialog-content { padding: var(--nas-space-5); }
+  .p-dialog-content {
+    padding: var(--nas-space-5);
+  }
 }
 
 /* ── Live Passcode dialog (dashboard · Figma 515:35489) ─────────────── */
@@ -567,7 +714,10 @@ input[type="number"]::-webkit-outer-spin-button {
     border-bottom: 1px solid #e6e7e8;
     background: #ffffff;
   }
-  .p-dialog-content { padding: 0; background: #ffffff; }
+  .p-dialog-content {
+    padding: 0;
+    background: #ffffff;
+  }
   .p-dialog-footer {
     padding: 17px 24px 16px;
     border-top: 1px solid #e6e7e8;
@@ -578,7 +728,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .passcode-modal__title {
   margin: 0;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-weight: 700;
   font-size: 16px;
   line-height: 24px;
@@ -610,7 +760,7 @@ input[type="number"]::-webkit-outer-spin-button {
   border: 1.5px solid #0c2427;
   border-radius: 12px;
   background: #fafafa;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-weight: 700;
   font-size: 16px;
   line-height: 24px;
@@ -635,14 +785,14 @@ input[type="number"]::-webkit-outer-spin-button {
     width: 80px;
     flex-shrink: 0;
     margin: 0;
-    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-family: "Fira Sans", system-ui, sans-serif;
     font-size: 12px;
     line-height: 18px;
     color: #676e76;
   }
   dd {
     margin: 0;
-    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-family: "Fira Sans", system-ui, sans-serif;
     font-size: 14px;
     line-height: 21px;
     color: #171819;
@@ -668,7 +818,7 @@ input[type="number"]::-webkit-outer-spin-button {
   border-radius: 8px;
   background: #0c2427;
   color: #fffbf7;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 14px;
   font-weight: 500;
   line-height: 16.8px;
@@ -678,9 +828,27 @@ input[type="number"]::-webkit-outer-spin-button {
     0 2px 5px 0 rgba(140, 140, 140, 0.08);
   transition: background 0.15s ease;
 
-  &:hover { background: #0a1d20; }
+  &:hover {
+    background: #0a1d20;
+  }
 }
 
 /* ── Animations ────────────────────────────────────────────────────────────── */
-@keyframes nasFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.page-container { animation: nasFadeIn .2s ease; }
+@keyframes nasFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-container {
+  animation: nasFadeIn 0.2s ease;
+}
+html:lang(ar) {
+  .p-calendar .p-datepicker-trigger {
+    border-radius: var(--nas-radius-md) 0 0 var(--nas-radius-md);
+  }
+}
