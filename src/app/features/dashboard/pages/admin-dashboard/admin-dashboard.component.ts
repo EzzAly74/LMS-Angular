@@ -20,6 +20,7 @@ import {
 } from '../../services/dashboard-api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { EnumsService } from '../../../../core/services/enums.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { pickLocalized } from '../../../../core/utils/localized';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -87,7 +88,16 @@ export class AdminDashboardComponent implements OnInit {
   private locale       = inject(LocaleService);
   private enums        = inject(EnumsService);
   private t            = inject(TranslateService);
+  private auth         = inject(AuthService);
   notifsDrawer         = inject(NotificationsDrawerService);
+
+  /**
+   * Display name for the greeting — the signed-in admin's name, falling
+   * back to the generic "Admin" label until the profile resolves.
+   */
+  adminName = computed(
+    () => this.auth.currentAdmin()?.name?.trim() || this.t.instant('dashboard.admin'),
+  );
 
   loading      = signal(true);
   data         = signal<DashboardData | null>(null);

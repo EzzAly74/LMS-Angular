@@ -4,7 +4,7 @@
   <header class="dashboard-greeting">
     <div>
       <h1 class="dashboard-greeting__title">
-        {{ greeting() | translate }}, {{ 'dashboard.admin' | translate }}
+        {{ greeting() | translate }}, {{ adminName() }}
       </h1>
       <p class="dashboard-greeting__date">{{ today | date:'fullDate' }}</p>
       <app-passcode-widget />
