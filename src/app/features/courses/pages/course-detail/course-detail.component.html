@@ -497,15 +497,11 @@
       <div class="nas-form__row">
         <div class="nas-form__field">
           <label>{{ 'course_detail.cohort_start' | translate }}</label>
-          <p-calendar formControlName="start_date" dateFormat="dd/mm/yy"
-                      [showIcon]="true" styleClass="w-full"
-                      placeholder="dd/mm/yyyy" />
+          <nas-datepicker formControlName="start_date" placeholder="dd/mm/yyyy" />
         </div>
         <div class="nas-form__field">
           <label>{{ 'course_detail.cohort_end' | translate }}</label>
-          <p-calendar formControlName="end_date" dateFormat="dd/mm/yy"
-                      [showIcon]="true" styleClass="w-full"
-                      placeholder="dd/mm/yyyy" />
+          <nas-datepicker formControlName="end_date" placeholder="dd/mm/yyyy" />
         </div>
       </div>
 
@@ -793,12 +789,12 @@
       <div class="nas-form__row">
         <div class="nas-form__field">
           <label>{{ 'add_course.cohort_start' | translate }}</label>
-          <p-calendar formControlName="cohort_start" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+          <nas-datepicker formControlName="cohort_start"
                       [placeholder]="'add_course.cohort_start_placeholder' | translate" />
         </div>
         <div class="nas-form__field">
           <label>{{ 'add_course.cohort_end' | translate }}</label>
-          <p-calendar formControlName="cohort_end"   dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full"
+          <nas-datepicker formControlName="cohort_end"
                       [placeholder]="'add_course.cohort_end_placeholder' | translate" />
         </div>
       </div>

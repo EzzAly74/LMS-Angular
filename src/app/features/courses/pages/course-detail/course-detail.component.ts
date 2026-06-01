@@ -8,7 +8,6 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -24,6 +23,7 @@ import {
   NasProgressComponent,
   NasAvatarComponent,
   NasPhotoUploadComponent,
+  NasDatepickerComponent,
   CohortAttendanceDrawerComponent,
 } from '../../../../shared/nas';
 import { NasLocaleInputComponent } from '../../../../shared/nas/nas-locale-input.component';
@@ -60,10 +60,10 @@ type ModuleFilter = 'all' | ModuleContentType;
   imports: [
     CommonModule, RouterLink, FormsModule, ReactiveFormsModule, TranslateModule,
     DatePipe,
-    DialogModule, DropdownModule, CalendarModule, InputNumberModule, CheckboxModule, SkeletonModule,
+    DialogModule, DropdownModule, InputNumberModule, CheckboxModule, SkeletonModule,
     OverlayPanelModule, ConfirmDialogModule,
     NasStatCardComponent, NasTabsComponent, NasStatusBadgeComponent, NasProgressComponent, NasAvatarComponent,
-    NasPhotoUploadComponent, NasLocaleInputComponent, CohortAttendanceDrawerComponent,
+    NasPhotoUploadComponent, NasLocaleInputComponent, NasDatepickerComponent, CohortAttendanceDrawerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-detail.component.html',

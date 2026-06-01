@@ -413,24 +413,9 @@ body {
   }
 }
 
-.p-calendar {
-  width: 100%;
-
-  &.p-calendar-w-btn .p-inputtext {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-right: none;
-  }
-  .p-datepicker-trigger {
-    height: 44px;
-    width: 44px;
-    border-radius: 0 var(--nas-radius-md) var(--nas-radius-md) 0;
-    flex-shrink: 0;
-    .p-button-icon {
-      font-size: 14px;
-    }
-  }
-}
+/* Date inputs are handled by the reusable <nas-datepicker> component
+   (src/app/shared/nas/nas-datepicker.component.ts) — it owns its own styles,
+   so no PrimeNG calendar overrides are needed here. */
 
 /* ── Hide all up/down number-input spinners globally ──────────────── */
 
@@ -491,12 +476,14 @@ input[type="number"]::-webkit-outer-spin-button {
   display: flex;
   flex-direction: column;
   gap: var(--nas-space-4);
+  min-width: 0;
 }
 
 .nas-form__field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0; /* allow grid/flex children to shrink instead of overflowing */
 
   > label {
     font-size: var(--nas-size-2xs);
@@ -507,10 +494,10 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .nas-form__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--nas-space-3);
   @media (max-width: 540px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -700,6 +687,7 @@ input[type="number"]::-webkit-outer-spin-button {
   }
   .p-dialog-content {
     padding: var(--nas-space-5);
+    overflow-x: hidden; /* never scroll sideways; the date popover is portaled to <body> */
   }
 }
 
@@ -846,9 +834,4 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 .page-container {
   animation: nasFadeIn 0.2s ease;
-}
-html:lang(ar) {
-  .p-calendar .p-datepicker-trigger {
-    border-radius: var(--nas-radius-md) 0 0 var(--nas-radius-md);
-  }
 }

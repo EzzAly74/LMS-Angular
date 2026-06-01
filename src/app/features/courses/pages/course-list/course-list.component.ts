@@ -11,7 +11,6 @@ import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -32,6 +31,7 @@ import {
   NasCellTplDirective,
   NasTableColumn,
   NasPhotoUploadComponent,
+  NasDatepickerComponent,
 } from '../../../../shared/nas';
 import { CoursesApiService } from '../../services/courses-api.service';
 import type { LocalizedText } from '../../../../core/models/localized.types';
@@ -47,9 +47,10 @@ type ActiveTab = 'all' | 'pending' | 'active' | 'upcoming' | 'inactive';
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslateModule,
     OverlayPanelModule, ConfirmDialogModule, DialogModule,
-    DropdownModule, CalendarModule, InputNumberModule, CheckboxModule, SkeletonModule,
+    DropdownModule, InputNumberModule, CheckboxModule, SkeletonModule,
     NasPageHeaderComponent, NasPillTabsComponent, NasStatusBadgeComponent, NasProgressComponent,
     NasLocaleInputComponent, NasDataTableComponent, NasCellTplDirective, NasPhotoUploadComponent,
+    NasDatepickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-list.component.html',
