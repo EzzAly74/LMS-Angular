@@ -340,6 +340,32 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   cancelDeactivate(): void { this.deactivateTarget.set(null); }
 
+  /** A deactivated user shows "Reactivate" instead of "Deactivate". */
+  isDeactivated(user: AdminUserListItem): boolean {
+    return user.status === 'deactivated';
+  }
+
+  reactivate(user: AdminUserListItem): void {
+    this.closeMenu();
+    this.api.reactivate(user.source, user.id).subscribe({
+      next: () => {
+        this.messages.add({
+          severity: 'success',
+          summary:  this.t.instant('common.success_title'),
+          detail:   this.t.instant('users_toasts.reactivated', { name: user.name ?? this.t.instant('common.user_one') }),
+        });
+        this.refresh();
+      },
+      error: () => {
+        this.messages.add({
+          severity: 'error',
+          summary:  this.t.instant('common.error_title'),
+          detail:   this.t.instant('users_toasts.reactivate_failed'),
+        });
+      },
+    });
+  }
+
   confirmDeactivate(): void {
     const target = this.deactivateTarget();
     if (!target || this.deactivating()) return;

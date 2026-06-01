@@ -85,6 +85,10 @@ export class ApiService {
     return this.http.put<ApiResponse<T>>(url, body);
   }
 
+  patch<T>(url: string, body: unknown = {}): Observable<ApiResponse<T>> {
+    return this.http.patch<ApiResponse<T>>(url, body);
+  }
+
   delete<T = void>(url: string): Observable<ApiResponse<T>> {
     return this.http.delete<ApiResponse<T>>(url);
   }

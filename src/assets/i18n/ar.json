@@ -105,6 +105,7 @@
     "details": "التفاصيل",
     "type": "النوع",
     "all": "الكل",
+    "all_types": "كل الأنواع",
     "required": "مطلوب",
     "quick_search": "بحث سريع...",
     "no_results_for": "لا توجد نتائج لـ",
@@ -153,6 +154,7 @@
     "back_to_list": "رجوع للقائمة",
     "yes_deactivate": "نعم، إلغاء التفعيل",
     "deactivate": "إلغاء التفعيل",
+    "reactivate": "إعادة التفعيل",
     "activate": "تفعيل",
     "publish": "نشر",
     "unpublish": "إلغاء النشر",
@@ -1033,7 +1035,7 @@
     "status": "الحالة",
     "learner": "المتدرب",
     "progress": "التقدم",
-    "enrolled": "المسجلون",
+    "enrolled": "تاريخ التسجيل",
     "edit_cohort": "تعديل المجموعة",
     "view_attendance": "عرض الحضور",
     "new_cohort": "مجموعة جديدة",
@@ -1211,7 +1213,9 @@
   },
   "users_toasts": {
     "deactivate_failed": "تعذّر إلغاء تفعيل المستخدم. يُرجى إعادة المحاولة.",
-    "deactivated":       "تم إلغاء تفعيل {{name}}."
+    "deactivated":       "تم إلغاء تفعيل {{name}}.",
+    "reactivate_failed": "تعذّر إعادة تفعيل المستخدم. يُرجى إعادة المحاولة.",
+    "reactivated":       "تمت إعادة تفعيل {{name}}."
   },
   "audit_toasts": {
     "generate_failed":   "تعذّر إنشاء سجل التدقيق. يُرجى إعادة المحاولة.",

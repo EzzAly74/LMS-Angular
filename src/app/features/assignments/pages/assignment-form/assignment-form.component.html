@@ -76,6 +76,7 @@
             optionLabel="title"
             optionValue="id"
             [placeholder]="'assignments.form_select_course' | translate"
+            appendTo="body"
             styleClass="af-dropdown"
             [style]="{'width':'100%'}" />
           @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
@@ -91,6 +92,7 @@
             optionLabel="value"
             optionValue="code"
             [placeholder]="'assignments.form_select_scope' | translate"
+            appendTo="body"
             styleClass="af-dropdown"
             [style]="{'width':'100%'}" />
         </div>
@@ -197,6 +199,7 @@
                   [ngModel]="questionType(i)"
                   [ngModelOptions]="{ standalone: true }"
                   (onChange)="changeQuestionType(i, $event.value)"
+                  appendTo="body"
                   styleClass="af-dropdown"
                   [style]="{'width':'100%'}" />
               </div>

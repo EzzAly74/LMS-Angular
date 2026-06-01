@@ -105,6 +105,7 @@
     "details": "Details",
     "type": "Type",
     "all": "All",
+    "all_types": "All Types",
     "required": "Required",
     "quick_search": "Quick search...",
     "no_results_for": "No results for",
@@ -153,6 +154,7 @@
     "back_to_list": "Back to list",
     "yes_deactivate": "Yes, Deactivate",
     "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
     "activate": "Activate",
     "publish": "Publish",
     "unpublish": "Unpublish",
@@ -1033,7 +1035,7 @@
     "status": "Status",
     "learner": "Learner",
     "progress": "Progress",
-    "enrolled": "Enrolled",
+    "enrolled": "Enrolled On",
     "edit_cohort": "Edit Cohort",
     "view_attendance": "View Attendance",
     "new_cohort": "New Cohort",
@@ -1211,7 +1213,9 @@
   },
   "users_toasts": {
     "deactivate_failed": "Could not deactivate the user. Please retry.",
-    "deactivated":       "{{name}} has been deactivated."
+    "deactivated":       "{{name}} has been deactivated.",
+    "reactivate_failed": "Could not reactivate the user. Please retry.",
+    "reactivated":       "{{name}} has been reactivated."
   },
   "audit_toasts": {
     "generate_failed":    "Could not generate the audit log. Please retry.",

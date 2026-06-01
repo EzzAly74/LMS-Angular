@@ -55,6 +55,7 @@
             [(ngModel)]="form.type"
             optionLabel="value"
             optionValue="id"
+            appendTo="body"
             styleClass="re-dropdown"
           />
         </div>
@@ -148,6 +149,7 @@
             [placeholder]="'resources.qualification_placeholder' | translate"
             [showClear]="true"
             [filter]="true"
+            appendTo="body"
             styleClass="re-dropdown"
           />
           <p class="re-side__hint">{{ 'resources.qualification_hint' | translate }}</p>

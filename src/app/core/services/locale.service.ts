@@ -44,8 +44,16 @@ export class LocaleService {
   switch(locale: SupportedLocale): void {
     if (this.locale() === locale) return;
     this.locale.set(locale);
-    this.applyLocale(locale);
-    this._changes$.next(locale);
+    this.setDocumentLocale(locale);
+    /**
+     * `translate.use()` is asynchronous — it resolves once the target
+     * language file is loaded (and cached). We must emit `changes$`
+     * *after* it completes, otherwise subscribers that read labels via
+     * `translate.instant(...)` (e.g. data-table column headers) get the
+     * previous language's strings on the first switch to a not-yet-cached
+     * locale — the "English page still shows Arabic headers" bug.
+     */
+    this.translate.use(locale).subscribe(() => this._changes$.next(locale));
   }
 
   get dir(): 'ltr' | 'rtl' {
@@ -58,6 +66,11 @@ export class LocaleService {
 
   private applyLocale(locale: SupportedLocale): void {
     this.translate.use(locale);
+    this.setDocumentLocale(locale);
+  }
+
+  /** Syncs `<html lang/dir>` and persists the choice (no translation load). */
+  private setDocumentLocale(locale: SupportedLocale): void {
     document.documentElement.lang = locale;
     document.documentElement.dir = LOCALE_CONFIG[locale].dir;
     localStorage.setItem(LOCALE_STORAGE_KEY, locale);

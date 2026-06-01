@@ -90,4 +90,8 @@ export class AdminUsersApiService {
   deactivate(source: AdminUserSource, id: number): Observable<ApiResponse<AdminUserDetail>> {
     return this.api.delete<AdminUserDetail>(`${API.ADMIN_USERS}/${source}/${id}`);
   }
+
+  reactivate(source: AdminUserSource, id: number): Observable<ApiResponse<AdminUserDetail>> {
+    return this.api.patch<AdminUserDetail>(`${API.ADMIN_USERS}/${source}/${id}/reactivate`);
+  }
 }

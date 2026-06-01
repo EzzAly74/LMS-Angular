@@ -145,24 +145,6 @@
         [disabled]="saving()" />
     </div>
 
-    <div class="cat-field">
-      <span class="cat-field__label">{{ 'categories.logo' | translate }}</span>
-      <div class="cat-logo-row">
-        <div class="cat-logo-thumb">
-          @if (logoPreview()) {
-            <img [src]="logoPreview()!" [alt]="'categories.logo_preview_alt' | translate" />
-          } @else {
-            <nas-icon name="image" [size]="24" />
-          }
-        </div>
-        <button type="button" class="cat-logo-btn" (click)="triggerLogoUpload()" [disabled]="saving()">
-          <nas-icon name="upload-simple" [size]="16" />
-          <span>{{ (logoPreview() ? 'categories.replace_logo' : 'categories.upload_logo') | translate }}</span>
-        </button>
-        <input #logoInput type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
-      </div>
-    </div>
-
     <label class="cat-toggle">
       <input type="checkbox" [(ngModel)]="form.active" [disabled]="saving()" />
       <span>{{ 'common.active' | translate }}</span>

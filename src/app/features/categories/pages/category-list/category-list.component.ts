@@ -4,7 +4,6 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
-  ElementRef,
   inject,
   signal,
   computed,
@@ -37,9 +36,6 @@ interface CategoryFormState {
   name_en: string;
   name_ar: string;
   active: boolean;
-  logoFile: File | null;
-  /** Existing logo URL preserved when editing. */
-  existingLogo: string | null;
 }
 
 /**
@@ -74,7 +70,6 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   private readonly t        = inject(TranslateService);
 
   @ViewChild('rowMenu') rowMenu?: OverlayPanel;
-  @ViewChild('logoInput') logoInput?: ElementRef<HTMLInputElement>;
 
   /* ── List state ───────────────────────────────────────────────────── */
   items   = signal<Category[]>([]);
@@ -95,10 +90,10 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     name_en:      '',
     name_ar:      '',
     active:       true,
-    logoFile:     null,
-    existingLogo: null,
   };
-  logoPreview = signal<string | null>(null);
+
+  /** Snapshot of the form at dialog-open, used to disable Save until something changes. */
+  private formSnapshot = '';
 
   /* ── Confirm-delete state ─────────────────────────────────────────── */
   confirmDeleteOpen = signal(false);
@@ -133,7 +128,6 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    if (this.logoPreview()) URL.revokeObjectURL(this.logoPreview()!);
   }
 
   /* ── Data ─────────────────────────────────────────────────────────── */
@@ -181,12 +175,11 @@ export class CategoryListComponent implements OnInit, OnDestroy {
 
   openEdit(item: Category): void {
     this.resetForm();
-    this.form.id           = item.id;
-    this.form.name_en      = item.name ?? '';
-    this.form.name_ar      = item.name ?? '';
-    this.form.active       = item.active ?? true;
-    this.form.existingLogo = item.logo ?? null;
-    this.logoPreview.set(item.logo ?? null);
+    this.form.id      = item.id;
+    this.form.name_en = item.name ?? '';
+    this.form.name_ar = item.name ?? '';
+    this.form.active  = item.active ?? true;
+    this.formSnapshot = this.snapshot();
     this.dialogMode.set('edit');
     this.dialogVisible.set(true);
     this.rowMenu?.hide();
@@ -199,39 +192,29 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   }
 
   private resetForm(): void {
-    if (this.logoPreview() && this.form.logoFile) {
-      URL.revokeObjectURL(this.logoPreview()!);
-    }
     this.form = {
-      name_en:      '',
-      name_ar:      '',
-      active:       true,
-      logoFile:     null,
-      existingLogo: null,
+      name_en: '',
+      name_ar: '',
+      active:  true,
     };
-    this.logoPreview.set(null);
+    this.formSnapshot = this.snapshot();
   }
 
-  triggerLogoUpload(): void {
-    this.logoInput?.nativeElement.click();
+  /** Serialised form state — used to detect whether the user changed anything. */
+  private snapshot(): string {
+    return JSON.stringify({
+      name_en: this.form.name_en.trim(),
+      name_ar: this.form.name_ar.trim(),
+      active:  this.form.active,
+    });
   }
 
-  onLogoSelected(evt: Event): void {
-    const file = (evt.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    if (this.logoPreview() && this.form.logoFile) {
-      URL.revokeObjectURL(this.logoPreview()!);
-    }
-    this.form.logoFile = file;
-    this.logoPreview.set(URL.createObjectURL(file));
-  }
-
-  /** Stable disabled state for the save button — both names required + logo for create. */
+  /** Save is enabled only when the form is valid AND (on edit) something changed. */
   get isFormValid(): boolean {
     const en = this.form.name_en.trim();
     const ar = this.form.name_ar.trim();
     if (!en && !ar) return false;
-    if (this.dialogMode() === 'create' && !this.form.logoFile) return false;
+    if (this.dialogMode() === 'edit' && this.snapshot() === this.formSnapshot) return false;
     return true;
   }
 
@@ -241,7 +224,6 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     fd.append('name[en]', this.form.name_en.trim() || this.form.name_ar.trim());
     fd.append('name[ar]', this.form.name_ar.trim() || this.form.name_en.trim());
     fd.append('active', this.form.active ? '1' : '0');
-    if (this.form.logoFile) fd.append('logo', this.form.logoFile);
 
     this.saving.set(true);
     if (this.dialogMode() === 'create') {

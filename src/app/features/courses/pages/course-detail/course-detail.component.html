@@ -484,7 +484,7 @@
       <div class="nas-form__field">
         <label>{{ 'course_detail.status' | translate }}</label>
         <p-dropdown [options]="cohortStatusOpts()" optionLabel="value" optionValue="id"
-                    formControlName="status" styleClass="w-full"
+                    formControlName="status" styleClass="w-full" appendTo="body"
                     [placeholder]="'course_detail.cohort_status_placeholder' | translate" />
         @if (enumCode('cohort_status', cohortForm.value.status) === 'scheduled') {
           <p class="cohort-form__hint">
@@ -558,13 +558,13 @@
       <div class="nas-form__field">
         <label>{{ 'course_detail.content_type' | translate }} <span class="required">*</span></label>
         <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
-                    formControlName="content_type" styleClass="w-full" />
+                    formControlName="content_type" styleClass="w-full" appendTo="body" />
       </div>
 
       <div class="nas-form__field">
         <label>{{ 'course_detail.learner_scope' | translate }} <span class="required">*</span></label>
         <p-dropdown [options]="learnerScopeOpts()" optionLabel="value" optionValue="id"
-                    formControlName="learner_scope" styleClass="w-full" />
+                    formControlName="learner_scope" styleClass="w-full" appendTo="body" />
       </div>
 
       @if (enumCode('module_learner_scope', moduleForm.value.learner_scope) === 'cohort') {
@@ -574,6 +574,7 @@
             <p-dropdown [options]="cohortDropdownOpts()" optionLabel="name" optionValue="id"
                         formControlName="session_id"
                         [placeholder]="'course_detail.select_cohort' | translate"
+                        appendTo="body"
                         styleClass="w-full" />
           } @else {
             <div class="module-form__hint module-form__hint--warn">
@@ -712,6 +713,7 @@
           <p-dropdown [options]="courseTypeOpts()" optionLabel="value" optionValue="id"
                       formControlName="type"
                       [placeholder]="'add_course.select_type' | translate"
+                      appendTo="body"
                       styleClass="w-full" />
         </div>
         <div class="nas-form__field">
@@ -720,6 +722,7 @@
                       formControlName="category_id"
                       [placeholder]="'add_course.select_category' | translate"
                       [showClear]="true"
+                      appendTo="body"
                       styleClass="w-full" />
         </div>
       </div>
@@ -729,6 +732,7 @@
         <p-dropdown [options]="courseLevelOpts()" optionLabel="value" optionValue="id"
                     formControlName="level"
                     [placeholder]="'add_course.select_level' | translate"
+                    appendTo="body"
                     styleClass="w-full" />
       </div>
 
@@ -737,6 +741,7 @@
         <p-dropdown [options]="instructorOpts()" optionLabel="name" optionValue="id"
                     formControlName="instructor_id"
                     [placeholder]="'add_course.assign_instructor' | translate"
+                    appendTo="body"
                     styleClass="w-full" />
       </div>
 

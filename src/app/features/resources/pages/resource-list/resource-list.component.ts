@@ -90,7 +90,7 @@ export class ResourceListComponent implements OnInit, OnDestroy {
    * "All Types" is a UI-only sentinel (empty string) prepended in front.
    */
   typeFilterOptions = computed(() => [
-    { label: this.t.instant('common.all') + ' ' + this.t.instant('common.type') + 's', value: '' },
+    { label: this.t.instant('common.all_types'), value: '' },
     ...this.enums.options('resource_type')().map(o => ({ label: o.value, value: o.code })),
   ]);
 

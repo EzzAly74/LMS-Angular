@@ -7,6 +7,7 @@
       <label style="font-size:var(--nas-size-xs);color:var(--nas-color-text-muted);white-space:nowrap;">{{ 'exams.filter_by_course' | translate }}</label>
       <p-dropdown [options]="courses()" [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
         [placeholder]="'exams.select_course' | translate" [loading]="coursesLoading()" [showClear]="true"
+        appendTo="body"
         styleClass="nas-dropdown" (onChange)="onCourseChange()" [style]="{'min-width':'240px','height':'36px'}" />
     </div>
     <div class="exam-table-wrap">

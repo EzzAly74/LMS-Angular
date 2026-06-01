@@ -404,7 +404,11 @@
                     <div class="ul-row-menu" (click)="$event.stopPropagation()">
                       <button type="button" (click)="openProfile(user)">{{ 'users.view_profile' | translate }}</button>
                       <button type="button" (click)="openEditForm(user)">{{ 'common.edit' | translate }}</button>
-                      <button type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">{{ 'common.deactivate' | translate }}</button>
+                      @if (isDeactivated(user)) {
+                        <button type="button" (click)="reactivate(user)">{{ 'common.reactivate' | translate }}</button>
+                      } @else {
+                        <button type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">{{ 'common.deactivate' | translate }}</button>
+                      }
                     </div>
                   }
                 </td>

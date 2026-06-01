@@ -691,6 +691,38 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 }
 
+/* ── Global popup behavior (design review) ─────────────────────────────
+   The header and footer CTAs stay pinned to the top/bottom of the dialog
+   while ONLY the body scrolls — so the 2 action buttons are always
+   reachable on tall forms. Applies to every PrimeNG dialog. */
+.p-dialog {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+
+  .p-dialog-header {
+    flex: 0 0 auto;
+  }
+  .p-dialog-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+  .p-dialog-footer {
+    flex: 0 0 auto;
+  }
+}
+
+/* ── Required-field markers (design review) ────────────────────────────
+   Every required-field asterisk is red, site-wide. Different feature
+   forms use their own marker class (`.required`, `*__req`, `*-req`,
+   `.ps-asterisk`); this enforces a single consistent colour for all. */
+.required,
+.ps-asterisk,
+[class*="__req"],
+[class*="-req"] {
+  color: var(--nas-status-red-500) !important;
+}
+
 /* ── Live Passcode dialog (dashboard · Figma 515:35489) ─────────────── */
 .p-dialog.passcode-dialog {
   border-radius: 16px;
@@ -834,4 +866,9 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 .page-container {
   animation: nasFadeIn 0.2s ease;
+}
+html:lang(ar) {
+  .jt-pagination__btn {
+    transform: scaleX(-1);
+  }
 }
