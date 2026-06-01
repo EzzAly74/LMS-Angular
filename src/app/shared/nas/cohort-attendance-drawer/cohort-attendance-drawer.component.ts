@@ -15,7 +15,7 @@ import { SidebarModule } from 'primeng/sidebar';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, takeUntil } from 'rxjs';
-import { NasIconComponent } from '../nas-icon.component';
+import { NasIconComponent } from '../nas-icon/nas-icon.component';
 import { CoursesApiService } from '../../../features/courses/services/courses-api.service';
 import { LocaleService } from '../../../core/services/locale.service';
 import type {

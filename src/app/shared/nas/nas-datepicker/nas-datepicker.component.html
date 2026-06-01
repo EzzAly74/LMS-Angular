@@ -1,0 +1,93 @@
+<div class="nasdp" [class.nasdp--disabled]="disabled">
+  <input
+    #trigger
+    type="text"
+    class="nasdp__input"
+    readonly
+    [value]="display()"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    (click)="toggle()"
+    (keydown.enter)="toggle(); $event.preventDefault()"
+    (keydown.space)="toggle(); $event.preventDefault()"
+    (blur)="onTouched()"
+  />
+  <button
+    type="button"
+    class="nasdp__btn"
+    tabindex="-1"
+    [disabled]="disabled"
+    (click)="toggle()"
+  >
+    <i class="pi pi-calendar"></i>
+  </button>
+</div>
+
+<ng-template #panelTpl>
+  <div
+    class="nasdp__panel"
+    [style.top.px]="pos().top"
+    [style.left.px]="pos().left"
+    [style.width.px]="PANEL_WIDTH"
+  >
+    <div class="nasdp__head">
+      <button
+        type="button"
+        class="nasdp__nav"
+        (click)="prevMonth()"
+        aria-label="Previous month"
+      >
+        <i class="pi pi-chevron-left"></i>
+      </button>
+      <span class="nasdp__title">{{ monthLabel() }}</span>
+      <button
+        type="button"
+        class="nasdp__nav"
+        (click)="nextMonth()"
+        aria-label="Next month"
+      >
+        <i class="pi pi-chevron-right"></i>
+      </button>
+    </div>
+
+    <table class="nasdp__grid">
+      <thead>
+        <tr>
+          @for (w of weekdays; track w) {
+            <th>{{ w }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (week of weeks(); track $index) {
+          <tr>
+            @for (c of week; track c.date.getTime()) {
+              <td>
+                <button
+                  type="button"
+                  class="nasdp__day"
+                  [class.is-other]="c.otherMonth"
+                  [class.is-today]="c.today"
+                  [class.is-selected]="c.selected"
+                  [disabled]="c.disabled"
+                  (click)="pick(c)"
+                >
+                  {{ c.day }}
+                </button>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="nasdp__foot">
+      <button type="button" class="nasdp__link" (click)="goToday()">
+        {{ todayLabel }}
+      </button>
+      <button type="button" class="nasdp__link" (click)="clear()">
+        {{ clearLabel }}
+      </button>
+    </div>
+  </div>
+</ng-template>

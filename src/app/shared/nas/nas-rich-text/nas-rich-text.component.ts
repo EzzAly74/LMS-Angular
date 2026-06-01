@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { NasIconComponent } from './nas-icon.component';
+import { NasIconComponent } from '../nas-icon/nas-icon.component';
 
 /**
  * Lightweight WYSIWYG editor matching the Figma "menu-bar" toolbar:
@@ -33,79 +33,7 @@ import { NasIconComponent } from './nas-icon.component';
   imports: [CommonModule, NasIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => NasRichTextComponent), multi: true }],
-  template: `
-    <div class="rte" [class.rte--disabled]="disabled()">
-      <div class="rte__bar">
-        <button type="button" class="rte__btn" (click)="exec('undo')" [attr.aria-label]="'Undo'"   tabindex="-1">
-          <nas-icon name="arrow-counter-clockwise" [size]="16" />
-        </button>
-        <button type="button" class="rte__btn" (click)="exec('redo')" [attr.aria-label]="'Redo'"   tabindex="-1">
-          <nas-icon name="arrow-clockwise" [size]="16" />
-        </button>
-
-        <span class="rte__divider"></span>
-
-        <button type="button" class="rte__btn rte__btn--dropdown" (click)="cycleBlock()" tabindex="-1">
-          <span class="rte__btn-label">{{ blockLabel() }}</span>
-          <nas-icon name="caret-down" [size]="12" />
-        </button>
-
-        <button type="button" class="rte__btn rte__btn--colour" (click)="cycleColour()" tabindex="-1">
-          <span class="rte__colour-chip" [style.background]="colour()"></span>
-          <nas-icon name="caret-down" [size]="12" />
-        </button>
-
-        <span class="rte__divider"></span>
-
-        <button type="button" class="rte__btn rte__btn--text"
-                (click)="exec('bold')"           [attr.aria-label]="'Bold'"          tabindex="-1">
-          <nas-icon name="text-b" [size]="16" />
-        </button>
-        <button type="button" class="rte__btn rte__btn--text"
-                (click)="exec('italic')"         [attr.aria-label]="'Italic'"        tabindex="-1">
-          <nas-icon name="text-italic" [size]="16" />
-        </button>
-        <button type="button" class="rte__btn rte__btn--text"
-                (click)="exec('underline')"      [attr.aria-label]="'Underline'"     tabindex="-1">
-          <nas-icon name="text-underline" [size]="16" />
-        </button>
-        <button type="button" class="rte__btn rte__btn--text"
-                (click)="exec('strikeThrough')"  [attr.aria-label]="'Strikethrough'" tabindex="-1">
-          <nas-icon name="text-strikethrough" [size]="16" />
-        </button>
-
-        <span class="rte__divider"></span>
-
-        <button type="button" class="rte__btn" (click)="linkPrompt()" [attr.aria-label]="'Insert link'" tabindex="-1">
-          <nas-icon name="link" [size]="16" />
-        </button>
-        <button type="button" class="rte__btn" (click)="exec('formatBlock', 'pre')" [attr.aria-label]="'Code'" tabindex="-1">
-          <nas-icon name="code" [size]="16" />
-        </button>
-
-        <span class="rte__divider"></span>
-
-        <button type="button" class="rte__btn" (click)="exec('insertUnorderedList')"
-                [attr.aria-label]="'Bullet list'" tabindex="-1">
-          <nas-icon name="list-bullets" [size]="16" />
-        </button>
-        <button type="button" class="rte__btn" (click)="exec('insertOrderedList')"
-                [attr.aria-label]="'Numbered list'" tabindex="-1">
-          <nas-icon name="list-numbers" [size]="16" />
-        </button>
-      </div>
-
-      <div
-        #editor
-        class="rte__area"
-        contenteditable="true"
-        spellcheck="true"
-        [attr.data-placeholder]="placeholder"
-        (input)="onInput()"
-        (blur)="onBlur()"
-      ></div>
-    </div>
-  `,
+  templateUrl: './nas-rich-text.component.html',
   styleUrl: './nas-rich-text.component.scss',
 })
 export class NasRichTextComponent implements ControlValueAccessor, AfterViewInit {

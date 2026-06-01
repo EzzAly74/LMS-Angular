@@ -18,8 +18,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
-import { NasIconComponent } from '../../../../shared/nas/nas-icon.component';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminCertificatesApiService } from '../../services/admin-certificates-api.service';
 import {

@@ -7,7 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NasIconComponent } from './nas-icon.component';
+import { NasIconComponent } from '../nas-icon/nas-icon.component';
 
 /**
  * Pixel-perfect Figma confirmation modal (node 453:37969 — "Log Out").

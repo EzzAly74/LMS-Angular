@@ -22,9 +22,9 @@ import { withLocaleReload } from '../../../core/utils/with-locale-reload';
 // Direct file imports — re-exporting through `index.ts` barrels confuses
 // Angular's compile-time `imports:[]` resolver and disables template type
 // inference (we end up with `$event: Event` on photo-upload handlers).
-import { NasIconComponent }        from '../../../shared/nas/nas-icon.component';
-import { NasPhotoUploadComponent } from '../../../shared/nas/nas-photo-upload.component';
-import { NasRichTextComponent }    from '../../../shared/nas/nas-rich-text.component';
+import { NasIconComponent }        from '../../../shared/nas/nas-icon/nas-icon.component';
+import { NasPhotoUploadComponent } from '../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
+import { NasRichTextComponent }    from '../../../shared/nas/nas-rich-text/nas-rich-text.component';
 
 interface Setting {
   id:    number;

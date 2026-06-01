@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   ContentChildren,
-  Directive,
   EventEmitter,
   Input,
   Output,
@@ -14,24 +13,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { NasShimmerComponent } from './nas-shimmer.component';
-
-/**
- * Cell template injection directive.
- *
- * Example:
- *   <ng-template nasCellTpl="user" let-row let-i="index">
- *     <span>{{ row.name }}</span>
- *   </ng-template>
- */
-@Directive({
-  selector: '[nasCellTpl]',
-  standalone: true,
-})
-export class NasCellTplDirective {
-  @Input('nasCellTpl') field = '';
-  constructor(public readonly template: TemplateRef<{ $implicit: unknown; index: number }>) {}
-}
+import { NasShimmerComponent } from '../nas-shimmer/nas-shimmer.component';
+import { NasCellTplDirective } from './nas-cell-tpl.directive';
 
 export interface NasTableColumn {
   /** field key used to look up `[nasCellTpl]` and the default row property. */

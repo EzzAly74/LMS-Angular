@@ -28,7 +28,7 @@ import type {
   AdminUserStatus,
   AdminUserSummary,
 } from '../../models/user.types';
-import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload.component';
+import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
 
 type RoleTab = 'all' | 'admin' | 'instructor';
 

@@ -15,7 +15,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
-import { NasIconComponent } from '../nas-icon.component';
+import { NasIconComponent } from '../nas-icon/nas-icon.component';
 import { NotificationsDrawerService } from './notifications-drawer.service';
 import { ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';

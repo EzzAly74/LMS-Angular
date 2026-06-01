@@ -1,0 +1,15 @@
+:host { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+
+.nas-icon__mask {
+  display: inline-block;
+  background-color: currentColor;
+  mask-image: var(--nas-icon-url);
+  -webkit-mask-image: var(--nas-icon-url);
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  flex-shrink: 0;
+}

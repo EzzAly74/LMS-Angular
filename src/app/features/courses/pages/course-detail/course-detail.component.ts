@@ -26,10 +26,10 @@ import {
   NasDatepickerComponent,
   CohortAttendanceDrawerComponent,
 } from '../../../../shared/nas';
-import { NasLocaleInputComponent } from '../../../../shared/nas/nas-locale-input.component';
+import { NasLocaleInputComponent } from '../../../../shared/nas/nas-locale-input/nas-locale-input.component';
 import type { LocalizedText } from '../../../../core/models/localized.types';
-import type { NasProgressTone } from '../../../../shared/nas/nas-progress.component';
-import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge.component';
+import type { NasProgressTone } from '../../../../shared/nas/nas-progress/nas-progress.component';
+import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
 import { CoursesApiService } from '../../services/courses-api.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';

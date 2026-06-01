@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { NasIconComponent } from './nas-icon.component';
+import { NasIconComponent } from '../nas-icon/nas-icon.component';
 
 /**
  * Pixel-perfect "Upload Photo / Replace Photo" panel from the Platform
@@ -28,42 +28,7 @@ import { NasIconComponent } from './nas-icon.component';
   standalone: true,
   imports: [CommonModule, TranslateModule, NasIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="photo-upload">
-      <label class="photo-upload__drop" [class.photo-upload__drop--has-file]="value">
-        <input type="file" class="photo-upload__hidden"
-               [accept]="accept"
-               (change)="onFileChange($event)" />
-
-        <div class="photo-upload__centre">
-          <span class="photo-upload__icon"><nas-icon name="upload-simple" [size]="24" /></span>
-
-          @if (ratio) {
-            <div class="photo-upload__ratio">Ratio: {{ ratio }}</div>
-          }
-
-          <div class="photo-upload__formats">{{ formats }}</div>
-          <div class="photo-upload__max">{{ maxLabel | translate }}</div>
-        </div>
-
-        <button type="button" class="photo-upload__cta" (click)="$event.preventDefault(); openPicker($event)">
-          {{ value
-            ? (replaceLabel || ('platform_settings.replace_photo' | translate))
-            : (addLabel     || ('platform_settings.upload_photo'  | translate)) }}
-        </button>
-      </label>
-
-      @if (value) {
-        <div class="photo-upload__preview" [title]="fileName() || ''">
-          <img [src]="value" alt="" />
-          <button type="button" class="photo-upload__clear" (click)="onClear()"
-                  [attr.aria-label]="'Clear'">
-            <nas-icon name="x" [size]="14" />
-          </button>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './nas-photo-upload.component.html',
   styleUrl: './nas-photo-upload.component.scss',
 })
 export class NasPhotoUploadComponent {

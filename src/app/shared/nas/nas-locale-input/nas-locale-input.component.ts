@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import type { LocalizedText } from '../../core/models/localized.types';
+import type { LocalizedText } from '../../../core/models/localized.types';
 
 const EMPTY: LocalizedText = { en: '', ar: '' };
 

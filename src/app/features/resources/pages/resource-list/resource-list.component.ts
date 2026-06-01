@@ -16,7 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { computed } from '@angular/core';
-import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { SkeletonModule } from 'primeng/skeleton';
-import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';

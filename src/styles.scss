@@ -414,7 +414,7 @@ body {
 }
 
 /* Date inputs are handled by the reusable <nas-datepicker> component
-   (src/app/shared/nas/nas-datepicker.component.ts) — it owns its own styles,
+   (src/app/shared/nas/nas-datepicker/nas-datepicker.component.ts) — it owns its own styles,
    so no PrimeNG calendar overrides are needed here. */
 
 /* ── Hide all up/down number-input spinners globally ──────────────── */

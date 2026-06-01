@@ -7,7 +7,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header.component';
+import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { pickLocalized, type MaybeLocalized } from '../../../../core/utils/localized';

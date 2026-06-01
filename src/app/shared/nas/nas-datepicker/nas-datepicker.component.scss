@@ -1,0 +1,174 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+/* The field follows the document direction (RTL in Arabic). Logical
+   border properties keep the input/icon corners correct in both
+   directions: the icon button sits on the trailing (inline-end) edge —
+   right in LTR, left in RTL. */
+.nasdp {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+}
+.nasdp__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--nas-color-border, #d7dade);
+  border-inline-end: none;
+  border-start-start-radius: var(--nas-radius-md, 8px);
+  border-end-start-radius: var(--nas-radius-md, 8px);
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--nas-color-text, #171819);
+  cursor: pointer;
+  outline: none;
+}
+.nasdp__input::placeholder {
+  color: var(--nas-color-text-muted, #9aa0a6);
+}
+.nasdp__input:focus {
+  border-color: var(--nas-teal-600, #0c6e62);
+}
+.nasdp__input:focus + button {
+  border-color: var(--nas-teal-600, #0c6e62);
+  border-inline-start-color: transparent;
+}
+
+.nasdp__btn {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--nas-color-border, #d7dade);
+  border-start-end-radius: var(--nas-radius-md, 8px);
+  border-end-end-radius: var(--nas-radius-md, 8px);
+  background: #fff;
+  color: var(--nas-color-text-muted, #6b7178);
+  cursor: pointer;
+}
+.nasdp__btn:hover:not(:disabled) {
+  background: #f4f5f6;
+}
+
+.nasdp--disabled .nasdp__input,
+.nasdp--disabled .nasdp__btn {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Popover panel (portaled to <body>) ── */
+.nasdp__panel {
+  position: fixed;
+  z-index: 11000;
+  box-sizing: border-box;
+  direction: ltr;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--nas-color-border, #e2e5e9);
+  border-radius: var(--nas-radius-md, 10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  user-select: none;
+}
+.nasdp__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.nasdp__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nas-color-text, #171819);
+}
+.nasdp__nav {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nas-color-text, #171819);
+  cursor: pointer;
+  font-size: 13px;
+}
+.nasdp__nav:hover {
+  background: #f0f1f3;
+}
+
+.nasdp__grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.nasdp__grid th {
+  padding: 4px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--nas-color-text-muted, #9aa0a6);
+  text-align: center;
+}
+.nasdp__grid td {
+  padding: 1px;
+  text-align: center;
+}
+
+.nasdp__day {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--nas-color-text, #171819);
+  cursor: pointer;
+}
+.nasdp__day:hover:not(:disabled):not(.is-selected) {
+  background: #eef0f2;
+}
+.nasdp__day.is-other {
+  color: var(--nas-color-text-muted, #c2c7cc);
+}
+.nasdp__day.is-today {
+  box-shadow: inset 0 0 0 1px var(--nas-teal-600, #0c6e62);
+}
+.nasdp__day.is-selected {
+  background: var(--nas-teal-700, #0c2427);
+  color: #fff;
+}
+.nasdp__day:disabled {
+  color: #d4d7da;
+  cursor: not-allowed;
+}
+
+.nasdp__foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nas-color-border, #eceef0);
+}
+.nasdp__link {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nas-teal-700, #0c6e62);
+}
