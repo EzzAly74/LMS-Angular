@@ -5,7 +5,7 @@ import { ActiveCourse, AttendanceSession, CertificateCard, MyLearningOverview, Q
 import { ApiCallResult } from '../../core/mobile-api.service';
 import { CourseCoverComponent } from '../ui/course-cover.component';
 
-type Sheet = 'none' | 'attendance' | 'present' | 'rating';
+type Sheet = 'none' | 'attendance' | 'present' | 'rating' | 'certificate';
 
 /** S-05 — Profile · My Learning, plus the attendance / mark-present / rating sheets. */
 @Component({
@@ -97,17 +97,26 @@ type Sheet = 'none' | 'attendance' | 'present' | 'rating';
           <div class="ml__label">MY CERTIFICATES</div>
           <div class="certs">
             @for (ct of certs(); track ct.id) {
-              <div class="cert">
-                <div class="cert__thumb"></div>
+              <button class="cert" type="button" (click)="openCert(ct)">
+                <div class="cert__thumb">
+                  @if (certImages()[ct.id]; as img) {
+                    <img [src]="img" alt="Certificate preview" />
+                  } @else if (certImgLoading()[ct.id]) {
+                    <span class="cert__thumbspin"></span>
+                  }
+                </div>
                 <div class="cert__txt">
                   <div class="cert__t">{{ ct.course_title }}</div>
                   <div class="cert__s">Issued {{ longDate(ct.issued_date || ct.issued_at) }}</div>
+                  @if (ct.certificate_number) {
+                    <div class="cert__s">No. {{ ct.certificate_number }}</div>
+                  }
                   @if (ct.user_rating != null) {
                     <div class="cert__rate">{{ sentiment(ct.user_rating) }} <svg viewBox="0 0 24 24" fill="#f5a623"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8-4.3-4.1 5.9-.9L12 3Z"/></svg> {{ ct.user_rating.toFixed(1) }}</div>
                   }
                 </div>
-                <button class="cert__add" type="button" aria-label="Open"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#0c2427" stroke-width="1.5"/><path d="M12 8v8m-4-4h8" stroke="#0c2427" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-              </div>
+                <span class="cert__add" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#0c2427" stroke-width="1.5"/><path d="M12 8v8m-4-4h8" stroke="#0c2427" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              </button>
             }
           </div>
           @if (counts().certificates > certs().length) {
@@ -218,6 +227,39 @@ type Sheet = 'none' | 'attendance' | 'present' | 'rating';
                   (click)="submitRating()">Submit</button>
         </div>
       }
+
+      <!-- Certificate viewer -->
+      @if (sheet() === 'certificate') {
+        <div class="sheet">
+          <div class="sheet__grip"></div>
+          <div class="sheet__head">
+            <span class="sheet__title">{{ currentCert()?.course_title }}</span>
+            <button class="sheet__x" type="button" (click)="closeSheet()">✕</button>
+          </div>
+
+          @if (currentCert(); as ct) {
+            <div class="certview">
+              @if (certImages()[ct.id]; as img) {
+                <img class="certview__img" [src]="img" alt="Certificate" />
+              } @else if (certError()) {
+                <div class="msg msg--err">{{ certError() }}</div>
+              } @else {
+                <div class="certview__loading"><span class="cert__thumbspin"></span> Rendering certificate…</div>
+              }
+
+              <div class="certview__meta">
+                <div><span>Issued</span><strong>{{ longDate(ct.issued_date || ct.issued_at) }}</strong></div>
+                @if (ct.certificate_number) { <div><span>Number</span><strong>{{ ct.certificate_number }}</strong></div> }
+                @if (ct.status) { <div><span>Status</span><strong>{{ ct.status }}</strong></div> }
+              </div>
+
+              @if (certImages()[ct.id]) {
+                <a class="rating-submit certview__dl" [href]="certImages()[ct.id]" [download]="downloadName(ct)">Download</a>
+              }
+            </div>
+          }
+        </div>
+      }
     }
   `,
   styles: [
@@ -259,15 +301,28 @@ type Sheet = 'none' | 'attendance' | 'present' | 'rating';
       .seeall { margin-top: 10px; width: 100%; border: 1px solid #e6e7e8; background: #fff; border-radius: 12px; padding: 12px; font-family: inherit; font-size: 13px; font-weight: 600; color: #171819; cursor: pointer; }
 
       .certs { display: flex; flex-direction: column; gap: 10px; }
-      .cert { display: flex; gap: 12px; align-items: center; border: 1px solid #e6e7e8; border-radius: 14px; padding: 12px; }
-      .cert__thumb { width: 56px; height: 44px; border-radius: 8px; background: #e9ebed; flex: none; }
+      .cert { display: flex; gap: 12px; align-items: center; border: 1px solid #e6e7e8; border-radius: 14px; padding: 12px; width: 100%; background: #fff; font-family: inherit; text-align: start; cursor: pointer; }
+      .cert:hover { border-color: #cfd0d1; }
+      .cert__thumb { width: 56px; height: 44px; border-radius: 8px; background: #e9ebed; flex: none; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+      .cert__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .cert__thumbspin { width: 16px; height: 16px; border: 2px solid #cfd0d1; border-top-color: #0c2427; border-radius: 50%; animation: certspin .7s linear infinite; }
+      @keyframes certspin { to { transform: rotate(360deg); } }
       .cert__txt { flex: 1; min-width: 0; }
       .cert__t { font-size: 14px; font-weight: 700; color: #171819; line-height: 1.2; }
       .cert__s { font-size: 12px; color: #595959; margin-top: 2px; }
       .cert__rate { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #595959; margin-top: 3px; }
       .cert__rate svg { width: 13px; height: 13px; }
-      .cert__add { background: none; border: 0; cursor: pointer; }
+      .cert__add { background: none; border: 0; flex: none; display: flex; align-items: center; }
       .cert__add svg { width: 22px; height: 22px; }
+
+      .certview { padding-top: 12px; }
+      .certview__img { width: 100%; border-radius: 12px; border: 1px solid #e6e7e8; display: block; }
+      .certview__loading { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 32px 0; color: #595959; font-size: 13px; }
+      .certview__meta { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+      .certview__meta div { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+      .certview__meta span { color: #8a8f98; }
+      .certview__meta strong { color: #171819; font-weight: 600; }
+      .certview__dl { display: flex; align-items: center; justify-content: center; text-decoration: none; }
 
       /* Sheets */
       .scrim { position: absolute; inset: 0; background: rgba(12,36,39,.35); z-index: 5; }
@@ -329,6 +384,11 @@ export class MyLearningScreenComponent implements OnInit {
   readonly active = signal<ActiveCourse[]>([]);
   readonly quals = signal<QualificationProgress[]>([]);
   readonly certs = signal<CertificateCard[]>([]);
+  /** certificateId → rendered image data-URL. */
+  readonly certImages = signal<Record<number, string>>({});
+  readonly certImgLoading = signal<Record<number, boolean>>({});
+  readonly currentCert = signal<CertificateCard | null>(null);
+  readonly certError = signal<string | null>(null);
   readonly counts = signal<MyLearningOverview['counts']>({ active_courses: 0, qualifications: 0, certificates: 0 });
   readonly loading = signal(false);
   readonly error = signal<ApiCallResult | null>(null);
@@ -378,6 +438,7 @@ export class MyLearningScreenComponent implements OnInit {
       this.quals.set(data?.previews?.qualifications ?? []);
       this.certs.set(data?.previews?.certificates ?? []);
       this.counts.set(data?.counts ?? { active_courses: 0, qualifications: 0, certificates: 0 });
+      void this.loadCertThumbs();
     } catch {
       this.error.set({ status: 0, message: 'Network error' } as ApiCallResult);
     } finally {
@@ -490,6 +551,45 @@ export class MyLearningScreenComponent implements OnInit {
     } finally {
       this.marking.set(false);
     }
+  }
+
+  // ── Certificates ──
+  openCert(ct: CertificateCard): void {
+    this.currentCert.set(ct);
+    this.certError.set(null);
+    this.sheet.set('certificate');
+    if (!this.certImages()[ct.id]) void this.fetchCertImage(ct.id, true);
+  }
+
+  /** Quietly pre-render the preview thumbnails (no log/inspector noise). */
+  private async loadCertThumbs(): Promise<void> {
+    await Promise.all(this.certs().map((c) => this.fetchCertImage(c.id, false)));
+  }
+
+  private async fetchCertImage(id: number, emit: boolean): Promise<void> {
+    if (this.certImages()[id] || this.certImgLoading()[id]) return;
+    this.certImgLoading.update((m) => ({ ...m, [id]: true }));
+    try {
+      const { data, call } = await this.data.certificateImage(id);
+      if (emit) this.apiResult.emit(call);
+      if (call.ok && data?.image_base64) {
+        const url = data.image_base64.startsWith('data:')
+          ? data.image_base64
+          : `data:${data.mime_type || 'image/jpeg'};base64,${data.image_base64}`;
+        this.certImages.update((m) => ({ ...m, [id]: url }));
+      } else if (emit) {
+        this.certError.set(call.message || 'Could not load certificate image.');
+      }
+    } catch {
+      if (emit) this.certError.set('Network error while loading certificate.');
+    } finally {
+      this.certImgLoading.update((m) => ({ ...m, [id]: false }));
+    }
+  }
+
+  downloadName(ct: CertificateCard): string {
+    const base = String(ct.certificate_number || ct.course_title || `certificate-${ct.id}`);
+    return `${base.replace(/[^a-z0-9\-_]+/gi, '_')}.jpg`;
   }
 
   closeSheet(): void {

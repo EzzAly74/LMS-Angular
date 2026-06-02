@@ -4,10 +4,10 @@
  * data and must degrade gracefully while the backend evolves.
  *
  * Source resources (Lms-Backend/app/Http/Resources/Mobile):
- *   AcademyCategoryChipResource, AcademyCourseCardResource,
- *   AcademyCourseDetailResource, MyLearningOverviewResource,
- *   MyLearningActiveCourseResource, QualificationProgressResource,
- *   MyLearningSessionResource, CertificateResource.
+ *   AcademyCourseCardResource, AcademyCourseDetailResource,
+ *   MyLearningOverviewResource, MyLearningActiveCourseResource,
+ *   QualificationProgressResource, MyLearningSessionResource,
+ *   CertificateResource.
  */
 
 export interface NamedRef {
@@ -134,13 +134,28 @@ export interface QualificationProgress {
 }
 
 export interface CertificateCard {
-  id: string;
-  type: string;
+  /** First-class certificate primary key (integer). Replaces the old `exam:1` compound id. */
+  id: number;
+  uuid?: string;
+  certificate_number?: string;
+  status?: string;
+  course?: { id: number; title: string } | null;
   course_id: number;
   course_title: string;
   issued_at?: string | null;
   issued_date?: string | null;
   user_rating?: number | null;
+}
+
+/** Payload of `GET /mobile/certificates/{certificateId}/download`. */
+export interface CertificateImage {
+  id: number;
+  certificate_number?: string;
+  course_id: number;
+  course_title: string;
+  issued_at?: string | null;
+  image_base64: string;
+  mime_type: string;
 }
 
 export interface MyLearningOverview {
@@ -160,13 +175,6 @@ export interface AttendanceSession {
   time_from?: string | null;
   time_to?: string | null;
   attended: boolean;
-}
-
-export interface CategoryChip {
-  id: number | null;
-  name: string;
-  count: number;
-  is_all: boolean;
 }
 
 /** S-02 fixed scope chip: All / Special / General. */

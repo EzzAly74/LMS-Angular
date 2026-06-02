@@ -483,13 +483,18 @@
 
       <div class="nas-form__field">
         <label>{{ 'course_detail.status' | translate }}</label>
-        <p-dropdown [options]="cohortStatusOpts()" optionLabel="value" optionValue="id"
+        <p-dropdown [options]="cohortStatusDropdownOpts()" optionLabel="value" optionValue="id"
                     formControlName="status" styleClass="w-full" appendTo="body"
                     [placeholder]="'course_detail.cohort_status_placeholder' | translate" />
         @if (enumCode('cohort_status', cohortForm.value.status) === 'scheduled') {
           <p class="cohort-form__hint">
             <i class="pi pi-info-circle"></i>
             {{ 'course_detail.cohort_status_helper' | translate }}
+          </p>
+        } @else if (enumCode('cohort_status', cohortForm.value.status) === 'open_for_enrollment') {
+          <p class="cohort-form__hint">
+            <i class="pi pi-info-circle"></i>
+            {{ 'course_detail.cohort_status_helper_open' | translate }}
           </p>
         }
       </div>
@@ -503,6 +508,20 @@
           <label>{{ 'course_detail.cohort_end' | translate }}</label>
           <nas-datepicker formControlName="end_date" placeholder="dd/mm/yyyy" />
         </div>
+      </div>
+
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.avg_session_time' | translate }}</label>
+        <div class="nas-input-suffix">
+          <input type="number" class="nas-input" formControlName="avg_session_time"
+                 min="0.25" max="24" step="0.5"
+                 [placeholder]="'course_detail.avg_session_time_placeholder' | translate" />
+          <span class="nas-input-suffix__unit">{{ 'course_detail.hours' | translate }}</span>
+        </div>
+        <p class="cohort-form__hint">
+          <i class="pi pi-info-circle"></i>
+          {{ 'course_detail.avg_session_time_helper' | translate }}
+        </p>
       </div>
 
       <footer class="nas-form__footer">

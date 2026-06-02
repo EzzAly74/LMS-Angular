@@ -139,6 +139,7 @@ export class SettingsComponent implements OnInit {
       platform_name:             [''],
       default_language:          ['en'],
       default_cohort_size:       [30],
+      academy_close_offset_days: [0],
       course_attendance_enabled: [true],
       passcode_reset_seconds:    [30],
       course_ratings_enabled:    [true],
@@ -192,6 +193,7 @@ export class SettingsComponent implements OnInit {
       platform_name:             map['platform_name']             ?? '',
       default_language:          map['default_language']          ?? 'en',
       default_cohort_size:       this.numericValue(map['default_cohort_size'], 30),
+      academy_close_offset_days: this.numericValue(map['academy_default_close_offset_days'], 0),
       course_attendance_enabled: attendanceEnabled,
       passcode_reset_seconds:    this.numericValue(map['passcode_reset_seconds'], 30),
       course_ratings_enabled:    this.boolValue(map['course_ratings_enabled'], true),
@@ -236,6 +238,7 @@ export class SettingsComponent implements OnInit {
       put('platform_name',             f.platform_name);
       put('default_language',          f.default_language);
       put('default_cohort_size',       f.default_cohort_size);
+      put('academy_default_close_offset_days', f.academy_close_offset_days);
       put('course_attendance_enabled', f.course_attendance_enabled ? '1' : '0');
       put('passcode_reset_seconds',    f.passcode_reset_seconds);
       put('course_ratings_enabled',    f.course_ratings_enabled ? '1' : '0');
@@ -301,7 +304,7 @@ export class SettingsComponent implements OnInit {
 
   /* ── Stepper handlers ─────────────────────────────────── */
   adjust(field: 'default_cohort_size' | 'abnormal_rating_threshold' | 'min_passing_score'
-              | 'passcode_reset_seconds',
+              | 'passcode_reset_seconds' | 'academy_close_offset_days',
          delta: number): void {
     const ctrl = this.form.get(field);
     if (!ctrl) return;

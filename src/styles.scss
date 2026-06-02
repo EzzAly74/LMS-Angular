@@ -739,6 +739,8 @@ input[type="number"]::-webkit-outer-spin-button {
     background: #ffffff;
   }
   .p-dialog-footer {
+    display: flex;
+    gap: 12px;
     padding: 17px 24px 16px;
     border-top: 1px solid #e6e7e8;
     background: #fafafa;
@@ -848,8 +850,75 @@ input[type="number"]::-webkit-outer-spin-button {
     0 2px 5px 0 rgba(140, 140, 140, 0.08);
   transition: background 0.15s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #0a1d20;
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+/* Auto-rotation note (rotating-passcode mode) */
+.passcode-modal__status {
+  margin: -6px 0 0;
+  text-align: center;
+  font-family: "Fira Sans", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #676e76;
+}
+
+/* End Session button (modal footer, sits next to Done) — red outline */
+.passcode-modal__end {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 0 0;
+  height: 44px;
+  border: 1px solid #f14437;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #f14437;
+  font-family: "Fira Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16.8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #fef2f1;
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+/* Start-session picker phase (course + cohort dropdowns) */
+.passcode-modal__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.passcode-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-family: "Fira Sans", system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #676e76;
+  }
+
+  .p-dropdown {
+    width: 100%;
   }
 }
 

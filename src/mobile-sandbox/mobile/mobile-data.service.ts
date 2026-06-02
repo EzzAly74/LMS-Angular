@@ -4,8 +4,8 @@ import { endpointById } from '../core/endpoints';
 import {
   ActiveCourse,
   AttendanceSession,
-  CategoryChip,
   CertificateCard,
+  CertificateImage,
   CourseCard,
   CourseDetail,
   MyLearningOverview,
@@ -48,10 +48,6 @@ export class MobileDataService {
     return body as unknown as T;
   }
 
-  categories(): Promise<DataResult<CategoryChip[]>> {
-    return this.run<CategoryChip[]>('academy_categories');
-  }
-
   scopes(): Promise<DataResult<ScopeChip[]>> {
     return this.run<ScopeChip[]>('academy_scopes');
   }
@@ -82,6 +78,11 @@ export class MobileDataService {
 
   certificates(): Promise<DataResult<CertificateCard[]>> {
     return this.run<CertificateCard[]>('my_certificates');
+  }
+
+  /** Rendered certificate image (base64 JPEG) for a given certificate id. */
+  certificateImage(certificateId: number): Promise<DataResult<CertificateImage>> {
+    return this.run<CertificateImage>('certificate_download', { certificateId });
   }
 
   sessions(courseId: number): Promise<DataResult<AttendanceSession[]>> {

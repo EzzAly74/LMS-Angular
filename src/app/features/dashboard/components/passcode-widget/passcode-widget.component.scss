@@ -77,6 +77,29 @@
   &--clickable { cursor: pointer; }
 }
 
+/* End Session button (live state) — red outline, Figma 515:35021 */
+.passcode__end {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #f14437;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #f14437;
+  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16.8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-speed, 0.15s) ease;
+
+  &:hover:not(:disabled) { background: #fef2f1; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
 .passcode__digit {
   display: inline-flex;
   align-items: center;

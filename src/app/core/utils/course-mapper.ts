@@ -256,6 +256,7 @@ export interface ApiCohortRaw {
   end_date?:   string | null;
   capacity?:   number | null;
   status?:     string | null;
+  avg_session_time?: number | string | null;
   enrolled_count?: number;
 }
 
@@ -266,6 +267,7 @@ export interface ApiCohortRaw {
  */
 function normalizeCohortStatus(s: string | null | undefined): CohortStatus {
   switch (s) {
+    case 'open_for_enrollment':
     case 'active':
     case 'completed':
     case 'inactive':
@@ -286,6 +288,7 @@ export function mapApiCohort(raw: ApiCohortRaw): Cohort {
     enrolled:   Number(raw.enrolled_count ?? 0),
     capacity:   raw.capacity ?? null,
     status:     normalizeCohortStatus(raw.status),
+    avg_session_time: raw.avg_session_time != null ? Number(raw.avg_session_time) : null,
     // Kept as an alias so the attendance drawer (which still reads
     // `cohort.section_id`) keeps working — cohort.id IS the section id.
     section_id: raw.id,

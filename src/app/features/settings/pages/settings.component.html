@@ -86,7 +86,30 @@
               </div>
               <p class="ps-help">{{ 'platform_settings.default_cohort_size_help' | translate }}</p>
             </div>
-            <div></div>
+            <div class="ps-field">
+              <label for="academy_close_offset_days">{{ 'platform_settings.academy_close_offset' | translate }}</label>
+              <div class="ps-number ps-number--unit">
+                <input id="academy_close_offset_days" type="number" min="0" inputmode="numeric"
+                       class="ps-input ps-input--unit"
+                       formControlName="academy_close_offset_days" />
+                <div class="ps-number__suffix">
+                  <span class="ps-unit">{{ 'platform_settings.days' | translate }}</span>
+                  <div class="ps-number__steppers ps-number__steppers--static">
+                    <button type="button" class="ps-number__step"
+                            (click)="adjust('academy_close_offset_days', +1)"
+                            tabindex="-1">
+                      <nas-icon name="caret-up" [size]="12" />
+                    </button>
+                    <button type="button" class="ps-number__step"
+                            (click)="adjust('academy_close_offset_days', -1)"
+                            tabindex="-1">
+                      <nas-icon name="caret-down" [size]="12" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p class="ps-help">{{ 'platform_settings.academy_close_offset_help' | translate }}</p>
+            </div>
           </div>
 
           <!-- Course Attendance — Yes/No segmented control -->

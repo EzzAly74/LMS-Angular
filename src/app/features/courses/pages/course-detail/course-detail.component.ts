@@ -250,10 +250,23 @@ export class CourseDetailComponent implements OnInit {
     status:     [null as number | null],
     start_date: [null as Date | null],
     end_date:   [null as Date | null],
+    // Average session length in hours (Figma 332:9988). Drives the live
+    // attendance-window length for this cohort's sessions.
+    avg_session_time: [null as number | null, [Validators.min(0.25), Validators.max(24)]],
   });
 
   /** Cohort-status dropdown — driven by the backend `cohort_status` enum. */
   cohortStatusOpts = this.enums.options('cohort_status');
+
+  /**
+   * The only two statuses an admin may pick manually (Figma 332:10708):
+   * `scheduled` and `open_for_enrollment`. `active`/`completed` are
+   * derived from the cohort's dates, and `inactive` is set elsewhere, so
+   * none of those appear in the dialog dropdown.
+   */
+  cohortStatusDropdownOpts = computed(() =>
+    this.cohortStatusOpts().filter(o => o.code === 'scheduled' || o.code === 'open_for_enrollment'),
+  );
 
   /* ── Content tab — modules state ──────────────────────────────────── */
   modules            = signal<CourseModule[]>([]);
@@ -839,8 +852,12 @@ export class CourseDetailComponent implements OnInit {
     this.activeCohort.set(null);
     this.cohortForm.reset({
       name_en: '', name_ar: '',
-      capacity: 30, status: null,
+      capacity: 30,
+      // Default to the canonical "Scheduled" choice so the helper hint
+      // shows immediately, matching the Figma "New Cohort" dialog.
+      status: this.enums.idForCode('cohort_status', 'scheduled'),
       start_date: null, end_date: null,
+      avg_session_time: null,
     });
     this.showCohort.set(true);
   }
@@ -856,11 +873,17 @@ export class CourseDetailComponent implements OnInit {
       name_en:    cohort.name_en ?? cohort.name ?? '',
       name_ar:    cohort.name_ar ?? cohort.name ?? '',
       capacity:   cohort.capacity ?? null,
-      // Translate the stored string `status` into the numeric enum id
-      // the dropdown is bound to.
-      status:     this.enums.idForCode('cohort_status', cohort.status ?? null),
+      // The dropdown only offers the two manual choices. Map the cohort's
+      // effective status back onto one of them: `open_for_enrollment`
+      // stays as-is, everything else (scheduled / active / completed)
+      // falls back to `scheduled`.
+      status:     this.enums.idForCode(
+                    'cohort_status',
+                    cohort.status === 'open_for_enrollment' ? 'open_for_enrollment' : 'scheduled',
+                  ),
       start_date: cohort.start_date ? new Date(cohort.start_date) : null,
       end_date:   cohort.end_date   ? new Date(cohort.end_date)   : null,
+      avg_session_time: cohort.avg_session_time ?? null,
     });
     this.showCohort.set(true);
   }
@@ -884,6 +907,7 @@ export class CourseDetailComponent implements OnInit {
       end_date:   v.end_date   ? this.toIso(v.end_date)   : null,
       capacity:   v.capacity ?? null,
       status:     statusCode ?? null,
+      avg_session_time: v.avg_session_time ?? null,
     };
 
     const editing = this.cohortEditMode() && this.activeCohort();
@@ -1042,6 +1066,7 @@ export class CourseDetailComponent implements OnInit {
   cohortStatusTone(cohort: Cohort): NasStatusTone {
     const s = cohort.status;
     if (s === 'completed' || s === 'active') return 'success';
+    if (s === 'open_for_enrollment') return 'teal';
     if (s === 'inactive') return 'danger';
     // scheduled — Up Coming visually = info, plain Scheduled = neutral
     const start = cohort.start_date ? new Date(cohort.start_date) : null;

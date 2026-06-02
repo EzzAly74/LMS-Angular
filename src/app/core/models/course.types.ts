@@ -46,11 +46,20 @@ export interface CourseSession {
 }
 
 /**
- * Canonical cohort status values stored on the backend. The table chip in
- * the Cohort tab maps `scheduled` → "Up Coming" when the start_date is in
+ * Canonical cohort status values stored on the backend.
+ *
+ * Admins only ever pick `scheduled` or `open_for_enrollment` (the two
+ * app-visibility choices); `active`/`completed` are derived from the
+ * cohort's start/end dates, and `inactive` is the manual offline override.
+ * The table chip maps `scheduled` → "Up Coming" when the start_date is in
  * the future, so the display label diverges from the storage label.
  */
-export type CohortStatus = 'scheduled' | 'active' | 'completed' | 'inactive';
+export type CohortStatus =
+  | 'scheduled'
+  | 'open_for_enrollment'
+  | 'active'
+  | 'completed'
+  | 'inactive';
 
 export interface Cohort {
   id: number;
@@ -64,6 +73,8 @@ export interface Cohort {
   enrolled: number;
   capacity: number | null;
   status: CohortStatus;
+  /** Average session length in hours (drives the live attendance window). */
+  avg_session_time?: number | null;
   /**
    * @deprecated — kept for backwards compatibility with the attendance
    * drawer that currently reads `cohort.section_id`. Equal to `id`.
@@ -79,6 +90,8 @@ export interface CohortPayload {
   end_date?:   string | null;
   capacity?:   number | null;
   status?:     CohortStatus | null;
+  /** Average session length in hours; null = use platform default. */
+  avg_session_time?: number | null;
 }
 
 export interface CourseDetail {

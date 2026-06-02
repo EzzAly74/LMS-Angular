@@ -609,6 +609,27 @@
   }
 }
 
+/* Number input with a trailing unit chip (e.g. "hours"), matching the
+   "Avg. Session Time" field in Figma 332:9988. The unit sits inside the
+   field on the trailing edge and is RTL-safe via logical properties. */
+.nas-input-suffix {
+  position: relative;
+  display: block;
+  width: 100%;
+
+  .nas-input { width: 100%; padding-inline-end: 64px; }
+
+  &__unit {
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-muted, #6B7280);
+  }
+}
+
 /* "Approximate Duration" — boxed input with the `minutes` label and a small
    vertical chevron stepper rendered *inside* the field, matching Figma. We
    intentionally avoid PrimeNG's `<p-inputNumber>` here because the project

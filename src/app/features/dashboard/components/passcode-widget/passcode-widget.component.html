@@ -6,30 +6,33 @@
     <button
       type="button"
       class="passcode__generate"
-      [disabled]="generating() || !canGenerate()"
-      (click)="generate()">
+      [disabled]="coursesLoading() || !canGenerate()"
+      (click)="openPicker()">
       <nas-icon name="repeat" [size]="20" />
       <span>{{ 'dashboard.passcode_generate' | translate }}</span>
     </button>
-    @if (!canGenerate()) {
-      <p class="passcode__hint">{{ 'dashboard.passcode_no_live_session' | translate }}</p>
+    @if (!coursesLoading() && !canGenerate()) {
+      <p class="passcode__hint">{{ 'dashboard.passcode_no_courses' | translate }}</p>
     }
   } @else {
     <p class="passcode__label">{{ 'dashboard.passcode_label' | translate }}</p>
     <div class="passcode__row">
       <button
         type="button"
-        class="passcode__digits"
-        [class.passcode__digits--clickable]="state() === 'live'"
+        class="passcode__digits passcode__digits--clickable"
         (click)="openModal()">
         @for (d of digits(); track $index) {
           <span class="passcode__digit">{{ d }}</span>
         }
       </button>
 
-      @if (state() === 'ended') {
-        <span class="passcode__ended">{{ 'dashboard.passcode_session_ended' | translate }}</span>
-      }
+      <button
+        type="button"
+        class="passcode__end"
+        [disabled]="endingSession()"
+        (click)="endSession()">
+        {{ 'dashboard.passcode_end_session' | translate }}
+      </button>
     </div>
   }
 </div>
@@ -47,16 +50,50 @@
   [style]="{ width: '512px' }"
   appendTo="body">
   <ng-template pTemplate="header">
-    <h2 class="passcode-modal__title">{{ 'dashboard.passcode_modal_title' | translate }}</h2>
+    <h2 class="passcode-modal__title">
+      @if (phase() === 'pick') {
+        {{ 'dashboard.passcode_pick_title' | translate }}
+      } @else {
+        {{ 'dashboard.passcode_modal_title' | translate }}
+      }
+    </h2>
   </ng-template>
 
-  @if (passcode(); as code) {
+  <!-- Phase 1 — choose the course + cohort to start a session for -->
+  @if (phase() === 'pick') {
+    <div class="passcode-modal__pick">
+      <div class="passcode-modal__field">
+        <label>{{ 'dashboard.passcode_course' | translate }}</label>
+        <p-dropdown
+          [options]="courses()"
+          [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
+          [placeholder]="'dashboard.passcode_select_course' | translate"
+          [loading]="coursesLoading()" [filter]="true" filterBy="title"
+          appendTo="body" styleClass="nas-dropdown"
+          (onChange)="onCourseChange()" />
+      </div>
+
+      <div class="passcode-modal__field">
+        <label>{{ 'dashboard.passcode_cohort' | translate }}</label>
+        <p-dropdown
+          [options]="cohortsForSelected()"
+          [(ngModel)]="selectedCohortId" optionLabel="name" optionValue="id"
+          [placeholder]="'dashboard.passcode_select_cohort' | translate"
+          [disabled]="selectedCourseId() === null"
+          appendTo="body" styleClass="nas-dropdown" />
+      </div>
+    </div>
+  } @else if (passcode()) {
   <div class="passcode-modal__body">
     <div class="passcode-modal__digits">
       @for (d of digits(); track $index) {
         <span class="passcode-modal__digit">{{ d }}</span>
       }
     </div>
+
+    @if (rotates()) {
+      <p class="passcode-modal__status">{{ 'dashboard.passcode_auto_reset_note' | translate }}</p>
+    }
 
     <dl class="passcode-modal__meta">
       <div class="passcode-modal__meta-row">
@@ -68,6 +105,10 @@
             <span class="passcode-modal__date">—</span>
           }
         </dd>
+      </div>
+      <div class="passcode-modal__meta-row">
+        <dt>{{ 'dashboard.passcode_course' | translate }}</dt>
+        <dd>{{ session()?.course_title || '—' }}</dd>
       </div>
       <div class="passcode-modal__meta-row">
         <dt>{{ 'dashboard.passcode_cohort' | translate }}</dt>
@@ -82,8 +123,27 @@
   }
 
   <ng-template pTemplate="footer">
-    <button type="button" class="passcode-modal__done" (click)="closeModal()">
-      {{ 'dashboard.passcode_done' | translate }}
-    </button>
+    @if (phase() === 'pick') {
+      <button
+        type="button"
+        class="passcode-modal__done"
+        [disabled]="!canStart()"
+        (click)="start()">
+        {{ 'dashboard.passcode_generate' | translate }}
+      </button>
+    } @else {
+      @if (state() === 'live') {
+        <button
+          type="button"
+          class="passcode-modal__end"
+          [disabled]="endingSession()"
+          (click)="endSession()">
+          {{ 'dashboard.passcode_end_session' | translate }}
+        </button>
+      }
+      <button type="button" class="passcode-modal__done" (click)="closeModal()">
+        {{ 'dashboard.passcode_done' | translate }}
+      </button>
+    }
   </ng-template>
 </p-dialog>
