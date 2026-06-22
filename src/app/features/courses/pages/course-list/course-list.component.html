@@ -187,16 +187,6 @@
     </div>
 
     <div class="nas-form__field">
-      <label>{{ 'add_course.review_content' | translate }} *</label>
-      <div class="nas-yesno">
-        <button type="button" class="nas-yesno__opt" [class.active]="form.value.require_instructor === true"
-                (click)="form.patchValue({ require_instructor: true })">{{ 'common.yes' | translate }}</button>
-        <button type="button" class="nas-yesno__opt" [class.active]="form.value.require_instructor === false"
-                (click)="form.patchValue({ require_instructor: false })">{{ 'common.no' | translate }}</button>
-      </div>
-    </div>
-
-    <div class="nas-form__field">
       <label>{{ 'courses_list.image' | translate }} *</label>
       <nas-photo-upload
         [value]="addPhotoPreview()"
@@ -356,16 +346,6 @@
                   (click)="editForm.patchValue({ certificate: true })">{{ 'common.yes' | translate }}</button>
           <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.certificate === false"
                   (click)="editForm.patchValue({ certificate: false })">{{ 'common.no' | translate }}</button>
-        </div>
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'add_course.review_content' | translate }} *</label>
-        <div class="nas-yesno">
-          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === true"
-                  (click)="editForm.patchValue({ require_instructor: true })">{{ 'common.yes' | translate }}</button>
-          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === false"
-                  (click)="editForm.patchValue({ require_instructor: false })">{{ 'common.no' | translate }}</button>
         </div>
       </div>
 

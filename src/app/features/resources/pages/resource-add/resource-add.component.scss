@@ -253,3 +253,27 @@
     &:disabled { opacity: 0.45; cursor: not-allowed; }
   }
 }
+
+/* ── Validation error states ──────────────────────────────────── */
+.ra-field__error {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--nas-status-red-500, #dc2626);
+}
+
+.ra-input--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}
+
+.ra-textarea--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}
+
+.ra-dropzone--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}
+
+:host ::ng-deep .ra-dropdown--error.p-dropdown {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}

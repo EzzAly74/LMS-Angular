@@ -183,11 +183,13 @@ export class CourseListComponent implements OnInit {
   tabs = computed<NasPillTab[]>(() => {
     const opts = this.enums.options('course_status')();
     const counts = this.tabCounts();
-    return opts.map(o => ({
-      id: o.code,
-      label: o.value,
-      count: counts[o.code as ActiveTab] ?? null,
-    }));
+    return opts
+      .filter(o => o.code !== 'pending')
+      .map(o => ({
+        id: o.code,
+        label: o.value,
+        count: counts[o.code as ActiveTab] ?? null,
+      }));
   });
 
   /**

@@ -280,3 +280,27 @@
   font-size: var(--nas-size-xs);
   color: var(--nas-color-text-muted);
 }
+
+/* ── Validation error states ──────────────────────────────────── */
+.re-field__error {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--nas-status-red-500, #dc2626);
+}
+
+.re-input--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}
+
+.re-textarea--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}
+
+.re-dropzone--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}
+
+:host ::ng-deep .re-dropdown--error.p-dropdown {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
+}

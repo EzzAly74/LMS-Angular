@@ -1,7 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import {
+  ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors,
+} from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../../core/services/api.service';
@@ -9,71 +14,95 @@ import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
-interface QualOption {
-  id: number;
-  name: string;
+type ResourceType = 'article' | 'link' | 'file';
+
+interface QualOption { id: number; name: string; }
+
+/** Simple URL validator — accepts http:// and https:// URLs. */
+function urlValidator(ctrl: AbstractControl): ValidationErrors | null {
+  const v = (ctrl.value ?? '').trim();
+  if (!v) return null;
+  try { new URL(v); return null; } catch { return { url: true }; }
 }
 
 @Component({
   selector: 'app-resource-add',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, DropdownModule, TranslateModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, DropdownModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './resource-add.component.html',
   styleUrl: './resource-add.component.scss',
 })
-export class ResourceAddComponent implements OnInit {
-  private api    = inject(ApiService);
-  private enums  = inject(EnumsService);
-  private router = inject(Router);
+export class ResourceAddComponent implements OnInit, OnDestroy {
+  private readonly api    = inject(ApiService);
+  private readonly enums  = inject(EnumsService);
+  private readonly router = inject(Router);
+  private readonly fb     = inject(FormBuilder);
+  private readonly destroy$ = new Subject<void>();
 
   saving      = signal(false);
   qualOptions = signal<QualOption[]>([]);
-
-  /**
-   * The resource type dropdown holds the numeric enum id — the backend's
-   * `LmsResourceRequest::AcceptsEnumIds` trait normalizes it back to the
-   * string code (`"article"` / `"link"` / `"file"`) before validation
-   * runs.
-   */
-  form = {
-    title: '',
-    type: null as number | null,
-    content: '',
-    url: '',
-    file: null as File | null,
-    qualification_skill_id: null as number | null,
-  };
+  /** Holds the selected File — not bindable via FormControl. */
+  selectedFile = signal<File | null>(null);
+  /** Shown below the dropzone after a submit attempt with no file. */
+  fileError    = signal(false);
 
   /** Resource-type dropdown options — backend `resource_type` enum. */
   typeOptions = this.enums.options('resource_type');
 
+  readonly form = this.fb.group({
+    title_en:               ['', [Validators.required, Validators.maxLength(255)]],
+    title_ar:               ['', [Validators.required, Validators.maxLength(255)]],
+    type:                   ['article' as ResourceType | null, Validators.required],
+    content:                [''],
+    content_ar:             [''],
+    url:                    [''],
+    qualification_skill_id: [null as number | null],
+  });
+
+  get titleEnCtrl()  { return this.form.controls.title_en; }
+  get titleArCtrl()  { return this.form.controls.title_ar; }
+  get typeCtrl()     { return this.form.controls.type; }
+  get contentCtrl()  { return this.form.controls.content; }
+  get urlCtrl()      { return this.form.controls.url; }
+
+  /** Instant equality — no enum lookup needed. */
+  isType(code: ResourceType): boolean { return this.typeCtrl.value === code; }
+
   constructor() {
-    // Qualifications come back localized — re-pull when the UI language
-    // switches so the dropdown labels match the user's locale.
     withLocaleReload(() => this.loadQualifications());
   }
 
   ngOnInit(): void {
     this.loadQualifications();
-    // Default to "article" once the enum has loaded. The effect is
-    // intentionally one-shot — once the form has a non-null type the
-    // user owns the value.
-    this.enums.fetchOnce('resource_type').subscribe(opts => {
-      if (this.form.type === null) {
-        this.form.type = opts.find(o => o.code === 'article')?.id ?? opts[0]?.id ?? null;
-      }
-    });
+    // Sync conditional validators whenever type changes.
+    this.typeCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.syncConditionalValidators());
+    // Apply initial validators for default type 'article'.
+    this.syncConditionalValidators();
   }
 
-  /** Translate the form's numeric type id back to its string code. */
-  private typeCode(): 'article' | 'link' | 'file' | null {
-    return this.enums.codeForId('resource_type', this.form.type) as 'article' | 'link' | 'file' | null;
-  }
+  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
-  /** Template helper — used by `@if` blocks that key on the type code. */
-  isType(code: 'article' | 'link' | 'file'): boolean {
-    return this.typeCode() === code;
+  private syncConditionalValidators(): void {
+    const type = this.typeCtrl.value;
+
+    // content: required only for articles
+    if (type === 'article') {
+      this.contentCtrl.setValidators([Validators.required]);
+    } else {
+      this.contentCtrl.clearValidators();
+    }
+    this.contentCtrl.updateValueAndValidity({ emitEvent: false });
+
+    // url: required + valid URL only for links
+    if (type === 'link') {
+      this.urlCtrl.setValidators([Validators.required, urlValidator]);
+    } else {
+      this.urlCtrl.clearValidators();
+    }
+    this.urlCtrl.updateValueAndValidity({ emitEvent: false });
   }
 
   private loadQualifications(): void {
@@ -83,30 +112,34 @@ export class ResourceAddComponent implements OnInit {
   }
 
   onFileSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.form.file = input.files?.[0] ?? null;
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    this.selectedFile.set(file);
+    this.fileError.set(false);
   }
 
-  cancel(): void {
-    this.router.navigate(['/admin/resources']);
-  }
+  cancel(): void { this.router.navigate(['/admin/resources']); }
 
   submit(): void {
-    if (!this.canSubmit()) return;
+    // Trigger file error manually (file inputs can't be in FormGroup)
+    if (this.isType('file') && !this.selectedFile()) {
+      this.fileError.set(true);
+    }
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
+    if (this.isType('file') && !this.selectedFile()) return;
+
     this.saving.set(true);
+    const v    = this.form.getRawValue();
+    const type = v.type!;
 
-    const typeId = this.form.type;
-    const typeCode = this.typeCode();
-
-    if (typeCode === 'file' && this.form.file) {
+    if (type === 'file') {
       const fd = new FormData();
-      fd.append('title', this.form.title);
-      // Send the numeric enum id; backend trait translates it to the
-      // string code for the validator + storage column.
-      fd.append('type',  String(typeId ?? ''));
-      fd.append('file',  this.form.file);
-      if (this.form.qualification_skill_id != null) {
-        fd.append('qualification_skill_id', String(this.form.qualification_skill_id));
+      fd.append('title',    v.title_en!.trim());
+      fd.append('title_ar', v.title_ar!.trim());
+      fd.append('type',     type);
+      fd.append('file',     this.selectedFile()!);
+      if (v.qualification_skill_id != null) {
+        fd.append('qualification_skill_id', String(v.qualification_skill_id));
       }
       this.api.post(API.LMS_RESOURCES, fd).subscribe({
         next: () => { this.saving.set(false); this.router.navigate(['/admin/resources']); },
@@ -114,28 +147,22 @@ export class ResourceAddComponent implements OnInit {
       });
     } else {
       const payload: Record<string, unknown> = {
-        title: this.form.title,
-        type:  typeId,
+        title:    v.title_en!.trim(),
+        title_ar: v.title_ar!.trim(),
+        type,
       };
-      if (typeCode === 'article') payload['content'] = this.form.content;
-      if (typeCode === 'link')    payload['url']     = this.form.url;
-      if (this.form.qualification_skill_id != null) {
-        payload['qualification_skill_id'] = this.form.qualification_skill_id;
+      if (type === 'article') {
+        payload['content']    = v.content ?? '';
+        payload['content_ar'] = v.content_ar ?? '';
+      }
+      if (type === 'link') payload['url'] = v.url;
+      if (v.qualification_skill_id != null) {
+        payload['qualification_skill_id'] = v.qualification_skill_id;
       }
       this.api.post(API.LMS_RESOURCES, payload).subscribe({
         next: () => { this.saving.set(false); this.router.navigate(['/admin/resources']); },
         error: () => this.saving.set(false),
       });
     }
-  }
-
-  canSubmit(): boolean {
-    if (this.saving()) return false;
-    if (!this.form.title.trim()) return false;
-    const typeCode = this.typeCode();
-    if (!typeCode) return false;
-    if (typeCode === 'link' && !this.form.url.trim()) return false;
-    if (typeCode === 'file' && !this.form.file)       return false;
-    return true;
   }
 }

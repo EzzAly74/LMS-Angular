@@ -207,8 +207,48 @@
   outline: none;
   &::placeholder { color: var(--nas-color-text-muted); }
   &:focus { border-color: var(--nas-teal-600); box-shadow: 0 0 0 3px var(--nas-teal-200); }
+  &--error {
+    border-color: #e53e3e;
+    &:focus { border-color: #e53e3e; box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15); }
+  }
 }
 .nas-input--area { height: auto; padding: var(--nas-space-3); resize: vertical; }
+
+/* Inline validation error message */
+.nas-form__error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #e53e3e;
+  line-height: 1.4;
+  &::before {
+    content: '\e90c'; /* pi-exclamation-circle */
+    font-family: 'primeicons';
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+}
+
+/* Footer row: error on the left, char counter on the right */
+.nas-field-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-2);
+  min-height: 16px;
+}
+
+/* Character counter */
+.nas-char-counter {
+  font-size: 11px;
+  color: var(--nas-color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  &--warn  { color: #d97706; }
+  &--error { color: #e53e3e; font-weight: var(--nas-weight-medium); }
+}
 
 .nas-input-with-icon {
   position: relative;
@@ -252,6 +292,7 @@
   border-radius: var(--nas-radius-md);
   max-height: 220px;
   overflow-y: auto;
+  &--error { border-color: #e53e3e; }
   &__group {
     padding: 8px var(--nas-space-3);
     font-size: var(--nas-size-3xs);
@@ -326,3 +367,113 @@
   font-weight: var(--nas-weight-semibold);
 }
 :host ::ng-deep .nas-dialog .p-dialog-content { padding: var(--nas-space-5); }
+/* ── Message detail ──────────────────────────────────────────────── */
+.msg-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-5);
+
+  &__body {
+    font-size: var(--nas-size-xs);
+    color: var(--nas-color-text-body);
+    line-height: var(--nas-height-l);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: var(--nas-space-4);
+    background: var(--nas-neutral-200);
+    border-radius: var(--nas-radius-md);
+    border: 1px solid var(--nas-color-border);
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nas-space-3);
+    margin: 0;
+    padding: 0;
+
+    > div {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--nas-space-3);
+    }
+
+    dt {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--nas-size-2xs);
+      color: var(--nas-color-text-muted);
+      white-space: nowrap;
+      i { font-size: 12px; }
+    }
+
+    dd {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font-size: var(--nas-size-2xs);
+      font-weight: var(--nas-weight-medium);
+      color: var(--nas-color-text-strong);
+      margin: 0;
+      text-align: end;
+    }
+  }
+
+  &__recipients-text {
+    color: var(--nas-color-text-body);
+    font-weight: var(--nas-weight-regular);
+  }
+
+  &__read-dd {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--nas-color-text-muted);
+    cursor: pointer;
+    border-radius: var(--nas-radius-sm);
+    padding: 0;
+    flex-shrink: 0;
+    &:hover {
+      color: var(--nas-teal-700);
+      background: var(--nas-neutral-300);
+    }
+    i { font-size: 11px; }
+  }
+
+  &__mark-read-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 8px;
+    border: 1px solid var(--nas-teal-600);
+    background: transparent;
+    color: var(--nas-teal-700);
+    border-radius: var(--nas-radius-sm);
+    font-size: 11px;
+    font-weight: var(--nas-weight-medium);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    &:hover {
+      background: var(--nas-teal-100);
+    }
+    i { font-size: 11px; }
+  }
+}

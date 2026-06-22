@@ -223,6 +223,16 @@
     }
   }
   &__required { color: var(--nas-status-red-500); margin-left: 2px; }
+  &__error {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--nas-status-red-500, #dc2626);
+  }
+}
+
+.nas-input--error {
+  border-color: var(--nas-status-red-500, #ef4444) !important;
 }
 
 .nas-input {

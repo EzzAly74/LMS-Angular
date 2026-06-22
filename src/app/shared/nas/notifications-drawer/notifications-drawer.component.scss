@@ -28,7 +28,7 @@
 }
 
 .nd-head__title {
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 700;
@@ -85,7 +85,7 @@
 }
 
 .nd-card__title {
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
@@ -112,7 +112,7 @@
 }
 
 .nd-field__label {
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 13px;
   font-weight: 600;
   color: #171819;
@@ -130,15 +130,22 @@
   padding: 10px 12px;
   border: 1px solid #e6e7e8;
   border-radius: 8px;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 14px;
   line-height: 20px;
   color: #171819;
   outline: none;
-  transition: border-color 120ms, box-shadow 120ms;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms;
 }
-.nd-textarea:focus { border-color: #26787b; box-shadow: 0 0 0 3px rgba(38, 120, 123, 0.12); }
-.nd-textarea::placeholder { color: #8c8c8c; }
+.nd-textarea:focus {
+  border-color: #26787b;
+  box-shadow: 0 0 0 3px rgba(38, 120, 123, 0.12);
+}
+.nd-textarea::placeholder {
+  color: #8c8c8c;
+}
 
 /* ── Recipients toolbar (search + role tabs) ─────────────────────── */
 .nd-recipients-toolbar {
@@ -157,6 +164,7 @@
   border-radius: 8px;
   background: #ffffff;
   color: #8c8c8c;
+  max-width: 150px;
 }
 .nd-search__input {
   flex: 1;
@@ -164,29 +172,38 @@
   background: transparent;
   border: 0;
   outline: 0;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 14px;
   color: #171819;
 }
-.nd-search__input::placeholder { color: #8c8c8c; }
+.nd-search__input::placeholder {
+  color: #8c8c8c;
+}
 
 .nd-role-tabs {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 .nd-role-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 13px;
   color: #676e76;
   user-select: none;
 }
-.nd-role-tab.active { color: #171819; font-weight: 600; }
-.nd-role-tab input[type='checkbox'] { accent-color: #0c2427; cursor: pointer; }
+.nd-role-tab.active {
+  color: #171819;
+  font-weight: 600;
+}
+.nd-role-tab input[type="checkbox"] {
+  accent-color: #0c2427;
+  cursor: pointer;
+}
 
 /* ── Recipient list ──────────────────────────────────────────────── */
 .nd-recipient-list {
@@ -201,7 +218,7 @@
   padding: 10px 12px;
   background: #fafafa;
   border-bottom: 1px solid #e6e7e8;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -216,21 +233,30 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 14px;
   color: #171819;
   cursor: pointer;
   border-bottom: 1px solid #f5f5f5;
 }
-.nd-recipient-row:last-child { border-bottom: 0; }
-.nd-recipient-row:hover { background: #fafafa; }
-.nd-recipient-row--all { font-weight: 600; }
-.nd-recipient-row input[type='checkbox'] { accent-color: #0c2427; cursor: pointer; }
+.nd-recipient-row:last-child {
+  border-bottom: 0;
+}
+.nd-recipient-row:hover {
+  background: #fafafa;
+}
+.nd-recipient-row--all {
+  font-weight: 600;
+}
+.nd-recipient-row input[type="checkbox"] {
+  accent-color: #0c2427;
+  cursor: pointer;
+}
 
 .nd-recipient-empty {
   padding: 16px 12px;
   text-align: center;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 13px;
   color: #8c8c8c;
 }
@@ -248,14 +274,21 @@
   color: #fffbf7;
   border: 1px solid #0c2427;
   border-radius: 8px;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 120ms, opacity 120ms;
+  transition:
+    background-color 120ms,
+    opacity 120ms;
 }
-.nd-send-btn:not(:disabled):hover { background: #15363a; }
-.nd-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.nd-send-btn:not(:disabled):hover {
+  background: #15363a;
+}
+.nd-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* ── Recent notifications list (below composer) ─────────────────── */
 .nd-list {
@@ -285,7 +318,7 @@
 }
 
 .nd-list-item__title {
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
@@ -298,7 +331,7 @@
 }
 
 .nd-list-item__detail {
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 13px;
   line-height: 18px;
   color: #676e76;
@@ -310,7 +343,7 @@
 }
 
 .nd-list-item__time {
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 12px;
   color: #8c8c8c;
   white-space: nowrap;
@@ -328,6 +361,6 @@
 }
 .nd-list-empty p {
   margin: 0;
-  font-family: 'Fira Sans', system-ui, sans-serif;
+  font-family: "Fira Sans", system-ui, sans-serif;
   font-size: 13px;
 }

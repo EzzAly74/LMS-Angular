@@ -31,33 +31,61 @@
   } @else if (!resource()) {
     <div class="re-not-found">{{ 'resources.not_found' | translate }}</div>
   } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" autocomplete="off">
     <div class="re-layout">
 
       <!-- Main form -->
       <div class="re-card re-card--main">
 
-        <!-- Title -->
+        <!-- Title (English) -->
         <div class="re-field">
-          <label class="re-field__label">{{ 'resources.title_label' | translate }} <span class="re-field__req">*</span></label>
+          <label class="re-field__label">{{ 'resources.title_en' | translate }} <span class="re-field__req">*</span></label>
           <input
             type="text"
-            [(ngModel)]="form.title"
+            formControlName="title_en"
             [placeholder]="'resources.title_placeholder' | translate"
             class="re-input"
-          />
+            [class.re-input--error]="titleEnCtrl.invalid && titleEnCtrl.touched" />
+          @if (titleEnCtrl.invalid && titleEnCtrl.touched) {
+            <span class="re-field__error">
+              @if (titleEnCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+              @else if (titleEnCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
+            </span>
+          }
+        </div>
+
+        <!-- Title (Arabic) -->
+        <div class="re-field">
+          <label class="re-field__label">{{ 'resources.title_ar' | translate }} <span class="re-field__req">*</span></label>
+          <input
+            type="text"
+            formControlName="title_ar"
+            [placeholder]="'resources.title_placeholder' | translate"
+            class="re-input"
+            [class.re-input--error]="titleArCtrl.invalid && titleArCtrl.touched"
+            dir="rtl" />
+          @if (titleArCtrl.invalid && titleArCtrl.touched) {
+            <span class="re-field__error">
+              @if (titleArCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+              @else if (titleArCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
+            </span>
+          }
         </div>
 
         <!-- Resource Type -->
         <div class="re-field">
           <label class="re-field__label">{{ 'resources.resource_type' | translate }} <span class="re-field__req">*</span></label>
           <p-dropdown
+            formControlName="type"
             [options]="typeOptions()"
-            [(ngModel)]="form.type"
             optionLabel="value"
-            optionValue="id"
+            optionValue="code"
             appendTo="body"
             styleClass="re-dropdown"
-          />
+            [class.re-dropdown--error]="typeCtrl.invalid && typeCtrl.touched" />
+          @if (typeCtrl.invalid && typeCtrl.touched) {
+            <span class="re-field__error">{{ 'errors.required' | translate }}</span>
+          }
         </div>
 
         <!-- Article: Description -->
@@ -65,10 +93,24 @@
           <div class="re-field">
             <label class="re-field__label">{{ 'resources.description_en' | translate }}</label>
             <textarea
-              [(ngModel)]="form.content"
+              formControlName="content"
               [placeholder]="'resources.description_placeholder' | translate"
               rows="5"
               class="re-textarea"
+              [class.re-textarea--error]="contentCtrl.invalid && contentCtrl.touched"
+            ></textarea>
+            @if (contentCtrl.invalid && contentCtrl.touched) {
+              <span class="re-field__error">{{ 'errors.required' | translate }}</span>
+            }
+          </div>
+          <div class="re-field">
+            <label class="re-field__label">{{ 'resources.description_ar' | translate }}</label>
+            <textarea
+              formControlName="content_ar"
+              [placeholder]="'resources.description_placeholder' | translate"
+              rows="5"
+              class="re-textarea"
+              dir="rtl"
             ></textarea>
           </div>
         }
@@ -79,10 +121,16 @@
             <label class="re-field__label">{{ 'resources.url' | translate }} <span class="re-field__req">*</span></label>
             <input
               type="url"
-              [(ngModel)]="form.url"
+              formControlName="url"
               placeholder="https://…"
               class="re-input"
-            />
+              [class.re-input--error]="urlCtrl.invalid && urlCtrl.touched" />
+            @if (urlCtrl.invalid && urlCtrl.touched) {
+              <span class="re-field__error">
+                @if (urlCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+                @else if (urlCtrl.hasError('url')) { {{ 'errors.url' | translate }} }
+              </span>
+            }
           </div>
         }
 
@@ -91,7 +139,7 @@
           <div class="re-field">
             <label class="re-field__label">{{ 'resources.upload_file' | translate }}</label>
 
-            @if (resource()?.file_name && !form.file) {
+            @if (resource()?.file_name && !selectedFile()) {
               <div class="re-current-file">
                 <i class="pi pi-file re-current-file__icon"></i>
                 <span>{{ resource()!.file_name }}</span>
@@ -99,14 +147,13 @@
                   [href]="resource()!.file_path ?? '#'"
                   target="_blank"
                   rel="noopener"
-                  class="re-current-file__link"
-                >
+                  class="re-current-file__link">
                   <i class="pi pi-external-link"></i> {{ 'resources.view' | translate }}
                 </a>
               </div>
             }
 
-            <label class="re-dropzone">
+            <label class="re-dropzone" [class.re-dropzone--error]="fileError()">
               <i class="pi pi-upload re-dropzone__icon"></i>
               <div class="re-dropzone__text">
                 <span>{{ 'resources.drag_drop' | translate }} <strong class="re-dropzone__browse">{{ 'resources.browse_file' | translate }}</strong></span>
@@ -116,15 +163,17 @@
                 type="file"
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                 class="re-dropzone__input"
-                (change)="onFileSelect($event)"
-              />
+                (change)="onFileSelect($event)" />
             </label>
 
-            @if (form.file) {
+            @if (selectedFile()) {
               <div class="re-file-selected">
                 <i class="pi pi-check-circle re-file-selected__icon"></i>
-                {{ form.file.name }}
+                {{ selectedFile()!.name }}
               </div>
+            }
+            @if (fileError()) {
+              <span class="re-field__error">{{ 'errors.required' | translate }}</span>
             }
           </div>
         }
@@ -142,28 +191,22 @@
             <span class="re-field__opt">({{ 'common.optional' | translate }})</span>
           </label>
           <p-dropdown
+            formControlName="qualification_skill_id"
             [options]="qualOptions()"
-            [(ngModel)]="form.qualification_skill_id"
             optionLabel="name"
             optionValue="id"
             [placeholder]="'resources.qualification_placeholder' | translate"
             [showClear]="true"
             [filter]="true"
             appendTo="body"
-            styleClass="re-dropdown"
-          />
+            styleClass="re-dropdown" />
           <p class="re-side__hint">{{ 'resources.qualification_hint' | translate }}</p>
         </div>
 
         <!-- Actions -->
         <div class="re-actions">
           <button type="button" class="re-btn re-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
-          <button
-            type="button"
-            class="re-btn re-btn--save"
-            [disabled]="saving() || !form.title.trim()"
-            (click)="save()"
-          >
+          <button type="submit" class="re-btn re-btn--save" [disabled]="saving()">
             <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : 'pi-floppy-disk'"></i>
             {{ 'common.save_changes' | translate }}
           </button>
@@ -171,6 +214,7 @@
       </div>
 
     </div>
+    </form>
   }
 
 </div>

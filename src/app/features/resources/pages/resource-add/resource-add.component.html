@@ -16,33 +16,61 @@
     <p class="ra-heading__sub">{{ 'resources.subtitle_create' | translate }}</p>
   </div>
 
+  <form [formGroup]="form" (ngSubmit)="submit()" autocomplete="off">
   <div class="ra-layout">
 
     <!-- Main form -->
     <div class="ra-card ra-card--main">
 
-      <!-- Title -->
+      <!-- Title (English) -->
       <div class="ra-field">
-        <label class="ra-field__label">{{ 'resources.title_label' | translate }} <span class="ra-field__req">*</span></label>
+        <label class="ra-field__label">{{ 'resources.title_en' | translate }} <span class="ra-field__req">*</span></label>
         <input
           type="text"
-          [(ngModel)]="form.title"
+          formControlName="title_en"
           [placeholder]="'resources.title_placeholder' | translate"
           class="ra-input"
-        />
+          [class.ra-input--error]="titleEnCtrl.invalid && titleEnCtrl.touched" />
+        @if (titleEnCtrl.invalid && titleEnCtrl.touched) {
+          <span class="ra-field__error">
+            @if (titleEnCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+            @else if (titleEnCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
+          </span>
+        }
+      </div>
+
+      <!-- Title (Arabic) -->
+      <div class="ra-field">
+        <label class="ra-field__label">{{ 'resources.title_ar' | translate }} <span class="ra-field__req">*</span></label>
+        <input
+          type="text"
+          formControlName="title_ar"
+          [placeholder]="'resources.title_placeholder' | translate"
+          class="ra-input"
+          [class.ra-input--error]="titleArCtrl.invalid && titleArCtrl.touched"
+          dir="rtl" />
+        @if (titleArCtrl.invalid && titleArCtrl.touched) {
+          <span class="ra-field__error">
+            @if (titleArCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+            @else if (titleArCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
+          </span>
+        }
       </div>
 
       <!-- Resource Type -->
       <div class="ra-field">
         <label class="ra-field__label">{{ 'resources.resource_type' | translate }} <span class="ra-field__req">*</span></label>
         <p-dropdown
+          formControlName="type"
           [options]="typeOptions()"
-          [(ngModel)]="form.type"
           optionLabel="value"
-          optionValue="id"
+          optionValue="code"
           appendTo="body"
           styleClass="ra-dropdown"
-        />
+          [class.ra-dropdown--error]="typeCtrl.invalid && typeCtrl.touched" />
+        @if (typeCtrl.invalid && typeCtrl.touched) {
+          <span class="ra-field__error">{{ 'errors.required' | translate }}</span>
+        }
       </div>
 
       <!-- Article: Description -->
@@ -50,10 +78,24 @@
         <div class="ra-field">
           <label class="ra-field__label">{{ 'resources.description_en' | translate }}</label>
           <textarea
-            [(ngModel)]="form.content"
+            formControlName="content"
             [placeholder]="'resources.description_placeholder' | translate"
             rows="5"
             class="ra-textarea"
+            [class.ra-textarea--error]="contentCtrl.invalid && contentCtrl.touched"
+          ></textarea>
+          @if (contentCtrl.invalid && contentCtrl.touched) {
+            <span class="ra-field__error">{{ 'errors.required' | translate }}</span>
+          }
+        </div>
+        <div class="ra-field">
+          <label class="ra-field__label">{{ 'resources.description_ar' | translate }}</label>
+          <textarea
+            formControlName="content_ar"
+            [placeholder]="'resources.description_placeholder' | translate"
+            rows="5"
+            class="ra-textarea"
+            dir="rtl"
           ></textarea>
         </div>
       }
@@ -64,10 +106,16 @@
           <label class="ra-field__label">{{ 'resources.url' | translate }} <span class="ra-field__req">*</span></label>
           <input
             type="url"
-            [(ngModel)]="form.url"
+            formControlName="url"
             placeholder="https://…"
             class="ra-input"
-          />
+            [class.ra-input--error]="urlCtrl.invalid && urlCtrl.touched" />
+          @if (urlCtrl.invalid && urlCtrl.touched) {
+            <span class="ra-field__error">
+              @if (urlCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+              @else if (urlCtrl.hasError('url')) { {{ 'errors.url' | translate }} }
+            </span>
+          }
         </div>
       }
 
@@ -76,7 +124,7 @@
         <div class="ra-field">
           <label class="ra-field__label">{{ 'resources.upload_file' | translate }} <span class="ra-field__req">*</span></label>
 
-          <label class="ra-dropzone">
+          <label class="ra-dropzone" [class.ra-dropzone--error]="fileError()">
             <i class="pi pi-upload ra-dropzone__icon"></i>
             <div class="ra-dropzone__text">
               <span>{{ 'resources.drag_drop' | translate }} <strong class="ra-dropzone__browse">{{ 'resources.browse_file' | translate }}</strong></span>
@@ -86,15 +134,17 @@
               type="file"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
               class="ra-dropzone__input"
-              (change)="onFileSelect($event)"
-            />
+              (change)="onFileSelect($event)" />
           </label>
 
-          @if (form.file) {
+          @if (selectedFile()) {
             <div class="ra-file-selected">
               <i class="pi pi-check-circle ra-file-selected__icon"></i>
-              {{ form.file.name }}
+              {{ selectedFile()!.name }}
             </div>
+          }
+          @if (fileError()) {
+            <span class="ra-field__error">{{ 'errors.required' | translate }}</span>
           }
         </div>
       }
@@ -112,34 +162,29 @@
           <span class="ra-field__opt">({{ 'common.optional' | translate }})</span>
         </label>
         <p-dropdown
+          formControlName="qualification_skill_id"
           [options]="qualOptions()"
-          [(ngModel)]="form.qualification_skill_id"
           optionLabel="name"
           optionValue="id"
           [placeholder]="'resources.qualification_placeholder' | translate"
           [showClear]="true"
           [filter]="true"
           appendTo="body"
-          styleClass="ra-dropdown"
-        />
+          styleClass="ra-dropdown" />
         <p class="ra-side__hint">{{ 'resources.qualification_hint' | translate }}</p>
       </div>
 
       <!-- Actions -->
       <div class="ra-actions">
         <button type="button" class="ra-btn ra-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
-        <button
-          type="button"
-          class="ra-btn ra-btn--save"
-          [disabled]="!canSubmit()"
-          (click)="submit()"
-        >
+        <button type="submit" class="ra-btn ra-btn--save" [disabled]="saving()">
           <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : 'pi-plus-circle'"></i>
-          {{ 'resources.add' | translate }}
+          {{ 'resources.publish' | translate }}
         </button>
       </div>
     </div>
 
   </div>
+  </form>
 
 </div>

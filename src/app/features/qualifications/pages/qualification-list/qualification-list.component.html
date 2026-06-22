@@ -12,29 +12,40 @@
   styleClass="nas-dialog"
   [style]="{ width: '480px' }">
 
-  <form class="nas-form" (ngSubmit)="save()">
+  <form class="nas-form" [formGroup]="form" (ngSubmit)="save()">
     <div class="nas-form__field">
       <label>{{ 'qualifications.name_en' | translate }} <span class="nas-form__required">*</span></label>
       <input
         class="nas-input"
+        [class.nas-input--error]="nameEnCtrl.invalid && nameEnCtrl.touched"
         type="text"
-        [(ngModel)]="form.name_en"
-        name="name_en"
+        formControlName="name_en"
         [placeholder]="'qualifications.name_en_placeholder' | translate"
-        autocomplete="off"
-      />
+        autocomplete="off" />
+      @if (nameEnCtrl.invalid && nameEnCtrl.touched) {
+        <span class="nas-form__error">
+          @if (nameEnCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+          @else if (nameEnCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
+        </span>
+      }
     </div>
+
     <div class="nas-form__field">
-      <label>{{ 'qualifications.name_ar' | translate }}</label>
+      <label>{{ 'qualifications.name_ar' | translate }} <span class="nas-form__required">*</span></label>
       <input
         class="nas-input"
+        [class.nas-input--error]="nameArCtrl.invalid && nameArCtrl.touched"
         type="text"
-        [(ngModel)]="form.name_ar"
-        name="name_ar"
+        formControlName="name_ar"
         dir="rtl"
         [placeholder]="'qualifications.name_ar_placeholder' | translate"
-        autocomplete="off"
-      />
+        autocomplete="off" />
+      @if (nameArCtrl.invalid && nameArCtrl.touched) {
+        <span class="nas-form__error">
+          @if (nameArCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
+          @else if (nameArCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
+        </span>
+      }
     </div>
   </form>
 

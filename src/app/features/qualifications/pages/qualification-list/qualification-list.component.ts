@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy, Component, OnInit, inject, signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  ReactiveFormsModule, FormBuilder, Validators,
+} from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -28,7 +32,7 @@ interface Qualification {
   selector: 'app-qualification-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, DialogModule, SkeletonModule,
+    CommonModule, ReactiveFormsModule, DialogModule, SkeletonModule,
     ConfirmDialogModule, TranslateModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,47 +40,49 @@ interface Qualification {
   styleUrl: './qualification-list.component.scss',
 })
 export class QualificationListComponent implements OnInit {
-  private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
-  private localeService  = inject(LocaleService);
-  private t              = inject(TranslateService);
+  private readonly api           = inject(ApiService);
+  private readonly confirmService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
+  private readonly localeService  = inject(LocaleService);
+  private readonly t              = inject(TranslateService);
+  private readonly fb             = inject(FormBuilder);
 
   constructor() { withLocaleReload(() => this.load()); }
 
-  qualName(item: Qualification): string {
-    const locale = this.localeService.locale() === 'ar' ? 'ar' : 'en';
-    return (
-      pickLocalized(item.name, locale, '') ||
-      (locale === 'ar' ? (item.name_ar ?? '') : (item.name_en ?? '')) ||
-      (item.name_en ?? item.name_ar ?? '') ||
-      '—'
-    );
-  }
+  /* ── Reactive form ───────────────────────────────────────────── */
+  readonly form = this.fb.group({
+    name_en: ['', [Validators.required, Validators.maxLength(255)]],
+    name_ar: ['', [Validators.required, Validators.maxLength(255)]],
+  });
 
+  get nameEnCtrl() { return this.form.controls.name_en; }
+  get nameArCtrl() { return this.form.controls.name_ar; }
+
+  /* ── State ───────────────────────────────────────────────────── */
   items     = signal<Qualification[]>([]);
   total     = signal(0);
   loading   = signal(true);
   saving    = signal(false);
   activeRow = signal<Qualification | null>(null);
 
-  readonly perPage    = 15;
-  page                = 1;
-  search              = '';
-  dialogVisible       = false;
+  readonly perPage = 15;
+  page             = 1;
+  search           = '';
+  dialogVisible    = false;
   editingId: number | null = null;
-  form = { name_en: '', name_ar: '' };
 
   readonly skeletons = [1, 2, 3, 4, 5];
 
   private search$ = new Subject<string>();
 
+  /* ── Lifecycle ───────────────────────────────────────────────── */
   ngOnInit(): void {
     this.search$.pipe(debounceTime(400), distinctUntilChanged())
       .subscribe(q => { this.search = q; this.page = 1; this.load(); });
     this.load();
   }
 
+  /* ── Data ────────────────────────────────────────────────────── */
   load(): void {
     this.loading.set(true);
     this.api.getPaginated<Qualification>(API.QUALIFICATIONS, {
@@ -89,30 +95,48 @@ export class QualificationListComponent implements OnInit {
 
   onSearch(term: string): void { this.search$.next(term); }
 
+  qualName(item: Qualification): string {
+    const locale = this.localeService.locale() === 'ar' ? 'ar' : 'en';
+    return (
+      pickLocalized(item.name, locale, '') ||
+      (locale === 'ar' ? (item.name_ar ?? '') : (item.name_en ?? '')) ||
+      (item.name_en ?? item.name_ar ?? '') ||
+      '—'
+    );
+  }
+
+  /* ── Dialog ──────────────────────────────────────────────────── */
   openCreate(): void {
     this.editingId = null;
-    this.form = { name_en: '', name_ar: '' };
     this.activeRow.set(null);
+    this.form.reset({ name_en: '', name_ar: '' });
     this.dialogVisible = true;
   }
 
   openEdit(item: Qualification): void {
     this.editingId = item.id;
-    this.form = { name_en: item.name_en ?? item.name, name_ar: item.name_ar ?? '' };
     this.activeRow.set(null);
+    this.form.reset({
+      name_en: item.name_en ?? item.name ?? '',
+      name_ar: item.name_ar ?? '',
+    });
     this.dialogVisible = true;
   }
 
   closeDialog(): void {
     this.dialogVisible = false;
     this.editingId = null;
-    this.form = { name_en: '', name_ar: '' };
+    this.form.reset({ name_en: '', name_ar: '' });
   }
 
   save(): void {
-    if (!this.form.name_en.trim()) return;
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
+
     this.saving.set(true);
-    const payload = { name: { en: this.form.name_en, ar: this.form.name_ar } };
+    const v = this.form.getRawValue();
+    const payload = { name: { en: v.name_en!.trim(), ar: v.name_ar!.trim() } };
+
     const req = this.editingId
       ? this.api.put(`${API.QUALIFICATIONS}/${this.editingId}`, payload)
       : this.api.post(API.QUALIFICATIONS, payload);
@@ -132,6 +156,7 @@ export class QualificationListComponent implements OnInit {
     });
   }
 
+  /* ── Row menu ────────────────────────────────────────────────── */
   toggleRowMenu(item: Qualification, event: Event): void {
     event.stopPropagation();
     this.activeRow.set(this.activeRow()?.id === item.id ? null : item);
@@ -144,7 +169,7 @@ export class QualificationListComponent implements OnInit {
     this.confirmService.confirm({
       message: `${this.t.instant('confirm.delete_message')} (${item.name_en ?? item.name})`,
       header:  this.t.instant('qualifications.confirm_delete'),
-      icon: 'pi pi-exclamation-triangle',
+      icon:    'pi pi-exclamation-triangle',
       accept: () => {
         this.api.delete(`${API.QUALIFICATIONS}/${item.id}`).subscribe({
           next: () => {

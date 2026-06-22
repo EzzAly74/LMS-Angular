@@ -903,3 +903,17 @@
 
 :host ::ng-deep .nas-dialog .p-dialog-header { padding: var(--nas-space-4) var(--nas-space-5); border-bottom: 1px solid var(--nas-color-border); font-size: var(--nas-size-m); font-weight: var(--nas-weight-semibold); }
 :host ::ng-deep .nas-dialog .p-dialog-content { padding: var(--nas-space-5); }
+
+.nas-required {
+  color: var(--nas-danger-600, #dc2626);
+  margin-inline-start: 2px;
+}
+.nas-form__error {
+  display: block;
+  margin-top: var(--nas-space-1);
+  font-size: var(--nas-size-xs);
+  color: var(--nas-danger-600, #dc2626);
+}
+.nas-input--error {
+  border-color: var(--nas-danger-500, #ef4444) !important;
+}

@@ -221,16 +221,31 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
   /* ── Data ─────────────────────────────────────────────────────────── */
   private loadRecipients(): void {
     this.loadingRecipients.set(true);
+    const isInstructor = this.recipientRole() === 'instructor';
+
+    // Instructors live in a separate table — use the dedicated endpoint.
+    // Learners come from the users table via the general /users endpoint.
+    const endpoint = isInstructor ? API.INSTRUCTORS : API.USERS;
+    const params: Record<string, string | number | undefined> = {
+      per_page: 100,
+      page: 1,
+      search: this.recipientSearch() || undefined,
+    };
+    if (!isInstructor) {
+      params['role'] = 'learner';
+    }
+
     this.api
-      .getPaginated<RecipientUser>(API.USERS, {
-        per_page: 50,
-        page: 1,
-        role: this.recipientRole(),
-        search: this.recipientSearch() || undefined,
-      })
+      .getPaginated<RecipientUser>(endpoint, params)
       .subscribe({
         next: (res) => {
-          this.recipients.set(res.result.data);
+          // Instructors have no machine_code — use their id (as string) so the
+          // existing selection logic (toggleRecipient / isRecipientSelected) works
+          // without any changes. The send() method routes these ids as instructor_ids.
+          const data = isInstructor
+            ? res.result.data.map(u => ({ ...u, machine_code: String(u.id) }))
+            : res.result.data;
+          this.recipients.set(data);
           this.loadingRecipients.set(false);
         },
         error: () => this.loadingRecipients.set(false),
@@ -286,7 +301,14 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
       payload['for_public'] = true;
     } else {
       payload['for_public'] = false;
-      payload['user_codes'] = Array.from(this.selectedCodes());
+      const codes = Array.from(this.selectedCodes());
+      if (this.recipientRole() === 'instructor') {
+        // Instructors have no HR machine codes — send as instructor_ids (integers).
+        // Backend stores them as DB records only; no HR push is attempted.
+        payload['instructor_ids'] = codes.map(Number);
+      } else {
+        payload['user_codes'] = codes;
+      }
     }
 
     this.saving.set(true);

@@ -173,7 +173,16 @@ export class SettingsComponent implements OnInit {
     const map: Record<string, string | null> = {};
     const previews: Record<string, string | null> = {};
 
-    rows.forEach(row => {
+    // Defend against duplicate rows sharing the same key (e.g. a setting that
+    // was historically seeded under two modules). The backend treats the
+    // lowest-id row as canonical — it's the one `updateByKey` edits — so we
+    // keep the first occurrence by id and ignore any stale later duplicates.
+    // Without this, last-row-wins would surface a stale value (the "Course
+    // Attendance / Passcode reset shows Yes/30 after save" bug).
+    const seen = new Set<string>();
+    [...rows].sort((a, b) => a.id - b.id).forEach(row => {
+      if (seen.has(row.key)) return;
+      seen.add(row.key);
       map[row.key] = row.value;
       if (row.type === 'file' && row.value) {
         previews[row.key] = this.resolvePublicUrl(row.value);

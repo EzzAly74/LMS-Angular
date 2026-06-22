@@ -88,13 +88,34 @@
   [header]="'inbox.new_message' | translate">
 
   <form [formGroup]="composeForm" (ngSubmit)="send()" class="nas-form">
+
+    <!-- ── Subject ─────────────────────────────────────────────────── -->
     <div class="nas-form__field">
       <label>{{ 'inbox.compose_title' | translate }} *</label>
-      <input class="nas-input" type="text"
+      <input class="nas-input"
+             [class.nas-input--error]="titleCtrl.invalid && titleCtrl.touched"
+             type="text"
              formControlName="title"
              [placeholder]="'inbox.compose_subject' | translate" />
+      <div class="nas-field-footer">
+        @if (titleCtrl.touched && titleCtrl.errors?.['required']) {
+          <span class="nas-form__error">{{ 'inbox.error_required' | translate }}</span>
+        } @else if (titleCtrl.touched && titleCtrl.errors?.['maxlength']) {
+          <span class="nas-form__error">
+            {{ 'inbox.error_max_chars' | translate : { max: TITLE_MAX } }}
+          </span>
+        } @else {
+          <span></span>
+        }
+        <span class="nas-char-counter"
+              [class.nas-char-counter--warn]="(titleCtrl.value?.length ?? 0) > TITLE_MAX - 20"
+              [class.nas-char-counter--error]="(titleCtrl.value?.length ?? 0) > TITLE_MAX">
+          {{ titleCtrl.value?.length ?? 0 }}/{{ TITLE_MAX }}
+        </span>
+      </div>
     </div>
 
+    <!-- ── Recipients ──────────────────────────────────────────────── -->
     <div class="nas-form__field">
       <label>{{ 'inbox.compose_recipients' | translate }} *</label>
 
@@ -120,7 +141,8 @@
                 (click)="recipientFilter.set('instructors')">{{ 'inbox.filter_instructors' | translate }}</button>
       </div>
 
-      <div class="recipient-list">
+      <div class="recipient-list"
+           [class.recipient-list--error]="recipientsCtrl.invalid && recipientsCtrl.touched">
         @if (learners().length) {
           <div class="recipient-list__group">{{ 'inbox.group_learners' | translate }}</div>
           <label class="nas-checklist__item">
@@ -153,14 +175,35 @@
           }
         }
       </div>
+      @if (recipientsCtrl.invalid && recipientsCtrl.touched) {
+        <span class="nas-form__error">{{ 'inbox.error_no_recipients' | translate }}</span>
+      }
     </div>
 
+    <!-- ── Message body ────────────────────────────────────────────── -->
     <div class="nas-form__field">
       <label>{{ 'inbox.compose_message' | translate }} *</label>
       <textarea formControlName="message"
                 class="nas-input nas-input--area"
+                [class.nas-input--error]="messageCtrl.invalid && messageCtrl.touched"
                 rows="4"
                 [placeholder]="'inbox.compose_message_placeholder' | translate"></textarea>
+      <div class="nas-field-footer">
+        @if (messageCtrl.touched && messageCtrl.errors?.['required']) {
+          <span class="nas-form__error">{{ 'inbox.error_required' | translate }}</span>
+        } @else if (messageCtrl.touched && messageCtrl.errors?.['maxlength']) {
+          <span class="nas-form__error">
+            {{ 'inbox.error_max_chars' | translate : { max: MESSAGE_MAX } }}
+          </span>
+        } @else {
+          <span></span>
+        }
+        <span class="nas-char-counter"
+              [class.nas-char-counter--warn]="(messageCtrl.value?.length ?? 0) > MESSAGE_MAX - 100"
+              [class.nas-char-counter--error]="(messageCtrl.value?.length ?? 0) > MESSAGE_MAX">
+          {{ messageCtrl.value?.length ?? 0 }}/{{ MESSAGE_MAX }}
+        </span>
+      </div>
     </div>
 
     <footer class="nas-form__footer">
@@ -175,43 +218,83 @@
   </form>
 </p-dialog>
 
-<!-- ── Welcome modal (sample) ───────────────────────────────────────── -->
-<p-dialog
-  [visible]="showWelcome()"
-  (visibleChange)="showWelcome.set($event)"
-  [modal]="true"
-  [closable]="true"
-  [draggable]="false"
-  [resizable]="false"
-  styleClass="nas-dialog"
-  [style]="{ width: '420px' }"
-  [header]="'inbox.welcome_title' | translate">
+<!-- ── Message detail dialog ─────────────────────────────────────── -->
+@if (selectedMessage(); as msg) {
+  <p-dialog
+    [visible]="showWelcome()"
+    (visibleChange)="showWelcome.set($event)"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="nas-dialog nas-dialog--detail"
+    [style]="{ width: '520px' }"
+    [header]="msg.subject">
 
-  <div class="nas-form">
-    <p style="margin:0;color:var(--nas-color-text-body);font-size:var(--nas-size-xs);line-height:var(--nas-height-l);">
-      {{ 'inbox.welcome_body' | translate }}
-    </p>
+    <div class="msg-detail">
 
-    <dl class="settings-list" style="margin-top:var(--nas-space-3);">
-      <div>
-        <dt>{{ 'inbox.welcome_recipients' | translate }}</dt>
-        <dd>{{ 'inbox.welcome_recipients_sample' | translate }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'inbox.welcome_type' | translate }}</dt>
-        <dd><nas-status-badge tone="info">{{ 'inbox.all_learners' | translate }}</nas-status-badge></dd>
-      </div>
-      <div>
-        <dt>{{ 'inbox.welcome_sent' | translate }}</dt>
-        <dd>2026-05-15 09:00</dd>
-      </div>
-    </dl>
+      <!-- Body -->
+      <div class="msg-detail__body" [innerHTML]="msg.body"></div>
 
-    <footer class="nas-form__footer">
-      <button type="button" class="nas-btn nas-btn--primary" style="width:100%;justify-content:center;"
-              (click)="showWelcome.set(false)">
-        {{ 'inbox.done' | translate }}
-      </button>
-    </footer>
-  </div>
-</p-dialog>
+      <!-- Metadata -->
+      <dl class="msg-detail__meta">
+        <div>
+          <dt>
+            <i class="pi pi-users"></i>
+            {{ 'inbox.welcome_recipients' | translate }}
+          </dt>
+          <dd>
+            <span class="msg-detail__recipients-text">{{ msg.recipients_text }}</span>
+            @for (tag of msg.recipient_tags; track tag) {
+              <nas-status-badge tone="info">{{ tag }}</nas-status-badge>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <i class="pi pi-check-circle"></i>
+            {{ 'inbox.detail_read' | translate }}
+          </dt>
+          <dd class="msg-detail__read-dd">
+            @if (loadingDetail() || markingAllRead()) {
+              <nas-shimmer width="40px" height="14px" />
+            } @else {
+              <span>{{ msg.read_count }}/{{ msg.recipients_count }}</span>
+              <button type="button"
+                      class="msg-detail__refresh-btn"
+                      [title]="'inbox.detail_refresh' | translate"
+                      (click)="refreshDetail(msg.id)">
+                <i class="pi pi-refresh"></i>
+              </button>
+              @if (msg.read_count < msg.recipients_count) {
+                <button type="button"
+                        class="msg-detail__mark-read-btn"
+                        [title]="'inbox.detail_mark_all_read' | translate"
+                        (click)="markAllRead(msg.id)">
+                  <i class="pi pi-check-square"></i>
+                  {{ 'inbox.detail_mark_all_read' | translate }}
+                </button>
+              }
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <i class="pi pi-calendar"></i>
+            {{ 'inbox.welcome_sent' | translate }}
+          </dt>
+          <dd>{{ msg.created_at | date:'dd MMM yyyy, HH:mm' }}</dd>
+        </div>
+      </dl>
+
+      <footer class="nas-form__footer">
+        <button type="button" class="nas-btn nas-btn--primary"
+                style="width:100%;justify-content:center;"
+                (click)="closeMessageDetail()">
+          {{ 'inbox.done' | translate }}
+        </button>
+      </footer>
+    </div>
+
+  </p-dialog>
+}

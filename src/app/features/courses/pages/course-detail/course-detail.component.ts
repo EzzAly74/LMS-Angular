@@ -248,8 +248,8 @@ export class CourseDetailComponent implements OnInit {
     name_ar:    ['', [Validators.required, Validators.maxLength(255)]],
     capacity:   [null as number | null, [Validators.min(1), Validators.max(10000)]],
     status:     [null as number | null],
-    start_date: [null as Date | null],
-    end_date:   [null as Date | null],
+    start_date: [null as Date | null, Validators.required],
+    end_date:   [null as Date | null, Validators.required],
     // Average session length in hours (Figma 332:9988). Drives the live
     // attendance-window length for this cohort's sessions.
     avg_session_time: [null as number | null, [Validators.min(0.25), Validators.max(24)]],
@@ -685,13 +685,13 @@ export class CourseDetailComponent implements OnInit {
     // kick the same idempotent loader off here too.
     this.preloadEditLookups();
 
-    // Optimistic patch from the cached localized snapshot so the dialog
-    // opens immediately. The bilingual fields fall back to the same
-    // string in both locales until the canonical detail refetch
-    // arrives below.
+    // Open the dialog immediately with empty bilingual fields; the API
+    // refetch below populates them with the correct EN/AR values.
+    // Using a single localized string for both fields would show the
+    // wrong language in one of the inputs (the bug we are fixing).
     this.editForm.reset({
-      title:              { en: c.title ?? '', ar: c.title ?? '' },
-      description:        { en: c.description ?? '', ar: c.description ?? '' },
+      title:              { en: '', ar: '' },
+      description:        { en: '', ar: '' },
       type:               this.enums.idForCode('course_type', c.type ?? null)
                            ?? this.enums.idForCode('course_type', 'hybrid')
                            ?? null,

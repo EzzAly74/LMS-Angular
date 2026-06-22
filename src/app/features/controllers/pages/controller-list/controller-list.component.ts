@@ -8,10 +8,17 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -49,13 +56,14 @@ interface Controller {
   created_at?: string;
 }
 
-interface ControllerForm {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-  /** Spatie role *machine name* (e.g. `superAdmin`, `admin`, `reports-viewer`). */
-  role: string;
+/** Cross-field validator: password_confirmation must match password. */
+function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const pwd    = group.get('password')?.value  ?? '';
+  const confirm = group.get('password_confirmation')?.value ?? '';
+  if (pwd && confirm && pwd !== confirm) {
+    return { passwordMismatch: true };
+  }
+  return null;
 }
 
 @Component({
@@ -63,10 +71,11 @@ interface ControllerForm {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     TranslateModule,
     SkeletonModule,
     DialogModule,
+    DropdownModule,
     ConfirmDialogModule,
     ToastModule,
     NasPageHeaderComponent,
@@ -82,14 +91,12 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   private readonly confirm  = inject(ConfirmationService);
   private readonly messages = inject(MessageService);
   private readonly t        = inject(TranslateService);
+  private readonly fb       = inject(FormBuilder);
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$  = new Subject<string>();
 
   constructor() {
-    // Reload controllers list AND localized role dropdown options
-    // on EN ↔ AR switch — the role names + chip labels come from a
-    // separate endpoint that wasn't being refreshed.
     withLocaleReload(() => {
       this.refresh();
       this.loadRoles();
@@ -113,19 +120,37 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   readonly min       = Math.min;
 
   /* ── Dialog state ─────────────────────────────────────────────── */
-  readonly dialogOpen  = signal(false);
-  readonly dialogMode  = signal<'create' | 'edit'>('create');
-  readonly editingId   = signal<number | null>(null);
-  readonly form        = signal<ControllerForm>(this.emptyForm());
+  readonly dialogOpen = signal(false);
+  readonly dialogMode = signal<'create' | 'edit'>('create');
+  readonly editingId  = signal<number | null>(null);
   readonly showPwd     = signal(false);
   readonly showConfirm = signal(false);
+
+  /* ── Reactive Form ───────────────────────────────────────────── */
+  readonly dialogForm = this.fb.group(
+    {
+      name:                  ['', [Validators.required, Validators.maxLength(255)]],
+      email:                 ['', [Validators.required, Validators.email]],
+      role:                  ['', Validators.required],
+      password:              ['', []],
+      password_confirmation: ['', []],
+    },
+    { validators: passwordMatchValidator },
+  );
+
+  /** Convenience accessors for the template. */
+  get nameCtrl()    { return this.dialogForm.controls.name; }
+  get emailCtrl()   { return this.dialogForm.controls.email; }
+  get roleCtrl()    { return this.dialogForm.controls.role; }
+  get pwdCtrl()     { return this.dialogForm.controls.password; }
+  get confirmCtrl() { return this.dialogForm.controls.password_confirmation; }
 
   /* ── Computed ────────────────────────────────────────────────── */
   readonly hasRows = computed(() => this.items().length > 0);
 
   /** Picked-role chip preview shown next to the dropdown. */
   readonly previewChip = computed<AdminRoleListItem | null>(() => {
-    const key = this.form().role;
+    const key = this.roleCtrl.value;
     if (!key) return null;
     return this.roleOptions().find(r => r.machine_name === key) ?? null;
   });
@@ -163,8 +188,6 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   }
 
   private loadRoles(): void {
-    // Use the rich admin-roles list so we have name_en/name_ar/color
-    // available for the dropdown swatches and badge previews.
     this.rolesApi.list().pipe(takeUntil(this.destroy$)).subscribe({
       next: res => this.roleOptions.set(res.result.roles ?? []),
     });
@@ -178,9 +201,12 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   openCreate(): void {
     this.dialogMode.set('create');
     this.editingId.set(null);
-    this.form.set(this.emptyForm());
     this.showPwd.set(false);
     this.showConfirm.set(false);
+    this.dialogForm.reset();
+    // Password required on create
+    this.pwdCtrl.setValidators([Validators.required, Validators.minLength(8)]);
+    this.pwdCtrl.updateValueAndValidity();
     this.dialogOpen.set(true);
   }
 
@@ -192,15 +218,18 @@ export class ControllerListComponent implements OnInit, OnDestroy {
           const full = res.result;
           this.dialogMode.set('edit');
           this.editingId.set(full.id);
-          this.form.set({
-            name:                  full.name ?? '',
-            email:                 full.email ?? '',
-            password:              '',
-            password_confirmation: '',
-            role:                  full.role_chip?.machine_name ?? full.roles?.[0] ?? '',
-          });
           this.showPwd.set(false);
           this.showConfirm.set(false);
+          // Password optional on edit
+          this.pwdCtrl.setValidators([Validators.minLength(8)]);
+          this.pwdCtrl.updateValueAndValidity();
+          this.dialogForm.reset({
+            name:                  full.name ?? '',
+            email:                 full.email ?? '',
+            role:                  full.role_chip?.machine_name ?? full.roles?.[0] ?? '',
+            password:              '',
+            password_confirmation: '',
+          });
           this.dialogOpen.set(true);
         },
       });
@@ -211,49 +240,24 @@ export class ControllerListComponent implements OnInit, OnDestroy {
     this.dialogOpen.set(false);
   }
 
-  updateForm<K extends keyof ControllerForm>(field: K, value: ControllerForm[K]): void {
-    this.form.update(f => ({ ...f, [field]: value }));
-  }
-
   togglePwd():     void { this.showPwd.update(v => !v); }
   toggleConfirm(): void { this.showConfirm.update(v => !v); }
 
   submit(): void {
-    const f = this.form();
-    if (!f.name.trim() || !f.email.trim() || !f.role) {
-      this.messages.add({
-        severity: 'warn',
-        summary:  this.t.instant('controllers_toasts.required_summary'),
-        detail:   this.t.instant('controllers_toasts.required_message'),
-      });
-      return;
-    }
-    if (this.dialogMode() === 'create' && f.password.length < 8) {
-      this.messages.add({
-        severity: 'warn',
-        summary:  this.t.instant('controllers_toasts.password_summary'),
-        detail:   this.t.instant('controllers_toasts.password_short'),
-      });
-      return;
-    }
-    if (f.password && f.password !== f.password_confirmation) {
-      this.messages.add({
-        severity: 'warn',
-        summary:  this.t.instant('controllers_toasts.password_summary'),
-        detail:   this.t.instant('controllers_toasts.password_mismatch'),
-      });
-      return;
-    }
+    this.dialogForm.markAllAsTouched();
+    if (this.dialogForm.invalid) return;
 
+    const v = this.dialogForm.getRawValue();
     this.saving.set(true);
+
     const payload: Record<string, string> = {
-      name:  f.name.trim(),
-      email: f.email.trim(),
-      role:  f.role,
+      name:  v.name!.trim(),
+      email: v.email!.trim(),
+      role:  v.role!,
     };
-    if (f.password) {
-      payload['password']              = f.password;
-      payload['password_confirmation'] = f.password_confirmation;
+    if (v.password) {
+      payload['password']              = v.password;
+      payload['password_confirmation'] = v.password_confirmation ?? '';
     }
 
     const request$ = this.dialogMode() === 'create'
@@ -275,7 +279,11 @@ export class ControllerListComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.saving.set(false);
-        const detail = err?.error?.message ?? this.t.instant('common.operation_failed');
+        const errors: Record<string, string[]> = err?.error?.errors ?? {};
+        const fieldErrors = Object.values(errors).flat();
+        const detail = fieldErrors.length
+          ? fieldErrors.join(' ')
+          : (err?.error?.message ?? this.t.instant('common.operation_failed'));
         this.messages.add({
           severity: 'error',
           summary:  this.t.instant('common.error_title'),
@@ -322,7 +330,6 @@ export class ControllerListComponent implements OnInit, OnDestroy {
     return (name ?? '').trim().charAt(0).toUpperCase() || '?';
   }
 
-  /** Tint class for a role badge (mirrors the Roles list palette). */
   badgeColorClass(color: string | undefined): string {
     switch (color) {
       case 'green':  return 'ctrl-badge--green';
@@ -333,12 +340,7 @@ export class ControllerListComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Locale-aware label for an admin-role list item. */
   roleLabel(opt: AdminRoleListItem): string {
     return opt.name || opt.name_en || opt.machine_name;
-  }
-
-  private emptyForm(): ControllerForm {
-    return { name: '', email: '', password: '', password_confirmation: '', role: '' };
   }
 }

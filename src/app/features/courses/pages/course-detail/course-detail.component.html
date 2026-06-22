@@ -501,12 +501,20 @@
 
       <div class="nas-form__row">
         <div class="nas-form__field">
-          <label>{{ 'course_detail.cohort_start' | translate }}</label>
-          <nas-datepicker formControlName="start_date" placeholder="dd/mm/yyyy" />
+          <label>{{ 'course_detail.cohort_start' | translate }} <span class="nas-required">*</span></label>
+          <nas-datepicker formControlName="start_date" placeholder="dd/mm/yyyy"
+                          [class.nas-input--error]="cohortForm.controls.start_date.invalid && cohortForm.controls.start_date.touched" />
+          @if (cohortForm.controls.start_date.invalid && cohortForm.controls.start_date.touched) {
+            <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
+          }
         </div>
         <div class="nas-form__field">
-          <label>{{ 'course_detail.cohort_end' | translate }}</label>
-          <nas-datepicker formControlName="end_date" placeholder="dd/mm/yyyy" />
+          <label>{{ 'course_detail.cohort_end' | translate }} <span class="nas-required">*</span></label>
+          <nas-datepicker formControlName="end_date" placeholder="dd/mm/yyyy"
+                          [class.nas-input--error]="cohortForm.controls.end_date.invalid && cohortForm.controls.end_date.touched" />
+          @if (cohortForm.controls.end_date.invalid && cohortForm.controls.end_date.touched) {
+            <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
+          }
         </div>
       </div>
 
@@ -771,16 +779,6 @@
                   (click)="editForm.patchValue({ certificate: true })">{{ 'common.yes' | translate }}</button>
           <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.certificate === false"
                   (click)="editForm.patchValue({ certificate: false })">{{ 'common.no' | translate }}</button>
-        </div>
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'add_course.review_content' | translate }} *</label>
-        <div class="nas-yesno">
-          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === true"
-                  (click)="editForm.patchValue({ require_instructor: true })">{{ 'common.yes' | translate }}</button>
-          <button type="button" class="nas-yesno__opt" [class.active]="editForm.value.require_instructor === false"
-                  (click)="editForm.patchValue({ require_instructor: false })">{{ 'common.no' | translate }}</button>
         </div>
       </div>
 
