@@ -38,7 +38,7 @@ import type {
   CourseDetail, Cohort, CohortPayload, CohortStatus,
   CourseLearner, CourseReview,
   CourseModule, ModuleContentType, ModuleLearnerScope, ModulePayload,
-  CourseType,
+  ModuleUploadResult, CourseType,
 } from '../../../../core/models/course.types';
 import {
   mapApiCourseDetail, mapEnrollmentToLearner, mapApiCohort,
@@ -281,8 +281,19 @@ export class CourseDetailComponent implements OnInit {
   moduleEditMode     = signal(false);
   moduleSaving       = signal(false);
   activeModule       = signal<CourseModule | null>(null);
-  /** Selected file for `content_type === 'document'` (pending upload UX). */
-  moduleFile         = signal<File | null>(null);
+
+  /** True while a video/document upload is in flight for the module form. */
+  moduleUploading    = signal(false);
+  /** Name of the file currently being uploaded (shown in the progress card). */
+  moduleUploadingName = signal<string | null>(null);
+  /** Most recent successful upload (fresh file picked in the dialog). */
+  moduleUpload       = signal<ModuleUploadResult | null>(null);
+  /**
+   * View model for the attached-file chip — drives the "File Title.mp4 · 313 MB"
+   * row. Populated from a fresh upload or, on edit, from the persisted
+   * `file_name`/`file_url`. `null` renders the upload dropzone instead.
+   */
+  moduleFileInfo     = signal<{ name: string; size: number | null; url: string | null } | null>(null);
 
   /** Module content-type dropdown — backend `module_content_type` enum. */
   moduleContentTypeOpts = this.enums.options('module_content_type');
@@ -488,7 +499,9 @@ export class CourseDetailComponent implements OnInit {
   openAddModule(): void {
     this.moduleEditMode.set(false);
     this.activeModule.set(null);
-    this.moduleFile.set(null);
+    this.moduleUpload.set(null);
+    this.moduleFileInfo.set(null);
+    this.moduleUploading.set(false);
     // Defaults map to the canonical first option per Figma — translate
     // the codes into enum ids the dropdowns are bound to. Returns null
     // if the enum hasn't loaded yet; the user can still pick.
@@ -506,7 +519,16 @@ export class CourseDetailComponent implements OnInit {
   openEditModule(m: CourseModule): void {
     this.moduleEditMode.set(true);
     this.activeModule.set(m);
-    this.moduleFile.set(null);
+    this.moduleUpload.set(null);
+    this.moduleUploading.set(false);
+    // Re-hydrate the attached-file chip for uploaded video/document modules so
+    // the editor shows the existing file (and a way to replace it) instead of
+    // an empty dropzone.
+    this.moduleFileInfo.set(
+      m.type === 'file' && m.video
+        ? { name: m.file_name || m.video, size: null, url: m.file_url ?? null }
+        : null,
+    );
     this.moduleForm.reset({
       title_en:           pickLocalized(m.title, 'en'),
       title_ar:           pickLocalized(m.title, 'ar'),
@@ -522,21 +544,70 @@ export class CourseDetailComponent implements OnInit {
     this.showModule.set(true);
   }
 
-  /** Local-only file selection for the Document content type. */
+  /* ── Content-type aware helpers (drive the conditional file/URL field) ─── */
+
+  /** `true` when the chosen content type stores an uploaded file (video/document). */
+  moduleIsFileType(): boolean {
+    const code = this.enumCode('module_content_type', this.moduleForm.value.content_type);
+    return code === 'video' || code === 'document';
+  }
+
+  moduleIsVideo(): boolean {
+    return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'video';
+  }
+
+  moduleIsLink(): boolean {
+    return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'link';
+  }
+
+  /** Switching content type clears any previously attached file / URL. */
+  onModuleContentTypeChange(): void {
+    this.moduleUpload.set(null);
+    this.moduleFileInfo.set(null);
+    this.moduleForm.patchValue({ video: '' });
+    this.moduleForm.controls.video.setErrors(null);
+  }
+
+  /** Upload the picked file immediately, then keep its storage path on the form. */
   onModuleFileSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    this.moduleFile.set(file);
-    if (file) this.moduleForm.patchValue({ video: file.name });
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file) return;
+
+    const id = this.courseId();
+    if (!id) return;
+
+    this.moduleUploadingName.set(file.name);
+    this.moduleUploading.set(true);
+    this.coursesApi.uploadModuleFile(id, file).subscribe({
+      next: res => {
+        const r = res.result;
+        if (r) {
+          this.moduleUpload.set(r);
+          this.moduleFileInfo.set({ name: r.name, size: r.size, url: r.url });
+          this.moduleForm.patchValue({ video: r.path });
+          this.moduleForm.controls.video.setErrors(null);
+        }
+        this.moduleUploading.set(false);
+        this.moduleUploadingName.set(null);
+      },
+      error: () => {
+        this.moduleUploading.set(false);
+        this.moduleUploadingName.set(null);
+      },
+    });
   }
 
   clearModuleFile(): void {
-    this.moduleFile.set(null);
+    this.moduleUpload.set(null);
+    this.moduleFileInfo.set(null);
     this.moduleForm.patchValue({ video: '' });
   }
 
-  /** Quickly format a selected file for the upload preview row. */
-  fileSizeLabel(file: File): string {
-    const kb = file.size / 1024;
+  /** Pretty file size from raw bytes for the attached-file chip. */
+  fileSizeLabel(bytes: number): string {
+    const kb = bytes / 1024;
     if (kb < 1024) return `${Math.round(kb)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   }
@@ -554,6 +625,7 @@ export class CourseDetailComponent implements OnInit {
   }
 
   submitModule(): void {
+    if (this.moduleUploading()) return;
     if (this.moduleForm.invalid) { this.moduleForm.markAllAsTouched(); return; }
     const id = this.courseId();
     if (!id) return;
@@ -566,11 +638,13 @@ export class CourseDetailComponent implements OnInit {
     const learnerScopeCode = this.enums.codeForId('module_learner_scope', v.learner_scope ?? null) as ModuleLearnerScope | null;
     if (!contentTypeCode || !learnerScopeCode) return;
 
-    // Document type currently stores the file *name* in `video` until the
-    // file-upload pipeline lands. URL-based types send the typed URL directly.
+    // Video/Document store an uploaded file (`video` = storage path, `type` =
+    // file); External Link / Article send the typed URL directly (`type` = url).
+    const isFile = contentTypeCode === 'video' || contentTypeCode === 'document';
     const videoValue = (v.video ?? '').trim();
     if (!videoValue) {
       this.moduleForm.controls.video.setErrors({ required: true });
+      this.moduleForm.markAllAsTouched();
       return;
     }
 
@@ -586,8 +660,11 @@ export class CourseDetailComponent implements OnInit {
       learner_scope:      learnerScopeCode,
       session_id:         learnerScopeCode === 'cohort' ? v.session_id ?? null : null,
       duration_minutes:   v.duration_minutes ?? null,
-      type:               contentTypeCode === 'document' ? 'file' : 'url',
+      type:               isFile ? 'file' : 'url',
       video:              videoValue,
+      file_name:          isFile
+        ? (this.moduleUpload()?.name ?? this.activeModule()?.file_name ?? null)
+        : null,
       require_completion: !!v.require_completion,
     };
 

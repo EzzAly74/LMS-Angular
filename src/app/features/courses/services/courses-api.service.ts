@@ -5,7 +5,7 @@ import { API, courseUrl } from '../../../core/constants/api.constants';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
 import type {
   Course, CourseSession, CreateCoursePayload,
-  CourseModule, ModulePayload, CohortAttendance,
+  CourseModule, ModulePayload, ModuleUploadResult, CohortAttendance,
   Cohort, CohortPayload,
 } from '../../../core/models/course.types';
 
@@ -88,6 +88,13 @@ export class CoursesApiService {
   /** Flat list of every module belonging to a course, ordered by creation. */
   listModules(courseId: number): Observable<ApiResponse<CourseModule[]>> {
     return this.api.get<CourseModule[]>(courseUrl.modules(courseId));
+  }
+
+  /** Multipart upload for a module's video (mp4 …) or document attachment. */
+  uploadModuleFile(courseId: number, file: File): Observable<ApiResponse<ModuleUploadResult>> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.api.post<ModuleUploadResult>(`${courseUrl.lectures(courseId)}/upload`, fd);
   }
 
   createModule(courseId: number, body: ModulePayload): Observable<ApiResponse<CourseModule>> {

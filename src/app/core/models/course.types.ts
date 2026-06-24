@@ -193,6 +193,10 @@ export interface CourseModule {
   duration_minutes?: number | null;
   type?: 'url' | 'file';
   video: string;
+  /** Original filename for uploaded video/document modules (`type === 'file'`). */
+  file_name?: string | null;
+  /** Public URL for an uploaded file, resolved server-side. */
+  file_url?: string | null;
   require_completion: boolean;
   created_at?: string;
   updated_at?: string;
@@ -267,5 +271,15 @@ export interface ModulePayload {
   duration_minutes?: number | null;
   type?: 'url' | 'file';
   video: string;
+  /** Original filename for uploaded video/document modules (`type === 'file'`). */
+  file_name?: string | null;
   require_completion: boolean;
+}
+
+/** Response shape from `POST /courses/{course}/lectures/upload`. */
+export interface ModuleUploadResult {
+  path: string;
+  url: string;
+  name: string;
+  size: number;
 }
