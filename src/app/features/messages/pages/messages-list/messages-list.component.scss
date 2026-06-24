@@ -39,10 +39,10 @@
   &:first-child { border-top: none; }
   &:hover { background: #fafafa; }
 
-  /* Unread / highlighted state — soft sky background from Figma */
+  /* Unread / highlighted state — soft mint background from Figma */
   &--unread {
-    background: #f1fcff;
-    &:hover { background: #e6f7fc; }
+    background: #f1fbf8;
+    &:hover { background: #e7f7f2; }
   }
 
   /* ── Envelope icon container (teal-tinted) ──────────────────────── */
@@ -81,6 +81,18 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+
+  /* Sender line (received / unread items) */
+  &__sender {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+    line-height: 18px;
+    i { font-size: 13px; color: var(--nas-color-text-muted); }
   }
 
   /* Subject + date row */
@@ -287,6 +299,34 @@
   }
 }
 
+/* Required-field asterisk */
+.nas-req { color: #e53e3e; }
+
+/* Role / category filter chips (compose recipients) */
+.recipient-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nas-space-2);
+  margin-bottom: 2px;
+}
+.recipient-chip {
+  border: 1px solid var(--nas-color-border);
+  background: var(--nas-color-bg-surface);
+  color: var(--nas-color-text-muted);
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: var(--nas-size-3xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  &:hover { border-color: var(--nas-teal-400); color: var(--nas-color-text-strong); }
+  &.active {
+    background: var(--nas-teal-700);
+    border-color: var(--nas-teal-700);
+    color: var(--nas-color-text-onDark);
+  }
+}
+
 .recipient-list {
   border: 1px solid var(--nas-color-border);
   border-radius: var(--nas-radius-md);
@@ -302,6 +342,15 @@
     letter-spacing: 0.04em;
     background: var(--nas-neutral-200);
     border-bottom: 1px solid var(--nas-color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  &__empty {
+    padding: var(--nas-space-4) var(--nas-space-3);
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-muted);
+    text-align: center;
   }
 }
 .nas-checklist__item {
@@ -428,6 +477,23 @@
   &__recipients-text {
     color: var(--nas-color-text-body);
     font-weight: var(--nas-weight-regular);
+  }
+
+  /* Scrollable comma-separated recipient names (explicit picks) */
+  &__names-row { display: block !important; }
+  &__names {
+    width: 100%;
+    max-height: 96px;
+    overflow-y: auto;
+    background: var(--nas-neutral-200);
+    border: 1px solid var(--nas-color-border);
+    border-radius: var(--nas-radius-sm);
+    padding: 8px 10px;
+    font-size: var(--nas-size-2xs);
+    font-weight: var(--nas-weight-regular) !important;
+    color: var(--nas-color-text-body) !important;
+    line-height: 1.7;
+    text-align: start !important;
   }
 
   &__read-dd {

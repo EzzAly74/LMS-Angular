@@ -13,12 +13,9 @@ import {
   ReactiveFormsModule,
   FormBuilder,
   Validators,
-  AbstractControl,
-  ValidationErrors,
 } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
-import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -32,29 +29,61 @@ import {
   NasShimmerComponent,
 } from '../../../../shared/nas';
 
+/* ── Models ──────────────────────────────────────────────────────────── */
+
+interface RecipientGroupTag {
+  type: 'learner' | 'role';
+  role_id: number | null;
+  label: string;
+  all: boolean;
+  count: number;
+}
+
+interface RecipientRef {
+  id: number;
+  name: string;
+  kind: 'learner' | 'instructor' | 'admin';
+  read_at?: string | null;
+}
+
 interface MessageItem {
   id: number;
   subject: string;
   body: string;
   preview?: string;
-  recipients_count: number;
-  read_count: number;
-  recipients_text?: string;
-  recipient_tags?: string[];
-  has_learner_recipients?: boolean;
-  has_instructor_recipients?: boolean;
   created_at: string;
-  is_read?: boolean;
-  resolved?: boolean;
+  sender?: { id: number; name: string } | null;
+  is_read?: boolean | null;
+  recipients_count?: number;
+  read_count?: number;
+  recipient_groups?: RecipientGroupTag[];
+  recipients_summary?: string | null;
+  recipients?: RecipientRef[];
 }
 
-interface UserOption {
+/** A selectable recipient group returned by the compose catalog. */
+interface CatalogMember {
   id: number;
   name: string;
-  is_instructor?: boolean;
+}
+interface CatalogGroup {
+  key: string;
+  type: 'learner' | 'role';
+  role_id: number | null;
+  label: string;
+  members: CatalogMember[];
 }
 
-type InboxTab = 'all' | 'unread' | 'sent' | 'received';
+/** A flattened, de-duplicated selectable entry for the compose checklist. */
+interface ComposeEntry {
+  uid: string; // `learner:5` | `admin:12`
+  id: number;
+  name: string;
+  type: 'learner' | 'admin';
+  roleIds: number[]; // admin entries: every role chip they belong to
+}
+
+type InboxTab = 'unread' | 'received' | 'sent';
 
 @Component({
   selector: 'app-messages-list',
@@ -84,66 +113,54 @@ export class MessagesListComponent implements OnInit {
   private t = inject(TranslateService);
 
   constructor() {
-    // Reload the messages list AND the compose recipient picker
-    // (user names render localized) on every language switch.
     withLocaleReload(() => {
       this.page = 1;
       this.load();
-      this.loadUsers();
+      this.loadRecipients();
     });
   }
 
+  /* ── List state ────────────────────────────────────────────────────── */
   items = signal<MessageItem[]>([]);
   total = signal(0);
   loading = signal(true);
-  activeTab = signal<InboxTab>('sent');
-  userOptions = signal<UserOption[]>([]);
-
-  showCompose      = signal(false);
-  showWelcome      = signal(false);
-  selectedMessage  = signal<MessageItem | null>(null);
-  loadingDetail    = signal(false);
-  markingAllRead   = signal(false);
-  saving           = signal(false);
-
-  recipientSearch = signal('');
-  recipientFilter = signal<'all' | 'learners' | 'instructors'>('all');
+  activeTab = signal<InboxTab>('unread');
 
   page = 1;
   perPage = 50;
   readonly skeletonRows = [0, 1, 2, 3, 4];
 
-  /**
-   * Inbox tab pills — driven by the backend `inbox_tab` enum so labels
-   * are localized and the option set stays in sync with the filter
-   * clauses on the server. The `sent` tab additionally surfaces the
-   * total count.
-   */
+  readonly TITLE_MAX = 191;
+
   tabs = computed<NasPillTab[]>(() =>
     this.enums
       .options('inbox_tab')()
       .map((o) => ({ id: o.code, label: o.value })),
   );
 
-  readonly TITLE_MAX = 191;
-  readonly MESSAGE_MAX = 255;
+  /* ── Detail dialog ─────────────────────────────────────────────────── */
+  showDetail = signal(false);
+  selectedMessage = signal<MessageItem | null>(null);
+  loadingDetail = signal(false);
+  /** Whether the open message is shown from the "Sent" perspective. */
+  detailIsSent = signal(false);
 
-  private atLeastOneRecipient = (
-    ctrl: AbstractControl,
-  ): ValidationErrors | null => {
-    const ids: number[] = ctrl.value ?? [];
-    return ids.length > 0 ? null : { noRecipients: true };
-  };
+  /* ── Compose dialog ────────────────────────────────────────────────── */
+  showCompose = signal(false);
+  saving = signal(false);
+
+  catalog = signal<CatalogGroup[]>([]);
+  recipientSearch = signal('');
+  activeChip = signal<string>('all'); // 'all' | 'learner' | 'role:<id>'
+
+  /** Selected recipient uids. */
+  private selected = signal<Set<string>>(new Set());
+  /** "Select all" toggles, keyed by chip id ('learner' | 'role:<id>'). */
+  private allFlags = signal<Set<string>>(new Set());
 
   composeForm = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(this.TITLE_MAX)]],
-    recipient_ids: [[] as number[], [this.atLeastOneRecipient]],
-    all_learners: [false],
-    all_instructors: [false],
-    message: [
-      '',
-      [Validators.required, Validators.maxLength(this.MESSAGE_MAX)],
-    ],
+    message: ['', [Validators.required]],
   });
 
   get titleCtrl() {
@@ -152,33 +169,87 @@ export class MessagesListComponent implements OnInit {
   get messageCtrl() {
     return this.composeForm.controls.message;
   }
-  get recipientsCtrl() {
-    return this.composeForm.controls.recipient_ids;
-  }
 
-  filteredUsers = computed(() => {
-    const term = this.recipientSearch().toLowerCase();
-    const filter = this.recipientFilter();
-    return this.userOptions().filter((u) => {
-      if (filter === 'learners' && u.is_instructor) return false;
-      if (filter === 'instructors' && !u.is_instructor) return false;
-      return !term || u.name.toLowerCase().includes(term);
+  /* ── Compose: derived data ─────────────────────────────────────────── */
+
+  /** Flattened, de-duplicated selectable entries built from the catalog. */
+  private entries = computed<ComposeEntry[]>(() => {
+    const learners: ComposeEntry[] = [];
+    const adminById = new Map<number, ComposeEntry>();
+
+    for (const g of this.catalog()) {
+      if (g.type === 'learner') {
+        for (const m of g.members) {
+          learners.push({
+            uid: `learner:${m.id}`,
+            id: m.id,
+            name: m.name,
+            type: 'learner',
+            roleIds: [],
+          });
+        }
+      } else if (g.role_id != null) {
+        for (const m of g.members) {
+          const existing = adminById.get(m.id);
+          if (existing) {
+            if (!existing.roleIds.includes(g.role_id)) existing.roleIds.push(g.role_id);
+          } else {
+            adminById.set(m.id, {
+              uid: `admin:${m.id}`,
+              id: m.id,
+              name: m.name,
+              type: 'admin',
+              roleIds: [g.role_id],
+            });
+          }
+        }
+      }
+    }
+
+    return [...learners, ...adminById.values()];
+  });
+
+  /** Chips: All + Learners + one per role group (Figma order). */
+  chips = computed(() => {
+    const out: { id: string; label: string }[] = [
+      { id: 'all', label: this.t.instant('common.all') },
+    ];
+    for (const g of this.catalog()) {
+      out.push({ id: g.type === 'learner' ? 'learner' : `role:${g.role_id}`, label: g.label });
+    }
+    return out;
+  });
+
+  /** Entries visible under the active chip, filtered by the search term. */
+  visibleEntries = computed<ComposeEntry[]>(() => {
+    const chip = this.activeChip();
+    const term = this.recipientSearch().trim().toLowerCase();
+    return this.entries().filter((e) => {
+      if (chip === 'learner' && e.type !== 'learner') return false;
+      if (chip.startsWith('role:')) {
+        const roleId = Number(chip.slice(5));
+        if (e.type !== 'admin' || !e.roleIds.includes(roleId)) return false;
+      }
+      return !term || e.name.toLowerCase().includes(term);
     });
   });
 
-  learners = computed(() =>
-    this.filteredUsers().filter((u) => !u.is_instructor),
-  );
-  instructors = computed(() =>
-    this.filteredUsers().filter((u) => u.is_instructor),
-  );
+  /** Label for the "select all" row of the active chip. */
+  activeGroupLabel = computed(() => {
+    const chip = this.activeChip();
+    if (chip === 'all') return this.t.instant('common.all');
+    const c = this.chips().find((x) => x.id === chip);
+    return c?.label ?? '';
+  });
+
+  selectedCount = computed(() => this.selected().size);
 
   ngOnInit(): void {
     this.load();
-    this.loadUsers();
+    this.loadRecipients();
   }
 
-  /* ── Data ─────────────────────────────────────────────────────────── */
+  /* ── Data ──────────────────────────────────────────────────────────── */
   load(): void {
     this.loading.set(true);
     this.api
@@ -189,7 +260,7 @@ export class MessagesListComponent implements OnInit {
       })
       .subscribe({
         next: (res) => {
-          this.items.set(res.result.data.map((m) => this.mapMessage(m)));
+          this.items.set(res.result.data);
           this.total.set(res.result.total);
           this.loading.set(false);
         },
@@ -197,149 +268,191 @@ export class MessagesListComponent implements OnInit {
       });
   }
 
-  loadUsers(): void {
-    forkJoin({
-      learners: this.api.getPaginated<UserOption>(API.USERS, {
-        per_page: 500,
-        role: 'learner',
-      }),
-      instructors: this.api.getPaginated<UserOption>(API.INSTRUCTORS, {
-        per_page: 500,
-      }),
-    }).subscribe({
-      next: ({ learners, instructors }) => {
-        const learnerList = (learners.result.data ?? []).map((u) => ({
-          ...u,
-          is_instructor: false,
-        }));
-        const instructorList = (instructors.result.data ?? []).map((u) => ({
-          ...u,
-          is_instructor: true,
-        }));
-        this.userOptions.set([...learnerList, ...instructorList]);
-      },
+  loadRecipients(): void {
+    this.api.get<CatalogGroup[]>(API.MESSAGES_RECIPIENTS).subscribe({
+      next: (res) => this.catalog.set(res.result ?? []),
     });
   }
 
-  private mapMessage(
-    m: MessageItem & { total_recipients?: number; read_count?: number },
-  ): MessageItem {
-    const count = m.recipients_count ?? m.total_recipients ?? 0;
-
-    const recipientsText =
-      m.recipients_text ?? (count ? `${count} recipients` : 'Recipients');
-
-    // Use backend-provided flags so the pills are always accurate —
-    // the list endpoint never loads the recipients relation itself.
-    const tags: string[] = [];
-    if (m.has_learner_recipients)    tags.push('Learners');
-    if (m.has_instructor_recipients) tags.push('Instructors');
-    if (tags.length === 0 && count > 0) tags.push('Learners');
-
-    return {
-      ...m,
-      recipients_count: count,
-      read_count:       m.read_count ?? 0,
-      preview:          m.preview ?? (m.body ? m.body.slice(0, 200) : ''),
-      recipients_text:  recipientsText,
-      recipient_tags:   tags,
-    };
-  }
-
-  openMessage(m: MessageItem): void {
-    this.selectedMessage.set(m);
-    this.showWelcome.set(true);
-    this.refreshDetail(m.id);
-  }
-
-  refreshDetail(id: number): void {
-    this.loadingDetail.set(true);
-    this.api.get<MessageItem>(`${API.MESSAGES}/${id}`).subscribe({
-      next: res => {
-        if (res.result) {
-          this.selectedMessage.set(this.mapMessage(res.result as MessageItem & { total_recipients?: number }));
-        }
-        this.loadingDetail.set(false);
-      },
-      error: () => this.loadingDetail.set(false),
-    });
-  }
-
-  markAllRead(id: number): void {
-    this.markingAllRead.set(true);
-    this.api.patch(API.messageMarkAllRead(id)).subscribe({
-      next: () => {
-        this.markingAllRead.set(false);
-        this.refreshDetail(id);
-      },
-      error: () => this.markingAllRead.set(false),
-    });
-  }
-
-  /* ── Tabs ─────────────────────────────────────────────────────────── */
+  /* ── Tabs ──────────────────────────────────────────────────────────── */
   setTab(t: string): void {
     this.page = 1;
     this.activeTab.set(t as InboxTab);
     this.load();
   }
 
-  /* ── Compose ──────────────────────────────────────────────────────── */
-  openCompose(): void {
-    this.composeForm.reset({
-      title: '',
-      recipient_ids: [],
-      all_learners: false,
-      all_instructors: false,
-      message: '',
+  isSentTab = computed(() => this.activeTab() === 'sent');
+
+  /* ── Open / read ───────────────────────────────────────────────────── */
+  openMessage(m: MessageItem): void {
+    this.detailIsSent.set(this.activeTab() === 'sent');
+    this.selectedMessage.set(m);
+    this.showDetail.set(true);
+    this.refreshDetail(m.id);
+
+    // Mark received messages read for the current admin on open.
+    if (this.activeTab() !== 'sent' && m.is_read === false) {
+      this.api.patch(API.messageRead(m.id)).subscribe({
+        next: () => {
+          this.items.update((list) =>
+            list.map((x) => (x.id === m.id ? { ...x, is_read: true } : x)),
+          );
+        },
+      });
+    }
+  }
+
+  refreshDetail(id: number): void {
+    this.loadingDetail.set(true);
+    this.api.get<MessageItem>(`${API.MESSAGES}/${id}`).subscribe({
+      next: (res) => {
+        if (res.result) this.selectedMessage.set(res.result);
+        this.loadingDetail.set(false);
+      },
+      error: () => this.loadingDetail.set(false),
     });
+  }
+
+  closeDetail(): void {
+    this.showDetail.set(false);
+    this.selectedMessage.set(null);
+  }
+
+  /* detail-popup helpers */
+  allGroups(m: MessageItem): RecipientGroupTag[] {
+    return (m.recipient_groups ?? []).filter((g) => g.all);
+  }
+  hasExplicitRecipients(m: MessageItem): boolean {
+    return (m.recipient_groups ?? []).some((g) => !g.all);
+  }
+  recipientNames(m: MessageItem): string {
+    return (m.recipients ?? []).map((r) => r.name).join('، ');
+  }
+
+  /* ── Compose ───────────────────────────────────────────────────────── */
+  openCompose(): void {
+    this.composeForm.reset({ title: '', message: '' });
     this.recipientSearch.set('');
-    this.recipientFilter.set('all');
+    this.activeChip.set('all');
+    this.selected.set(new Set());
+    this.allFlags.set(new Set());
     this.showCompose.set(true);
   }
 
-  toggleRecipient(id: number, checked: boolean): void {
-    const ids = new Set(this.composeForm.value.recipient_ids ?? []);
-    if (checked) ids.add(id);
-    else ids.delete(id);
-    this.composeForm.patchValue({ recipient_ids: Array.from(ids) });
+  /* selection helpers */
+  isSelected(uid: string): boolean {
+    return this.selected().has(uid);
   }
 
-  isRecipientSelected(id: number): boolean {
-    return (this.composeForm.value.recipient_ids ?? []).includes(id);
+  toggleEntry(entry: ComposeEntry, checked: boolean): void {
+    const next = new Set(this.selected());
+    if (checked) next.add(entry.uid);
+    else {
+      next.delete(entry.uid);
+      // unchecking a member drops any "all" flag for groups it belongs to
+      this.clearAllFlagsFor(entry);
+    }
+    this.selected.set(next);
   }
 
-  toggleAllLearners(checked: boolean): void {
-    const learnerIds = this.learners().map((l) => l.id);
-    const current = new Set(this.composeForm.value.recipient_ids ?? []);
-    if (checked) learnerIds.forEach((id) => current.add(id));
-    else learnerIds.forEach((id) => current.delete(id));
-    this.composeForm.patchValue({
-      recipient_ids: Array.from(current),
-      all_learners: checked,
-    });
+  private clearAllFlagsFor(entry: ComposeEntry): void {
+    const flags = new Set(this.allFlags());
+    if (entry.type === 'learner') flags.delete('learner');
+    else for (const r of entry.roleIds) flags.delete(`role:${r}`);
+    this.allFlags.set(flags);
+  }
+
+  /** Whether the active chip's "select all" is on. */
+  isGroupAllChecked(): boolean {
+    const chip = this.activeChip();
+    if (chip === 'all') {
+      const entries = this.entries();
+      return entries.length > 0 && entries.every((e) => this.selected().has(e.uid));
+    }
+    return this.allFlags().has(chip);
+  }
+
+  toggleGroupAll(checked: boolean): void {
+    const chip = this.activeChip();
+    const next = new Set(this.selected());
+    const flags = new Set(this.allFlags());
+
+    const targets =
+      chip === 'all'
+        ? this.entries()
+        : this.entries().filter((e) =>
+            chip === 'learner'
+              ? e.type === 'learner'
+              : e.type === 'admin' && e.roleIds.includes(Number(chip.slice(5))),
+          );
+
+    for (const e of targets) {
+      if (checked) next.add(e.uid);
+      else next.delete(e.uid);
+    }
+
+    if (chip === 'all') {
+      // toggle every group's "all" flag
+      flags.clear();
+      if (checked) {
+        flags.add('learner');
+        for (const g of this.catalog())
+          if (g.type === 'role') flags.add(`role:${g.role_id}`);
+      }
+    } else if (checked) {
+      flags.add(chip);
+    } else {
+      flags.delete(chip);
+    }
+
+    this.selected.set(next);
+    this.allFlags.set(flags);
+  }
+
+  /** Build the `groups` payload from the current selection. */
+  private buildGroups(): Array<{
+    type: 'learner' | 'role';
+    role_id?: number;
+    all: boolean;
+    ids?: number[];
+  }> {
+    const groups: Array<{ type: 'learner' | 'role'; role_id?: number; all: boolean; ids?: number[] }> = [];
+    const flags = this.allFlags();
+    const selected = this.selected();
+
+    for (const g of this.catalog()) {
+      if (g.type === 'learner') {
+        if (flags.has('learner')) {
+          groups.push({ type: 'learner', all: true });
+        } else {
+          const ids = g.members.filter((m) => selected.has(`learner:${m.id}`)).map((m) => m.id);
+          if (ids.length) groups.push({ type: 'learner', all: false, ids });
+        }
+      } else if (g.role_id != null) {
+        const chipId = `role:${g.role_id}`;
+        if (flags.has(chipId)) {
+          groups.push({ type: 'role', role_id: g.role_id, all: true });
+        } else {
+          const ids = g.members.filter((m) => selected.has(`admin:${m.id}`)).map((m) => m.id);
+          if (ids.length) groups.push({ type: 'role', role_id: g.role_id, all: false, ids });
+        }
+      }
+    }
+    return groups;
   }
 
   send(): void {
     this.composeForm.markAllAsTouched();
-    if (this.composeForm.invalid) return;
+    const groups = this.buildGroups();
+    if (this.composeForm.invalid || groups.length === 0) return;
+
     this.saving.set(true);
     const v = this.composeForm.getRawValue();
-    const opts = this.userOptions();
-    const selected = v.recipient_ids ?? [];
-
-    const recipient_ids = selected.filter(
-      (id) => !opts.find((u) => u.id === id && u.is_instructor),
-    );
-    const instructor_ids = selected.filter((id) =>
-      opts.find((u) => u.id === id && u.is_instructor),
-    );
-
     this.api
       .post(API.MESSAGES, {
         subject: v.title!,
         body: v.message!,
-        recipient_ids,
-        instructor_ids,
+        groups,
       })
       .subscribe({
         next: () => {
@@ -349,14 +462,11 @@ export class MessagesListComponent implements OnInit {
           });
           this.showCompose.set(false);
           this.saving.set(false);
+          this.page = 1;
+          this.activeTab.set('sent');
           this.load();
         },
         error: () => this.saving.set(false),
       });
-  }
-
-  closeMessageDetail(): void {
-    this.showWelcome.set(false);
-    this.selectedMessage.set(null);
   }
 }

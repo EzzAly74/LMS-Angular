@@ -23,6 +23,7 @@ export const API = {
   RATINGS:        `${API_BASE}/ratings`,
   ADMIN_RATINGS:  `${API_BASE}/admin/ratings`,
   MESSAGES:            `${API_BASE}/messages`,
+  MESSAGES_RECIPIENTS: `${API_BASE}/messages/recipients`,
   messageRead:         (id: number) => `${API_BASE}/messages/${id}/read`,
   messageMarkAllRead:  (id: number) => `${API_BASE}/messages/${id}/mark-all-read`,
   LMS_RESOURCES:  `${API_BASE}/lms-resources`,
