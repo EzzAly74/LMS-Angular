@@ -243,7 +243,14 @@
     "name_en_placeholder": "e.g. Sara Al-Mansouri",
     "name_ar_placeholder": "مثال: سارة المنصوري",
     "email_placeholder": "e.g. name@mail.com",
-    "select_role": "Select a role"
+    "select_role": "Select a role",
+    "password": "Password",
+    "password_placeholder": "At least 8 characters",
+    "confirm_password": "Confirm Password",
+    "confirm_password_placeholder": "Re-enter your password",
+    "password_edit_hint": "Leave blank to keep the current password.",
+    "password_mismatch": "Passwords do not match.",
+    "toggle_password": "Toggle password visibility"
   },
   "instructors": {
     "title": "Instructors",

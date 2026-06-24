@@ -62,7 +62,6 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     label: 'nav.group.system',
     items: [
       { label: 'nav.users',           route: '/admin/users',       icon: `${NAV_ICONS}/icon-users.svg`,       viewKey: 'view-users' },
-      { label: 'nav.controllers',     route: '/admin/controllers', icon: `${NAV_ICONS}/icon-controllers.svg`, viewKey: 'view-controllers' },
       { label: 'nav.roles',           route: '/admin/roles',       icon: `${NAV_ICONS}/icon-roles.svg`,       viewKey: 'view-roles' },
       { label: 'nav.platform_config', route: '/admin/settings',    icon: `${NAV_ICONS}/icon-settings.svg`,    viewKey: 'view-platform-config' },
       { label: 'nav.audit_log',       route: '/admin/audit-log',   icon: `${NAV_ICONS}/icon-audit-log.svg`,   viewKey: 'view-audit-log' },

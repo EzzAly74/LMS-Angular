@@ -143,10 +143,19 @@
   background: var(--nas-color-bg-surface);
   border: 1px solid var(--nas-color-border);
   border-radius: var(--nas-radius-lg);
-  overflow: hidden;
+  // Keep `visible` so the row action ("…") menu can overflow the card
+  // instead of being clipped behind the table — most noticeable when a
+  // role filter leaves only one or two rows.
+  overflow: visible;
 }
 
-.ul-table-wrap { overflow-x: auto; }
+// `overflow-x: auto` forces vertical clipping too, which hides the row
+// menu; only enable horizontal scrolling on narrow viewports where the
+// table genuinely overflows.
+.ul-table-wrap {
+  overflow: visible;
+  @media (max-width: 768px) { overflow-x: auto; }
+}
 
 .ul-table {
   width: 100%;
@@ -265,17 +274,26 @@
   letter-spacing: 0.02em;
   line-height: 1;
 
-  &--instructor {
+  /* Colour variants keyed by the role's configured colour. */
+  &--teal {
     background: var(--nas-teal-100, #d1f2ec);
     color: var(--nas-teal-800, #0c4a44);
   }
-  &--admin {
-    background: var(--nas-neutral-200, #f1f5f9);
-    color: var(--nas-color-text-strong);
+  &--green {
+    background: var(--nas-status-green-50, #ecfdf5);
+    color: var(--nas-status-green-700, #15803d);
   }
-  &--learner {
-    background: var(--nas-neutral-200, #f1f5f9);
-    color: var(--nas-color-text-strong);
+  &--orange {
+    background: var(--nas-status-amber-50, #fff7ed);
+    color: var(--nas-status-amber-700, #c2410c);
+  }
+  &--red {
+    background: var(--nas-status-red-50, #fef2f2);
+    color: var(--nas-status-red-600, #dc2626);
+  }
+  &--blue {
+    background: var(--nas-status-blue-50, #eff6ff);
+    color: var(--nas-status-blue-700, #1d4ed8);
   }
 }
 
@@ -411,6 +429,43 @@
 }
 
 .ul-form__req { color: var(--nas-status-red-500, #dc2626); margin-inline-start: 2px; }
+
+.ul-form__hint {
+  margin: 0;
+  font-size: var(--nas-size-3xs, 11px);
+  color: var(--nas-color-text-muted);
+  &--error { color: var(--nas-status-red-500, #dc2626); }
+}
+
+/* Password field with the show/hide eye toggle (Figma 715:56031). */
+.ul-password {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &__input {
+    width: 100%;
+    padding-inline-end: var(--nas-space-10);
+  }
+  &__toggle {
+    position: absolute;
+    inset-inline-end: var(--nas-space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--nas-color-text-muted);
+    cursor: pointer;
+    border-radius: var(--nas-radius-sm);
+    &:hover { color: var(--nas-color-text-strong); }
+    i { font-size: 14px; }
+  }
+}
 
 .ul-input,
 .ul-select {

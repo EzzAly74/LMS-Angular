@@ -65,6 +65,54 @@
     </div>
 
     <div class="ul-form__field">
+      <label>
+        {{ 'users.password' | translate }}
+        @if (formMode() === 'create') { <span class="ul-form__req">*</span> }
+      </label>
+      <div class="ul-password">
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          class="ul-input ul-password__input"
+          autocomplete="new-password"
+          [placeholder]="'users.password_placeholder' | translate"
+          [ngModel]="form().password"
+          (ngModelChange)="updateForm('password', $event)"
+          name="password" />
+        <button type="button" class="ul-password__toggle" (click)="togglePassword()"
+                [attr.aria-label]="'users.toggle_password' | translate">
+          <i class="pi" [class.pi-eye]="!showPassword()" [class.pi-eye-slash]="showPassword()"></i>
+        </button>
+      </div>
+      @if (formMode() === 'edit') {
+        <p class="ul-form__hint">{{ 'users.password_edit_hint' | translate }}</p>
+      }
+    </div>
+
+    <div class="ul-form__field">
+      <label>
+        {{ 'users.confirm_password' | translate }}
+        @if (formMode() === 'create') { <span class="ul-form__req">*</span> }
+      </label>
+      <div class="ul-password">
+        <input
+          [type]="showPasswordConfirm() ? 'text' : 'password'"
+          class="ul-input ul-password__input"
+          autocomplete="new-password"
+          [placeholder]="'users.confirm_password_placeholder' | translate"
+          [ngModel]="form().password_confirmation"
+          (ngModelChange)="updateForm('password_confirmation', $event)"
+          name="password_confirmation" />
+        <button type="button" class="ul-password__toggle" (click)="togglePasswordConfirm()"
+                [attr.aria-label]="'users.toggle_password' | translate">
+          <i class="pi" [class.pi-eye]="!showPasswordConfirm()" [class.pi-eye-slash]="showPasswordConfirm()"></i>
+        </button>
+      </div>
+      @if (form().password && form().password_confirmation && form().password !== form().password_confirmation) {
+        <p class="ul-form__hint ul-form__hint--error">{{ 'users.password_mismatch' | translate }}</p>
+      }
+    </div>
+
+    <div class="ul-form__field">
       <label>{{ 'users.image_optional' | translate }}</label>
       <nas-photo-upload
         [value]="form().imagePreview"
@@ -95,51 +143,6 @@
         <i class="pi pi-plus"></i>
       }
       {{ (formMode() === 'create' ? 'users.add_user' : 'common.save_changes') | translate }}
-    </button>
-  </ng-template>
-</p-dialog>
-
-<!-- ═════════════════════════════════════════════════════════════════
-     INSTRUCTORS SUB-FILTER MODAL
-═══════════════════════════════════════════════════════════════════ -->
-<p-dialog
-  [header]="'common.filter_results' | translate"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '420px' }"
-  [visible]="instructorModal().open"
-  (visibleChange)="closeInstructorModal()"
-  styleClass="nas-dialog ul-filter-dialog">
-
-  <div class="ul-modal-label">{{ 'nav.instructors' | translate }}</div>
-
-  <div class="ul-modal-search">
-    <i class="pi pi-search ul-modal-search__icon"></i>
-    <input
-      type="text"
-      class="ul-modal-search__input"
-      [placeholder]="'common.quick_search' | translate"
-      [ngModel]="instructorModal().query"
-      (ngModelChange)="onInstructorQuery($event)" />
-  </div>
-
-  <div class="ul-modal-list">
-    @for (item of filteredInstructorOptions(); track item.id) {
-      <label class="ul-modal-row" [class.ul-modal-row--selected]="isInstructorSelected(item.id)">
-        <input type="checkbox" [checked]="isInstructorSelected(item.id)" (change)="toggleInstructorSelection(item.id)" />
-        <span class="ul-modal-row__title">{{ item.name }}</span>
-      </label>
-    }
-    @if (!filteredInstructorOptions().length) {
-      <p class="ul-modal-empty">{{ 'users.no_instructors_match' | translate }}</p>
-    }
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button type="button" class="ul-btn ul-btn--ghost" (click)="clearInstructorSelection()">{{ 'common.reset' | translate }}</button>
-    <button type="button" class="ul-btn ul-btn--primary" (click)="applyInstructorFilter()">
-      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -210,12 +213,12 @@
       <div class="ul-drawer__row">
         <dt>{{ 'users.role' | translate }}</dt>
         <dd>
-          <span [class]="roleBadgeClass(profile()!.role_key)">{{ profile()!.role }}</span>
+          <span [class]="roleBadgeClass(profile()!.role_color)">{{ profile()!.role }}</span>
         </dd>
       </div>
       <div class="ul-drawer__row">
-        <dt>{{ 'users.enrolled_courses' | translate }}</dt>
-        <dd>{{ profile()!.enrolled_courses_count }}</dd>
+        <dt>{{ 'auth.email_address' | translate }}</dt>
+        <dd>{{ profile()!.email || '—' }}</dd>
       </div>
       <div class="ul-drawer__row">
         <dt>{{ 'users.last_active' | translate }}</dt>
@@ -307,31 +310,20 @@
     <button
       type="button"
       class="ul-pill"
-      [class.ul-pill--active]="activeTab() === 'all'"
-      (click)="setTab('all')">
+      [class.ul-pill--active]="activeRole() === null"
+      (click)="setRole(null)">
       {{ 'common.all' | translate }}
     </button>
 
-    <button
-      type="button"
-      class="ul-pill"
-      [class.ul-pill--active]="activeTab() === 'admin'"
-      (click)="setTab('admin')">
-      {{ 'dashboard.admin' | translate }}
-      <i class="pi pi-chevron-down"></i>
-    </button>
-
-    <button
-      type="button"
-      class="ul-pill"
-      [class.ul-pill--active]="activeTab() === 'instructor'"
-      (click)="openInstructorModal()">
-      {{ 'nav.instructors' | translate }}
-      @if (instructorIds.length) {
-        <span class="ul-pill__count">{{ instructorIds.length }}</span>
-      }
-      <i class="pi pi-chevron-down"></i>
-    </button>
+    @for (role of roleOptions(); track role.key) {
+      <button
+        type="button"
+        class="ul-pill"
+        [class.ul-pill--active]="activeRole() === role.key"
+        (click)="setRole(role.key)">
+        {{ role.label }}
+      </button>
+    }
   </div>
 
   <!-- ── Users table ──────────────────────────────────────────── -->
@@ -342,7 +334,6 @@
           <tr>
             <th>{{ 'users.name' | translate }}</th>
             <th>{{ 'users.role' | translate }}</th>
-            <th>{{ 'users.compliance' | translate }}</th>
             <th>{{ 'users.status' | translate }}</th>
             <th>{{ 'users.last_active' | translate }}</th>
             <th class="ul-table__action-head"></th>
@@ -352,14 +343,14 @@
           @if (loading()) {
             @for (s of skeletonRows; track s) {
               <tr>
-                @for (c of [1,2,3,4,5,6]; track c) {
+                @for (c of [1,2,3,4,5]; track c) {
                   <td><p-skeleton height="14px" /></td>
                 }
               </tr>
             }
           } @else if (!items().length) {
             <tr>
-              <td colspan="6" class="ul-table__empty">
+              <td colspan="5" class="ul-table__empty">
                 <i class="pi pi-users"></i>
                 <span>{{ 'users.no_results' | translate }}</span>
               </td>
@@ -381,14 +372,7 @@
                   </div>
                 </td>
                 <td>
-                  <span [class]="roleBadgeClass(user.role_key)">{{ user.role }}</span>
-                </td>
-                <td class="ul-cell-pct" [class]="complianceTone(user.compliance_pct)">
-                  @if (user.has_compliance) {
-                    {{ user.compliance_pct }}%
-                  } @else {
-                    —
-                  }
+                  <span [class]="roleBadgeClass(user.role_color)">{{ user.role }}</span>
                 </td>
                 <td>
                   <span class="u-status" [class]="statusTone(user.status)">

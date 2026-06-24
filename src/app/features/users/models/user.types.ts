@@ -19,6 +19,8 @@ export type AdminUserRoleKey = AdminUserRole | (string & {});
 export type AdminUserStatus = 'active' | 'inactive' | 'deactivated';
 export type AdminUserSource = 'user' | 'instructor' | 'admin';
 export type LearnerType     = 'online' | 'offline' | 'hybrid';
+/** Role palette shared with the Roles feature (backend `roles.color`). */
+export type AdminRoleColor  = 'teal' | 'green' | 'orange' | 'red' | 'blue';
 
 export interface AdminUserListItem {
   /** Numeric id within the source table. */
@@ -42,6 +44,10 @@ export interface AdminUserListItem {
   image: string | null;
   role: string;
   role_key: AdminUserRoleKey;
+  /** Real Spatie role machine name (e.g. "superAdmin", "reports-viewer"). */
+  role_machine: string;
+  /** Configured colour for the role badge (teal/green/orange/red/blue). */
+  role_color: AdminRoleColor | string;
   status: AdminUserStatus;
   last_active_at: string | null;
   compliance_pct: number | null;
@@ -65,6 +71,8 @@ export interface AdminUserRoleOption {
   key:   AdminUserRoleKey;
   /** Bilingual display label resolved server-side via `Accept-Language`. */
   label: string;
+  /** Configured colour so the filter pill can render in the role's colour. */
+  color: AdminRoleColor | string;
   /** Live count of people attached to the role (bucketed or pivoted). */
   count: number;
 }
@@ -79,6 +87,9 @@ export interface AdminUserStorePayload {
   name_ar: string;
   email: string;
   role: AdminUserRoleKey;
+  /** Set the account password directly (required on create). */
+  password?: string;
+  password_confirmation?: string;
   department_name?: string | null;
   phone?: string | null;
   learner_type?: LearnerType | null;

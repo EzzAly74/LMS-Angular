@@ -30,8 +30,6 @@ import type {
 } from '../../models/user.types';
 import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
 
-type RoleTab = 'all' | 'admin' | 'instructor';
-
 interface UserFormState {
   id: number | null;
   source: AdminUserSource | null;
@@ -39,6 +37,10 @@ interface UserFormState {
   name_ar: string;
   email: string;
   role: AdminUserRoleKey | '';
+  /** Plain-text password (hashed server-side). Required on create. */
+  password: string;
+  /** Confirmation field — must match `password` (create only). */
+  password_confirmation: string;
   /** Local preview / pending upload. `null` means "no avatar". */
   image: File | null;
   /** Existing server-side URL — drives the "Replace Photo" UX. */
@@ -101,8 +103,8 @@ export class UserListComponent implements OnInit, OnDestroy {
   page        = 1;
   perPage     = 15;
   search      = '';
-  activeTab   = signal<RoleTab>('all');
-  instructorIds: number[] = [];
+  /** Active role filter machine name; `null` = "All". */
+  activeRole  = signal<string | null>(null);
 
   /* ── Lookups ─────────────────────────────────────────────────── */
   readonly lookupInstructors = signal<Array<{ id: number; name: string; email: string | null }>>([]);
@@ -120,22 +122,31 @@ export class UserListComponent implements OnInit, OnDestroy {
   readonly formMode    = signal<'create' | 'edit'>('create');
   readonly formSaving  = signal(false);
   readonly form        = signal<UserFormState>(this.emptyForm());
+  readonly showPassword        = signal(false);
+  readonly showPasswordConfirm = signal(false);
 
   /* ── Deactivate confirm dialog ───────────────────────────────── */
   readonly deactivateTarget = signal<AdminUserListItem | null>(null);
   readonly deactivating     = signal(false);
 
-  /* ── Instructors sub-filter modal ────────────────────────────── */
-  readonly instructorModal = signal<{ open: boolean; query: string }>({ open: false, query: '' });
-  readonly selectedInstructorSet = signal<Set<number>>(new Set());
-
   /* ── Computed ────────────────────────────────────────────────── */
   readonly formValid = computed(() => {
     const f = this.form();
-    return f.name_en.trim().length > 0
+    const base = f.name_en.trim().length > 0
         && f.name_ar.trim().length > 0
         && /^\S+@\S+\.\S+$/.test(f.email)
         && !!f.role;
+    if (!base) return false;
+
+    if (this.formMode() === 'create') {
+      // Password + confirmation required and must match on create.
+      return f.password.length >= 8 && f.password === f.password_confirmation;
+    }
+    // On edit the password is optional ("leave blank to keep current"),
+    // but if one is typed it must be ≥ 8 chars AND match the confirmation
+    // (the backend enforces the `confirmed` rule).
+    return f.password.length === 0
+        || (f.password.length >= 8 && f.password === f.password_confirmation);
   });
 
   readonly visibleStatusKpi = computed(() =>
@@ -180,9 +191,8 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.api.list({
       page:     this.page,
       per_page: this.perPage,
-      ...(this.search                       ? { search:         this.search }         : {}),
-      ...(this.activeTab() !== 'all'        ? { role:           this.activeTab() }    : {}),
-      ...(this.instructorIds.length         ? { instructor_ids: this.instructorIds }  : {}),
+      ...(this.search       ? { search: this.search }       : {}),
+      ...(this.activeRole() ? { role:   this.activeRole()! } : {}),
     }).subscribe({
       next: res => {
         this.items.set(res.result.data ?? []);
@@ -211,13 +221,11 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.loadList();
   }
 
-  setTab(tab: RoleTab): void {
-    if (tab === this.activeTab()) return;
-    this.activeTab.set(tab);
+  /** Select a role filter pill. Pass `null` for the "All" pill. */
+  setRole(role: string | null): void {
+    if (role === this.activeRole()) return;
+    this.activeRole.set(role);
     this.page = 1;
-    if (tab !== 'instructor') {
-      this.instructorIds = [];
-    }
     this.loadList();
   }
 
@@ -258,6 +266,8 @@ export class UserListComponent implements OnInit, OnDestroy {
   /* ── Add / Edit user modal ──────────────────────────────────── */
   openCreateForm(): void {
     this.formMode.set('create');
+    this.showPassword.set(false);
+    this.showPasswordConfirm.set(false);
     this.form.set(this.emptyForm());
     this.formOpen.set(true);
   }
@@ -265,13 +275,18 @@ export class UserListComponent implements OnInit, OnDestroy {
   openEditForm(user: AdminUserListItem | AdminUserDetail): void {
     this.closeMenu();
     this.formMode.set('edit');
+    this.showPassword.set(false);
+    this.showPasswordConfirm.set(false);
     this.form.set({
       id:        user.id,
       source:    user.source,
       name_en:   user.name_en ?? user.name ?? '',
       name_ar:   user.name_ar ?? '',
       email:     user.email ?? '',
-      role:      user.role_key ?? 'learner',
+      // Prefer the real Spatie role so the dropdown reflects e.g. "Reports
+      // Viewer" rather than the bucket; fall back to the bucket key.
+      role:      user.role_machine ?? user.role_key ?? 'learner',
+      password: '', password_confirmation: '',
       image:        null,
       imagePreview: user.image ?? null,
     });
@@ -297,6 +312,12 @@ export class UserListComponent implements OnInit, OnDestroy {
       name_ar:   f.name_ar.trim(),
       email:     f.email.trim(),
       role:      f.role as AdminUserRoleKey,
+      // Send the password only when one was entered. On create it is
+      // required (enforced by `formValid`); on edit it is optional and a
+      // blank value leaves the current password untouched.
+      ...(f.password
+        ? { password: f.password, password_confirmation: f.password_confirmation }
+        : {}),
       // Only send the image field when the admin actually picked a new
       // file. Omitting the key keeps the request as JSON and avoids
       // accidentally clearing the avatar on edit.
@@ -393,54 +414,6 @@ export class UserListComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ── Instructors sub-filter modal ───────────────────────────── */
-  openInstructorModal(): void {
-    if (this.activeTab() !== 'instructor') {
-      this.setTab('instructor');
-    }
-    this.selectedInstructorSet.set(new Set(this.instructorIds));
-    this.instructorModal.set({ open: true, query: '' });
-  }
-
-  closeInstructorModal(): void {
-    this.instructorModal.update(s => ({ ...s, open: false }));
-  }
-
-  onInstructorQuery(v: string): void {
-    this.instructorModal.update(s => ({ ...s, query: v }));
-  }
-
-  filteredInstructorOptions(): Array<{ id: number; name: string }> {
-    const q = this.instructorModal().query.trim().toLowerCase();
-    const src = this.lookupInstructors().map(i => ({ id: i.id, name: i.name }));
-    if (!q) return src;
-    return src.filter(i => i.name.toLowerCase().includes(q));
-  }
-
-  toggleInstructorSelection(id: number): void {
-    this.selectedInstructorSet.update(set => {
-      const next = new Set(set);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  isInstructorSelected(id: number): boolean {
-    return this.selectedInstructorSet().has(id);
-  }
-
-  clearInstructorSelection(): void {
-    this.selectedInstructorSet.set(new Set());
-  }
-
-  applyInstructorFilter(): void {
-    this.instructorIds = [...this.selectedInstructorSet()];
-    this.instructorModal.update(s => ({ ...s, open: false }));
-    this.page = 1;
-    this.loadList();
-  }
-
   /* ── Visual helpers ─────────────────────────────────────────── */
   statusTone(s: AdminUserStatus | null | undefined): string {
     switch (s) {
@@ -466,13 +439,16 @@ export class UserListComponent implements OnInit, OnDestroy {
     return 'u-pct--bad';
   }
 
-  roleBadgeClass(roleKey: string): string {
-    switch (roleKey) {
-      case 'admin':      return 'u-role-badge u-role-badge--admin';
-      case 'instructor': return 'u-role-badge u-role-badge--instructor';
-      default:           return 'u-role-badge u-role-badge--learner';
-    }
+  /** Role badge classes keyed by the configured role colour. */
+  roleBadgeClass(color: string | null | undefined): string {
+    const palette = ['teal', 'green', 'orange', 'red', 'blue'];
+    const c = palette.includes(color ?? '') ? color : 'teal';
+    return `u-role-badge u-role-badge--${c}`;
   }
+
+  /** Toggle visibility of the password / confirmation inputs. */
+  togglePassword(): void { this.showPassword.update(v => !v); }
+  togglePasswordConfirm(): void { this.showPasswordConfirm.update(v => !v); }
 
   /* ── Avatar upload ──────────────────────────────────────────── */
   /**
@@ -498,7 +474,8 @@ export class UserListComponent implements OnInit, OnDestroy {
   private emptyForm(): UserFormState {
     return {
       id: null, source: null, name_en: '', name_ar: '', email: '',
-      role: '', image: null, imagePreview: null,
+      role: '', password: '', password_confirmation: '',
+      image: null, imagePreview: null,
     };
   }
 }

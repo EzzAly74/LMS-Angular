@@ -243,7 +243,14 @@
     "name_en_placeholder": "مثال: سارة المنصوري",
     "name_ar_placeholder": "مثال: سارة المنصوري",
     "email_placeholder": "مثال: name@mail.com",
-    "select_role": "اختر دوراً"
+    "select_role": "اختر دوراً",
+    "password": "كلمة المرور",
+    "password_placeholder": "8 أحرف على الأقل",
+    "confirm_password": "تأكيد كلمة المرور",
+    "confirm_password_placeholder": "أعد إدخال كلمة المرور",
+    "password_edit_hint": "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
+    "password_mismatch": "كلمتا المرور غير متطابقتين.",
+    "toggle_password": "إظهار/إخفاء كلمة المرور"
   },
   "instructors": {
     "title": "المدربون",

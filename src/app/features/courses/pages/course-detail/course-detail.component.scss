@@ -938,9 +938,6 @@
   &-icon.pi-spinner {
     color: var(--nas-color-text-muted);
   }
-  &--busy {
-    background: var(--nas-neutral-100);
-  }
   &-meta {
     display: flex;
     flex-direction: column;
@@ -954,12 +951,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  a.module-form__file-name {
     text-decoration: none;
-  }
-  a.module-form__file-name:hover {
-    text-decoration: underline;
+    &:hover { text-decoration: none; }
   }
   &-sub {
     font-size: var(--nas-size-3xs);
