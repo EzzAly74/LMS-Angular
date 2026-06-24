@@ -508,6 +508,20 @@ input[type="number"]::-webkit-outer-spin-button {
   line-height: 1.4;
 }
 
+/* Info-style hint (icon + text) — e.g. the "leave blank = available to all
+   learners" note under the Qualifications checklist (Figma 469:36890). */
+.nas-form__hint--info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+
+  i {
+    font-size: 0.9em;
+    color: var(--nas-color-text-muted);
+  }
+}
+
 .nas-form__field-opt {
   font-size: var(--nas-size-2xs);
   font-weight: var(--nas-weight-regular);

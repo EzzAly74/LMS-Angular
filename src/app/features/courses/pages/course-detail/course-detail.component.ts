@@ -248,6 +248,10 @@ export class CourseDetailComponent implements OnInit {
     name_ar:    ['', [Validators.required, Validators.maxLength(255)]],
     capacity:   [null as number | null, [Validators.min(1), Validators.max(10000)]],
     status:     [null as number | null],
+    // Planned session count (Figma 332:10708). Defaults from the course,
+    // editable per cohort; once this many sessions are held the cohort
+    // completes (and raising it re-opens an already-completed cohort).
+    number_of_sessions: [null as number | null, [Validators.required, Validators.min(1), Validators.max(1000)]],
     start_date: [null as Date | null, Validators.required],
     end_date:   [null as Date | null, Validators.required],
     // Average session length in hours (Figma 332:9988). Drives the live
@@ -374,25 +378,6 @@ export class CourseDetailComponent implements OnInit {
     this.api.get<Array<{ id: number; name: string }>>(API.QUALIFICATIONS_ACTIVE).subscribe({
       next: r => this.qualOptions.set(Array.isArray(r.result) ? r.result : []),
     });
-  }
-
-  /**
-   * Master "Select all" toggle for the Edit Course qualifications
-   * checklist. Mirrors the helper on `course-list` so the two dialogs
-   * behave identically.
-   */
-  toggleAllQualifications(): void {
-    const current = (this.editForm.value.qualification_ids ?? []) as number[];
-    const all = this.qualOptions().map(q => q.id);
-    const allSelected = all.length > 0 && current.length === all.length;
-    this.editForm.patchValue({ qualification_ids: allSelected ? [] : all });
-  }
-
-  /** Whether every qualification is currently selected on the Edit dialog. */
-  allQualificationsSelected(): boolean {
-    const current = (this.editForm.value.qualification_ids ?? []) as number[];
-    const total   = this.qualOptions().length;
-    return total > 0 && current.length === total;
   }
 
   load(id: number): void {
@@ -856,6 +841,8 @@ export class CourseDetailComponent implements OnInit {
       // Default to the canonical "Scheduled" choice so the helper hint
       // shows immediately, matching the Figma "New Cohort" dialog.
       status: this.enums.idForCode('cohort_status', 'scheduled'),
+      // Inherit the course's planned session count as the editable default.
+      number_of_sessions: this.course()?.number_of_sessions ?? null,
       start_date: null, end_date: null,
       avg_session_time: null,
     });
@@ -881,6 +868,7 @@ export class CourseDetailComponent implements OnInit {
                     'cohort_status',
                     cohort.status === 'open_for_enrollment' ? 'open_for_enrollment' : 'scheduled',
                   ),
+      number_of_sessions: cohort.number_of_sessions ?? this.course()?.number_of_sessions ?? null,
       start_date: cohort.start_date ? new Date(cohort.start_date) : null,
       end_date:   cohort.end_date   ? new Date(cohort.end_date)   : null,
       avg_session_time: cohort.avg_session_time ?? null,
@@ -907,6 +895,7 @@ export class CourseDetailComponent implements OnInit {
       end_date:   v.end_date   ? this.toIso(v.end_date)   : null,
       capacity:   v.capacity ?? null,
       status:     statusCode ?? null,
+      number_of_sessions: v.number_of_sessions ?? null,
       avg_session_time: v.avg_session_time ?? null,
     };
 
@@ -940,6 +929,13 @@ export class CourseDetailComponent implements OnInit {
     const current = Number(this.cohortForm.value.capacity ?? 0);
     const next = Math.max(1, Math.min(10000, current + delta));
     this.cohortForm.patchValue({ capacity: next });
+  }
+
+  /** Stepper for the cohort "Number of Sessions" field (Figma 332:10708). */
+  adjustCohortSessions(delta: number): void {
+    const current = Number(this.cohortForm.value.number_of_sessions ?? 0);
+    const next = Math.max(1, Math.min(1000, current + delta));
+    this.cohortForm.patchValue({ number_of_sessions: next });
   }
 
   deleteCohort(cohort: Cohort, overlay: OverlayPanel): void {

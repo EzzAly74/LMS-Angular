@@ -73,6 +73,10 @@ export interface Cohort {
   enrolled: number;
   capacity: number | null;
   status: CohortStatus;
+  /** Planned session count for this cohort (shown in the Sessions column). */
+  number_of_sessions?: number | null;
+  /** Sessions already held — drives the completed/active transition. */
+  held_sessions_count?: number | null;
   /** Average session length in hours (drives the live attendance window). */
   avg_session_time?: number | null;
   /**
@@ -90,6 +94,8 @@ export interface CohortPayload {
   end_date?:   string | null;
   capacity?:   number | null;
   status?:     CohortStatus | null;
+  /** Planned session count for this cohort. */
+  number_of_sessions?: number | null;
   /** Average session length in hours; null = use platform default. */
   avg_session_time?: number | null;
 }
@@ -119,6 +125,8 @@ export interface CourseDetail {
   updated_at?: string;
   qualification_skills?: Array<{ id: number; name: string }>;
   qualifications?: Array<{ id: number; name: string }>;
+  /** Planned session count — read-only on the course; seeds new cohorts. */
+  number_of_sessions?: number | null;
   rating_distribution?: number[];
   reviews?: CourseReview[];
   cohorts?: Cohort[];
@@ -157,6 +165,8 @@ export interface CreateCoursePayload {
   active?: boolean;
   /** Per-course override for "Max per Cohort". Null/undefined → platform default. */
   max_learners?: number | null;
+  /** Planned session count captured at creation (read-only afterwards). */
+  number_of_sessions?: number | null;
   image?: File;
 }
 

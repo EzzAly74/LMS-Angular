@@ -206,22 +206,39 @@
       [placeholderAr]="'add_course.description_placeholder' | translate"
     />
 
-    <div class="nas-form__field">
-      <label>{{ 'add_course.max_learners' | translate }}</label>
-      <p-inputNumber formControlName="max_learners" [min]="1" [max]="500" [showButtons]="true"
-                     styleClass="w-full" />
+    <div class="nas-form__row">
+      <div class="nas-form__field">
+        <label>{{ 'add_course.max_learners' | translate }}</label>
+        <p-inputNumber formControlName="max_learners" [min]="1" [max]="500" [showButtons]="true"
+                       styleClass="w-full" />
+      </div>
+      <div class="nas-form__field">
+        <label>{{ 'add_course.number_of_sessions' | translate }} *</label>
+        <p-inputNumber formControlName="number_of_sessions" [min]="1" [max]="1000" [showButtons]="true"
+                       [placeholder]="'add_course.number_of_sessions_placeholder' | translate"
+                       styleClass="w-full" />
+        @if (form.controls.number_of_sessions.invalid && form.controls.number_of_sessions.touched) {
+          <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
+        }
+      </div>
     </div>
 
     <div class="nas-form__row">
       <div class="nas-form__field">
-        <label>{{ 'add_course.cohort_start' | translate }}</label>
+        <label>{{ 'add_course.cohort_start' | translate }} *</label>
         <nas-datepicker formControlName="cohort_start"
                     [placeholder]="'add_course.cohort_start_placeholder' | translate" />
+        @if (form.controls.cohort_start.invalid && form.controls.cohort_start.touched) {
+          <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
+        }
       </div>
       <div class="nas-form__field">
-        <label>{{ 'add_course.cohort_end' | translate }}</label>
+        <label>{{ 'add_course.cohort_end' | translate }} *</label>
         <nas-datepicker formControlName="cohort_end"
                     [placeholder]="'add_course.cohort_end_placeholder' | translate" />
+        @if (form.controls.cohort_end.invalid && form.controls.cohort_end.touched) {
+          <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
+        }
       </div>
     </div>
 
@@ -235,13 +252,6 @@
           }
         </div>
       } @else {
-        <label class="nas-checklist__select-all">
-          <p-checkbox [binary]="true"
-                      [ngModel]="allQualificationsSelected('add')"
-                      [ngModelOptions]="{ standalone: true }"
-                      (onChange)="toggleAllQualifications('qualification_ids', 'add')" />
-          <span>{{ 'common.select_all' | translate }}</span>
-        </label>
         <div class="nas-checklist">
           @for (q of qualOptions(); track q.id) {
             <label class="nas-checklist__item">
@@ -251,6 +261,10 @@
           }
         </div>
       }
+      <p class="nas-form__hint nas-form__hint--info">
+        <i class="pi pi-info-circle"></i>
+        {{ 'add_course.qualifications_all_hint' | translate }}
+      </p>
     </div>
 
     <footer class="nas-form__footer">
@@ -398,13 +412,6 @@
             }
           </div>
         } @else {
-          <label class="nas-checklist__select-all">
-            <p-checkbox [binary]="true"
-                        [ngModel]="allQualificationsSelected('edit')"
-                        [ngModelOptions]="{ standalone: true }"
-                        (onChange)="toggleAllQualifications('qualification_ids', 'edit')" />
-            <span>{{ 'common.select_all' | translate }}</span>
-          </label>
           <div class="nas-checklist">
             @for (q of qualOptions(); track q.id) {
               <label class="nas-checklist__item">
@@ -414,6 +421,10 @@
             }
           </div>
         }
+        <p class="nas-form__hint nas-form__hint--info">
+          <i class="pi pi-info-circle"></i>
+          {{ 'add_course.qualifications_all_hint' | translate }}
+        </p>
       </div>
 
       <footer class="nas-form__footer">

@@ -38,6 +38,7 @@ export interface ApiCourseRaw {
   price?: number;
   currency?: string;
   max_learners?: number;
+  number_of_sessions?: number | null;
   /**
    * Course thumbnail. The detail resource resolves this to a fully-
    * qualified URL via `getFileUrl()` — the list endpoint usually doesn't
@@ -166,6 +167,7 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
     delivery_type:            displayName(raw.course_type, LOCALE, ''),
     level:                    mapCourseLevel(raw.level as string | null | undefined),
     max_learners:             raw.max_learners,
+    number_of_sessions:       raw.number_of_sessions ?? null,
     created_at:               raw.created_at,
     updated_at:               raw.updated_at ?? raw.created_at,
     enrolled_count:           raw.enrolled_count ?? raw.users_count ?? 0,
@@ -256,6 +258,8 @@ export interface ApiCohortRaw {
   end_date?:   string | null;
   capacity?:   number | null;
   status?:     string | null;
+  number_of_sessions?: number | null;
+  held_sessions_count?: number | null;
   avg_session_time?: number | string | null;
   enrolled_count?: number;
 }
@@ -288,6 +292,8 @@ export function mapApiCohort(raw: ApiCohortRaw): Cohort {
     enrolled:   Number(raw.enrolled_count ?? 0),
     capacity:   raw.capacity ?? null,
     status:     normalizeCohortStatus(raw.status),
+    number_of_sessions: raw.number_of_sessions != null ? Number(raw.number_of_sessions) : null,
+    held_sessions_count: raw.held_sessions_count != null ? Number(raw.held_sessions_count) : null,
     avg_session_time: raw.avg_session_time != null ? Number(raw.avg_session_time) : null,
     // Kept as an alias so the attendance drawer (which still reads
     // `cohort.section_id`) keeps working — cohort.id IS the section id.

@@ -102,28 +102,6 @@ export class CourseListComponent implements OnInit {
     });
   }
 
-  /**
-   * Master "Select all" toggle for the qualifications checklist on
-   * the Add/Edit Course dialogs. We accept the FormControl name so a
-   * single helper drives every dialog instance instead of writing
-   * three near-identical handlers.
-   */
-  toggleAllQualifications(controlName: 'qualification_ids', form: 'add' | 'edit'): void {
-    const fg = form === 'add' ? this.form : this.editForm;
-    const current = (fg.get(controlName)?.value ?? []) as number[];
-    const all = this.qualOptions().map(q => q.id);
-    const allSelected = all.length > 0 && current.length === all.length;
-    fg.patchValue({ qualification_ids: allSelected ? [] : all });
-  }
-
-  /** Whether every qualification is checked on the given dialog. */
-  allQualificationsSelected(form: 'add' | 'edit'): boolean {
-    const fg = form === 'add' ? this.form : this.editForm;
-    const current = (fg.value.qualification_ids ?? []) as number[];
-    const total   = this.qualOptions().length;
-    return total > 0 && current.length === total;
-  }
-
   items     = signal<Course[]>([]);
   total     = signal(0);
   loading   = signal(true);
@@ -227,8 +205,9 @@ export class CourseListComponent implements OnInit {
     description:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
     hours:               [1, [Validators.required, Validators.min(1)]],
     max_learners:        [30,    [Validators.required, Validators.min(1)]],
-    cohort_start:        [null as Date | null],
-    cohort_end:          [null as Date | null],
+    number_of_sessions:  [null as number | null, [Validators.required, Validators.min(1)]],
+    cohort_start:        [null as Date | null, Validators.required],
+    cohort_end:          [null as Date | null, Validators.required],
     qualification_ids:   [[] as number[]],
     image:               [null as File | null],
   });
@@ -583,7 +562,8 @@ export class CourseListComponent implements OnInit {
     this.form.reset({
       title: { en: '', ar: '' }, type: defaultType, category_id: null, level: defaultLevel, instructor_id: null,
       certificate: true, require_instructor: true, description: { en: '', ar: '' },
-      hours: 1, max_learners: 30, cohort_start: null, cohort_end: null, qualification_ids: [], image: null,
+      hours: 1, max_learners: 30, number_of_sessions: null, cohort_start: null, cohort_end: null,
+      qualification_ids: [], image: null,
     });
     this.addPhotoPreview.set(null);
     // Fetch dropdown lookups lazily — keeps the initial page load
@@ -618,6 +598,9 @@ export class CourseListComponent implements OnInit {
       fd.append('level',     String(v.level));
     }
     fd.append('hours', String(v.hours ?? 1));
+    fd.append('max_learners', String(v.max_learners ?? 30));
+    // Planned session count — captured once here; read-only on edit.
+    fd.append('number_of_sessions', String(v.number_of_sessions ?? ''));
     fd.append('certificate', v.certificate ? '1' : '0');
     fd.append('instructors[]', String(v.instructor_id!));
     // Cohort calendar: when the admin picks dates inline with the
