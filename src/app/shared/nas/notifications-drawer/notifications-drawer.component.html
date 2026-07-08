@@ -115,9 +115,23 @@
       }
     </section>
 
-    <!-- ── Recent notifications list ────────────────────────────────── -->
+    <!-- ── Personal inbox (event-driven notifications) ──────────────── -->
     <section class="nd-list">
-      @if (loadingList()) {
+      <div class="nd-list__head">
+        <span class="nd-list__title">
+          {{ 'notifications.inbox.title' | translate }}
+          @if (feed.unreadCount() > 0) {
+            <span class="nd-list__badge">{{ feed.unreadCount() > 99 ? '99+' : feed.unreadCount() }}</span>
+          }
+        </span>
+        @if (feed.unreadCount() > 0) {
+          <button type="button" class="nd-list__mark-all" (click)="markAllRead()">
+            {{ 'notifications.inbox.mark_all_read' | translate }}
+          </button>
+        }
+      </div>
+
+      @if (feed.loading()) {
         @for (i of [1,2,3]; track i) {
           <div class="nd-list-item">
             <p-skeleton height="18px" width="80%" />
@@ -125,12 +139,16 @@
           </div>
         }
       } @else {
-        @for (note of notifications(); track note.id) {
-          <article class="nd-list-item">
+        @for (note of feed.items(); track note.id) {
+          <article
+            class="nd-list-item"
+            [class.nd-list-item--unread]="!note.read_at"
+            [class.nd-list-item--clickable]="!note.read_at"
+            (click)="markRead(note)">
             <div class="nd-list-item__body">
-              <div class="nd-list-item__title">{{ display(note.title) }}</div>
-              @if (display(note.body)) {
-                <div class="nd-list-item__detail">{{ display(note.body) }}</div>
+              <div class="nd-list-item__title">{{ note.title }}</div>
+              @if (note.body) {
+                <div class="nd-list-item__detail">{{ note.body }}</div>
               }
             </div>
             <time class="nd-list-item__time">
@@ -138,10 +156,10 @@
             </time>
           </article>
         }
-        @if (!notifications().length) {
+        @if (!feed.items().length) {
           <div class="nd-list-empty">
             <nas-icon name="bell" [size]="32" />
-            <p>{{ 'notifications.no_yet' | translate }}</p>
+            <p>{{ 'notifications.inbox.empty' | translate }}</p>
           </div>
         }
       }

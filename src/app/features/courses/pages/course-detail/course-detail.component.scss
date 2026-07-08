@@ -164,8 +164,25 @@
 
 .overview-about,
 .overview-ratings,
+.overview-list-card,
 .overview-settings {
   padding: 20px;
+}
+
+/* Bulleted "What students will learn" / "Requirements" lists (Overview tab). */
+.overview-bullets {
+  margin: 0;
+  padding-inline-start: 20px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--nas-color-text-body, #676e76);
+  }
 }
 
 .overview-about p {
@@ -758,7 +775,7 @@
   }
 }
 
-/* ── Cohort dialog (Figma 332:9988 / 332:10708) ──────────────────── */
+/* Cohort dialog */
 .cohort-form {
   display: flex;
   flex-direction: column;
@@ -783,9 +800,7 @@
   }
 }
 
-/* Number input with a trailing unit chip (e.g. "hours"), matching the
-   "Avg. Session Time" field in Figma 332:9988. The unit sits inside the
-   field on the trailing edge and is RTL-safe via logical properties. */
+/* Trailing unit chip inside number inputs (e.g. hours). */
 .nas-input-suffix {
   position: relative;
   display: block;
@@ -807,11 +822,7 @@
   }
 }
 
-/* "Approximate Duration" — boxed input with the `minutes` label and a small
-   vertical chevron stepper rendered *inside* the field, matching Figma. We
-   intentionally avoid PrimeNG's `<p-inputNumber>` here because the project
-   hides native + PrimeNG spinners globally; rolling our own keeps full
-   visual control. */
+/* Approximate Duration — Figma boxed input with in-field stepper. */
 .duration-input {
   position: relative;
   display: block;
@@ -952,7 +963,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     text-decoration: none;
-    &:hover { text-decoration: none; }
   }
   &-sub {
     font-size: var(--nas-size-3xs);
@@ -978,10 +988,6 @@
   }
 }
 
-/* ── Upload progress card ───────────────────────────────────────────
-   Replaces the plain spinner with a polished, animated "uploading" state:
-   a pulsing file icon with an orbiting ring + an indeterminate gradient
-   progress bar. RTL-safe via logical properties. */
 .module-upload-progress {
   position: relative;
   display: grid;
@@ -997,7 +1003,7 @@
   overflow: hidden;
   animation: upload-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* Soft sheen sweeping across the whole card. */
+  /* Soft sheen across the upload card. */
   &::after {
     content: "";
     position: absolute;
@@ -1094,7 +1100,6 @@
     overflow: hidden;
   }
 
-  /* Indeterminate bar that slides back and forth. */
   &__bar {
     position: absolute;
     inset-block: 0;

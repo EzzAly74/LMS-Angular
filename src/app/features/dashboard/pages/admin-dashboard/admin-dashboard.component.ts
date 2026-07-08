@@ -15,12 +15,12 @@ import { SkeletonModule } from 'primeng/skeleton';
 import {
   DashboardApiService,
   DashboardData,
-  DashboardNotification,
   DashboardTrendRange,
 } from '../../services/dashboard-api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationFeedService } from '../../../../core/services/notification-feed.service';
 import { pickLocalized } from '../../../../core/utils/localized';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -90,6 +90,8 @@ export class AdminDashboardComponent implements OnInit {
   private t            = inject(TranslateService);
   private auth         = inject(AuthService);
   notifsDrawer         = inject(NotificationsDrawerService);
+  /** Shared per-user notification feed — same store the drawer uses. */
+  feed                 = inject(NotificationFeedService);
 
   /**
    * Display name for the greeting — the signed-in admin's name, falling
@@ -246,28 +248,13 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   /**
-   * Notification card — localised title pulled straight from the
-   * translatable `title` JSON column of `public_notifications`. The
-   * dashboard endpoint never bakes a locale-resolved string anymore.
-   */
-  notificationTitle(n: DashboardNotification): string {
-    return pickLocalized(n.title as never, this.uiLocale, '') || '—';
-  }
-
-  /** Notification card — localised body. */
-  notificationDetail(n: DashboardNotification): string {
-    return pickLocalized(n.body as never, this.uiLocale, '') || '';
-  }
-
-  /**
    * Relative-time chip ("just now", "today", "yesterday", "n days ago").
    * Derived from `created_at` on the client so the server never emits an
-   * English label. Uses the i18n `dashboard.relative_time.*` dictionary
-   * and depends on `langTick` for re-evaluation on locale toggle.
+   * English label. Uses the i18n `dashboard.relative_time.*` dictionary.
    */
-  notificationTime(n: DashboardNotification): string {
-    if (!n.created_at) return '';
-    const created = new Date(n.created_at);
+  notificationTime(createdAt: string | null | undefined): string {
+    if (!createdAt) return '';
+    const created = new Date(createdAt);
     if (Number.isNaN(created.getTime())) return '';
 
     const diffMs = Date.now() - created.getTime();
@@ -336,6 +323,9 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    // Per-user notification feed powering the card preview — shared with
+    // the drawer, so marking one read there updates this card instantly.
+    this.feed.load();
   }
 
   /** Public reload — used by the locale-reload helper. */

@@ -45,6 +45,9 @@ export interface ApiCourseRaw {
    * include it, hence the optional/nullable shape.
    */
   image?: string | null;
+  /** Bilingual bullet lists (Overview tab) — `{ en: string[], ar: string[] }`. */
+  what_students_will_learn?: { en?: string[]; ar?: string[] } | null;
+  requirements?: { en?: string[]; ar?: string[] } | null;
   category?: { id: number; name: MaybeLocalized } | null;
   instructors?: Array<{ id: number; name: MaybeLocalized; image?: string | null }>;
   instructor?: { id: number; name: MaybeLocalized } | null;
@@ -145,12 +148,27 @@ export function mapApiCourseListItem(raw: ApiCourseRaw): Course {
   };
 }
 
+/** Resolve a bilingual bullet list to the active locale, falling back to the
+ *  other locale when the active one is empty (mirrors pickLocalized). */
+function pickLocalizedList(
+  value: { en?: string[]; ar?: string[] } | null | undefined,
+  locale: 'en' | 'ar',
+): string[] {
+  if (!value) return [];
+  const primary = value[locale];
+  if (Array.isArray(primary) && primary.length) return primary;
+  const fallback = value[locale === 'en' ? 'ar' : 'en'];
+  return Array.isArray(fallback) ? fallback : [];
+}
+
 export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
   const instructor = raw.instructors?.[0] ?? raw.instructor ?? null;
   return {
     id:                       raw.id,
     title:                    pickLocalized(raw.title, LOCALE, ''),
     description:              pickLocalized(raw.description, LOCALE, ''),
+    what_students_will_learn: pickLocalizedList(raw.what_students_will_learn, LOCALE),
+    requirements:             pickLocalizedList(raw.requirements, LOCALE),
     type:                     mapCourseType(raw.course_type),
     status:                   mapCourseStatus(raw.status, raw.active),
     category:                 flattenLocalized(raw.category),

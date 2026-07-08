@@ -78,6 +78,28 @@
               }
             </article>
 
+            @if (c.what_students_will_learn?.length) {
+              <article class="nas-card overview-list-card">
+                <h3 class="nas-section-title">{{ 'course_detail.what_students_will_learn' | translate }}</h3>
+                <ul class="overview-bullets">
+                  @for (point of c.what_students_will_learn; track $index) {
+                    <li>{{ point }}</li>
+                  }
+                </ul>
+              </article>
+            }
+
+            @if (c.requirements?.length) {
+              <article class="nas-card overview-list-card">
+                <h3 class="nas-section-title">{{ 'course_detail.requirements' | translate }}</h3>
+                <ul class="overview-bullets">
+                  @for (point of c.requirements; track $index) {
+                    <li>{{ point }}</li>
+                  }
+                </ul>
+              </article>
+            }
+
             <article class="nas-card overview-ratings">
               <h3 class="nas-section-title">{{ 'course_detail.learner_ratings' | translate }}</h3>
               <div class="rating-summary">
@@ -714,10 +736,20 @@
             }
           }
         </div>
-      } @else {
+      } @else if (moduleIsArticle()) {
+        <div class="nas-form__field module-form__article">
+          <label>
+            {{ 'course_detail.article' | translate }}
+            <span class="required">*</span>
+          </label>
+          <nas-rich-text formControlName="content"
+                           areaMinHeight="138px"
+                           [placeholder]="'course_detail.article_placeholder' | translate" />
+        </div>
+      } @else if (moduleIsLink()) {
         <div class="nas-form__field">
           <label>
-            {{ (moduleIsLink() ? 'course_detail.module_url' : 'course_detail.content_link') | translate }}
+            {{ 'course_detail.module_url' | translate }}
             <span class="required">*</span>
           </label>
           <input class="nas-input" type="url" formControlName="video" placeholder="https://example.com" />

@@ -40,6 +40,8 @@ export class NasRichTextComponent implements ControlValueAccessor, AfterViewInit
   @ViewChild('editor', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
 
   @Input() placeholder = '';
+  /** Minimum height of the editable area — Figma module article uses ~138px. */
+  @Input() areaMinHeight = '60px';
 
   disabled = signal(false);
   blockLabel = signal('Normal text');

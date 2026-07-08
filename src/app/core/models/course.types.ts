@@ -106,6 +106,9 @@ export interface CourseDetail {
   status: CourseStatus;
   type: CourseType;
   description?: string;
+  /** Bilingual bullet lists resolved to the active locale (Overview tab). */
+  what_students_will_learn?: string[];
+  requirements?: string[];
   category?: { id: number; name: string } | null;
   instructor?: { id: number; name: string };
   instructors?: Array<{ id: number; name: string }>;
@@ -191,8 +194,11 @@ export interface CourseModule {
   learner_scope: ModuleLearnerScope;
   session_id?: number | null;
   duration_minutes?: number | null;
-  type?: 'url' | 'file';
-  video: string;
+  type?: 'url' | 'file' | 'article';
+  /** URL (link) or stored file path (video/document); null for articles. */
+  video: string | null;
+  /** Rich-text HTML body for article modules; null otherwise. */
+  content?: string | null;
   /** Original filename for uploaded video/document modules (`type === 'file'`). */
   file_name?: string | null;
   /** Public URL for an uploaded file, resolved server-side. */
@@ -269,8 +275,11 @@ export interface ModulePayload {
   learner_scope: ModuleLearnerScope;
   session_id?: number | null;
   duration_minutes?: number | null;
-  type?: 'url' | 'file';
-  video: string;
+  type?: 'url' | 'file' | 'article';
+  /** URL (link) or stored file path (video/document); empty/null for articles. */
+  video: string | null;
+  /** Rich-text HTML body for article modules. */
+  content?: string | null;
   /** Original filename for uploaded video/document modules (`type === 'file'`). */
   file_name?: string | null;
   require_completion: boolean;

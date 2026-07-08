@@ -25,6 +25,7 @@ import {
   NasPhotoUploadComponent,
   NasDatepickerComponent,
   CohortAttendanceDrawerComponent,
+  NasRichTextComponent,
 } from '../../../../shared/nas';
 import { NasLocaleInputComponent } from '../../../../shared/nas/nas-locale-input/nas-locale-input.component';
 import type { LocalizedText } from '../../../../core/models/localized.types';
@@ -64,6 +65,7 @@ type ModuleFilter = 'all' | ModuleContentType;
     OverlayPanelModule, ConfirmDialogModule,
     NasStatCardComponent, NasTabsComponent, NasStatusBadgeComponent, NasProgressComponent, NasAvatarComponent,
     NasPhotoUploadComponent, NasLocaleInputComponent, NasDatepickerComponent, CohortAttendanceDrawerComponent,
+    NasRichTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-detail.component.html',
@@ -314,6 +316,8 @@ export class CourseDetailComponent implements OnInit {
     session_id:         [null as number | null],
     duration_minutes:   [30 as number | null, [Validators.required, Validators.min(0)]],
     video:              [''],
+    // Rich-text HTML body — used only by the "article" content type.
+    content:            [''],
     instructions_en:    [''],
     instructions_ar:    [''],
     require_completion: [false],
@@ -509,7 +513,7 @@ export class CourseDetailComponent implements OnInit {
       title_en: '', title_ar: '',
       content_type:  this.enums.idForCode('module_content_type', 'video'),
       learner_scope: this.enums.idForCode('module_learner_scope', 'all'),
-      session_id: null, duration_minutes: 30, video: '',
+      session_id: null, duration_minutes: 30, video: '', content: '',
       instructions_en: '', instructions_ar: '',
       require_completion: false,
     });
@@ -537,6 +541,7 @@ export class CourseDetailComponent implements OnInit {
       session_id:         m.session_id ?? null,
       duration_minutes:   m.duration_minutes ?? 30,
       video:              m.video ?? '',
+      content:            m.content ?? '',
       instructions_en:    pickLocalized(m.instructions, 'en'),
       instructions_ar:    pickLocalized(m.instructions, 'ar'),
       require_completion: m.require_completion,
@@ -560,12 +565,17 @@ export class CourseDetailComponent implements OnInit {
     return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'link';
   }
 
-  /** Switching content type clears any previously attached file / URL. */
+  moduleIsArticle(): boolean {
+    return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'article';
+  }
+
+  /** Switching content type clears any previously attached file / URL / body. */
   onModuleContentTypeChange(): void {
     this.moduleUpload.set(null);
     this.moduleFileInfo.set(null);
-    this.moduleForm.patchValue({ video: '' });
+    this.moduleForm.patchValue({ video: '', content: '' });
     this.moduleForm.controls.video.setErrors(null);
+    this.moduleForm.controls.content.setErrors(null);
   }
 
   /** Upload the picked file immediately, then keep its storage path on the form. */
@@ -624,6 +634,16 @@ export class CourseDetailComponent implements OnInit {
     this.moduleForm.patchValue({ duration_minutes: next });
   }
 
+  /** True when the rich-text editor has no meaningful text content. */
+  private isRichTextEmpty(html: string): boolean {
+    const text = html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return text.length === 0;
+  }
+
   submitModule(): void {
     if (this.moduleUploading()) return;
     if (this.moduleForm.invalid) { this.moduleForm.markAllAsTouched(); return; }
@@ -639,11 +659,17 @@ export class CourseDetailComponent implements OnInit {
     if (!contentTypeCode || !learnerScopeCode) return;
 
     // Video/Document store an uploaded file (`video` = storage path, `type` =
-    // file); External Link / Article send the typed URL directly (`type` = url).
-    const isFile = contentTypeCode === 'video' || contentTypeCode === 'document';
-    const videoValue = (v.video ?? '').trim();
-    if (!videoValue) {
-      this.moduleForm.controls.video.setErrors({ required: true });
+    // file); External Link stores a URL in `video`; Article stores rich-text
+    // HTML in the dedicated `content` field (`video` stays empty).
+    const isFile    = contentTypeCode === 'video' || contentTypeCode === 'document';
+    const isArticle = contentTypeCode === 'article';
+    const videoValue   = (v.video ?? '').trim();
+    const contentValue = (v.content ?? '').trim();
+
+    const contentMissing = isArticle ? this.isRichTextEmpty(contentValue) : !videoValue;
+    if (contentMissing) {
+      // Flag the field the admin actually edits for this content type.
+      this.moduleForm.controls[isArticle ? 'content' : 'video'].setErrors({ required: true });
       this.moduleForm.markAllAsTouched();
       return;
     }
@@ -660,8 +686,9 @@ export class CourseDetailComponent implements OnInit {
       learner_scope:      learnerScopeCode,
       session_id:         learnerScopeCode === 'cohort' ? v.session_id ?? null : null,
       duration_minutes:   v.duration_minutes ?? null,
-      type:               isFile ? 'file' : 'url',
-      video:              videoValue,
+      type:               isArticle ? 'article' : isFile ? 'file' : 'url',
+      video:              isArticle ? null : videoValue,
+      content:            isArticle ? contentValue : null,
       file_name:          isFile
         ? (this.moduleUpload()?.name ?? this.activeModule()?.file_name ?? null)
         : null,

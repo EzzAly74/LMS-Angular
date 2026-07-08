@@ -19,12 +19,11 @@ import { NasIconComponent } from '../nas-icon/nas-icon.component';
 import { NotificationsDrawerService } from './notifications-drawer.service';
 import { ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
-import { LocaleService } from '../../../core/services/locale.service';
 import { withLocaleReload } from '../../../core/utils/with-locale-reload';
 import {
-  pickLocalized,
-  type MaybeLocalized,
-} from '../../../core/utils/localized';
+  NotificationFeedService,
+  type FeedNotification,
+} from '../../../core/services/notification-feed.service';
 
 interface RecipientUser {
   id: number;
@@ -34,31 +33,25 @@ interface RecipientUser {
   learner_type?: string | null;
 }
 
-interface NotificationItem {
-  id: number;
-  title: MaybeLocalized;
-  body: MaybeLocalized;
-  for_public: boolean;
-  created_at: string;
-}
-
 type RecipientRole = 'learner' | 'instructor';
 
 /**
  * Right-edge `<p-sidebar>` notifications drawer (Figma 281:8104).
  *
  * Lives in the admin shell and is shown / hidden via
- * `NotificationsDrawerService`. Wraps three responsibilities:
+ * `NotificationsDrawerService`. Wraps two responsibilities:
  *
- *   1. List recent notifications from `/api/v1/notifications` (paginated).
- *   2. Compose a new notification — description, recipient role tabs
- *      (Learners / Instructors), recipient picker with `All` toggle, send.
- *   3. Push the created notification (admin-only API call).
+ *   1. Compose + send a broadcast notification — description, recipient
+ *      role tabs (Learners / Instructors), recipient picker with `All`
+ *      toggle. Selecting `All <role>` switches the payload to
+ *      `for_public=true`, which the backend broadcasts over the existing
+ *      public-notification pipeline.
+ *   2. Show the admin's personal, event-driven notification inbox from
+ *      `/api/v1/notifications/mine` (rating drops, new cohorts, …) with
+ *      per-item read/unread state, click-to-read, and mark-all-read.
  *
  * The recipient picker hits `/api/v1/users?role=learner|instructor` so
- * both tabs are fully dynamic; selecting `All <role>` switches the
- * payload to `for_public=true`, which the backend interprets as a
- * broadcast over the existing public-notification pipeline.
+ * both tabs are fully dynamic.
  */
 @Component({
   selector: 'nas-notifications-drawer',
@@ -79,9 +72,10 @@ type RecipientRole = 'learner' | 'instructor';
 export class NotificationsDrawerComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
   private readonly messages = inject(MessageService);
-  private readonly localeSvc = inject(LocaleService);
   private readonly t = inject(TranslateService);
   readonly drawer = inject(NotificationsDrawerService);
+  /** Shared per-user feed — also drives the dashboard notif-card. */
+  readonly feed = inject(NotificationFeedService);
 
   /** Bumped on every locale switch so `computed()` re-evaluates labels
    *  derived from `t.instant()`, which is not signal-tracked. */
@@ -107,10 +101,6 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
 
   /** When true, the "All <role>" checkbox is on → broadcast. */
   allSelected = signal(false);
-
-  /* ── Notifications list state ─────────────────────────────────────── */
-  notifications = signal<NotificationItem[]>([]);
-  loadingList = signal(false);
 
   private readonly destroy$ = new Subject<void>();
 
@@ -142,7 +132,7 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
         const open = this.drawer.isOpen();
         this.visible = open;
         if (open) {
-          this.loadList();
+          this.feed.load();
           this.loadRecipients();
         }
       },
@@ -157,7 +147,7 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
     withLocaleReload(() => {
       this.langTick.update(v => v + 1);
       if (!this.drawer.isOpen()) return;
-      this.loadList();
+      this.feed.load();
       this.loadRecipients();
     });
   }
@@ -252,26 +242,13 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadList(): void {
-    this.loadingList.set(true);
-    this.api
-      .getPaginated<NotificationItem>(API.NOTIFICATIONS, {
-        per_page: 20,
-        page: 1,
-      })
-      .subscribe({
-        next: (res) => {
-          this.notifications.set(res.result.data);
-          this.loadingList.set(false);
-        },
-        error: () => this.loadingList.set(false),
-      });
+  /** Click an unread item → mark it read via the shared feed store. */
+  markRead(item: FeedNotification): void {
+    this.feed.markRead(item);
   }
 
-  /** Localised title/body fallback for translatable notification fields. */
-  display(value: MaybeLocalized): string {
-    const locale = this.localeSvc.locale() === 'ar' ? 'ar' : 'en';
-    return pickLocalized(value, locale, '') || '';
+  markAllRead(): void {
+    this.feed.markAllRead();
   }
 
   /* ── Send ─────────────────────────────────────────────────────────── */
@@ -323,7 +300,9 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
           summary: 'Sent',
           detail: 'Notification dispatched.',
         });
-        this.loadList();
+        // A for-all / admin-targeted broadcast lands in the sender's own
+        // feed too — refresh so it appears immediately.
+        this.feed.load();
       },
       error: () => this.saving.set(false),
     });

@@ -64,6 +64,7 @@
     class="rte__area"
     contenteditable="true"
     spellcheck="true"
+    [style.min-height]="areaMinHeight"
     [attr.data-placeholder]="placeholder"
     (input)="onInput()"
     (blur)="onBlur()"

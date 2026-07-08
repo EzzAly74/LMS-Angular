@@ -1,0 +1,41 @@
+<div class="nas-points">
+  @if (label) {
+    <label class="nas-points__label">{{ label }}</label>
+  }
+
+  <input
+    type="text"
+    class="nas-points__input"
+    [placeholder]="placeholder"
+    [value]="draft()"
+    [disabled]="disabled"
+    (input)="onDraftInput($event)"
+    (keydown)="onKeydown($event)" />
+
+  <button
+    type="button"
+    class="nas-points__add"
+    [disabled]="disabled || !draft().trim()"
+    (click)="add()">
+    <nas-icon name="plus-circle" [size]="16" />
+    <span>{{ 'add_course.add_point' | translate }}</span>
+  </button>
+
+  @if (points().length) {
+    <ul class="nas-points__list">
+      @for (point of points(); track $index) {
+        <li class="nas-points__item">
+          <span class="nas-points__text">{{ point }}</span>
+          <button
+            type="button"
+            class="nas-points__remove"
+            [disabled]="disabled"
+            [attr.aria-label]="'common.remove' | translate"
+            (click)="remove($index)">
+            <nas-icon name="x" [size]="16" />
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

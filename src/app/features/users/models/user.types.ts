@@ -32,6 +32,11 @@ export interface AdminUserListItem {
   name: string | null;
   name_en: string | null;
   name_ar: string | null;
+  /** Instructor "Brief" (bio). Locale-resolved string + per-locale keys;
+   *  null for non-instructor rows. */
+  brief: string | null;
+  brief_en: string | null;
+  brief_ar: string | null;
   email: string | null;
   phone: string | null;
   machine_code: string | null;
@@ -93,6 +98,9 @@ export interface AdminUserStorePayload {
   department_name?: string | null;
   phone?: string | null;
   learner_type?: LearnerType | null;
+  /** Instructor "Brief" (bilingual). Only meaningful for the instructor role. */
+  brief_en?: string | null;
+  brief_ar?: string | null;
   /** Optional avatar upload. Sent as multipart/form-data when present. */
   image?: File | null;
 }

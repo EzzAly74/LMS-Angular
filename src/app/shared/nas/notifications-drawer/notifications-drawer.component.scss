@@ -290,11 +290,58 @@
   cursor: not-allowed;
 }
 
-/* ── Recent notifications list (below composer) ─────────────────── */
+/* ── Personal inbox (below composer) ────────────────────────────── */
 .nd-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.nd-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+.nd-list__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Fira Sans", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #171819;
+}
+
+.nd-list__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #d62b2b;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nd-list__mark-all {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #26787b;
+  font-family: "Fira Sans", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nd-list__mark-all:hover {
+  text-decoration: underline;
 }
 
 .nd-list-item {
@@ -307,6 +354,20 @@
   justify-content: space-between;
   gap: 12px;
   box-shadow: 0 1px 1px rgba(12, 36, 39, 0.04);
+}
+
+/* Unread rows get a tinted fill + accent rail and are clickable to dismiss. */
+.nd-list-item--unread {
+  background: #f0f8f8;
+  border-color: #cfe6e6;
+  border-inline-start: 3px solid #26787b;
+}
+.nd-list-item--clickable {
+  cursor: pointer;
+  transition: background-color 120ms;
+}
+.nd-list-item--clickable:hover {
+  background: #e6f3f3;
 }
 
 .nd-list-item__body {

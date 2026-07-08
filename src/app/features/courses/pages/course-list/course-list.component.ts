@@ -27,6 +27,7 @@ import {
   NasStatusTone,
   NasProgressComponent,
   NasLocaleInputComponent,
+  NasPointsInputComponent,
   NasDataTableComponent,
   NasCellTplDirective,
   NasTableColumn,
@@ -49,7 +50,7 @@ type ActiveTab = 'all' | 'pending' | 'active' | 'upcoming' | 'inactive';
     OverlayPanelModule, ConfirmDialogModule, DialogModule,
     DropdownModule, InputNumberModule, CheckboxModule, SkeletonModule,
     NasPageHeaderComponent, NasPillTabsComponent, NasStatusBadgeComponent, NasProgressComponent,
-    NasLocaleInputComponent, NasDataTableComponent, NasCellTplDirective, NasPhotoUploadComponent,
+    NasLocaleInputComponent, NasPointsInputComponent, NasDataTableComponent, NasCellTplDirective, NasPhotoUploadComponent,
     NasDatepickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -197,12 +198,18 @@ export class CourseListComponent implements OnInit {
   form = this.fb.group({
     title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
     type:                [null as number | null, Validators.required],
-    category_id:         [null as number | null, Validators.required],
+    // Category is optional (Figma carries no required marker).
+    category_id:         [null as number | null],
     level:               [null as number | null, Validators.required],
     instructor_id:       [null as number | null, Validators.required],
     certificate:         [true,  Validators.required],
     require_instructor:  [true,  Validators.required],
     description:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
+    // Bilingual bullet lists — flat string[] controls (like qualification_ids).
+    learn_en:            [[] as string[]],
+    learn_ar:            [[] as string[]],
+    requirements_en:     [[] as string[]],
+    requirements_ar:     [[] as string[]],
     hours:               [1, [Validators.required, Validators.min(1)]],
     max_learners:        [30,    [Validators.required, Validators.min(1)]],
     number_of_sessions:  [null as number | null, [Validators.required, Validators.min(1)]],
@@ -228,12 +235,17 @@ export class CourseListComponent implements OnInit {
   editForm = this.fb.group({
     title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
     type:                [null as number | null, Validators.required],
-    category_id:         [null as number | null, Validators.required],
+    // Category is optional (Figma carries no required marker).
+    category_id:         [null as number | null],
     level:               [null as number | null, Validators.required],
     instructor_id:       [null as number | null, Validators.required],
     certificate:         [true,  Validators.required],
     require_instructor:  [true,  Validators.required],
     description:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
+    learn_en:            [[] as string[]],
+    learn_ar:            [[] as string[]],
+    requirements_en:     [[] as string[]],
+    requirements_ar:     [[] as string[]],
     hours:               [1, [Validators.required, Validators.min(1)]],
     max_learners:        [30, [Validators.required, Validators.min(1)]],
     cohort_start:        [null as Date | null],
@@ -403,6 +415,10 @@ export class CourseListComponent implements OnInit {
           // binds to the dense numeric id from the enums service.
           level:              this.enums.idForCode('course_level', (r.level ?? null) as string | null) ?? null,
           instructor_id:      firstInstructor?.id ?? null,
+          learn_en:           r.what_students_will_learn?.en ?? [],
+          learn_ar:           r.what_students_will_learn?.ar ?? [],
+          requirements_en:    r.requirements?.en ?? [],
+          requirements_ar:    r.requirements?.ar ?? [],
           certificate:        !!r.certificate,
           // The backend doesn't currently track an explicit "review
           // content" flag — default to true and let the admin opt out
@@ -492,10 +508,16 @@ export class CourseListComponent implements OnInit {
     fd.append('description[en]', descEn  || descAr);
     fd.append('description[ar]', descAr  || descEn);
     fd.append('course_type',     String(v.type ?? ''));
-    fd.append('category_id',     String(v.category_id ?? ''));
+    // Category is optional — only send it when set (see submitAddCourse).
+    if (v.category_id !== null && v.category_id !== undefined) {
+      fd.append('category_id',   String(v.category_id));
+    }
     if (v.level !== null && v.level !== undefined) {
       fd.append('level',         String(v.level));
     }
+    // Bilingual bullet lists — JSON so clearing a list persists on update.
+    fd.append('what_students_will_learn', JSON.stringify({ en: v.learn_en ?? [], ar: v.learn_ar ?? [] }));
+    fd.append('requirements',             JSON.stringify({ en: v.requirements_en ?? [], ar: v.requirements_ar ?? [] }));
     fd.append('instructors[]',   String(v.instructor_id ?? ''));
     fd.append('hours',           String(v.hours ?? 1));
     fd.append('max_learners',    String(v.max_learners ?? 30));
@@ -593,10 +615,17 @@ export class CourseListComponent implements OnInit {
     // Numeric enum id — CourseRequest's AcceptsEnumIds trait normalizes
     // this back into the string code expected by the validator.
     fd.append('course_type', String(v.type ?? ''));
-    fd.append('category_id', String(v.category_id!));
+    // Category is optional — only send it when the admin picked one so the
+    // backend's `nullable|exists` rule isn't tripped by an empty value.
+    if (v.category_id !== null && v.category_id !== undefined) {
+      fd.append('category_id', String(v.category_id));
+    }
     if (v.level !== null && v.level !== undefined) {
       fd.append('level',     String(v.level));
     }
+    // Bilingual bullet lists — JSON so empty lists survive multipart.
+    fd.append('what_students_will_learn', JSON.stringify({ en: v.learn_en ?? [], ar: v.learn_ar ?? [] }));
+    fd.append('requirements',             JSON.stringify({ en: v.requirements_en ?? [], ar: v.requirements_ar ?? [] }));
     fd.append('hours', String(v.hours ?? 1));
     fd.append('max_learners', String(v.max_learners ?? 30));
     // Planned session count — captured once here; read-only on edit.

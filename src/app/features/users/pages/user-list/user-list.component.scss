@@ -488,6 +488,16 @@
   &::placeholder { color: var(--nas-color-text-muted); }
 }
 
+/* Multi-line variant for the instructor "Brief" — overrides the fixed
+   single-line height so the textarea can grow. */
+.ul-textarea {
+  height: auto;
+  min-height: 92px;
+  padding: var(--nas-space-3) var(--nas-space-4);
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .ul-select-wrap {
   position: relative;
   &__chevron, .ul-select__chevron {
@@ -751,6 +761,21 @@
       font-size: var(--nas-size-xs);
       color: var(--nas-color-text-strong);
       font-weight: var(--nas-weight-medium);
+    }
+
+    /* Long-form value (instructor Brief): stack the label over a wrapped,
+       left-aligned paragraph instead of the single-line key/value row. */
+    &--stacked {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--nas-space-2);
+
+      dd {
+        font-weight: var(--nas-weight-regular, 400);
+        color: var(--nas-color-text-body);
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
     }
   }
 

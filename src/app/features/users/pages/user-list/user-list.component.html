@@ -122,6 +122,32 @@
         (fileSelected)="onPhotoPicked($event)"
         (cleared)="onPhotoCleared()" />
     </div>
+
+    <!-- Brief — only the Instructor "user" carries one (persists to bio). -->
+    @if (form().role === 'instructor') {
+      <div class="ul-form__field">
+        <label>{{ 'users.brief_en' | translate }}</label>
+        <textarea
+          class="ul-input ul-textarea"
+          rows="3"
+          [placeholder]="'users.brief_placeholder' | translate"
+          [ngModel]="form().brief_en"
+          (ngModelChange)="updateForm('brief_en', $event)"
+          name="brief_en"></textarea>
+      </div>
+
+      <div class="ul-form__field">
+        <label>{{ 'users.brief_ar' | translate }}</label>
+        <textarea
+          class="ul-input ul-textarea"
+          rows="3"
+          dir="rtl"
+          [placeholder]="'users.brief_placeholder' | translate"
+          [ngModel]="form().brief_ar"
+          (ngModelChange)="updateForm('brief_ar', $event)"
+          name="brief_ar"></textarea>
+      </div>
+    }
   </form>
 
   <ng-template pTemplate="footer">
@@ -232,6 +258,13 @@
           </span>
         </dd>
       </div>
+
+      @if (profile()!.source === 'instructor') {
+        <div class="ul-drawer__row ul-drawer__row--stacked">
+          <dt>{{ 'users.brief' | translate }}</dt>
+          <dd>{{ profile()!.brief || '—' }}</dd>
+        </div>
+      }
     </dl>
 
     <footer class="ul-drawer__footer">

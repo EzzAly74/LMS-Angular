@@ -91,22 +91,21 @@
         </button>
       </header>
       <ul class="notif-list">
-        @for (note of data()?.notifications ?? []; track $index) {
-        @if($index < 2) { <li class="notif-item" [class.notif-item--unread]="$index < 2">
-          <span class="notif-item__dot" [class.notif-item__dot--unread]="$index < 2"></span>
-          <div class="notif-item__body">
-            <div class="notif-item__title">{{ notificationTitle(note) }}</div>
-            <div class="notif-item__detail">{{ notificationDetail(note) }}</div>
-          </div>
-          @if (notificationTime(note); as t) {
-          <div class="notif-item__time">{{ t }}</div>
-          }
+        @for (note of feed.items().slice(0, 2); track note.id) {
+          <li class="notif-item" [class.notif-item--unread]="!note.read_at">
+            <span class="notif-item__dot" [class.notif-item__dot--unread]="!note.read_at"></span>
+            <div class="notif-item__body">
+              <div class="notif-item__title">{{ note.title }}</div>
+              <div class="notif-item__detail">{{ note.body }}</div>
+            </div>
+            @if (notificationTime(note.created_at); as t) {
+              <div class="notif-item__time">{{ t }}</div>
+            }
           </li>
-          }
-          }
-          @if (!(data()?.notifications?.length)) {
+        }
+        @if (!feed.items().length) {
           <li class="notif-item notif-item--empty">{{ 'dashboard.no_notifications' | translate }}</li>
-          }
+        }
       </ul>
     </article>
   </section>
