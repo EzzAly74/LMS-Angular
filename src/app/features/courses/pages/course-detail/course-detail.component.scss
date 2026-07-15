@@ -1,4 +1,3 @@
-/* ── Loading skeleton ────────────────────────────────────────────── */
 .detail-skeleton {
   height: 160px;
   border-radius: var(--nas-radius-lg);
@@ -20,7 +19,6 @@
   }
 }
 
-/* ── Breadcrumb ──────────────────────────────────────────────────── */
 .detail-breadcrumb {
   display: flex;
   align-items: center;
@@ -47,7 +45,6 @@
   transform: scaleX(-1);
 }
 
-/* ── Header ──────────────────────────────────────────────────────── */
 .detail-header {
   display: flex;
   align-items: flex-start;
@@ -120,7 +117,6 @@
   }
 }
 
-/* ── KPI row ─────────────────────────────────────────────────────── */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -133,7 +129,6 @@
   }
 }
 
-/* ── Overview grid ───────────────────────────────────────────────── */
 .overview-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -169,7 +164,6 @@
   padding: 20px;
 }
 
-/* Bulleted "What students will learn" / "Requirements" lists (Overview tab). */
 .overview-bullets {
   margin: 0;
   padding-inline-start: 20px;
@@ -197,9 +191,6 @@
   font-style: italic;
 }
 
-/* Course description is stored as HTML by the rich-text editor — render it
-   with normalized spacing so headings/paragraphs/lists from the editor look
-   native inside the card. */
 .rich-content {
   font-size: 14px;
   color: var(--nas-color-text-body, #676e76);
@@ -241,7 +232,6 @@
   }
 }
 
-/* ── Learner ratings ─────────────────────────────────────────────── */
 .rating-summary {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr);
@@ -257,8 +247,6 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  /* Reserve the visual height of a real big number so an em-dash
-     "no rating" placeholder doesn't collapse the column. */
   min-height: 60px;
 }
 .rating-summary__value {
@@ -289,12 +277,8 @@
   font-size: 12px;
   color: var(--nas-color-text-muted, #676e76);
 }
-/* IMPORTANT: keep these flat — nesting them under `.rating-bars__row`
-   would compile to `.rating-bars__row__track`, which the HTML doesn't use. */
 .rating-bars__track {
   height: 8px;
-  /* A literal mid-gray rather than the lightest neutral token so the
-     empty track is still clearly visible on the white card. */
   background: #d9dbde;
   border-radius: 9999px;
   overflow: hidden;
@@ -316,7 +300,6 @@
   font-weight: 500;
 }
 
-/* ── Course Settings sidebar ─────────────────────────────────────── */
 .overview-settings {
   align-self: start;
 }
@@ -347,7 +330,6 @@
   }
 }
 
-/* ── Cohort tab ──────────────────────────────────────────────────── */
 .cohort-tab__head {
   display: flex;
   align-items: center;
@@ -456,7 +438,6 @@
   }
 }
 
-/* ── Learners tab ────────────────────────────────────────────────── */
 .learners-tab {
   display: flex;
   flex-direction: column;
@@ -509,9 +490,6 @@
     min-width: 180px;
   }
 
-  /* Status column — Figma 321:6791 uses plain coloured text, not a pill.
-     Each colour comes straight from the LMS design tokens used in the
-     mock so the row reads identically to the spec. */
   &__status {
     font-size: var(--nas-size-2xs);
     font-weight: var(--nas-weight-medium);
@@ -538,9 +516,6 @@
     position: relative;
     display: inline-flex;
 
-    /* Figma shows a small green dot in the bottom-right of the avatar for
-       completed / in-progress learners only. Not-started learners get a
-       plain avatar so the table reads at a glance. */
     &--active::after {
       content: "";
       position: absolute;
@@ -560,7 +535,6 @@
   }
 }
 
-/* ── Qualifications tab ──────────────────────────────────────────── */
 .qual-list {
   display: flex;
   flex-direction: column;
@@ -580,7 +554,6 @@
   }
 }
 
-/* ── Modules (Content) tab ───────────────────────────────────────── */
 .modules-tab {
   display: flex;
   flex-direction: column;
@@ -755,7 +728,6 @@
   }
 }
 
-/* ── Module dialog ───────────────────────────────────────────────── */
 .module-form {
   display: flex;
   flex-direction: column;
@@ -775,7 +747,6 @@
   }
 }
 
-/* Cohort dialog */
 .cohort-form {
   display: flex;
   flex-direction: column;
@@ -800,7 +771,6 @@
   }
 }
 
-/* Trailing unit chip inside number inputs (e.g. hours). */
 .nas-input-suffix {
   position: relative;
   display: block;
@@ -822,7 +792,6 @@
   }
 }
 
-/* Approximate Duration — Figma boxed input with in-field stepper. */
 .duration-input {
   position: relative;
   display: block;
@@ -847,7 +816,6 @@
       border-color: var(--nas-teal-600);
     }
 
-    /* Hide native browser spinners — matches project-wide rule. */
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -998,7 +966,11 @@
   border: 1px solid var(--nas-brand-200, #bfdbfe);
   border-radius: var(--nas-radius-md);
   background:
-    radial-gradient(120% 120% at 0% 0%, rgba(37, 99, 235, 0.06), transparent 60%),
+    radial-gradient(
+      120% 120% at 0% 0%,
+      rgba(37, 99, 235, 0.06),
+      transparent 60%
+    ),
     var(--nas-color-bg-surface);
   overflow: hidden;
   animation: upload-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1053,8 +1025,16 @@
       currentColor 300deg,
       transparent 360deg
     );
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    -webkit-mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 3px),
+      #000 calc(100% - 3px)
+    );
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 3px),
+      #000 calc(100% - 3px)
+    );
     animation: upload-ring-spin 0.9s linear infinite;
   }
 
@@ -1116,33 +1096,66 @@
 }
 
 @keyframes upload-card-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes upload-sheen {
-  0%        { transform: translateX(-100%); }
-  60%, 100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes upload-icon-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.06); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
 }
 
 @keyframes upload-ring-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes upload-dot-blink {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-  50%      { opacity: 0.4; box-shadow: 0 0 0 5px rgba(59, 130, 246, 0); }
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    opacity: 0.4;
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0);
+  }
 }
 
 @keyframes upload-bar-slide {
-  0%   { inset-inline-start: -40%; width: 40%; }
-  50%  { width: 55%; }
-  100% { inset-inline-start: 100%; width: 40%; }
+  0% {
+    inset-inline-start: -40%;
+    width: 40%;
+  }
+  50% {
+    width: 55%;
+  }
+  100% {
+    inset-inline-start: 100%;
+    width: 40%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1179,7 +1192,6 @@
   line-height: var(--nas-height-l);
 }
 
-/* ── Placeholder tab ─────────────────────────────────────────────── */
 .placeholder-tab {
   padding: var(--nas-space-12) var(--nas-space-6);
   text-align: center;
@@ -1205,7 +1217,6 @@
   }
 }
 
-/* ── Ratings tab ─────────────────────────────────────────────────── */
 .ratings-tab {
   display: flex;
   flex-direction: column;
@@ -1305,8 +1316,6 @@
     margin: 0;
   }
 }
-
-/* ── Form (modal) ────────────────────────────────────────────────── */
 .nas-form {
   display: flex;
   flex-direction: column;
