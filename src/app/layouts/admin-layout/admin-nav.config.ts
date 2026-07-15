@@ -45,7 +45,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
           { label: 'nav.ratings',     route: '/admin/ratings',     icon: '', viewKey: 'view-ratings' },
         ],
       },
-      { label: 'nav.resources', route: '/admin/resources', icon: `${NAV_ICONS}/icon-resources.svg`, viewKey: 'view-resources' },
+      { label: 'nav.blogs', route: '/admin/blogs', icon: `${NAV_ICONS}/icon-resources.svg`, viewKey: 'view-resources' },
     ],
   },
   {

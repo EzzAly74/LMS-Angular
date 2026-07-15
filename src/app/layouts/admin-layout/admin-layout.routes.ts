@@ -32,7 +32,7 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
       { path: 'courses',        loadChildren: () => import('../../features/courses/courses.routes').then(m => m.COURSES_ROUTES),                 data: { viewKey: 'view-courses' } },
       { path: 'categories',     loadChildren: () => import('../../features/categories/categories.routes').then(m => m.CATEGORIES_ROUTES),       data: { viewKey: 'view-categories' } },
       { path: 'instructors',    loadChildren: () => import('../../features/instructors/instructors.routes').then(m => m.INSTRUCTORS_ROUTES) },  // legacy, un-gated
-      { path: 'resources',      loadChildren: () => import('../../features/resources/resources.routes').then(m => m.RESOURCES_ROUTES),           data: { viewKey: 'view-resources' } },
+      { path: 'blogs',          loadChildren: () => import('../../features/blogs/blogs.routes').then(m => m.BLOGS_ROUTES),                       data: { viewKey: 'view-resources' } },
 
       // ── Learner management ─────────────────────────────────────────
       { path: 'users',          loadChildren: () => import('../../features/users/users.routes').then(m => m.USERS_ROUTES),                       data: { viewKey: 'view-users' } },

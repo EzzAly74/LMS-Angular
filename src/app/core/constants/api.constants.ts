@@ -27,6 +27,7 @@ export const API = {
   messageRead:         (id: number) => `${API_BASE}/messages/${id}/read`,
   messageMarkAllRead:  (id: number) => `${API_BASE}/messages/${id}/mark-all-read`,
   LMS_RESOURCES:  `${API_BASE}/lms-resources`,
+  BLOGS:          `${API_BASE}/admin/blogs`,
   COURSES:        `${API_BASE}/courses`,
   CATEGORIES:        `${API_BASE}/categories`,
   CATEGORIES_ACTIVE: `${API_BASE}/categories/active`,

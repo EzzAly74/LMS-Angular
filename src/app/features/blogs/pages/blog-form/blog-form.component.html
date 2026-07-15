@@ -1,0 +1,235 @@
+<div class="nas-page-container">
+
+  <!-- Breadcrumbs -->
+  <div class="bf-breadcrumbs">
+    <a routerLink="/admin/blogs" class="bf-breadcrumbs__link">
+      <i class="pi pi-book"></i>
+      {{ 'blogs.title' | translate }}
+    </a>
+    <i class="pi pi-chevron-right bf-breadcrumbs__sep"></i>
+    <span class="bf-breadcrumbs__current">
+      {{ (isEdit() ? 'blogs.edit_blog' : 'blogs.new_blog') | translate }}
+    </span>
+  </div>
+
+  <!-- Heading -->
+  <div class="bf-heading">
+    <h1 class="bf-heading__title">{{ (isEdit() ? 'blogs.edit_blog' : 'blogs.new_blog') | translate }}</h1>
+    <p class="bf-heading__sub">{{ 'blogs.form_subtitle' | translate }}</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" autocomplete="off">
+    <div class="bf-layout">
+
+      <!-- Left column -->
+      <div class="bf-main">
+
+        <!-- Main info card -->
+        <div class="bf-card">
+
+          <!-- Title EN -->
+          <div class="bf-field">
+            <label class="bf-field__label">{{ 'blogs.title_en' | translate }} <span class="bf-field__req">*</span></label>
+            <input type="text" formControlName="title_en" class="bf-input"
+              [placeholder]="'blogs.title_placeholder' | translate"
+              [class.bf-input--error]="form.controls.title_en.invalid && form.controls.title_en.touched" />
+            @if (form.controls.title_en.invalid && form.controls.title_en.touched) {
+              <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            }
+          </div>
+
+          <!-- Title AR -->
+          <div class="bf-field">
+            <label class="bf-field__label">{{ 'blogs.title_ar' | translate }} <span class="bf-field__req">*</span></label>
+            <input type="text" formControlName="title_ar" class="bf-input" dir="rtl"
+              [placeholder]="'blogs.title_placeholder' | translate"
+              [class.bf-input--error]="form.controls.title_ar.invalid && form.controls.title_ar.touched" />
+            @if (form.controls.title_ar.invalid && form.controls.title_ar.touched) {
+              <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            }
+          </div>
+
+          <!-- Subtitle EN -->
+          <div class="bf-field">
+            <label class="bf-field__label">{{ 'blogs.subtitle_en' | translate }}</label>
+            <textarea formControlName="subtitle_en" rows="3" class="bf-textarea"
+              [placeholder]="'blogs.subtitle_placeholder' | translate"></textarea>
+          </div>
+
+          <!-- Subtitle AR -->
+          <div class="bf-field">
+            <label class="bf-field__label">{{ 'blogs.subtitle_ar' | translate }}</label>
+            <textarea formControlName="subtitle_ar" rows="3" class="bf-textarea" dir="rtl"
+              [placeholder]="'blogs.subtitle_placeholder' | translate"></textarea>
+          </div>
+
+          <!-- Cover image -->
+          <div class="bf-field">
+            <label class="bf-field__label">{{ 'blogs.image' | translate }} <span class="bf-field__req">*</span></label>
+            <nas-photo-upload
+              [value]="coverPreview()"
+              ratio="16:9"
+              [addLabel]="'blogs.upload_image' | translate"
+              [replaceLabel]="'blogs.replace_image' | translate"
+              (fileSelected)="onCoverSelected($event)"
+              (cleared)="onCoverCleared()" />
+            @if (coverError()) {
+              <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            }
+          </div>
+
+          <!-- Level -->
+          <div class="bf-field">
+            <label class="bf-field__label">{{ 'blogs.level_label' | translate }} <span class="bf-field__req">*</span></label>
+            <p-dropdown formControlName="level" [options]="levelOptions()"
+              optionLabel="value" optionValue="code" appendTo="body"
+              [placeholder]="'blogs.level_placeholder' | translate"
+              styleClass="bf-dropdown"
+              [class.bf-dropdown--error]="form.controls.level.invalid && form.controls.level.touched" />
+            @if (form.controls.level.invalid && form.controls.level.touched) {
+              <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            }
+          </div>
+
+          <!-- Owner + Read time row -->
+          <div class="bf-row">
+            <div class="bf-field bf-field--grow">
+              <label class="bf-field__label">{{ 'blogs.owner' | translate }} <span class="bf-field__req">*</span></label>
+              <p-dropdown formControlName="author_user_id" [options]="userOptions()"
+                optionLabel="name" optionValue="id" appendTo="body"
+                [filter]="true" [showClear]="true" (onFilter)="onUserFilter($event)"
+                [placeholder]="'blogs.owner_placeholder' | translate"
+                styleClass="bf-dropdown"
+                [class.bf-dropdown--error]="form.controls.author_user_id.invalid && form.controls.author_user_id.touched" />
+              @if (form.controls.author_user_id.invalid && form.controls.author_user_id.touched) {
+                <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+              }
+              <label class="bf-check">
+                <input type="checkbox" formControlName="is_anonymous" />
+                <span class="bf-check__box"><i class="pi pi-check"></i></span>
+                <span class="bf-check__label">{{ 'blogs.anonymous' | translate }}</span>
+              </label>
+            </div>
+
+            <div class="bf-field bf-field--time">
+              <label class="bf-field__label">{{ 'blogs.read_time' | translate }} <span class="bf-field__req">*</span></label>
+              <div class="bf-time-input" [class.bf-input--error]="form.controls.reading_time.invalid && form.controls.reading_time.touched">
+                <input type="number" min="1" formControlName="reading_time"
+                  [placeholder]="'blogs.read_time_placeholder' | translate" />
+                <span class="bf-time-input__suffix">{{ 'blogs.minutes' | translate }}</span>
+              </div>
+              @if (form.controls.reading_time.invalid && form.controls.reading_time.touched) {
+                <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+              }
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Section cards -->
+        @for (section of sections.controls; track section; let i = $index) {
+          <div class="bf-card bf-section" [formGroup]="section">
+            <div class="bf-section__head">
+              <h3 class="bf-section__title">{{ 'blogs.section' | translate }} {{ i + 1 }}</h3>
+              @if (sections.length > 1) {
+                <button type="button" class="bf-section__remove" (click)="removeSection(i)">
+                  <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
+                </button>
+              }
+            </div>
+
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.section_title_en' | translate }} <span class="bf-field__req">*</span></label>
+              <input type="text" formControlName="title_en" class="bf-input"
+                [placeholder]="'blogs.title_placeholder' | translate"
+                [class.bf-input--error]="section.controls['title_en'].invalid && section.controls['title_en'].touched" />
+            </div>
+
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.section_title_ar' | translate }} <span class="bf-field__req">*</span></label>
+              <input type="text" formControlName="title_ar" class="bf-input" dir="rtl"
+                [placeholder]="'blogs.title_placeholder' | translate"
+                [class.bf-input--error]="section.controls['title_ar'].invalid && section.controls['title_ar'].touched" />
+            </div>
+
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.section_image' | translate }}</label>
+              <nas-photo-upload
+                [value]="section.controls['image_preview'].value"
+                [addLabel]="'blogs.upload_image' | translate"
+                [replaceLabel]="'blogs.replace_image' | translate"
+                (fileSelected)="onSectionImageSelected(i, $event)"
+                (cleared)="onSectionImageCleared(i)" />
+            </div>
+
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.body_en' | translate }} <span class="bf-field__req">*</span></label>
+              <nas-rich-text formControlName="body_en" areaMinHeight="140px"
+                [placeholder]="'blogs.body_placeholder' | translate" />
+              @if (section.controls['body_en'].invalid && section.controls['body_en'].touched) {
+                <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+              }
+            </div>
+
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.body_ar' | translate }} <span class="bf-field__req">*</span></label>
+              <nas-rich-text formControlName="body_ar" areaMinHeight="140px"
+                [placeholder]="'blogs.body_placeholder' | translate" />
+              @if (section.controls['body_ar'].invalid && section.controls['body_ar'].touched) {
+                <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+              }
+            </div>
+
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.quote' | translate }}</label>
+              <input type="text" formControlName="quote_en" class="bf-input"
+                [placeholder]="'blogs.quote_placeholder_en' | translate" />
+            </div>
+            <div class="bf-field">
+              <label class="bf-field__label">{{ 'blogs.quote_ar' | translate }}</label>
+              <input type="text" formControlName="quote_ar" class="bf-input" dir="rtl"
+                [placeholder]="'blogs.quote_placeholder_ar' | translate" />
+            </div>
+          </div>
+        }
+
+        <!-- Add section -->
+        <button type="button" class="bf-add-section" (click)="addSection()">
+          <span>{{ 'blogs.add_section' | translate }}</span>
+          <i class="pi pi-plus-circle"></i>
+        </button>
+
+      </div>
+
+      <!-- Right column: Publishing -->
+      <div class="bf-side">
+        <div class="bf-card bf-card--side">
+          <p class="bf-side__heading">{{ 'blogs.publishing' | translate }}</p>
+
+          <div class="bf-field">
+            <label class="bf-field__label">
+              {{ 'blogs.linked_qualification' | translate }}
+              <span class="bf-field__opt">({{ 'common.optional' | translate }})</span>
+            </label>
+            <p-dropdown formControlName="qualification_skill_id" [options]="qualOptions()"
+              optionLabel="name" optionValue="id" appendTo="body"
+              [showClear]="true" [filter]="true"
+              [placeholder]="'blogs.qualification_placeholder' | translate"
+              styleClass="bf-dropdown" />
+            <p class="bf-side__hint">{{ 'blogs.qualification_hint' | translate }}</p>
+          </div>
+
+          <div class="bf-actions">
+            <button type="button" class="bf-btn bf-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
+            <button type="submit" class="bf-btn bf-btn--save" [disabled]="saving()">
+              <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : (isEdit() ? 'pi-save' : 'pi-send')"></i>
+              {{ (isEdit() ? 'blogs.save_changes' : 'blogs.publish') | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+</div>

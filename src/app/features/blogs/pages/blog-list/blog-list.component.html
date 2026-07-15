@@ -1,0 +1,145 @@
+<div class="nas-page-container" (click)="closeMenu()">
+
+  <nas-page-header
+    [title]="'blogs.title' | translate"
+    [subtitle]="'blogs.subtitle' | translate">
+    <a routerLink="/admin/blogs/add" class="nas-cta-btn">
+      <i class="pi pi-plus-circle"></i>
+      {{ 'blogs.new_blog' | translate }}
+    </a>
+  </nas-page-header>
+
+  <!-- Blog list card -->
+  <div class="blog-list-card">
+
+    @if (loading()) {
+      @for (s of skeletons; track s) {
+        <div class="blog-row" [class.blog-row--first]="$first">
+          <p-skeleton width="40px" height="40px" borderRadius="12px" />
+          <div class="blog-row__body">
+            <p-skeleton width="55%" height="16px" />
+            <p-skeleton width="85%" height="13px" styleClass="mt-2" />
+            <p-skeleton width="28%" height="12px" styleClass="mt-2" />
+          </div>
+        </div>
+      }
+    } @else if (!items().length) {
+      <div class="blog-empty">
+        <i class="pi pi-book blog-empty__icon"></i>
+        <p>{{ 'blogs.no_results' | translate }}</p>
+        <a routerLink="/admin/blogs/add" class="nas-cta-btn">
+          <i class="pi pi-plus-circle"></i>
+          {{ 'blogs.new_blog' | translate }}
+        </a>
+      </div>
+    } @else {
+      @for (item of items(); track item.id) {
+        <div class="blog-row" [class.blog-row--first]="$first">
+
+          <!-- Leading icon -->
+          <div class="blog-row__icon-wrap">
+            <i class="pi pi-book"></i>
+          </div>
+
+          <!-- Content -->
+          <div class="blog-row__body">
+            <div class="blog-row__header">
+              <span class="blog-row__title">{{ item.title }}</span>
+              @if (item.level) {
+                <span class="blog-badge" [ngClass]="'blog-badge--' + item.level">
+                  {{ 'blogs.level.' + item.level | translate }}
+                </span>
+              }
+              @if (item.qualification?.name) {
+                <span class="blog-badge blog-badge--qual">{{ item.qualification!.name }}</span>
+              }
+            </div>
+            @if (item.subtitle) {
+              <p class="blog-row__desc">{{ item.subtitle }}</p>
+            }
+            <p class="blog-row__meta">
+              {{ 'blogs.added_by' | translate }}
+              <strong>{{ item.added_by || item.author.name }}</strong>
+              @if (item.published_at) {
+                &nbsp;&middot;&nbsp;{{ item.published_at | date:'dd MMM yyyy' }}
+              }
+            </p>
+          </div>
+
+          <!-- Kebab menu -->
+          <div class="blog-menu-wrap" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="blog-menu-btn"
+              [class.blog-menu-btn--active]="openMenuId() === item.id"
+              (click)="toggleMenu(item.id, $event)"
+              [attr.aria-label]="'common.options_for' | translate:{ name: item.title }"
+            >
+              <i class="pi pi-ellipsis-h"></i>
+            </button>
+            @if (openMenuId() === item.id) {
+              <div class="blog-menu-dropdown">
+                <button type="button" class="blog-menu-item" (click)="edit(item.id)">
+                  <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="blog-menu-item blog-menu-item--danger"
+                  (click)="askDelete(item, $event)"
+                >
+                  <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
+                </button>
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+    }
+
+  </div>
+
+  <!-- Pagination -->
+  @if (total() > perPage) {
+    <div class="nas-table-pagination">
+      <span class="nas-table-pagination__info">
+        {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
+      </span>
+      <div class="nas-table-pagination__nav">
+        <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- Delete confirmation (Figma: Yes, Delete it | No, Keep it) -->
+@if (pendingDelete(); as blog) {
+  <div class="blog-modal-backdrop" (click)="cancelDelete()">
+    <div class="blog-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="blog-modal__head">
+        <h2 class="blog-modal__title">{{ 'blogs.delete_title' | translate }}</h2>
+        <button type="button" class="blog-modal__close" (click)="cancelDelete()" aria-label="Close">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="blog-modal__body">
+        <p>{{ 'blogs.delete_message' | translate }}</p>
+      </div>
+      <div class="blog-modal__foot">
+        <button type="button" class="blog-modal__btn blog-modal__btn--danger" [disabled]="deleting()" (click)="confirmDelete()">
+          <i class="pi" [ngClass]="deleting() ? 'pi-spin pi-spinner' : 'pi-trash'"></i>
+          {{ 'blogs.delete_confirm' | translate }}
+        </button>
+        <button type="button" class="blog-modal__btn blog-modal__btn--keep" [disabled]="deleting()" (click)="cancelDelete()">
+          {{ 'blogs.delete_cancel' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
