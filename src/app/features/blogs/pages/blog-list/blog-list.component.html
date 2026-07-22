@@ -50,8 +50,8 @@
                   {{ 'blogs.level.' + item.level | translate }}
                 </span>
               }
-              @if (item.qualification?.name) {
-                <span class="blog-badge blog-badge--qual">{{ item.qualification!.name }}</span>
+              @for (qual of item.qualifications; track qual.id) {
+                <span class="blog-badge blog-badge--qual">{{ qual.name }}</span>
               }
             </div>
             @if (item.subtitle) {

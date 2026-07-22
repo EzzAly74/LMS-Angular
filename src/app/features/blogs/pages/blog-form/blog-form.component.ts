@@ -17,6 +17,7 @@ import {
 } from '@angular/forms';
 import { Subject, Subscription, debounceTime, takeUntil } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { TranslateModule } from '@ngx-translate/core';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -33,6 +34,7 @@ import { AdminBlog, AdminBlogSection, QualificationOption, UserOption } from '..
     RouterLink,
     ReactiveFormsModule,
     DropdownModule,
+    MultiSelectModule,
     TranslateModule,
     NasPhotoUploadComponent,
     NasRichTextComponent,
@@ -75,7 +77,7 @@ export class BlogFormComponent implements OnInit, OnDestroy {
     author_user_id: [null as number | null],
     is_anonymous: [false],
     reading_time: [null as number | null, [Validators.required, Validators.min(1)]],
-    qualification_skill_id: [null as number | null],
+    qualification_skill_ids: [[] as number[]],
     sections: this.fb.array<FormGroup>([]),
   });
 
@@ -179,7 +181,7 @@ export class BlogFormComponent implements OnInit, OnDestroy {
       author_user_id: b.author_user_id,
       is_anonymous: b.is_anonymous,
       reading_time: b.reading_time,
-      qualification_skill_id: b.qualification_skill_id,
+      qualification_skill_ids: b.qualification_skill_ids ?? [],
     });
     this.syncOwnerValidators(b.is_anonymous);
 
@@ -295,9 +297,9 @@ export class BlogFormComponent implements OnInit, OnDestroy {
       fd.append('author_user_id', String(v.author_user_id));
     }
     if (v.reading_time != null) fd.append('reading_time', String(v.reading_time));
-    if (v.qualification_skill_id != null) {
-      fd.append('qualification_skill_id', String(v.qualification_skill_id));
-    }
+    (v.qualification_skill_ids ?? []).forEach((id) => {
+      fd.append('qualification_skill_ids[]', String(id));
+    });
     fd.append('active', '1');
 
     if (this.coverFile()) fd.append('image', this.coverFile()!);

@@ -391,6 +391,8 @@ body {
   border-radius: var(--nas-radius-md);
   border-color: var(--nas-color-border);
   background: var(--nas-color-bg-surface);
+  width: 100%;
+  max-width: 100%;
 
   &.p-focus {
     border-color: var(--nas-teal-600);

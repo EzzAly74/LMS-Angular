@@ -21,7 +21,9 @@ export interface BlogListItem {
   image: string | null;
   level: string | null;
   reading_time: number | null;
+  /** First qualification, kept for backward compatibility. */
   qualification: BlogQualification | null;
+  qualifications: BlogQualification[];
   author: BlogAuthor;
   added_by: string | null;
   published_at: string | null;
@@ -53,8 +55,8 @@ export interface AdminBlog {
   author_name: string | null;
   is_anonymous: boolean;
   reading_time: number | null;
-  qualification_skill_id: number | null;
-  qualification_name: string | null;
+  qualification_skill_ids: number[];
+  qualifications: BlogQualification[];
   active: boolean;
   published_at: string | null;
   sections: AdminBlogSection[];
