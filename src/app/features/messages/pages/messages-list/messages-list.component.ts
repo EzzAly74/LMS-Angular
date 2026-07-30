@@ -8,80 +8,41 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import {
-  FormsModule,
-  ReactiveFormsModule,
-  FormBuilder,
-  Validators,
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
+import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
-import { MessageService } from 'primeng/api';
 import {
   NasPageHeaderComponent,
   NasPillTabsComponent,
   NasPillTab,
-  NasStatusBadgeComponent,
   NasShimmerComponent,
 } from '../../../../shared/nas';
 
-/* ── Models ──────────────────────────────────────────────────────────── */
+/* ── Models (unified conversation store) ─────────────────────────────── */
 
-interface RecipientGroupTag {
-  type: 'learner' | 'role';
-  role_id: number | null;
-  label: string;
-  all: boolean;
-  count: number;
-}
-
-interface RecipientRef {
+interface Counterpart { name: string; image: string | null; role: string; }
+interface LastMessage { body: string; created_at: string | null; mine: boolean; }
+interface Conversation {
   id: number;
-  name: string;
-  kind: 'learner' | 'instructor' | 'admin';
-  read_at?: string | null;
+  subject: string | null;
+  course: { id: number; title: string } | null;
+  counterpart: Counterpart;
+  last_message: LastMessage | null;
+  unread_count: number;
+  last_message_at: string | null;
 }
+interface ThreadMessage { id: number; body: string; mine: boolean; sender_name: string; created_at: string | null; }
+interface ConversationThread { conversation: Conversation; messages: ThreadMessage[]; }
 
-interface MessageItem {
-  id: number;
-  subject: string;
-  body: string;
-  preview?: string;
-  created_at: string;
-  sender?: { id: number; name: string } | null;
-  is_read?: boolean | null;
-  recipients_count?: number;
-  read_count?: number;
-  recipient_groups?: RecipientGroupTag[];
-  recipients_summary?: string | null;
-  recipients?: RecipientRef[];
-}
-
-/** A selectable recipient group returned by the compose catalog. */
-interface CatalogMember {
-  id: number;
-  name: string;
-}
-interface CatalogGroup {
-  key: string;
-  type: 'learner' | 'role';
-  role_id: number | null;
-  label: string;
-  members: CatalogMember[];
-}
-
-/** A flattened, de-duplicated selectable entry for the compose checklist. */
-interface ComposeEntry {
-  uid: string; // `learner:5` | `admin:12`
-  id: number;
-  name: string;
-  type: 'learner' | 'admin';
-  roleIds: number[]; // admin entries: every role chip they belong to
-}
+/* Compose recipient catalog (reuses /messages/recipients: learners + roles). */
+interface CatalogMember { id: number; name: string; }
+interface CatalogGroup { key: string; type: 'learner' | 'role'; role_id: number | null; label: string; members: CatalogMember[]; }
+interface ComposeEntry { uid: string; id: number; name: string; type: 'learner' | 'admin'; roleIds: number[]; }
 
 type InboxTab = 'unread' | 'received' | 'sent';
 
@@ -98,7 +59,6 @@ type InboxTab = 'unread' | 'received' | 'sent';
     CheckboxModule,
     NasPageHeaderComponent,
     NasPillTabsComponent,
-    NasStatusBadgeComponent,
     NasShimmerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -112,81 +72,57 @@ export class MessagesListComponent implements OnInit {
   private toast = inject(MessageService);
   private t = inject(TranslateService);
 
+  readonly TITLE_MAX = 191;
+
   constructor() {
     withLocaleReload(() => {
-      this.page = 1;
       this.load();
       this.loadRecipients();
     });
   }
 
   /* ── List state ────────────────────────────────────────────────────── */
-  items = signal<MessageItem[]>([]);
-  total = signal(0);
+  items = signal<Conversation[]>([]);
   loading = signal(true);
   activeTab = signal<InboxTab>('unread');
-
-  page = 1;
-  perPage = 50;
   readonly skeletonRows = [0, 1, 2, 3, 4];
 
-  readonly TITLE_MAX = 191;
-
   tabs = computed<NasPillTab[]>(() =>
-    this.enums
-      .options('inbox_tab')()
-      .map((o) => ({ id: o.code, label: o.value })),
+    this.enums.options('inbox_tab')().map((o) => ({ id: o.code, label: o.value })),
   );
+  isSentTab = computed(() => this.activeTab() === 'sent');
 
-  /* ── Detail dialog ─────────────────────────────────────────────────── */
-  showDetail = signal(false);
-  selectedMessage = signal<MessageItem | null>(null);
-  loadingDetail = signal(false);
-  /** Whether the open message is shown from the "Sent" perspective. */
-  detailIsSent = signal(false);
+  /* ── Thread dialog ─────────────────────────────────────────────────── */
+  showThread = signal(false);
+  thread = signal<ConversationThread | null>(null);
+  loadingThread = signal(false);
+  draftReply = signal('');
+  replying = signal(false);
 
   /* ── Compose dialog ────────────────────────────────────────────────── */
   showCompose = signal(false);
   saving = signal(false);
-
   catalog = signal<CatalogGroup[]>([]);
   recipientSearch = signal('');
   activeChip = signal<string>('all'); // 'all' | 'learner' | 'role:<id>'
-
-  /** Selected recipient uids. */
   private selected = signal<Set<string>>(new Set());
-  /** "Select all" toggles, keyed by chip id ('learner' | 'role:<id>'). */
   private allFlags = signal<Set<string>>(new Set());
 
   composeForm = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(this.TITLE_MAX)]],
     message: ['', [Validators.required]],
   });
+  get titleCtrl() { return this.composeForm.controls.title; }
+  get messageCtrl() { return this.composeForm.controls.message; }
 
-  get titleCtrl() {
-    return this.composeForm.controls.title;
-  }
-  get messageCtrl() {
-    return this.composeForm.controls.message;
-  }
-
-  /* ── Compose: derived data ─────────────────────────────────────────── */
-
-  /** Flattened, de-duplicated selectable entries built from the catalog. */
+  /** Flattened, de-duplicated selectable entries from the catalog. */
   private entries = computed<ComposeEntry[]>(() => {
     const learners: ComposeEntry[] = [];
     const adminById = new Map<number, ComposeEntry>();
-
     for (const g of this.catalog()) {
       if (g.type === 'learner') {
         for (const m of g.members) {
-          learners.push({
-            uid: `learner:${m.id}`,
-            id: m.id,
-            name: m.name,
-            type: 'learner',
-            roleIds: [],
-          });
+          learners.push({ uid: `learner:${m.id}`, id: m.id, name: m.name, type: 'learner', roleIds: [] });
         }
       } else if (g.role_id != null) {
         for (const m of g.members) {
@@ -194,33 +130,22 @@ export class MessagesListComponent implements OnInit {
           if (existing) {
             if (!existing.roleIds.includes(g.role_id)) existing.roleIds.push(g.role_id);
           } else {
-            adminById.set(m.id, {
-              uid: `admin:${m.id}`,
-              id: m.id,
-              name: m.name,
-              type: 'admin',
-              roleIds: [g.role_id],
-            });
+            adminById.set(m.id, { uid: `admin:${m.id}`, id: m.id, name: m.name, type: 'admin', roleIds: [g.role_id] });
           }
         }
       }
     }
-
     return [...learners, ...adminById.values()];
   });
 
-  /** Chips: All + Learners + one per role group (Figma order). */
   chips = computed(() => {
-    const out: { id: string; label: string }[] = [
-      { id: 'all', label: this.t.instant('common.all') },
-    ];
+    const out: { id: string; label: string }[] = [{ id: 'all', label: this.t.instant('common.all') }];
     for (const g of this.catalog()) {
       out.push({ id: g.type === 'learner' ? 'learner' : `role:${g.role_id}`, label: g.label });
     }
     return out;
   });
 
-  /** Entries visible under the active chip, filtered by the search term. */
   visibleEntries = computed<ComposeEntry[]>(() => {
     const chip = this.activeChip();
     const term = this.recipientSearch().trim().toLowerCase();
@@ -234,14 +159,11 @@ export class MessagesListComponent implements OnInit {
     });
   });
 
-  /** Label for the "select all" row of the active chip. */
   activeGroupLabel = computed(() => {
     const chip = this.activeChip();
     if (chip === 'all') return this.t.instant('common.all');
-    const c = this.chips().find((x) => x.id === chip);
-    return c?.label ?? '';
+    return this.chips().find((x) => x.id === chip)?.label ?? '';
   });
-
   selectedCount = computed(() => this.selected().size);
 
   ngOnInit(): void {
@@ -252,20 +174,13 @@ export class MessagesListComponent implements OnInit {
   /* ── Data ──────────────────────────────────────────────────────────── */
   load(): void {
     this.loading.set(true);
-    this.api
-      .getPaginated<MessageItem>(API.MESSAGES, {
-        page: this.page,
-        per_page: this.perPage,
-        tab: this.activeTab(),
-      })
-      .subscribe({
-        next: (res) => {
-          this.items.set(res.result.data);
-          this.total.set(res.result.total);
-          this.loading.set(false);
-        },
-        error: () => this.loading.set(false),
-      });
+    this.api.get<Conversation[]>(API.CONVERSATIONS, { tab: this.activeTab() }).subscribe({
+      next: (res) => {
+        this.items.set(Array.isArray(res.result) ? res.result : []);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
   loadRecipients(): void {
@@ -274,59 +189,45 @@ export class MessagesListComponent implements OnInit {
     });
   }
 
-  /* ── Tabs ──────────────────────────────────────────────────────────── */
   setTab(t: string): void {
-    this.page = 1;
     this.activeTab.set(t as InboxTab);
     this.load();
   }
 
-  isSentTab = computed(() => this.activeTab() === 'sent');
-
-  /* ── Open / read ───────────────────────────────────────────────────── */
-  openMessage(m: MessageItem): void {
-    this.detailIsSent.set(this.activeTab() === 'sent');
-    this.selectedMessage.set(m);
-    this.showDetail.set(true);
-    this.refreshDetail(m.id);
-
-    // Mark received messages read for the current admin on open.
-    if (this.activeTab() !== 'sent' && m.is_read === false) {
-      this.api.patch(API.messageRead(m.id)).subscribe({
-        next: () => {
-          this.items.update((list) =>
-            list.map((x) => (x.id === m.id ? { ...x, is_read: true } : x)),
-          );
-        },
-      });
-    }
-  }
-
-  refreshDetail(id: number): void {
-    this.loadingDetail.set(true);
-    this.api.get<MessageItem>(`${API.MESSAGES}/${id}`).subscribe({
+  /* ── Open thread / reply ───────────────────────────────────────────── */
+  openConversation(c: Conversation): void {
+    this.thread.set(null);
+    this.draftReply.set('');
+    this.showThread.set(true);
+    this.loadingThread.set(true);
+    this.api.get<ConversationThread>(API.conversationThread(c.id)).subscribe({
       next: (res) => {
-        if (res.result) this.selectedMessage.set(res.result);
-        this.loadingDetail.set(false);
+        this.thread.set(res.result ?? null);
+        this.loadingThread.set(false);
+        this.load();
       },
-      error: () => this.loadingDetail.set(false),
+      error: () => this.loadingThread.set(false),
     });
   }
 
-  closeDetail(): void {
-    this.showDetail.set(false);
-    this.selectedMessage.set(null);
+  sendReply(): void {
+    const t = this.thread();
+    const body = this.draftReply().trim();
+    if (!t || !body || this.replying()) return;
+    this.replying.set(true);
+    this.api.post<ConversationThread>(API.conversationReply(t.conversation.id), { body }).subscribe({
+      next: (res) => {
+        this.replying.set(false);
+        if (res.result) this.thread.set(res.result);
+        this.draftReply.set('');
+      },
+      error: () => this.replying.set(false),
+    });
   }
 
-  /* detail-popup helpers */
-  allGroups(m: MessageItem): RecipientGroupTag[] {
-    return (m.recipient_groups ?? []).filter((g) => g.all);
-  }
-  hasExplicitRecipients(m: MessageItem): boolean {
-    return (m.recipient_groups ?? []).some((g) => !g.all);
-  }
-  recipientNames(m: MessageItem): string {
-    return (m.recipients ?? []).map((r) => r.name).join('، ');
+  closeThread(): void {
+    this.showThread.set(false);
+    this.thread.set(null);
   }
 
   /* ── Compose ───────────────────────────────────────────────────────── */
@@ -339,30 +240,21 @@ export class MessagesListComponent implements OnInit {
     this.showCompose.set(true);
   }
 
-  /* selection helpers */
-  isSelected(uid: string): boolean {
-    return this.selected().has(uid);
-  }
+  isSelected(uid: string): boolean { return this.selected().has(uid); }
 
   toggleEntry(entry: ComposeEntry, checked: boolean): void {
     const next = new Set(this.selected());
     if (checked) next.add(entry.uid);
     else {
       next.delete(entry.uid);
-      // unchecking a member drops any "all" flag for groups it belongs to
-      this.clearAllFlagsFor(entry);
+      const flags = new Set(this.allFlags());
+      if (entry.type === 'learner') flags.delete('learner');
+      else for (const r of entry.roleIds) flags.delete(`role:${r}`);
+      this.allFlags.set(flags);
     }
     this.selected.set(next);
   }
 
-  private clearAllFlagsFor(entry: ComposeEntry): void {
-    const flags = new Set(this.allFlags());
-    if (entry.type === 'learner') flags.delete('learner');
-    else for (const r of entry.roleIds) flags.delete(`role:${r}`);
-    this.allFlags.set(flags);
-  }
-
-  /** Whether the active chip's "select all" is on. */
   isGroupAllChecked(): boolean {
     const chip = this.activeChip();
     if (chip === 'all') {
@@ -376,7 +268,6 @@ export class MessagesListComponent implements OnInit {
     const chip = this.activeChip();
     const next = new Set(this.selected());
     const flags = new Set(this.allFlags());
-
     const targets =
       chip === 'all'
         ? this.entries()
@@ -385,84 +276,61 @@ export class MessagesListComponent implements OnInit {
               ? e.type === 'learner'
               : e.type === 'admin' && e.roleIds.includes(Number(chip.slice(5))),
           );
-
     for (const e of targets) {
       if (checked) next.add(e.uid);
       else next.delete(e.uid);
     }
-
     if (chip === 'all') {
-      // toggle every group's "all" flag
       flags.clear();
       if (checked) {
         flags.add('learner');
-        for (const g of this.catalog())
-          if (g.type === 'role') flags.add(`role:${g.role_id}`);
+        for (const g of this.catalog()) if (g.type === 'role') flags.add(`role:${g.role_id}`);
       }
     } else if (checked) {
       flags.add(chip);
     } else {
       flags.delete(chip);
     }
-
     this.selected.set(next);
     this.allFlags.set(flags);
   }
 
-  /** Build the `groups` payload from the current selection. */
-  private buildGroups(): Array<{
-    type: 'learner' | 'role';
-    role_id?: number;
-    all: boolean;
-    ids?: number[];
-  }> {
-    const groups: Array<{ type: 'learner' | 'role'; role_id?: number; all: boolean; ids?: number[] }> = [];
+  /** Resolve the current selection to a flat recipient list (fan-out). */
+  private buildRecipients(): Array<{ type: 'learner' | 'admin'; id: number }> {
     const flags = this.allFlags();
     const selected = this.selected();
-
+    const out = new Map<string, { type: 'learner' | 'admin'; id: number }>();
     for (const g of this.catalog()) {
       if (g.type === 'learner') {
-        if (flags.has('learner')) {
-          groups.push({ type: 'learner', all: true });
-        } else {
-          const ids = g.members.filter((m) => selected.has(`learner:${m.id}`)).map((m) => m.id);
-          if (ids.length) groups.push({ type: 'learner', all: false, ids });
-        }
+        const ids = flags.has('learner')
+          ? g.members.map((m) => m.id)
+          : g.members.filter((m) => selected.has(`learner:${m.id}`)).map((m) => m.id);
+        for (const id of ids) out.set(`learner:${id}`, { type: 'learner', id });
       } else if (g.role_id != null) {
         const chipId = `role:${g.role_id}`;
-        if (flags.has(chipId)) {
-          groups.push({ type: 'role', role_id: g.role_id, all: true });
-        } else {
-          const ids = g.members.filter((m) => selected.has(`admin:${m.id}`)).map((m) => m.id);
-          if (ids.length) groups.push({ type: 'role', role_id: g.role_id, all: false, ids });
-        }
+        const ids = flags.has(chipId)
+          ? g.members.map((m) => m.id)
+          : g.members.filter((m) => selected.has(`admin:${m.id}`)).map((m) => m.id);
+        for (const id of ids) out.set(`admin:${id}`, { type: 'admin', id });
       }
     }
-    return groups;
+    return [...out.values()];
   }
 
   send(): void {
     this.composeForm.markAllAsTouched();
-    const groups = this.buildGroups();
-    if (this.composeForm.invalid || groups.length === 0) return;
+    const recipients = this.buildRecipients();
+    if (this.composeForm.invalid || recipients.length === 0) return;
 
     this.saving.set(true);
     const v = this.composeForm.getRawValue();
     this.api
-      .post(API.MESSAGES, {
-        subject: v.title!,
-        body: v.message!,
-        groups,
-      })
+      .post(API.CONVERSATIONS_BULK, { subject: v.title!, body: v.message!, recipients })
       .subscribe({
         next: () => {
-          this.toast.add({
-            severity: 'success',
-            detail: this.t.instant('messages_list_toasts.sent'),
-          });
+          this.toast.add({ severity: 'success', detail: this.t.instant('messages_list_toasts.sent') });
           this.showCompose.set(false);
           this.saving.set(false);
-          this.page = 1;
           this.activeTab.set('sent');
           this.load();
         },

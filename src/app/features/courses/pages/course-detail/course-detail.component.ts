@@ -1,10 +1,19 @@
 import {
-  ChangeDetectionStrategy, Component, OnInit,
-  computed, inject, signal,
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+} from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
@@ -36,21 +45,39 @@ import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { API } from '../../../../core/constants/api.constants';
 import type {
-  CourseDetail, Cohort, CohortPayload, CohortStatus,
-  CourseLearner, CourseReview,
-  CourseModule, ModuleContentType, ModuleLearnerScope, ModulePayload,
-  ModuleUploadResult, CourseType,
+  CourseDetail,
+  Cohort,
+  CohortPayload,
+  CohortStatus,
+  CourseLearner,
+  CourseReview,
+  CourseModule,
+  ModuleContentType,
+  ModuleLearnerScope,
+  ModulePayload,
+  ModuleUploadResult,
+  CourseType,
 } from '../../../../core/models/course.types';
 import {
-  mapApiCourseDetail, mapEnrollmentToLearner, mapApiCohort,
-  type ApiCourseRaw, type ApiEnrollmentRaw, type ApiCohortRaw,
+  mapApiCourseDetail,
+  mapEnrollmentToLearner,
+  mapApiCohort,
+  type ApiCourseRaw,
+  type ApiEnrollmentRaw,
+  type ApiCohortRaw,
 } from '../../../../core/utils/course-mapper';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pickLocalized } from '../../../../core/utils/localized';
 
 export type { CourseDetail, Cohort, CourseLearner, CourseReview };
 
-type DetailTab = 'overview' | 'cohort' | 'learners' | 'content' | 'qualifications' | 'ratings';
+type DetailTab =
+  | 'overview'
+  | 'cohort'
+  | 'learners'
+  | 'content'
+  | 'qualifications'
+  | 'ratings';
 
 /** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
 type ModuleFilter = 'all' | ModuleContentType;
@@ -59,12 +86,28 @@ type ModuleFilter = 'all' | ModuleContentType;
   selector: 'app-course-detail',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, FormsModule, ReactiveFormsModule, TranslateModule,
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
     DatePipe,
-    DialogModule, DropdownModule, InputNumberModule, CheckboxModule, SkeletonModule,
-    OverlayPanelModule, ConfirmDialogModule,
-    NasStatCardComponent, NasTabsComponent, NasStatusBadgeComponent, NasProgressComponent, NasAvatarComponent,
-    NasPhotoUploadComponent, NasLocaleInputComponent, NasDatepickerComponent, CohortAttendanceDrawerComponent,
+    DialogModule,
+    DropdownModule,
+    InputNumberModule,
+    CheckboxModule,
+    SkeletonModule,
+    OverlayPanelModule,
+    ConfirmDialogModule,
+    NasStatCardComponent,
+    NasTabsComponent,
+    NasStatusBadgeComponent,
+    NasProgressComponent,
+    NasAvatarComponent,
+    NasPhotoUploadComponent,
+    NasLocaleInputComponent,
+    NasDatepickerComponent,
+    CohortAttendanceDrawerComponent,
     NasRichTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,17 +116,17 @@ type ModuleFilter = 'all' | ModuleContentType;
 })
 export class CourseDetailComponent implements OnInit {
   private readonly coursesApi = inject(CoursesApiService);
-  private readonly api        = inject(ApiService);
-  private readonly enums      = inject(EnumsService);
-  private readonly fb         = inject(FormBuilder);
-  private readonly route      = inject(ActivatedRoute);
-  private readonly toast      = inject(MessageService);
-  private readonly t          = inject(TranslateService);
-  private readonly confirm    = inject(ConfirmationService);
+  private readonly api = inject(ApiService);
+  private readonly enums = inject(EnumsService);
+  private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(MessageService);
+  private readonly t = inject(TranslateService);
+  private readonly confirm = inject(ConfirmationService);
 
   constructor() {
     withLocaleReload(() => {
-      this.langTick.update(v => v + 1);
+      this.langTick.update((v) => v + 1);
       const id = this.courseId();
       if (id) this.load(id);
     });
@@ -93,15 +136,15 @@ export class CourseDetailComponent implements OnInit {
    *  `TranslateService.instant()` (which is not signal-tracked) re-evaluate. */
   langTick = signal(0);
 
-  loading      = signal(true);
-  course       = signal<CourseDetail | null>(null);
-  courseId     = signal<number | null>(null);
-  activeTab    = signal<DetailTab>('overview');
+  loading = signal(true);
+  course = signal<CourseDetail | null>(null);
+  courseId = signal<number | null>(null);
+  activeTab = signal<DetailTab>('overview');
   activeCohort = signal<Cohort | null>(null);
 
-  showCohort     = signal(false);
+  showCohort = signal(false);
   cohortEditMode = signal(false);
-  saving         = signal(false);
+  saving = signal(false);
 
   /* ── Cohort Attendance drawer state ─────────────────────────────────── */
   /**
@@ -110,21 +153,21 @@ export class CourseDetailComponent implements OnInit {
    * we store both ids + the optimistic name so the drawer header shows
    * something useful while the API request is in flight.
    */
-  showAttendance        = signal(false);
-  attendanceCohortId    = signal<number | null>(null);
-  attendanceCohortName  = signal<string>('');
+  showAttendance = signal(false);
+  attendanceCohortId = signal<number | null>(null);
+  attendanceCohortName = signal<string>('');
 
   /* ── Edit Course dialog state ─────────────────────────────────────── */
-  showEdit          = signal(false);
-  editSaving        = signal(false);
-  categoryOpts      = signal<Array<{ id: number; name: string }>>([]);
-  instructorOpts    = signal<Array<{ id: number; name: string }>>([]);
+  showEdit = signal(false);
+  editSaving = signal(false);
+  categoryOpts = signal<Array<{ id: number; name: string }>>([]);
+  instructorOpts = signal<Array<{ id: number; name: string }>>([]);
   /**
    * Qualifications skill list — mirrors the Add Course dialog so the
    * Edit dialog can offer the same checklist. Populated on first open
    * to keep the page-load request count low.
    */
-  qualOptions       = signal<Array<{ id: number; name: string }>>([]);
+  qualOptions = signal<Array<{ id: number; name: string }>>([]);
   /** Cheap-and-cached: only fetched the first time the Edit dialog opens. */
   private lookupsLoaded = false;
 
@@ -147,20 +190,26 @@ export class CourseDetailComponent implements OnInit {
    * actually behaves.
    */
   editForm = this.fb.group({
-    title:               this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
-    type:                [null as number | null, Validators.required],
-    category_id:         [null as number | null, Validators.required],
-    level:               [null as number | null, Validators.required],
-    instructor_id:       [null as number | null, Validators.required],
-    certificate:         [true,  Validators.required],
-    require_instructor:  [true,  Validators.required],
-    description:         this.fb.control<LocalizedText>({ en: '', ar: '' }, Validators.required),
-    hours:               [1, [Validators.required, Validators.min(1)]],
-    max_learners:        [30, [Validators.required, Validators.min(1)]],
-    cohort_start:        [null as Date | null],
-    cohort_end:          [null as Date | null],
-    qualification_ids:   [[] as number[]],
-    image:               [null as File | null],
+    title: this.fb.control<LocalizedText>(
+      { en: '', ar: '' },
+      Validators.required,
+    ),
+    type: [null as number | null, Validators.required],
+    category_id: [null as number | null, Validators.required],
+    level: [null as number | null, Validators.required],
+    instructor_id: [null as number | null, Validators.required],
+    certificate: [true, Validators.required],
+    require_instructor: [true, Validators.required],
+    description: this.fb.control<LocalizedText>(
+      { en: '', ar: '' },
+      Validators.required,
+    ),
+    hours: [1, [Validators.required, Validators.min(1)]],
+    max_learners: [30, [Validators.required, Validators.min(1)]],
+    cohort_start: [null as Date | null],
+    cohort_end: [null as Date | null],
+    qualification_ids: [[] as number[]],
+    image: [null as File | null],
   });
 
   /**
@@ -171,7 +220,10 @@ export class CourseDetailComponent implements OnInit {
   editPhotoPreview = signal<string | null>(null);
 
   sectionOptions = computed(() =>
-    (this.course()?.sections ?? []).map(s => ({ id: s.id, name: s.name ?? `Section ${s.id}` })),
+    (this.course()?.sections ?? []).map((s) => ({
+      id: s.id,
+      name: s.name ?? `Section ${s.id}`,
+    })),
   );
 
   ratingDistributionRows = computed(() => {
@@ -185,7 +237,7 @@ export class CourseDetailComponent implements OnInit {
     // Read `langTick` so this computed re-evaluates after a locale switch
     // (the underlying ngx-translate calls are not signal-tracked).
     this.langTick();
-    const rating  = this.t.instant('course_detail.rating');
+    const rating = this.t.instant('course_detail.rating');
     const reviews = this.t.instant('course_detail.reviews');
     return `${rating} (${c?.rating_count ?? 0} ${reviews})`;
   });
@@ -214,14 +266,14 @@ export class CourseDetailComponent implements OnInit {
   deliveryLabel = computed(() => {
     const code = this.course()?.type;
     if (!code) return '—';
-    return this.courseTypeOpts().find(o => o.code === code)?.value ?? '—';
+    return this.courseTypeOpts().find((o) => o.code === code)?.value ?? '—';
   });
 
   /** Localized level label — looked up from the `course_level` enum. */
   levelLabel = computed(() => {
     const code = this.course()?.level;
     if (!code) return '—';
-    return this.courseLevelOpts().find(o => o.code === code)?.value ?? '—';
+    return this.courseLevelOpts().find((o) => o.code === code)?.value ?? '—';
   });
 
   tabs = computed<NasTab[]>(() => {
@@ -230,12 +282,28 @@ export class CourseDetailComponent implements OnInit {
     // refresh; `t.instant` itself is not signal-tracked.
     this.langTick();
     return [
-      { id: 'overview',       label: this.t.instant('course_detail.tab_overview') },
-      { id: 'cohort',         label: this.t.instant('course_detail.tab_cohort'),         count: c?.cohorts?.length ?? c?.cohorts_count ?? 0 },
-      { id: 'learners',       label: this.t.instant('course_detail.tab_learners'),       count: c?.learners?.length ?? c?.enrolled_count ?? 0 },
-      { id: 'content',        label: this.t.instant('course_detail.tab_content') },
-      { id: 'qualifications', label: this.t.instant('course_detail.tab_qualifications'), count: c?.qualifications?.length ?? 0 },
-      { id: 'ratings',        label: this.t.instant('course_detail.tab_ratings'),        count: c?.rating_count ?? 0 },
+      { id: 'overview', label: this.t.instant('course_detail.tab_overview') },
+      {
+        id: 'cohort',
+        label: this.t.instant('course_detail.tab_cohort'),
+        count: c?.cohorts?.length ?? c?.cohorts_count ?? 0,
+      },
+      {
+        id: 'learners',
+        label: this.t.instant('course_detail.tab_learners'),
+        count: c?.learners?.length ?? c?.enrolled_count ?? 0,
+      },
+      { id: 'content', label: this.t.instant('course_detail.tab_content') },
+      {
+        id: 'qualifications',
+        label: this.t.instant('course_detail.tab_qualifications'),
+        count: c?.qualifications?.length ?? 0,
+      },
+      {
+        id: 'ratings',
+        label: this.t.instant('course_detail.tab_ratings'),
+        count: c?.rating_count ?? 0,
+      },
     ];
   });
 
@@ -246,19 +314,28 @@ export class CourseDetailComponent implements OnInit {
    * actually scheduled.
    */
   cohortForm = this.fb.group({
-    name_en:    ['', [Validators.required, Validators.maxLength(255)]],
-    name_ar:    ['', [Validators.required, Validators.maxLength(255)]],
-    capacity:   [null as number | null, [Validators.min(1), Validators.max(10000)]],
-    status:     [null as number | null],
+    name_en: ['', [Validators.required, Validators.maxLength(255)]],
+    name_ar: ['', [Validators.required, Validators.maxLength(255)]],
+    capacity: [
+      null as number | null,
+      [Validators.min(1), Validators.max(10000)],
+    ],
+    status: [null as number | null],
     // Planned session count (Figma 332:10708). Defaults from the course,
     // editable per cohort; once this many sessions are held the cohort
     // completes (and raising it re-opens an already-completed cohort).
-    number_of_sessions: [null as number | null, [Validators.required, Validators.min(1), Validators.max(1000)]],
+    number_of_sessions: [
+      null as number | null,
+      [Validators.required, Validators.min(1), Validators.max(1000)],
+    ],
     start_date: [null as Date | null, Validators.required],
-    end_date:   [null as Date | null, Validators.required],
+    end_date: [null as Date | null, Validators.required],
     // Average session length in hours (Figma 332:9988). Drives the live
     // attendance-window length for this cohort's sessions.
-    avg_session_time: [null as number | null, [Validators.min(0.25), Validators.max(24)]],
+    avg_session_time: [
+      null as number | null,
+      [Validators.min(0.25), Validators.max(24)],
+    ],
   });
 
   /** Cohort-status dropdown — driven by the backend `cohort_status` enum. */
@@ -271,31 +348,37 @@ export class CourseDetailComponent implements OnInit {
    * none of those appear in the dialog dropdown.
    */
   cohortStatusDropdownOpts = computed(() =>
-    this.cohortStatusOpts().filter(o => o.code === 'scheduled' || o.code === 'open_for_enrollment'),
+    this.cohortStatusOpts().filter(
+      (o) => o.code === 'scheduled' || o.code === 'open_for_enrollment',
+    ),
   );
 
   /* ── Content tab — modules state ──────────────────────────────────── */
-  modules            = signal<CourseModule[]>([]);
-  modulesLoading     = signal(false);
+  modules = signal<CourseModule[]>([]);
+  modulesLoading = signal(false);
   /** Active filter chips. Mutating this signal recomputes `filteredModules()`. */
-  moduleFilters      = signal<Set<ModuleFilter>>(new Set<ModuleFilter>(['all']));
-  showModule         = signal(false);
-  moduleEditMode     = signal(false);
-  moduleSaving       = signal(false);
-  activeModule       = signal<CourseModule | null>(null);
+  moduleFilters = signal<Set<ModuleFilter>>(new Set<ModuleFilter>(['all']));
+  showModule = signal(false);
+  moduleEditMode = signal(false);
+  moduleSaving = signal(false);
+  activeModule = signal<CourseModule | null>(null);
 
   /** True while a video/document upload is in flight for the module form. */
-  moduleUploading    = signal(false);
+  moduleUploading = signal(false);
   /** Name of the file currently being uploaded (shown in the progress card). */
   moduleUploadingName = signal<string | null>(null);
   /** Most recent successful upload (fresh file picked in the dialog). */
-  moduleUpload       = signal<ModuleUploadResult | null>(null);
+  moduleUpload = signal<ModuleUploadResult | null>(null);
   /**
    * View model for the attached-file chip — drives the "File Title.mp4 · 313 MB"
    * row. Populated from a fresh upload or, on edit, from the persisted
    * `file_name`/`file_url`. `null` renders the upload dropzone instead.
    */
-  moduleFileInfo     = signal<{ name: string; size: number | null; url: string | null } | null>(null);
+  moduleFileInfo = signal<{
+    name: string;
+    size: number | null;
+    url: string | null;
+  } | null>(null);
 
   /** Module content-type dropdown — backend `module_content_type` enum. */
   moduleContentTypeOpts = this.enums.options('module_content_type');
@@ -305,21 +388,35 @@ export class CourseDetailComponent implements OnInit {
 
   /** Cohort dropdown options for the Specific-Cohort scope. */
   cohortDropdownOpts = computed(() =>
-    (this.course()?.cohorts ?? []).map(c => ({ id: c.id, name: c.name || `Cohort ${c.id}` })),
+    (this.course()?.cohorts ?? []).map((c) => ({
+      id: c.id,
+      name: c.name || `Cohort ${c.id}`,
+    })),
   );
 
+  /** "Related to session number" options — 1..N from the course's planned sessions. */
+  sessionNumberOptions = computed<number[]>(() => {
+    const n = this.course()?.number_of_sessions ?? 0;
+    const count = n && n > 0 ? n : 12;
+    return Array.from({ length: count }, (_, i) => i + 1);
+  });
+
   moduleForm = this.fb.group({
-    title_en:           ['', Validators.required],
-    title_ar:           ['', Validators.required],
-    content_type:       [null as number | null, Validators.required],
-    learner_scope:      [null as number | null, Validators.required],
-    session_id:         [null as number | null],
-    duration_minutes:   [30 as number | null, [Validators.required, Validators.min(0)]],
-    video:              [''],
+    title_en: ['', Validators.required],
+    title_ar: ['', Validators.required],
+    session_number: [null as number | null, Validators.required],
+    content_type: [null as number | null, Validators.required],
+    learner_scope: [null as number | null, Validators.required],
+    session_id: [null as number | null],
+    duration_minutes: [
+      30 as number | null,
+      [Validators.required, Validators.min(0)],
+    ],
+    video: [''],
     // Rich-text HTML body — used only by the "article" content type.
-    content:            [''],
-    instructions_en:    [''],
-    instructions_ar:    [''],
+    content: [''],
+    instructions_en: [''],
+    instructions_ar: [''],
     require_completion: [false],
   });
 
@@ -329,15 +426,25 @@ export class CourseDetailComponent implements OnInit {
    * 'cohort'?"). Returns null when the enum hasn't loaded yet so callers
    * can default safely.
    */
-  enumCode(name: Parameters<EnumsService['codeForId']>[0], id: number | null | undefined): string | null {
+  enumCode(
+    name: Parameters<EnumsService['codeForId']>[0],
+    id: number | null | undefined,
+  ): string | null {
     if (id === null || id === undefined) return null;
     return this.enums.codeForId(name, id);
   }
 
   /** Convenience method — find an option's localized `value` from its `code`. */
-  enumValueFromCode(name: Parameters<EnumsService['options']>[0], code: string | null | undefined): string {
+  enumValueFromCode(
+    name: Parameters<EnumsService['options']>[0],
+    code: string | null | undefined,
+  ): string {
     if (!code) return '';
-    return this.enums.options(name)().find(o => o.code === code)?.value ?? code;
+    return (
+      this.enums
+        .options(name)()
+        .find((o) => o.code === code)?.value ?? code
+    );
   }
 
   /** Filtered list — driven by the chip selection. */
@@ -345,13 +452,16 @@ export class CourseDetailComponent implements OnInit {
     const filters = this.moduleFilters();
     const list = this.modules();
     if (filters.has('all') || filters.size === 0) return list;
-    return list.filter(m => filters.has(m.content_type));
+    return list.filter((m) => filters.has(m.content_type));
   });
 
   /** "12 modules · 310 min estimated learner time" header text. */
   modulesHeader = computed(() => {
     const list = this.modules();
-    const totalMin = list.reduce((sum, m) => sum + (m.duration_minutes ?? 0), 0);
+    const totalMin = list.reduce(
+      (sum, m) => sum + (m.duration_minutes ?? 0),
+      0,
+    );
     const count = list.length;
     const noun = count === 1 ? 'module' : 'modules';
     return totalMin > 0
@@ -360,7 +470,7 @@ export class CourseDetailComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
       if (id) {
         this.courseId.set(id);
@@ -384,25 +494,34 @@ export class CourseDetailComponent implements OnInit {
   private preloadEditLookups(): void {
     if (this.lookupsLoaded) return;
     this.lookupsLoaded = true;
-    this.api.get<Array<{ id: number; name: string }>>(API.CATEGORIES_ACTIVE).subscribe({
-      next: r => this.categoryOpts.set(Array.isArray(r.result) ? r.result : []),
-    });
-    this.api.get<Array<{ id: number; name: string }>>(API.INSTRUCTORS_ALL).subscribe({
-      next: r => this.instructorOpts.set(Array.isArray(r.result) ? r.result : []),
-    });
-    this.api.get<Array<{ id: number; name: string }>>(API.QUALIFICATIONS_ACTIVE).subscribe({
-      next: r => this.qualOptions.set(Array.isArray(r.result) ? r.result : []),
-    });
+    this.api
+      .get<Array<{ id: number; name: string }>>(API.CATEGORIES_ACTIVE)
+      .subscribe({
+        next: (r) =>
+          this.categoryOpts.set(Array.isArray(r.result) ? r.result : []),
+      });
+    this.api
+      .get<Array<{ id: number; name: string }>>(API.INSTRUCTORS_ALL)
+      .subscribe({
+        next: (r) =>
+          this.instructorOpts.set(Array.isArray(r.result) ? r.result : []),
+      });
+    this.api
+      .get<Array<{ id: number; name: string }>>(API.QUALIFICATIONS_ACTIVE)
+      .subscribe({
+        next: (r) =>
+          this.qualOptions.set(Array.isArray(r.result) ? r.result : []),
+      });
   }
 
   load(id: number): void {
     this.loading.set(true);
     forkJoin({
-      course:      this.coursesApi.getById(id),
+      course: this.coursesApi.getById(id),
       // Cohorts now live on `course_sections` directly. Pulling them in
       // the same `forkJoin` as the course + enrollments means the detail
       // page is a single round-trip on load.
-      cohorts:     this.coursesApi.listCohorts(id),
+      cohorts: this.coursesApi.listCohorts(id),
       // Pull every enrollment (online + offline) in a single shot. The
       // endpoint paginates, but for the detail page we want the full list
       // so we ask for a generous per_page. Failures don't block the page.
@@ -414,12 +533,13 @@ export class CourseDetailComponent implements OnInit {
         const cohortRows = Array.isArray(cohorts.result)
           ? (cohorts.result as ApiCohortRaw[]).map(mapApiCohort)
           : [];
-        const rawLearners = (enrollments.result?.data ?? []) as ApiEnrollmentRaw[];
+        const rawLearners = (enrollments.result?.data ??
+          []) as ApiEnrollmentRaw[];
         const learners = rawLearners.map(mapEnrollmentToLearner);
         this.course.set({
           ...mapped,
-          cohorts:        cohortRows,
-          cohorts_count:  cohortRows.length || mapped.cohorts_count || 0,
+          cohorts: cohortRows,
+          cohorts_count: cohortRows.length || mapped.cohorts_count || 0,
           learners,
           // Prefer the actual list length when the server returned rows,
           // otherwise fall back to the scalar count from the detail resource.
@@ -444,7 +564,7 @@ export class CourseDetailComponent implements OnInit {
   loadModules(courseId: number): void {
     this.modulesLoading.set(true);
     this.coursesApi.listModules(courseId).subscribe({
-      next: res => {
+      next: (res) => {
         this.modules.set(Array.isArray(res.result) ? res.result : []);
         this.modulesLoading.set(false);
       },
@@ -493,10 +613,14 @@ export class CourseDetailComponent implements OnInit {
   /** Tone for the content-type chip on the row. */
   moduleChipTone(t: ModuleContentType): 'teal' | 'success' | 'sky' | 'neutral' {
     switch (t) {
-      case 'video':    return 'teal';
-      case 'article':  return 'success';
-      case 'link':     return 'sky';
-      case 'document': return 'neutral';
+      case 'video':
+        return 'teal';
+      case 'article':
+        return 'success';
+      case 'link':
+        return 'sky';
+      case 'document':
+        return 'neutral';
     }
   }
 
@@ -510,11 +634,17 @@ export class CourseDetailComponent implements OnInit {
     // the codes into enum ids the dropdowns are bound to. Returns null
     // if the enum hasn't loaded yet; the user can still pick.
     this.moduleForm.reset({
-      title_en: '', title_ar: '',
-      content_type:  this.enums.idForCode('module_content_type', 'video'),
+      title_en: '',
+      title_ar: '',
+      session_number: null,
+      content_type: this.enums.idForCode('module_content_type', 'video'),
       learner_scope: this.enums.idForCode('module_learner_scope', 'all'),
-      session_id: null, duration_minutes: 30, video: '', content: '',
-      instructions_en: '', instructions_ar: '',
+      session_id: null,
+      duration_minutes: 30,
+      video: '',
+      content: '',
+      instructions_en: '',
+      instructions_ar: '',
       require_completion: false,
     });
     this.showModule.set(true);
@@ -534,16 +664,20 @@ export class CourseDetailComponent implements OnInit {
         : null,
     );
     this.moduleForm.reset({
-      title_en:           pickLocalized(m.title, 'en'),
-      title_ar:           pickLocalized(m.title, 'ar'),
-      content_type:       this.enums.idForCode('module_content_type',  m.content_type),
-      learner_scope:      this.enums.idForCode('module_learner_scope', m.learner_scope),
-      session_id:         m.session_id ?? null,
-      duration_minutes:   m.duration_minutes ?? 30,
-      video:              m.video ?? '',
-      content:            m.content ?? '',
-      instructions_en:    pickLocalized(m.instructions, 'en'),
-      instructions_ar:    pickLocalized(m.instructions, 'ar'),
+      title_en: pickLocalized(m.title, 'en'),
+      title_ar: pickLocalized(m.title, 'ar'),
+      session_number: m.session_number ?? null,
+      content_type: this.enums.idForCode('module_content_type', m.content_type),
+      learner_scope: this.enums.idForCode(
+        'module_learner_scope',
+        m.learner_scope,
+      ),
+      session_id: m.session_id ?? null,
+      duration_minutes: m.duration_minutes ?? 30,
+      video: m.video ?? '',
+      content: m.content ?? '',
+      instructions_en: pickLocalized(m.instructions, 'en'),
+      instructions_ar: pickLocalized(m.instructions, 'ar'),
       require_completion: m.require_completion,
     });
     this.showModule.set(true);
@@ -553,20 +687,38 @@ export class CourseDetailComponent implements OnInit {
 
   /** `true` when the chosen content type stores an uploaded file (video/document). */
   moduleIsFileType(): boolean {
-    const code = this.enumCode('module_content_type', this.moduleForm.value.content_type);
+    const code = this.enumCode(
+      'module_content_type',
+      this.moduleForm.value.content_type,
+    );
     return code === 'video' || code === 'document';
   }
 
   moduleIsVideo(): boolean {
-    return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'video';
+    return (
+      this.enumCode(
+        'module_content_type',
+        this.moduleForm.value.content_type,
+      ) === 'video'
+    );
   }
 
   moduleIsLink(): boolean {
-    return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'link';
+    return (
+      this.enumCode(
+        'module_content_type',
+        this.moduleForm.value.content_type,
+      ) === 'link'
+    );
   }
 
   moduleIsArticle(): boolean {
-    return this.enumCode('module_content_type', this.moduleForm.value.content_type) === 'article';
+    return (
+      this.enumCode(
+        'module_content_type',
+        this.moduleForm.value.content_type,
+      ) === 'article'
+    );
   }
 
   /** Switching content type clears any previously attached file / URL / body. */
@@ -591,7 +743,7 @@ export class CourseDetailComponent implements OnInit {
     this.moduleUploadingName.set(file.name);
     this.moduleUploading.set(true);
     this.coursesApi.uploadModuleFile(id, file).subscribe({
-      next: res => {
+      next: (res) => {
         const r = res.result;
         if (r) {
           this.moduleUpload.set(r);
@@ -646,7 +798,10 @@ export class CourseDetailComponent implements OnInit {
 
   submitModule(): void {
     if (this.moduleUploading()) return;
-    if (this.moduleForm.invalid) { this.moduleForm.markAllAsTouched(); return; }
+    if (this.moduleForm.invalid) {
+      this.moduleForm.markAllAsTouched();
+      return;
+    }
     const id = this.courseId();
     if (!id) return;
 
@@ -654,22 +809,33 @@ export class CourseDetailComponent implements OnInit {
     // Translate the numeric enum ids back to their string codes — both
     // because the backend storage column is a varchar and because the
     // type-payload (`type: 'file' | 'url'`) is derived from the code.
-    const contentTypeCode = this.enums.codeForId('module_content_type',  v.content_type ?? null) as ModuleContentType | null;
-    const learnerScopeCode = this.enums.codeForId('module_learner_scope', v.learner_scope ?? null) as ModuleLearnerScope | null;
+    const contentTypeCode = this.enums.codeForId(
+      'module_content_type',
+      v.content_type ?? null,
+    ) as ModuleContentType | null;
+    const learnerScopeCode = this.enums.codeForId(
+      'module_learner_scope',
+      v.learner_scope ?? null,
+    ) as ModuleLearnerScope | null;
     if (!contentTypeCode || !learnerScopeCode) return;
 
     // Video/Document store an uploaded file (`video` = storage path, `type` =
     // file); External Link stores a URL in `video`; Article stores rich-text
     // HTML in the dedicated `content` field (`video` stays empty).
-    const isFile    = contentTypeCode === 'video' || contentTypeCode === 'document';
+    const isFile =
+      contentTypeCode === 'video' || contentTypeCode === 'document';
     const isArticle = contentTypeCode === 'article';
-    const videoValue   = (v.video ?? '').trim();
+    const videoValue = (v.video ?? '').trim();
     const contentValue = (v.content ?? '').trim();
 
-    const contentMissing = isArticle ? this.isRichTextEmpty(contentValue) : !videoValue;
+    const contentMissing = isArticle
+      ? this.isRichTextEmpty(contentValue)
+      : !videoValue;
     if (contentMissing) {
       // Flag the field the admin actually edits for this content type.
-      this.moduleForm.controls[isArticle ? 'content' : 'video'].setErrors({ required: true });
+      this.moduleForm.controls[isArticle ? 'content' : 'video'].setErrors({
+        required: true,
+      });
       this.moduleForm.markAllAsTouched();
       return;
     }
@@ -679,17 +845,22 @@ export class CourseDetailComponent implements OnInit {
         en: (v.title_en ?? '').trim(),
         ar: (v.title_ar ?? '').trim(),
       },
-      instructions: (v.instructions_en || v.instructions_ar)
-        ? { en: (v.instructions_en ?? '').trim(), ar: (v.instructions_ar ?? '').trim() }
-        : null,
-      content_type:       contentTypeCode,
-      learner_scope:      learnerScopeCode,
-      session_id:         learnerScopeCode === 'cohort' ? v.session_id ?? null : null,
-      duration_minutes:   v.duration_minutes ?? null,
-      type:               isArticle ? 'article' : isFile ? 'file' : 'url',
-      video:              isArticle ? null : videoValue,
-      content:            isArticle ? contentValue : null,
-      file_name:          isFile
+      instructions:
+        v.instructions_en || v.instructions_ar
+          ? {
+              en: (v.instructions_en ?? '').trim(),
+              ar: (v.instructions_ar ?? '').trim(),
+            }
+          : null,
+      content_type: contentTypeCode,
+      learner_scope: learnerScopeCode,
+      session_number: v.session_number ?? null,
+      session_id: learnerScopeCode === 'cohort' ? (v.session_id ?? null) : null,
+      duration_minutes: v.duration_minutes ?? null,
+      type: isArticle ? 'article' : isFile ? 'file' : 'url',
+      video: isArticle ? null : videoValue,
+      content: isArticle ? contentValue : null,
+      file_name: isFile
         ? (this.moduleUpload()?.name ?? this.activeModule()?.file_name ?? null)
         : null,
       require_completion: !!v.require_completion,
@@ -706,7 +877,9 @@ export class CourseDetailComponent implements OnInit {
         this.toast.add({
           severity: 'success',
           detail: this.t.instant(
-            editing ? 'course_detail_toasts.module_updated' : 'course_detail_toasts.module_added',
+            editing
+              ? 'course_detail_toasts.module_updated'
+              : 'course_detail_toasts.module_added',
           ),
         });
         this.moduleSaving.set(false);
@@ -722,9 +895,11 @@ export class CourseDetailComponent implements OnInit {
     const id = this.courseId();
     if (!id) return;
     this.confirm.confirm({
-      message: this.t.instant('course_detail_toasts.module_delete_message', { name: this.moduleTitle(m) }),
-      header:  this.t.instant('course_detail_toasts.module_delete_title'),
-      icon:    'pi pi-exclamation-triangle',
+      message: this.t.instant('course_detail_toasts.module_delete_message', {
+        name: this.moduleTitle(m),
+      }),
+      header: this.t.instant('course_detail_toasts.module_delete_title'),
+      icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.coursesApi.deleteModule(id, m.id).subscribe({
           next: () => {
@@ -751,7 +926,9 @@ export class CourseDetailComponent implements OnInit {
     const dur = this.moduleDurationLabel(m);
     if (dur) parts.push(dur);
     if (m.learner_scope === 'cohort' && m.session_id) {
-      const cohort = (this.course()?.cohorts ?? []).find(c => c.id === m.session_id);
+      const cohort = (this.course()?.cohorts ?? []).find(
+        (c) => c.id === m.session_id,
+      );
       if (cohort?.name) parts.push(cohort.name);
     }
     return parts.join(' · ');
@@ -779,29 +956,34 @@ export class CourseDetailComponent implements OnInit {
     // Using a single localized string for both fields would show the
     // wrong language in one of the inputs (the bug we are fixing).
     this.editForm.reset({
-      title:              { en: '', ar: '' },
-      description:        { en: '', ar: '' },
-      type:               this.enums.idForCode('course_type', c.type ?? null)
-                           ?? this.enums.idForCode('course_type', 'hybrid')
-                           ?? null,
-      category_id:        c.category?.id ?? null,
-      level:              this.enums.idForCode('course_level', (c.level ?? null) as string | null)
-                           ?? this.enums.idForCode('course_level', 'beginner')
-                           ?? null,
-      instructor_id:      c.instructor?.id ?? c.instructors?.[0]?.id ?? null,
-      certificate:        !!c.certificate,
+      title: { en: '', ar: '' },
+      description: { en: '', ar: '' },
+      type:
+        this.enums.idForCode('course_type', c.type ?? null) ??
+        this.enums.idForCode('course_type', 'hybrid') ??
+        null,
+      category_id: c.category?.id ?? null,
+      level:
+        this.enums.idForCode(
+          'course_level',
+          (c.level ?? null) as string | null,
+        ) ??
+        this.enums.idForCode('course_level', 'beginner') ??
+        null,
+      instructor_id: c.instructor?.id ?? c.instructors?.[0]?.id ?? null,
+      certificate: !!c.certificate,
       // No persisted column for the "review content" gate yet — open in
       // the "yes, instructor reviews" position to match the Add form's
       // default. Hook to a real column when the API adds one.
       require_instructor: true,
-      hours:              1,
-      max_learners:       c.max_learners ?? 30,
-      cohort_start:       null,
-      cohort_end:         null,
-      qualification_ids:  (c.qualification_skills ?? c.qualifications ?? [])
-                            .map(q => q.id)
-                            .filter(id => Number.isFinite(id)),
-      image:              null,
+      hours: 1,
+      max_learners: c.max_learners ?? 30,
+      cohort_start: null,
+      cohort_end: null,
+      qualification_ids: (c.qualification_skills ?? c.qualifications ?? [])
+        .map((q) => q.id)
+        .filter((id) => Number.isFinite(id)),
+      image: null,
     });
     this.editPhotoPreview.set(c.image ?? null);
     this.showEdit.set(true);
@@ -812,11 +994,18 @@ export class CourseDetailComponent implements OnInit {
     // first cohort, matching the Add Course dialog's hint.
     if (c.id) {
       this.coursesApi.getById(c.id).subscribe({
-        next: res => {
+        next: (res) => {
           const r = res.result as unknown as ApiCourseRaw;
           const title = this.toLocalized(r.title);
-          const desc  = this.toLocalized(r.description);
-          const firstSection = (r as { sections?: Array<{ start_date?: string | null; end_date?: string | null }> }).sections?.[0];
+          const desc = this.toLocalized(r.description);
+          const firstSection = (
+            r as {
+              sections?: Array<{
+                start_date?: string | null;
+                end_date?: string | null;
+              }>;
+            }
+          ).sections?.[0];
           const qualIds = Array.isArray(r.qualification_skills)
             ? r.qualification_skills
                 .map((q) => Number((q as { id?: number }).id))
@@ -824,11 +1013,15 @@ export class CourseDetailComponent implements OnInit {
             : (this.editForm.value.qualification_ids ?? []);
 
           this.editForm.patchValue({
-            title:             title,
-            description:       desc,
-            hours:             r.hours ?? this.editForm.value.hours ?? 1,
-            cohort_start:      firstSection?.start_date ? new Date(firstSection.start_date) : null,
-            cohort_end:        firstSection?.end_date   ? new Date(firstSection.end_date)   : null,
+            title: title,
+            description: desc,
+            hours: r.hours ?? this.editForm.value.hours ?? 1,
+            cohort_start: firstSection?.start_date
+              ? new Date(firstSection.start_date)
+              : null,
+            cohort_end: firstSection?.end_date
+              ? new Date(firstSection.end_date)
+              : null,
             qualification_ids: qualIds,
           });
         },
@@ -874,35 +1067,38 @@ export class CourseDetailComponent implements OnInit {
   }
 
   submitEditCourse(): void {
-    if (this.editForm.invalid) { this.editForm.markAllAsTouched(); return; }
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
     const id = this.courseId();
     if (!id || this.editSaving()) return;
 
-    const v       = this.editForm.getRawValue();
-    const title   = (v.title       ?? {}) as LocalizedText;
-    const desc    = (v.description ?? {}) as LocalizedText;
+    const v = this.editForm.getRawValue();
+    const title = (v.title ?? {}) as LocalizedText;
+    const desc = (v.description ?? {}) as LocalizedText;
     const titleEn = (title.en ?? '').trim();
     const titleAr = (title.ar ?? '').trim();
-    const descEn  = (desc.en  ?? '').trim();
-    const descAr  = (desc.ar  ?? '').trim();
+    const descEn = (desc.en ?? '').trim();
+    const descAr = (desc.ar ?? '').trim();
 
     // The dropdown is bound to the numeric enum id; CourseRequest's
     // AcceptsEnumIds trait normalizes it to the string code on the way in.
     const fd = new FormData();
     fd.append('_method', 'PUT');
-    fd.append('title[en]',       titleEn || titleAr);
-    fd.append('title[ar]',       titleAr || titleEn);
-    fd.append('description[en]', descEn  || descAr);
-    fd.append('description[ar]', descAr  || descEn);
-    fd.append('course_type',     String(v.type ?? ''));
-    fd.append('category_id',     String(v.category_id ?? ''));
+    fd.append('title[en]', titleEn || titleAr);
+    fd.append('title[ar]', titleAr || titleEn);
+    fd.append('description[en]', descEn || descAr);
+    fd.append('description[ar]', descAr || descEn);
+    fd.append('course_type', String(v.type ?? ''));
+    fd.append('category_id', String(v.category_id ?? ''));
     if (v.level !== null && v.level !== undefined) {
-      fd.append('level',         String(v.level));
+      fd.append('level', String(v.level));
     }
-    fd.append('instructors[]',   String(v.instructor_id ?? ''));
-    fd.append('hours',           String(v.hours ?? 1));
-    fd.append('max_learners',    String(v.max_learners ?? 30));
-    fd.append('certificate',     v.certificate ? '1' : '0');
+    fd.append('instructors[]', String(v.instructor_id ?? ''));
+    fd.append('hours', String(v.hours ?? 1));
+    fd.append('max_learners', String(v.max_learners ?? 30));
+    fd.append('certificate', v.certificate ? '1' : '0');
     // Cohort calendar — the backend creates / upserts the first
     // CourseSection row from these so editing the course in-place
     // can drive cohort status changes (Figma 332:9988).
@@ -910,7 +1106,7 @@ export class CourseDetailComponent implements OnInit {
       fd.append('cohort_start', this.toIsoDate(v.cohort_start));
     }
     if (v.cohort_end instanceof Date) {
-      fd.append('cohort_end',   this.toIsoDate(v.cohort_end));
+      fd.append('cohort_end', this.toIsoDate(v.cohort_end));
     }
     Array.from(new Set(v.qualification_ids ?? [])).forEach((qid: number) =>
       fd.append('qualification_skill_ids[]', String(qid)),
@@ -940,14 +1136,16 @@ export class CourseDetailComponent implements OnInit {
     this.cohortEditMode.set(false);
     this.activeCohort.set(null);
     this.cohortForm.reset({
-      name_en: '', name_ar: '',
+      name_en: '',
+      name_ar: '',
       capacity: 30,
       // Default to the canonical "Scheduled" choice so the helper hint
       // shows immediately, matching the Figma "New Cohort" dialog.
       status: this.enums.idForCode('cohort_status', 'scheduled'),
       // Inherit the course's planned session count as the editable default.
       number_of_sessions: this.course()?.number_of_sessions ?? null,
-      start_date: null, end_date: null,
+      start_date: null,
+      end_date: null,
       avg_session_time: null,
     });
     this.showCohort.set(true);
@@ -961,27 +1159,33 @@ export class CourseDetailComponent implements OnInit {
       // Prefer the dedicated translations from the resource. Fall back
       // to the localized `name` if the backend hasn't shipped the pair
       // yet (older cohorts created before this migration).
-      name_en:    cohort.name_en ?? cohort.name ?? '',
-      name_ar:    cohort.name_ar ?? cohort.name ?? '',
-      capacity:   cohort.capacity ?? null,
+      name_en: cohort.name_en ?? cohort.name ?? '',
+      name_ar: cohort.name_ar ?? cohort.name ?? '',
+      capacity: cohort.capacity ?? null,
       // The dropdown only offers the two manual choices. Map the cohort's
       // effective status back onto one of them: `open_for_enrollment`
       // stays as-is, everything else (scheduled / active / completed)
       // falls back to `scheduled`.
-      status:     this.enums.idForCode(
-                    'cohort_status',
-                    cohort.status === 'open_for_enrollment' ? 'open_for_enrollment' : 'scheduled',
-                  ),
-      number_of_sessions: cohort.number_of_sessions ?? this.course()?.number_of_sessions ?? null,
+      status: this.enums.idForCode(
+        'cohort_status',
+        cohort.status === 'open_for_enrollment'
+          ? 'open_for_enrollment'
+          : 'scheduled',
+      ),
+      number_of_sessions:
+        cohort.number_of_sessions ?? this.course()?.number_of_sessions ?? null,
       start_date: cohort.start_date ? new Date(cohort.start_date) : null,
-      end_date:   cohort.end_date   ? new Date(cohort.end_date)   : null,
+      end_date: cohort.end_date ? new Date(cohort.end_date) : null,
       avg_session_time: cohort.avg_session_time ?? null,
     });
     this.showCohort.set(true);
   }
 
   submitCohort(): void {
-    if (this.cohortForm.invalid) { this.cohortForm.markAllAsTouched(); return; }
+    if (this.cohortForm.invalid) {
+      this.cohortForm.markAllAsTouched();
+      return;
+    }
     const id = this.courseId();
     if (!id) return;
 
@@ -989,16 +1193,19 @@ export class CourseDetailComponent implements OnInit {
     const v = this.cohortForm.getRawValue();
     // Translate enum id back to its string code. Cohorts are stored with
     // a string status column, so the API expects the canonical code.
-    const statusCode = this.enums.codeForId('cohort_status', v.status ?? null) as CohortStatus | null;
+    const statusCode = this.enums.codeForId(
+      'cohort_status',
+      v.status ?? null,
+    ) as CohortStatus | null;
     const body: CohortPayload = {
       name: {
         en: (v.name_en ?? '').trim(),
         ar: (v.name_ar ?? '').trim(),
       },
       start_date: v.start_date ? this.toIso(v.start_date) : null,
-      end_date:   v.end_date   ? this.toIso(v.end_date)   : null,
-      capacity:   v.capacity ?? null,
-      status:     statusCode ?? null,
+      end_date: v.end_date ? this.toIso(v.end_date) : null,
+      capacity: v.capacity ?? null,
+      status: statusCode ?? null,
       number_of_sessions: v.number_of_sessions ?? null,
       avg_session_time: v.avg_session_time ?? null,
     };
@@ -1013,7 +1220,9 @@ export class CourseDetailComponent implements OnInit {
         this.toast.add({
           severity: 'success',
           detail: this.t.instant(
-            editing ? 'course_detail_toasts.cohort_updated' : 'course_detail_toasts.cohort_created',
+            editing
+              ? 'course_detail_toasts.cohort_updated'
+              : 'course_detail_toasts.cohort_created',
           ),
         });
         this.saving.set(false);
@@ -1075,19 +1284,26 @@ export class CourseDetailComponent implements OnInit {
   }
 
   private toIso(d: Date): string {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      .toISOString()
+      .slice(0, 10);
   }
 
   statusTone(s: string): 'success' | 'warning' | 'info' | 'danger' | 'neutral' {
     switch (s) {
       case 'completed':
-      case 'active':       return 'success';
+      case 'active':
+        return 'success';
       case 'pending':
-      case 'in_progress':  return 'warning';
-      case 'upcoming':     return 'info';
+      case 'in_progress':
+        return 'warning';
+      case 'upcoming':
+        return 'info';
       case 'inactive':
-      case 'not_started':  return 'danger';
-      default:             return 'neutral';
+      case 'not_started':
+        return 'danger';
+      default:
+        return 'neutral';
     }
   }
 
@@ -1112,15 +1328,18 @@ export class CourseDetailComponent implements OnInit {
    */
   learnerProgressTone(p: number): NasProgressTone {
     if (p >= 100) return 'success';
-    if (p >= 50)  return 'info';
+    if (p >= 50) return 'info';
     return 'danger';
   }
 
   typeTone(s?: string): 'teal' | 'neutral' | 'success' | 'sky' {
-    return s === 'hybrid' ? 'success'
-         : s === 'online' ? 'teal'
-         : s === 'external_link' ? 'sky'
-         : 'neutral';
+    return s === 'hybrid'
+      ? 'success'
+      : s === 'online'
+        ? 'teal'
+        : s === 'external_link'
+          ? 'sky'
+          : 'neutral';
   }
 
   /**
@@ -1133,7 +1352,8 @@ export class CourseDetailComponent implements OnInit {
     const s = cohort.status;
     if (s === 'scheduled') {
       const start = cohort.start_date ? new Date(cohort.start_date) : null;
-      const isFuture = start instanceof Date && !isNaN(start.getTime()) && start > new Date();
+      const isFuture =
+        start instanceof Date && !isNaN(start.getTime()) && start > new Date();
       if (isFuture) return this.t.instant('course_detail.up_coming');
     }
     return this.enumValueFromCode('cohort_status', s);
@@ -1157,9 +1377,7 @@ export class CourseDetailComponent implements OnInit {
    * is hard-coded.
    */
   cohortCapacity(cohort: Cohort): number {
-    return cohort.capacity
-        ?? this.course()?.max_learners
-        ?? 0;
+    return cohort.capacity ?? this.course()?.max_learners ?? 0;
   }
 
   /** Tone for the cohort status chip — derived the same way as the label. */
@@ -1170,8 +1388,8 @@ export class CourseDetailComponent implements OnInit {
     if (s === 'inactive') return 'danger';
     // scheduled — Up Coming visually = info, plain Scheduled = neutral
     const start = cohort.start_date ? new Date(cohort.start_date) : null;
-    const isFuture = start instanceof Date && !isNaN(start.getTime()) && start > new Date();
+    const isFuture =
+      start instanceof Date && !isNaN(start.getTime()) && start > new Date();
     return isFuture ? 'info' : 'neutral';
   }
 }
-

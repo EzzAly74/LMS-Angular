@@ -183,8 +183,106 @@
   }
 }
 
+/* Unread count badge + "You:" preview prefix (conversation list). */
+.inbox-item__badge {
+  align-self: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--nas-teal-700);
+  color: var(--nas-color-text-onDark);
+  font-size: 11px;
+  font-weight: var(--nas-weight-bold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.inbox-item { grid-template-columns: 40px 1fr auto; }
+.inbox-item__you { color: var(--nas-color-text-muted); font-weight: var(--nas-weight-medium); }
+
 /* RTL: people icon mirror */
 [dir="rtl"] .inbox-item__recipients i { transform: scaleX(-1); }
+
+/* ── Conversation thread (dialog) ────────────────────────────────────── */
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-4);
+  height: 60vh;
+  max-height: 460px;
+
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--nas-space-3);
+    padding-inline-end: 4px;
+  }
+
+  &__bubble {
+    max-width: 80%;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border-radius: var(--nas-radius-md);
+    background: var(--nas-neutral-200);
+
+    &.is-mine {
+      align-self: flex-end;
+      background: #d6efed;
+    }
+  }
+
+  &__body {
+    font-size: var(--nas-size-xs);
+    color: var(--nas-color-text-strong);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__time {
+    align-self: flex-end;
+    font-size: 10px;
+    color: var(--nas-color-text-muted);
+  }
+
+  &__composer {
+    display: flex;
+    align-items: center;
+    gap: var(--nas-space-2);
+    border-top: 1px solid var(--nas-color-border);
+    padding-top: var(--nas-space-3);
+
+    .nas-input { flex: 1; }
+    .nas-btn { width: 44px; justify-content: center; padding: 0; }
+  }
+}
+
+/* Single-select recipient row (compose). */
+.recipient-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  width: 100%;
+  padding: 10px var(--nas-space-3);
+  border: none;
+  border-bottom: 1px solid var(--nas-color-border);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+  text-align: start;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--nas-neutral-200); }
+  &.is-selected { background: var(--nas-teal-100); color: var(--nas-teal-800); }
+  i { color: var(--nas-teal-700); }
+}
 
 /* Match shared shimmer animation */
 @keyframes nas-shimmer-pulse {

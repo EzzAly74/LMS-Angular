@@ -1,7 +1,7 @@
 import type { LocalizedText } from './localized.types';
 
 export type CourseStatus = 'active' | 'pending' | 'upcoming' | 'inactive';
-export type CourseType   = 'online' | 'offline' | 'hybrid' | 'external_link';
+export type CourseType = 'online' | 'offline' | 'hybrid' | 'external_link';
 export type ApiCourseType = 'online' | 'offline';
 /**
  * Course difficulty level — mirrors the backend `course_level` enum.
@@ -69,7 +69,7 @@ export interface Cohort {
   name_en?: string | null;
   name_ar?: string | null;
   start_date: string | null;
-  end_date:   string | null;
+  end_date: string | null;
   enrolled: number;
   capacity: number | null;
   status: CohortStatus;
@@ -91,9 +91,9 @@ export interface CohortPayload {
   /** Bilingual cohort name — backend stores it on the translatable `name` column. */
   name: LocalizedText;
   start_date?: string | null;
-  end_date?:   string | null;
-  capacity?:   number | null;
-  status?:     CohortStatus | null;
+  end_date?: string | null;
+  capacity?: number | null;
+  status?: CohortStatus | null;
   /** Planned session count for this cohort. */
   number_of_sessions?: number | null;
   /** Average session length in hours; null = use platform default. */
@@ -193,6 +193,7 @@ export interface CourseModule {
   content_type: ModuleContentType;
   learner_scope: ModuleLearnerScope;
   session_id?: number | null;
+  session_number: number | null;
   duration_minutes?: number | null;
   type?: 'url' | 'file' | 'article';
   /** URL (link) or stored file path (video/document); null for articles. */
@@ -260,9 +261,19 @@ export interface CohortAttendanceLearner {
  * Absence) without any extra round-trips.
  */
 export interface CohortAttendance {
-  cohort:  { id: number; name: string; start_date: string | null; end_date: string | null };
-  course:  { id: number; title: string };
-  totals:  { sessions: number; learners: number; attended: number; absent: number };
+  cohort: {
+    id: number;
+    name: string;
+    start_date: string | null;
+    end_date: string | null;
+  };
+  course: { id: number; title: string };
+  totals: {
+    sessions: number;
+    learners: number;
+    attended: number;
+    absent: number;
+  };
   sessions: CohortAttendanceSession[];
   learners: CohortAttendanceLearner[];
 }
@@ -273,6 +284,8 @@ export interface ModulePayload {
   instructions?: LocalizedText | null;
   content_type: ModuleContentType;
   learner_scope: ModuleLearnerScope;
+  /** "Related to session number" — the week/session this module is taught in. */
+  session_number?: number | null;
   session_id?: number | null;
   duration_minutes?: number | null;
   type?: 'url' | 'file' | 'article';

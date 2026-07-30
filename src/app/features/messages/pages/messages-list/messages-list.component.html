@@ -15,7 +15,7 @@
     [activeId]="activeTab()"
     (activeIdChange)="setTab($event)" />
 
-  <!-- ── Inbox list ──────────────────────────────────────────────────── -->
+  <!-- ── Conversation list ───────────────────────────────────────────── -->
   <div class="nas-card inbox-card">
     @if (loading()) {
       @for (i of skeletonRows; track i) {
@@ -27,44 +27,33 @@
               <nas-shimmer width="120px" height="12px" />
             </div>
             <nas-shimmer width="85%" height="12px" />
-            <nas-shimmer width="140px" height="12px" />
           </div>
         </article>
       }
     } @else if (items().length) {
-      @for (m of items(); track m.id) {
+      @for (c of items(); track c.id) {
         <article class="inbox-item"
-                 [class.inbox-item--unread]="!isSentTab() && m.is_read === false"
-                 (click)="openMessage(m)">
-
-          <div class="inbox-item__icon">
-            <i class="pi" [class.pi-send]="isSentTab()" [class.pi-inbox]="!isSentTab()"></i>
-          </div>
-
+                 [class.inbox-item--unread]="c.unread_count > 0"
+                 (click)="openConversation(c)">
+          <div class="inbox-item__icon"><i class="pi pi-comments"></i></div>
           <div class="inbox-item__body">
-            <!-- Sender line (received / unread only) -->
-            @if (!isSentTab() && m.sender) {
-              <div class="inbox-item__sender">
-                <i class="pi pi-user"></i>
-                <span>{{ m.sender.name }}</span>
-              </div>
-            }
-
-            <div class="inbox-item__row">
-              <h3 class="inbox-item__subject">{{ m.subject }}</h3>
-              <span class="inbox-item__time">{{ m.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            <div class="inbox-item__sender">
+              <i class="pi pi-user"></i>
+              <span>{{ c.counterpart.name }}</span>
             </div>
-
-            <p class="inbox-item__preview">{{ m.preview }}</p>
-
-            <!-- Recipients line (sent only) -->
-            @if (isSentTab() && m.recipients_summary) {
-              <div class="inbox-item__recipients">
-                <i class="pi pi-users"></i>
-                <span>{{ m.recipients_summary }}</span>
-              </div>
-            }
+            <div class="inbox-item__row">
+              <p class="inbox-item__preview">
+                @if (c.last_message) {
+                  @if (c.last_message.mine) { <span class="inbox-item__you">{{ 'inbox.you' | translate }}: </span> }
+                  {{ c.last_message.body }}
+                }
+              </p>
+              <span class="inbox-item__time">{{ c.last_message_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            </div>
           </div>
+          @if (c.unread_count > 0) {
+            <span class="inbox-item__badge">{{ c.unread_count }}</span>
+          }
         </article>
       }
     } @else {
@@ -76,27 +65,60 @@
   </div>
 </div>
 
-<!-- ── Compose dialog ────────────────────────────────────────────────── -->
+<!-- ── Thread dialog ─────────────────────────────────────────────────── -->
+@if (thread(); as t) {
+  <p-dialog
+    [visible]="showThread()"
+    (visibleChange)="showThread.set($event)"
+    [modal]="true" [closable]="true" [draggable]="false" [resizable]="false"
+    styleClass="nas-dialog"
+    [style]="{ width: '520px' }"
+    [header]="t.conversation.counterpart.name">
+    <div class="thread">
+      <div class="thread__scroll">
+        @if (loadingThread()) {
+          <nas-shimmer width="70%" height="34px" />
+          <nas-shimmer width="55%" height="34px" />
+        } @else {
+          @for (m of t.messages; track m.id) {
+            <div class="thread__bubble" [class.is-mine]="m.mine">
+              <p class="thread__body">{{ m.body }}</p>
+              <span class="thread__time">{{ m.created_at | date:'HH:mm' }}</span>
+            </div>
+          }
+        }
+      </div>
+      <form class="thread__composer" (ngSubmit)="sendReply()">
+        <input type="text" class="nas-input"
+               [ngModel]="draftReply()" [ngModelOptions]="{ standalone: true }"
+               (ngModelChange)="draftReply.set($event)"
+               [placeholder]="'inbox.compose_message_placeholder' | translate" />
+        <button type="submit" class="nas-btn nas-btn--primary"
+                [disabled]="!draftReply().trim() || replying()">
+          <i class="pi pi-send"></i>
+        </button>
+      </form>
+    </div>
+  </p-dialog>
+}
+
+<!-- ── Compose dialog (role filters + multi-select fan-out) ──────────── -->
 <p-dialog
   [visible]="showCompose()"
   (visibleChange)="showCompose.set($event)"
-  [modal]="true"
-  [closable]="true"
-  [draggable]="false"
-  [resizable]="false"
+  [modal]="true" [closable]="true" [draggable]="false" [resizable]="false"
   styleClass="nas-dialog"
   [style]="{ width: '460px' }"
   [header]="'inbox.new_message' | translate">
 
   <form [formGroup]="composeForm" (ngSubmit)="send()" class="nas-form">
 
-    <!-- ── Title ───────────────────────────────────────────────────── -->
+    <!-- Title / subject -->
     <div class="nas-form__field">
       <label>{{ 'inbox.compose_title' | translate }} <span class="nas-req">*</span></label>
       <input class="nas-input"
              [class.nas-input--error]="titleCtrl.invalid && titleCtrl.touched"
-             type="text"
-             formControlName="title"
+             type="text" formControlName="title"
              [placeholder]="'inbox.compose_subject' | translate" />
       <div class="nas-field-footer">
         @if (titleCtrl.touched && titleCtrl.errors?.['required']) {
@@ -104,28 +126,24 @@
         } @else if (titleCtrl.touched && titleCtrl.errors?.['maxlength']) {
           <span class="nas-form__error">{{ 'inbox.error_max_chars' | translate : { max: TITLE_MAX } }}</span>
         } @else { <span></span> }
-        <span class="nas-char-counter"
-              [class.nas-char-counter--error]="(titleCtrl.value?.length ?? 0) > TITLE_MAX">
+        <span class="nas-char-counter" [class.nas-char-counter--error]="(titleCtrl.value?.length ?? 0) > TITLE_MAX">
           {{ titleCtrl.value?.length ?? 0 }}/{{ TITLE_MAX }}
         </span>
       </div>
     </div>
 
-    <!-- ── Recipients ──────────────────────────────────────────────── -->
+    <!-- Recipients: search + role chips + select-all + checklist -->
     <div class="nas-form__field">
       <label>{{ 'inbox.compose_recipients' | translate }} <span class="nas-req">*</span></label>
 
       <div class="nas-input-with-icon">
         <i class="pi pi-search"></i>
-        <input type="text"
-               class="nas-input"
-               [ngModel]="recipientSearch()"
-               [ngModelOptions]="{ standalone: true }"
+        <input type="text" class="nas-input"
+               [ngModel]="recipientSearch()" [ngModelOptions]="{ standalone: true }"
                (ngModelChange)="recipientSearch.set($event)"
                [placeholder]="'inbox.compose_search_recipients' | translate" />
       </div>
 
-      <!-- Role / category filter chips -->
       <div class="recipient-chips">
         @for (chip of chips(); track chip.id) {
           <button type="button" class="recipient-chip"
@@ -139,12 +157,9 @@
       <div class="recipient-list">
         <div class="recipient-list__group">{{ activeGroupLabel() }}</div>
 
-        <!-- Select all for the active chip -->
         <label class="nas-checklist__item">
-          <p-checkbox [ngModel]="isGroupAllChecked()"
-                      [ngModelOptions]="{ standalone: true }"
-                      [binary]="true"
-                      (onChange)="toggleGroupAll($event.checked)" />
+          <p-checkbox [ngModel]="isGroupAllChecked()" [ngModelOptions]="{ standalone: true }"
+                      [binary]="true" (onChange)="toggleGroupAll($event.checked)" />
           <span>
             {{ activeChip() === 'all'
                 ? ('inbox.select_all' | translate)
@@ -154,10 +169,8 @@
 
         @for (e of visibleEntries(); track e.uid) {
           <label class="nas-checklist__item">
-            <p-checkbox [ngModel]="isSelected(e.uid)"
-                        [ngModelOptions]="{ standalone: true }"
-                        [binary]="true"
-                        (onChange)="toggleEntry(e, $event.checked)" />
+            <p-checkbox [ngModel]="isSelected(e.uid)" [ngModelOptions]="{ standalone: true }"
+                        [binary]="true" (onChange)="toggleEntry(e, $event.checked)" />
             <span>{{ e.name }}</span>
           </label>
         }
@@ -172,13 +185,11 @@
       }
     </div>
 
-    <!-- ── Message ─────────────────────────────────────────────────── -->
+    <!-- Message -->
     <div class="nas-form__field">
       <label>{{ 'inbox.compose_message' | translate }} <span class="nas-req">*</span></label>
-      <textarea formControlName="message"
-                class="nas-input nas-input--area"
+      <textarea formControlName="message" class="nas-input nas-input--area" rows="4"
                 [class.nas-input--error]="messageCtrl.invalid && messageCtrl.touched"
-                rows="4"
                 [placeholder]="'inbox.compose_message_placeholder' | translate"></textarea>
       @if (messageCtrl.touched && messageCtrl.errors?.['required']) {
         <span class="nas-form__error">{{ 'inbox.error_required' | translate }}</span>
@@ -197,70 +208,3 @@
     </footer>
   </form>
 </p-dialog>
-
-<!-- ── Message detail dialog ─────────────────────────────────────────── -->
-@if (selectedMessage(); as msg) {
-  <p-dialog
-    [visible]="showDetail()"
-    (visibleChange)="showDetail.set($event)"
-    [modal]="true"
-    [closable]="true"
-    [draggable]="false"
-    [resizable]="false"
-    styleClass="nas-dialog nas-dialog--detail"
-    [style]="{ width: '520px' }"
-    [header]="msg.subject">
-
-    <div class="msg-detail">
-      <div class="msg-detail__body">{{ msg.body }}</div>
-
-      <dl class="msg-detail__meta">
-        @if (detailIsSent()) {
-          <!-- Sent → Recipients -->
-          <div>
-            <dt><i class="pi pi-users"></i>{{ 'inbox.welcome_recipients' | translate }}</dt>
-            <dd>
-              @if (loadingDetail()) {
-                <nas-shimmer width="120px" height="14px" />
-              } @else {
-                @for (g of allGroups(msg); track g.label) {
-                  <nas-status-badge tone="info">
-                    {{ 'inbox.all_group' | translate : { group: g.label } }}
-                  </nas-status-badge>
-                }
-              }
-            </dd>
-          </div>
-          @if (!loadingDetail() && hasExplicitRecipients(msg)) {
-            <div class="msg-detail__names-row">
-              <dd class="msg-detail__names">{{ recipientNames(msg) }}</dd>
-            </div>
-          }
-        } @else {
-          <!-- Received → Sent By -->
-          <div>
-            <dt><i class="pi pi-user"></i>{{ 'inbox.sent_by' | translate }}</dt>
-            <dd>
-              @if (msg.sender) {
-                <nas-status-badge tone="info">{{ msg.sender.name }}</nas-status-badge>
-              }
-            </dd>
-          </div>
-        }
-
-        <div>
-          <dt><i class="pi pi-calendar"></i>{{ 'inbox.welcome_sent' | translate }}</dt>
-          <dd>{{ msg.created_at | date:'yyyy-MM-dd HH:mm' }}</dd>
-        </div>
-      </dl>
-
-      <footer class="nas-form__footer">
-        <button type="button" class="nas-btn nas-btn--primary"
-                style="width:100%;justify-content:center;"
-                (click)="closeDetail()">
-          {{ 'inbox.done' | translate }}
-        </button>
-      </footer>
-    </div>
-  </p-dialog>
-}

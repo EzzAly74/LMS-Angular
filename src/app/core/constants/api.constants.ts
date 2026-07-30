@@ -26,6 +26,12 @@ export const API = {
   MESSAGES_RECIPIENTS: `${API_BASE}/messages/recipients`,
   messageRead:         (id: number) => `${API_BASE}/messages/${id}/read`,
   messageMarkAllRead:  (id: number) => `${API_BASE}/messages/${id}/mark-all-read`,
+  // Unified two-way conversation store — shared with the learner website.
+  CONVERSATIONS:            `${API_BASE}/conversations`,
+  CONVERSATIONS_BULK:       `${API_BASE}/conversations/bulk`,
+  CONVERSATIONS_RECIPIENTS: `${API_BASE}/conversations/recipients`,
+  conversationThread:       (id: number) => `${API_BASE}/conversations/${id}`,
+  conversationReply:        (id: number) => `${API_BASE}/conversations/${id}/reply`,
   LMS_RESOURCES:  `${API_BASE}/lms-resources`,
   BLOGS:          `${API_BASE}/admin/blogs`,
   COURSES:        `${API_BASE}/courses`,

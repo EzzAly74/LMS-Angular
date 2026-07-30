@@ -628,6 +628,13 @@
       </div>
 
       <div class="nas-form__field">
+        <label>{{ 'course_detail.related_session_number' | translate }} <span class="required">*</span></label>
+        <p-dropdown [options]="sessionNumberOptions()"
+                    formControlName="session_number" styleClass="w-full" appendTo="body"
+                    [placeholder]="'course_detail.related_session_number_ph' | translate" />
+      </div>
+
+      <div class="nas-form__field">
         <label>{{ 'course_detail.content_type' | translate }} <span class="required">*</span></label>
         <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
                     formControlName="content_type" styleClass="w-full" appendTo="body"
