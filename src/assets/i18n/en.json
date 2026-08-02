@@ -1416,6 +1416,8 @@
     "basis_score_desc": "Certificate is awarded when the learner achieves the required passing score",
     "basis_both": "Both requirements",
     "basis_both_desc": "Both requirements must be met before the certificate is awarded",
+    "min_passing_attendance": "Min Passing Attendance (%)",
+    "min_passing_attendance_help": "Students must attend a specific percentage of sessions to earn the certificate.",
     "min_passing_score": "Min Passing Score (%)",
     "min_passing_score_help": "Learners must reach this score to earn the certificate.",
 

@@ -117,6 +117,7 @@ export class SettingsComponent implements OnInit {
    * to it — `computed()` only depends on other signals, not on Form values.
    */
   basisSig = signal<CertificateBasis>('attendance');
+  showMinAttendance = computed(() => this.basisSig() === 'attendance' || this.basisSig() === 'both');
   showMinScore = computed(() => this.basisSig() === 'score' || this.basisSig() === 'both');
 
   /**
@@ -145,6 +146,7 @@ export class SettingsComponent implements OnInit {
       course_ratings_enabled:    [true],
       abnormal_rating_threshold: [30],
       certificate_award_basis:   ['attendance' as CertificateBasis],
+      min_passing_attendance:    [70],
       min_passing_score:         [30],
       about_description:         [''],
       about_values:              [''],
@@ -208,6 +210,7 @@ export class SettingsComponent implements OnInit {
       course_ratings_enabled:    this.boolValue(map['course_ratings_enabled'], true),
       abnormal_rating_threshold: this.numericValue(map['abnormal_rating_threshold'], 30),
       certificate_award_basis:   basis,
+      min_passing_attendance:    this.numericValue(map['min_passing_attendance'], 70),
       min_passing_score:         this.numericValue(map['min_passing_score'], 30),
       about_description:         map['about_description'] ?? '',
       about_values:              map['about_values']      ?? '',
@@ -253,6 +256,7 @@ export class SettingsComponent implements OnInit {
       put('course_ratings_enabled',    f.course_ratings_enabled ? '1' : '0');
       put('abnormal_rating_threshold', f.abnormal_rating_threshold);
       put('certificate_award_basis',   f.certificate_award_basis);
+      put('min_passing_attendance',    f.min_passing_attendance);
       put('min_passing_score',         f.min_passing_score);
       put('about_description',         f.about_description);
       put('about_values',              f.about_values);
@@ -313,12 +317,15 @@ export class SettingsComponent implements OnInit {
 
   /* ── Stepper handlers ─────────────────────────────────── */
   adjust(field: 'default_cohort_size' | 'abnormal_rating_threshold' | 'min_passing_score'
-              | 'passcode_reset_seconds' | 'academy_close_offset_days',
+              | 'min_passing_attendance' | 'passcode_reset_seconds' | 'academy_close_offset_days',
          delta: number): void {
     const ctrl = this.form.get(field);
     if (!ctrl) return;
+    // Percentages are bounded 0–100; the other steppers are open-ended counts.
+    const isPercent = field === 'min_passing_score' || field === 'min_passing_attendance'
+                   || field === 'abnormal_rating_threshold';
     const next = Math.max(0, Number(ctrl.value || 0) + delta);
-    ctrl.setValue(next);
+    ctrl.setValue(isPercent ? Math.min(100, next) : next);
   }
 
   /* ── Helpers ────────────────────────────────────────────── */

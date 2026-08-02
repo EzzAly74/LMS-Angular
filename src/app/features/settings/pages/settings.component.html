@@ -231,6 +231,32 @@
             </div>
           </div>
 
+          @if (showMinAttendance()) {
+            <div class="ps-field ps-field--half">
+              <label for="min_passing_attendance">
+                {{ 'platform_settings.min_passing_attendance' | translate }} <span class="ps-asterisk">*</span>
+              </label>
+              <div class="ps-number">
+                <input id="min_passing_attendance" type="number" min="0" max="100" inputmode="numeric"
+                       class="ps-input ps-input--number"
+                       formControlName="min_passing_attendance" />
+                <div class="ps-number__steppers">
+                  <button type="button" class="ps-number__step"
+                          (click)="adjust('min_passing_attendance', +1)"
+                          tabindex="-1">
+                    <nas-icon name="caret-up" [size]="12" />
+                  </button>
+                  <button type="button" class="ps-number__step"
+                          (click)="adjust('min_passing_attendance', -1)"
+                          tabindex="-1">
+                    <nas-icon name="caret-down" [size]="12" />
+                  </button>
+                </div>
+              </div>
+              <p class="ps-help">{{ 'platform_settings.min_passing_attendance_help' | translate }}</p>
+            </div>
+          }
+
           @if (showMinScore()) {
             <div class="ps-field ps-field--half">
               <label for="min_passing_score">
