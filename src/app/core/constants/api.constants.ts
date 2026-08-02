@@ -30,6 +30,7 @@ export const API = {
   CONVERSATIONS:            `${API_BASE}/conversations`,
   CONVERSATIONS_BULK:       `${API_BASE}/conversations/bulk`,
   CONVERSATIONS_RECIPIENTS: `${API_BASE}/conversations/recipients`,
+  CONVERSATIONS_UNREAD_COUNT: `${API_BASE}/conversations/unread-count`,
   conversationThread:       (id: number) => `${API_BASE}/conversations/${id}`,
   conversationReply:        (id: number) => `${API_BASE}/conversations/${id}/reply`,
   LMS_RESOURCES:  `${API_BASE}/lms-resources`,

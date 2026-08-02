@@ -75,7 +75,7 @@
     [style]="{ width: '520px' }"
     [header]="t.conversation.counterpart.name">
     <div class="thread">
-      <div class="thread__scroll">
+      <div class="thread__scroll" #threadScroll>
         @if (loadingThread()) {
           <nas-shimmer width="70%" height="34px" />
           <nas-shimmer width="55%" height="34px" />

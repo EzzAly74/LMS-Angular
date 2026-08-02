@@ -8,6 +8,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { LocaleService } from '../../core/services/locale.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MessagesRealtimeService } from '../../core/services/messages-realtime.service';
 import { ADMIN_NAV_GROUPS, NavGroup, NavItem } from './admin-nav.config';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -41,6 +42,9 @@ export class AdminLayoutComponent {
   auth            = inject(AuthService);
   router          = inject(Router);
   notifsDrawer    = inject(NotificationsDrawerService);
+  // Injected (not just used by the messages route) so its realtime
+  // subscription + unread badge stay live across the whole dashboard.
+  messagesRealtime = inject(MessagesRealtimeService);
   private t       = inject(TranslateService);
 
   /** Bumped on every locale switch so `computed()` derivations that read

@@ -105,13 +105,25 @@
                 class="nas-nav-item"
                 [title]="item.label | translate"
               >
-                <img
-                  [src]="item.icon"
-                  class="nas-nav-item__icon"
-                  width="20"
-                  height="20"
-                  alt=""
-                />
+                <span class="nas-nav-item__icon-wrap">
+                  <img
+                    [src]="item.icon"
+                    class="nas-nav-item__icon"
+                    width="20"
+                    height="20"
+                    alt=""
+                  />
+                  @if (
+                    item.route === "/admin/messages" &&
+                    messagesRealtime.unreadCount() > 0
+                  ) {
+                    <span class="nas-nav-item__badge">{{
+                      messagesRealtime.unreadCount() > 99
+                        ? "99+"
+                        : messagesRealtime.unreadCount()
+                    }}</span>
+                  }
+                </span>
                 @if (!sidebarCollapsed()) {
                   <span class="nas-nav-item__label">{{
                     item.label | translate
@@ -170,23 +182,27 @@
           <div class="nas-search__menu" role="listbox">
             @if (searchMatches().length) {
               @for (m of searchMatches(); track m.route) {
-                <button type="button"
-                        class="nas-search__menu-item"
-                        role="option"
-                        (mousedown)="$event.preventDefault()"
-                        (click)="navigateMatch(m.route)">
+                <button
+                  type="button"
+                  class="nas-search__menu-item"
+                  role="option"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="navigateMatch(m.route)"
+                >
                   <i class="pi pi-arrow-right nas-search__menu-icon"></i>
                   <span class="nas-search__menu-label">
                     {{ m.translatedLabel }}
                     @if (m.translatedParent) {
-                      <span class="nas-search__menu-parent">· {{ m.translatedParent }}</span>
+                      <span class="nas-search__menu-parent"
+                        >· {{ m.translatedParent }}</span
+                      >
                     }
                   </span>
                 </button>
               }
             } @else {
               <div class="nas-search__menu-empty">
-                {{ 'common.no_results_for' | translate }} "{{ searchTerm() }}"
+                {{ "common.no_results_for" | translate }} "{{ searchTerm() }}"
               </div>
             }
           </div>

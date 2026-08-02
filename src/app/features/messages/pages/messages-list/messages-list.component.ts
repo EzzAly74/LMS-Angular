@@ -1,10 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  OnDestroy,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -12,8 +16,10 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
+import { Subscription } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
+import { MessagesRealtimeService } from '../../../../core/services/messages-realtime.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -65,12 +71,14 @@ type InboxTab = 'unread' | 'received' | 'sent';
   templateUrl: './messages-list.component.html',
   styleUrl: './messages-list.component.scss',
 })
-export class MessagesListComponent implements OnInit {
+export class MessagesListComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private enums = inject(EnumsService);
   private fb = inject(FormBuilder);
   private toast = inject(MessageService);
   private t = inject(TranslateService);
+  private realtime = inject(MessagesRealtimeService);
+  private realtimeSub?: Subscription;
 
   readonly TITLE_MAX = 191;
 
@@ -79,6 +87,23 @@ export class MessagesListComponent implements OnInit {
       this.load();
       this.loadRecipients();
     });
+
+    // Chat should always open on the latest messages — re-run whenever the
+    // thread is (re)loaded, a reply is sent, or a realtime push updates it.
+    effect(() => {
+      const count = this.thread()?.messages.length ?? 0;
+      if (count === 0) return;
+      setTimeout(() => this.scrollThreadToBottom());
+    });
+  }
+
+  private scrollThreadToBottom(): void {
+    const el = this.threadScroll()?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  ngOnDestroy(): void {
+    this.realtimeSub?.unsubscribe();
   }
 
   /* ── List state ────────────────────────────────────────────────────── */
@@ -98,6 +123,7 @@ export class MessagesListComponent implements OnInit {
   loadingThread = signal(false);
   draftReply = signal('');
   replying = signal(false);
+  private threadScroll = viewChild<ElementRef<HTMLDivElement>>('threadScroll');
 
   /* ── Compose dialog ────────────────────────────────────────────────── */
   showCompose = signal(false);
@@ -169,6 +195,23 @@ export class MessagesListComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadRecipients();
+
+    // Realtime push (see MessagesRealtimeService) — refresh the list preview
+    // for every incoming message, and live-append it if its thread is open.
+    this.realtimeSub = this.realtime.messageReceived$.subscribe((payload) => {
+      this.load();
+      if (this.thread()?.conversation.id === payload.conversation_id) {
+        // The thread is already open — fetching it marks the conversation
+        // read server-side, so the badge the realtime push just bumped
+        // needs correcting back down immediately, not on next reopen.
+        this.api.get<ConversationThread>(API.conversationThread(payload.conversation_id)).subscribe({
+          next: (res) => {
+            if (res.result) this.thread.set(res.result);
+            this.realtime.refreshUnread();
+          },
+        });
+      }
+    });
   }
 
   /* ── Data ──────────────────────────────────────────────────────────── */
@@ -205,6 +248,9 @@ export class MessagesListComponent implements OnInit {
         this.thread.set(res.result ?? null);
         this.loadingThread.set(false);
         this.load();
+        // Fetching the thread marks it read server-side — reflect that in
+        // the sidebar badge right away instead of waiting for the next push.
+        this.realtime.refreshUnread();
       },
       error: () => this.loadingThread.set(false),
     });
