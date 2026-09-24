@@ -7,9 +7,12 @@ import {
   forwardRef,
   signal,
   AfterViewInit,
+  SecurityContext,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
 
 /**
@@ -59,20 +62,41 @@ export class NasRichTextComponent implements ControlValueAccessor, AfterViewInit
   private readonly colours = ['#000000', '#F14437', '#F79008', '#0FB86A', '#2E7CF6', '#7C3AED'];
   private colourIdx = 0;
 
+  private readonly sanitizer = inject(DomSanitizer);
+
+  /**
+   * Sanitise HTML before it reaches the DOM.
+   *
+   * DB-04 (High): this component assigned `element.innerHTML = value`
+   * directly. Angular only sanitises the `[innerHTML]` *binding* — a direct
+   * DOM assignment bypasses the sanitizer entirely, so any stored HTML coming
+   * back from the API rendered unsanitised. That is a stored-XSS sink, and
+   * with the bearer token sitting in localStorage (DB-03) it is a complete
+   * account-takeover chain: inject a script into a CMS field, and every admin
+   * who opens that record ships their token to the attacker.
+   *
+   * `DomSanitizer.sanitize(SecurityContext.HTML, …)` strips scripts, event
+   * handlers and javascript: URLs while keeping the formatting markup this
+   * editor produces (b/i/u/headings/lists/colour spans).
+   */
+  private sanitiseHtml(value: string | null): string {
+    return this.sanitizer.sanitize(SecurityContext.HTML, value ?? '') ?? '';
+  }
+
   private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};
   private pendingValue: string | null = null;
 
   ngAfterViewInit(): void {
     if (this.pendingValue !== null) {
-      this.editorRef.nativeElement.innerHTML = this.pendingValue;
+      this.editorRef.nativeElement.innerHTML = this.sanitiseHtml(this.pendingValue);
       this.pendingValue = null;
     }
   }
 
   /* ── ControlValueAccessor ─────────────────────────────────── */
   writeValue(value: string | null): void {
-    const html = value ?? '';
+    const html = this.sanitiseHtml(value);
     if (this.editorRef?.nativeElement) {
       this.editorRef.nativeElement.innerHTML = html;
     } else {
@@ -90,7 +114,10 @@ export class NasRichTextComponent implements ControlValueAccessor, AfterViewInit
 
   /* ── Editing ──────────────────────────────────────────────── */
   onInput(): void {
-    this.onChange(this.editorRef.nativeElement.innerHTML);
+    // Sanitise on the way out as well as in: contenteditable accepts pasted
+    // markup, so without this an admin could paste a <script> and persist it
+    // for everyone else to render.
+    this.onChange(this.sanitiseHtml(this.editorRef.nativeElement.innerHTML));
   }
   onBlur(): void {
     this.onTouched();
