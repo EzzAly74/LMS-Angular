@@ -17,12 +17,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
-      // Avoid touching TranslateService for translation-file requests,
-      // otherwise we re-enter the DI cycle that constructs it.
-      if (req.url.includes('/assets/i18n/')) {
-        return throwError(() => err);
-      }
-
+      // (A guard for `/assets/i18n/` requests used to sit here, to stop an
+      // HTTP translation fetch re-entering the DI cycle that constructs
+      // TranslateService. Translations are now bundled chunks loaded by
+      // BundledTranslateLoader and never pass through HttpClient, so the
+      // guard could no longer match anything and was removed.)
       const translate = injector.get(TranslateService);
       const t = (key: string) => translate.instant(key);
 

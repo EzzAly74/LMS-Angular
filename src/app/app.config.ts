@@ -3,19 +3,16 @@ import { provideRouter, withComponentInputBinding, withRouterConfig } from '@ang
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { HttpClient } from '@angular/common/http';
+import { BundledTranslateLoader } from './core/i18n/bundled-translate.loader';
+import { LocaleService } from './core/services/locale.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { localeInterceptor } from './core/interceptors/locale.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-
-export function createTranslateLoader(http: HttpClient): TranslateHttpLoader {
-  return new TranslateHttpLoader(http, '/assets/i18n/', '.json');
-}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,16 +28,35 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     importProvidersFrom(
       TranslateModule.forRoot({
+        // Translations ship as content-hashed build chunks, so a deploy can
+        // never serve a stale cached file against new code. This replaces the
+        // HTTP loader, which fetched a fixed /assets/i18n/<lang>.json URL
+        // that the build never renamed. See BundledTranslateLoader.
         loader: {
-          provide:    TranslateLoader,
-          useFactory: createTranslateLoader,
-          deps:       [HttpClient],
+          provide:  TranslateLoader,
+          useClass: BundledTranslateLoader,
         },
         defaultLanguage: 'ar',
       })
     ),
     MessageService,
     ConfirmationService,
+    {
+      // Load the active locale's translations BEFORE anything renders.
+      //
+      // This initializer did not exist, and that was the Dashboard's half of
+      // "translation corrupts and needs a refresh". Angular rendered before
+      // ar.json/en.json had arrived, so every `translate.instant()` returned
+      // the raw key - and any component that stored the result in a field or
+      // signal kept the raw key permanently. A refresh appeared to fix it only
+      // because the file was then cached and usually won the race.
+      //
+      // Runs alongside the auth initializer below; Angular awaits both.
+      provide: APP_INITIALIZER,
+      useFactory: (locale: LocaleService) => () => firstValueFrom(locale.ready()),
+      deps: [LocaleService],
+      multi: true,
+    },
     {
       // Materialise the auth session BEFORE Angular bootstraps the
       // router. Returning a Promise makes the initializer awaited, so

@@ -30,6 +30,20 @@ export class LocaleService {
   private readonly _changes$ = new Subject<SupportedLocale>();
   readonly changes$: Observable<SupportedLocale> = this._changes$.asObservable();
 
+  /**
+   * The bootstrap translation load, kept so startup can wait for it.
+   *
+   * It must be THIS observable and not a fresh `translate.use()` call.
+   * ngx-translate v15's `use()` short-circuits on its first line with
+   * `if (lang === this.currentLang) return of(this.translations[lang])` - and
+   * it sets `currentLang` immediately on the first call, before the file has
+   * loaded. A second `use()` for the same locale therefore resolves at once
+   * with `undefined`, and anything awaiting it waits for nothing. The first
+   * call's observable is `shareReplay(1)`, so awaiting it later is safe even
+   * after it has completed.
+   */
+  private readonly bootLoad$: Observable<unknown>;
+
   constructor(private translate: TranslateService) {
     translate.addLangs([...SUPPORTED_LOCALES]);
     translate.setDefaultLang(DEFAULT_LOCALE);
@@ -38,7 +52,22 @@ export class LocaleService {
     // first paint — but do NOT emit `changes$` here (it would fire
     // before any subscriber is attached, and is semantically a
     // "user changed language" signal, not "app booted").
-    this.applyLocale(this.locale());
+    this.bootLoad$ = this.applyLocale(this.locale());
+  }
+
+  /**
+   * Resolves once the active locale's translations are loaded.
+   *
+   * Awaited by the APP_INITIALIZER so nothing renders - and no
+   * `translate.instant()` runs - before the strings exist. Without that wait,
+   * `instant()` returns the raw key, and any component that stored the result
+   * in a field or signal kept the raw key until the page was refreshed. That
+   * was the Dashboard's half of "translation corrupts and needs a refresh";
+   * `switch()` below already guarded against the same race, bootstrap never
+   * did.
+   */
+  ready(): Observable<unknown> {
+    return this.bootLoad$;
   }
 
   switch(locale: SupportedLocale): void {
@@ -64,9 +93,10 @@ export class LocaleService {
     return this.dir === 'rtl';
   }
 
-  private applyLocale(locale: SupportedLocale): void {
-    this.translate.use(locale);
+  private applyLocale(locale: SupportedLocale): Observable<unknown> {
+    const load = this.translate.use(locale);
     this.setDocumentLocale(locale);
+    return load;
   }
 
   /** Syncs `<html lang/dir>` and persists the choice (no translation load). */
