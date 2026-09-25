@@ -40,3 +40,11 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Playwright (D-047) — local harness credentials and run output. Never commit.
+.env.e2e
+/test-results/
+/playwright-report/
+/e2e-artifacts/
+/playwright/.cache/
+/e2e/.auth/
