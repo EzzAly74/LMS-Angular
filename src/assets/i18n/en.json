@@ -1389,10 +1389,6 @@
     "save_changes": "Save Changes",
     "saved": "Platform settings updated.",
 
-    "general": "General",
-    "platform_name": "Platform Name",
-    "platform_name_placeholder": "NAS LMS",
-    "default_language": "Default Language",
 
     "enrolment_learning": "Enrolment & Learning",
     "enrolment_attendance": "Enrolment & Attendance",
@@ -1407,8 +1403,6 @@
     "seconds": "Seconds",
 
     "grading_certs": "Grading & Certificates",
-    "course_ratings": "Course Ratings",
-    "course_ratings_sub": "Allow learners to rate courses after completion",
     "abnormal_rating": "Abnormal Rating Threshold",
     "abnormal_rating_help": "Alert fires when avg rating drops by this amount within 7 days",
     "cert_basis": "Certificate Awarded Based On",
@@ -1423,26 +1417,12 @@
     "min_passing_score": "Min Passing Score (%)",
     "min_passing_score_help": "Learners must reach this score to earn the certificate.",
 
-    "about_us": "About Us",
-    "website_view": "Website View",
-    "description": "Description",
     "description_placeholder": "Tell visitors what your academy does…",
-    "our_values": "Our Values",
     "our_values_placeholder": "What you stand for…",
-    "our_mission": "Our Mission",
     "our_mission_placeholder": "What you set out to do…",
-    "our_vision": "Our Vision",
     "our_vision_placeholder": "Where you're heading…",
-    "image": "Image",
 
-    "settings": "Settings",
-    "header_logo": "Header's Logo",
-    "banner_image": "Banner's Image",
-    "banner_description": "Banner Description",
-    "banner_description_placeholder": "Hero copy that appears on the public website banner…",
-    "why_choose_us": "Why choose Us",
     "why_choose_us_placeholder": "Selling points for prospective learners…",
-    "footer_logo": "Footer's Logo",
 
     "upload_photo": "Upload Photo",
     "replace_photo": "Replace Photo"

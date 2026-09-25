@@ -1389,10 +1389,6 @@
     "save_changes": "حفظ التغييرات",
     "saved": "تم تحديث إعدادات المنصة.",
 
-    "general": "العام",
-    "platform_name": "اسم المنصة",
-    "platform_name_placeholder": "NAS LMS",
-    "default_language": "اللغة الافتراضية",
 
     "enrolment_learning": "التسجيل والتعلم",
     "enrolment_attendance": "التسجيل والحضور",
@@ -1407,8 +1403,6 @@
     "seconds": "ثانية",
 
     "grading_certs": "التقييم والشهادات",
-    "course_ratings": "تقييمات الدورة",
-    "course_ratings_sub": "اسمح للمتعلمين بتقييم الدورات بعد إتمامها",
     "abnormal_rating": "حد التقييم غير الطبيعي",
     "abnormal_rating_help": "ينطلق التنبيه عند انخفاض متوسط التقييم بهذا المقدار خلال 7 أيام",
     "cert_basis": "تُمنح الشهادة بناءً على",
@@ -1423,26 +1417,12 @@
     "min_passing_score": "الحد الأدنى لدرجة النجاح (%)",
     "min_passing_score_help": "يجب على المتعلمين الوصول إلى هذه الدرجة لاستحقاق الشهادة.",
 
-    "about_us": "من نحن",
-    "website_view": "عرض الموقع",
-    "description": "الوصف",
     "description_placeholder": "اخبر الزوار عن أكاديميتك…",
-    "our_values": "قيمنا",
     "our_values_placeholder": "ما الذي تؤمن به…",
-    "our_mission": "مهمتنا",
     "our_mission_placeholder": "ما الذي تسعى لتحقيقه…",
-    "our_vision": "رؤيتنا",
     "our_vision_placeholder": "إلى أين تتجه…",
-    "image": "الصورة",
 
-    "settings": "الإعدادات",
-    "header_logo": "شعار الرأس",
-    "banner_image": "صورة البانر",
-    "banner_description": "وصف البانر",
-    "banner_description_placeholder": "نص رئيسي يظهر على بانر الموقع العام…",
-    "why_choose_us": "لماذا نحن",
     "why_choose_us_placeholder": "نقاط البيع للمتعلمين المحتملين…",
-    "footer_logo": "شعار التذييل",
 
     "upload_photo": "رفع صورة",
     "replace_photo": "استبدال الصورة"

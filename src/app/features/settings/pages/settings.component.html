@@ -31,32 +31,6 @@
     <form [formGroup]="form" class="platform-settings__form" (ngSubmit)="save()">
 
       <!-- ─────────────── 1. General ─────────────── -->
-      <section class="nas-card ps-card">
-        <header class="ps-card__head">
-          <h2 class="ps-card__title">{{ 'platform_settings.general' | translate }}</h2>
-        </header>
-        <div class="ps-card__body">
-          <div class="ps-grid ps-grid--2">
-            <div class="ps-field">
-              <label for="platform_name">{{ 'platform_settings.platform_name' | translate }}</label>
-              <input id="platform_name" type="text" class="ps-input"
-                     formControlName="platform_name"
-                     [placeholder]="'platform_settings.platform_name_placeholder' | translate" />
-            </div>
-            <div class="ps-field">
-              <label for="default_language">{{ 'platform_settings.default_language' | translate }}</label>
-              <p-dropdown id="default_language"
-                          [options]="languageOptions()"
-                          formControlName="default_language"
-                          optionLabel="value"
-                          optionValue="code"
-                          appendTo="body"
-                          styleClass="ps-dropdown"
-                          panelStyleClass="ps-dropdown-panel" />
-            </div>
-          </div>
-        </div>
-      </section>
 
       <!-- ─────────────── 2. Enrolment & Attendance ─────────────── -->
       <section class="nas-card ps-card">
@@ -168,17 +142,6 @@
         </header>
         <div class="ps-card__body ps-card__body--stack">
 
-          <!-- Course Ratings toggle row -->
-          <div class="ps-row ps-row--between">
-            <div>
-              <div class="ps-row__title">{{ 'platform_settings.course_ratings' | translate }}</div>
-              <div class="ps-row__sub">{{ 'platform_settings.course_ratings_sub' | translate }}</div>
-            </div>
-            <p-inputSwitch formControlName="course_ratings_enabled" styleClass="ps-switch" />
-          </div>
-
-          <div class="ps-divider"></div>
-
           <!-- Abnormal Rating Threshold -->
           <div class="ps-field ps-field--half">
             <label for="abnormal_rating_threshold">{{ 'platform_settings.abnormal_rating' | translate }}</label>
@@ -287,96 +250,8 @@
       </section>
 
       <!-- ─────────────── 4. About Us (Website View) ─────────────── -->
-      <section class="nas-card ps-card">
-        <header class="ps-card__head">
-          <h2 class="ps-card__title">{{ 'platform_settings.about_us' | translate }}</h2>
-          <span class="ps-pill">{{ 'platform_settings.website_view' | translate }}</span>
-        </header>
-        <div class="ps-card__body ps-card__body--stack">
-          <div class="ps-grid ps-grid--2">
-            <div class="ps-field">
-              <label>{{ 'platform_settings.description' | translate }}</label>
-              <nas-rich-text formControlName="about_description"
-                             [placeholder]="'platform_settings.description_placeholder' | translate" />
-            </div>
-            <div class="ps-field">
-              <label>{{ 'platform_settings.our_values' | translate }}</label>
-              <nas-rich-text formControlName="about_values"
-                             [placeholder]="'platform_settings.our_values_placeholder' | translate" />
-            </div>
-          </div>
-          <div class="ps-grid ps-grid--2">
-            <div class="ps-field">
-              <label>{{ 'platform_settings.our_mission' | translate }}</label>
-              <nas-rich-text formControlName="about_mission"
-                             [placeholder]="'platform_settings.our_mission_placeholder' | translate" />
-            </div>
-            <div class="ps-field">
-              <label>{{ 'platform_settings.our_vision' | translate }}</label>
-              <nas-rich-text formControlName="about_vision"
-                             [placeholder]="'platform_settings.our_vision_placeholder' | translate" />
-            </div>
-          </div>
-          <div class="ps-field">
-            <label>{{ 'platform_settings.image' | translate }}</label>
-            <nas-photo-upload
-              [value]="filePreviews()['about_image']"
-              maxLabel="common.max_file_size_2mb"
-              (fileSelected)="onFilePicked('about_image', $event)"
-              (cleared)="onFileCleared('about_image')" />
-          </div>
-        </div>
-      </section>
 
       <!-- ─────────────── 5. Settings (Website View) ─────────────── -->
-      <section class="nas-card ps-card">
-        <header class="ps-card__head">
-          <h2 class="ps-card__title">{{ 'platform_settings.settings' | translate }}</h2>
-          <span class="ps-pill">{{ 'platform_settings.website_view' | translate }}</span>
-        </header>
-        <div class="ps-card__body ps-card__body--stack">
-
-          <div class="ps-field">
-            <label>{{ 'platform_settings.header_logo' | translate }}</label>
-            <nas-photo-upload
-              [value]="filePreviews()['header_logo']"
-              ratio="100x45"
-              (fileSelected)="onFilePicked('header_logo', $event)"
-              (cleared)="onFileCleared('header_logo')" />
-          </div>
-
-          <div class="ps-field">
-            <label>{{ 'platform_settings.banner_image' | translate }}</label>
-            <nas-photo-upload
-              [value]="filePreviews()['banner_background']"
-              ratio="1366x650"
-              (fileSelected)="onFilePicked('banner_background', $event)"
-              (cleared)="onFileCleared('banner_background')" />
-          </div>
-
-          <div class="ps-field">
-            <label>{{ 'platform_settings.banner_description' | translate }}</label>
-            <nas-rich-text formControlName="banner_description"
-                           [placeholder]="'platform_settings.banner_description_placeholder' | translate" />
-          </div>
-
-          <div class="ps-field">
-            <label>{{ 'platform_settings.why_choose_us' | translate }}</label>
-            <nas-rich-text formControlName="why_us"
-                           [placeholder]="'platform_settings.why_choose_us_placeholder' | translate" />
-          </div>
-
-          <div class="ps-field">
-            <label>{{ 'platform_settings.footer_logo' | translate }}</label>
-            <nas-photo-upload
-              [value]="filePreviews()['footer_logo']"
-              ratio="100x45"
-              (fileSelected)="onFilePicked('footer_logo', $event)"
-              (cleared)="onFileCleared('footer_logo')" />
-          </div>
-
-        </div>
-      </section>
 
     </form>
   }

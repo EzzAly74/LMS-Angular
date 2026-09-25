@@ -18,7 +18,6 @@ import { ApiService } from '../../../core/services/api.service';
 import { EnumsService } from '../../../core/services/enums.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { API } from '../../../core/constants/api.constants';
-import { withLocaleReload } from '../../../core/utils/with-locale-reload';
 // Direct file imports — re-exporting through `index.ts` barrels confuses
 // Angular's compile-time `imports:[]` resolver and disables template type
 // inference (we end up with `$event: Event` on photo-upload handlers).
@@ -46,15 +45,19 @@ type CertificateBasis = 'attendance' | 'score' | 'both';
  * Platform Settings — pixel-perfect Figma implementation (nodes
  * 380:16365, 385:14745, 385:13783, 385:12821).
  *
- * Six sections in one form:
- *   1. General                — platform_name, default_language
- *   2. Enrolment & Learning   — default_cohort_size
- *   3. Grading & Certificates — course_ratings_enabled, abnormal_rating_threshold,
- *                              certificate_award_basis, min_passing_score (conditional)
- *   4. About Us               — about_description / values / mission / vision (rich text),
- *                              about_image (upload)
- *   5. Settings (website view)— header_logo, banner_background, banner_description,
- *                              why_us, footer_logo
+ * Two sections in one form:
+ *   1. Enrolment & Attendance - default_cohort_size, academy close offset,
+ *                               attendance toggle, passcode reset
+ *   2. Grading & Certificates - abnormal_rating_threshold,
+ *                               certificate_award_basis, min_passing_* (conditional)
+ *
+ * Three sections were removed on 2026-09-25 (I18N-03): General
+ * (platform_name, default_language), About Us (about_*), and the "website
+ * view" Settings card (header/footer logo, banner, why_us). Every field in
+ * them was edited here and read nowhere - the Angular Website renders none
+ * of them, and the human confirmed the mobile app does not use /settings.
+ * why_us also stored Arabic hard-coded into one value, which D-051 forbids.
+ * The course-ratings toggle went too: no code ever read it (I18N-04).
  *
  * Everything lives on the existing `settings` table — text/number/boolean
  * keys go through `PUT /admin/settings`, image keys go through
@@ -127,33 +130,17 @@ export class SettingsComponent implements OnInit {
    */
   attendanceSig = signal(true);
 
-  constructor() {
-    // Refetch platform settings whenever the user switches UI language so
-    // bilingual fields (about_*, banner_description, why_us, etc.) come
-    // back in the new active locale via the `Accept-Language` header.
-    withLocaleReload(() => this.load());
-  }
-
   /* ── Lifecycle ───────────────────────────────────────────── */
   ngOnInit(): void {
     this.form = this.fb.group({
-      platform_name:             [''],
-      default_language:          ['en'],
       default_cohort_size:       [30],
       academy_close_offset_days: [0],
       course_attendance_enabled: [true],
       passcode_reset_seconds:    [30],
-      course_ratings_enabled:    [true],
       abnormal_rating_threshold: [30],
       certificate_award_basis:   ['attendance' as CertificateBasis],
       min_passing_attendance:    [70],
       min_passing_score:         [30],
-      about_description:         [''],
-      about_values:              [''],
-      about_mission:             [''],
-      about_vision:              [''],
-      banner_description:        [''],
-      why_us:                    [''],
     });
 
     this.load();
@@ -201,23 +188,14 @@ export class SettingsComponent implements OnInit {
     this.attendanceSig.set(attendanceEnabled);
 
     this.form.patchValue({
-      platform_name:             map['platform_name']             ?? '',
-      default_language:          map['default_language']          ?? 'en',
       default_cohort_size:       this.numericValue(map['default_cohort_size'], 30),
       academy_close_offset_days: this.numericValue(map['academy_default_close_offset_days'], 0),
       course_attendance_enabled: attendanceEnabled,
       passcode_reset_seconds:    this.numericValue(map['passcode_reset_seconds'], 30),
-      course_ratings_enabled:    this.boolValue(map['course_ratings_enabled'], true),
       abnormal_rating_threshold: this.numericValue(map['abnormal_rating_threshold'], 30),
       certificate_award_basis:   basis,
       min_passing_attendance:    this.numericValue(map['min_passing_attendance'], 70),
       min_passing_score:         this.numericValue(map['min_passing_score'], 30),
-      about_description:         map['about_description'] ?? '',
-      about_values:              map['about_values']      ?? '',
-      about_mission:             map['about_mission']     ?? '',
-      about_vision:              map['about_vision']      ?? '',
-      banner_description:        map['banner_description'] ?? '',
-      why_us:                    map['why_us']             ?? '',
     }, { emitEvent: false });
   }
 
@@ -247,23 +225,14 @@ export class SettingsComponent implements OnInit {
       const payload: Record<string, string> = {};
       const f = this.form.value;
       const put = (k: string, v: unknown) => { payload[k] = v === null || v === undefined ? '' : String(v); };
-      put('platform_name',             f.platform_name);
-      put('default_language',          f.default_language);
       put('default_cohort_size',       f.default_cohort_size);
       put('academy_default_close_offset_days', f.academy_close_offset_days);
       put('course_attendance_enabled', f.course_attendance_enabled ? '1' : '0');
       put('passcode_reset_seconds',    f.passcode_reset_seconds);
-      put('course_ratings_enabled',    f.course_ratings_enabled ? '1' : '0');
       put('abnormal_rating_threshold', f.abnormal_rating_threshold);
       put('certificate_award_basis',   f.certificate_award_basis);
       put('min_passing_attendance',    f.min_passing_attendance);
       put('min_passing_score',         f.min_passing_score);
-      put('about_description',         f.about_description);
-      put('about_values',              f.about_values);
-      put('about_mission',             f.about_mission);
-      put('about_vision',              f.about_vision);
-      put('banner_description',        f.banner_description);
-      put('why_us',                    f.why_us);
 
       const res = await this.api.put<Setting[]>(API.ADMIN_SETTINGS, { settings: payload }).toPromise();
       if (res?.result) this.ingestSettings(res.result);
