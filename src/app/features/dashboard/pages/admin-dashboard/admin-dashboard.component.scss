@@ -256,7 +256,12 @@
     font-weight: var(--nas-weight-medium);
     i { font-size: 12px; }
   }
-  &__table-wrap { padding: 0; overflow: hidden; }
+  // `overflow-x: auto`, not `hidden`. With `hidden`, a table wider than its
+  // card was silently truncated: at 375 px, 3 of its 6 columns were cut off
+  // with no way to scroll to them. Any non-visible overflow value still clips
+  // to the border-radius, so the rounded corners this rule was protecting are
+  // kept - the table now scrolls inside its card instead of losing columns.
+  &__table-wrap { padding: 0; overflow-x: auto; }
 }
 
 /* ── NAS table ───────────────────────────────────────────────────── */

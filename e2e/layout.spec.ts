@@ -141,6 +141,39 @@ for (const locale of LOCALES) {
           `${route} overflows horizontally by ${overflow.scroll - overflow.client}px`,
         ).toBeLessThanOrEqual(overflow.client + 1);
 
+        // 2b. No table is CLIPPED by a container that cannot scroll.
+        //
+        // Check 2 alone has a blind spot, found 2026-09-25: a container with
+        // `overflow: hidden` stops the page overflowing precisely BY cutting
+        // its content off. The dashboard's top-courses table passed check 2 at
+        // 375 px while 3 of its 6 columns were unreachable - the page was
+        // "fine" because the columns were simply gone. A wide table must
+        // scroll inside its card, never be silently truncated.
+        const clipped = await page.evaluate(() => {
+          const found: string[] = [];
+          for (const table of Array.from(document.querySelectorAll('table, [role="table"]'))) {
+            let el = table.parentElement;
+            while (el && el !== document.body) {
+              const cs = getComputedStyle(el);
+              if (
+                (cs.overflowX === 'hidden' || cs.overflowX === 'clip') &&
+                el.scrollWidth > el.clientWidth + 1
+              ) {
+                const cls = String(el.className).trim().split(/\s+/).slice(0, 2).join('.');
+                found.push(
+                  `${el.tagName.toLowerCase()}${cls ? '.' + cls : ''} hides ` +
+                    `${el.scrollWidth - el.clientWidth}px of a table ` +
+                    `(${el.clientWidth}px visible of ${el.scrollWidth}px)`,
+                );
+                break;
+              }
+              el = el.parentElement;
+            }
+          }
+          return found;
+        });
+        expect(clipped, `${route} clips table content the user cannot reach`).toEqual([]);
+
         // Evidence for the human Figma review, taken before the error
         // assertion so a failing page still leaves a screenshot behind.
         const dir = resolve(ARTIFACTS, route);

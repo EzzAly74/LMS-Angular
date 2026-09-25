@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -10,6 +10,7 @@ import { LocaleService } from '../../core/services/locale.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MessagesRealtimeService } from '../../core/services/messages-realtime.service';
 import { ADMIN_NAV_GROUPS, NavGroup, NavItem } from './admin-nav.config';
+import { SIDEBAR_COLLAPSE_QUERY } from '../../core/constants/breakpoints';
 import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NasConfirmModalComponent } from '../../shared/nas/nas-confirm-modal/nas-confirm-modal.component';
@@ -53,9 +54,37 @@ export class AdminLayoutComponent {
 
   constructor() {
     withLocaleReload(() => this.langTick.update(v => v + 1));
+
+    // Track the viewport so the sidebar can be held collapsed on narrow
+    // screens (D-025). The listener is removed with the component.
+    const mq = window.matchMedia(SIDEBAR_COLLAPSE_QUERY);
+    const onChange = (e: MediaQueryListEvent): void => this.narrowViewport.set(e.matches);
+    mq.addEventListener('change', onChange);
+    inject(DestroyRef).onDestroy(() => mq.removeEventListener('change', onChange));
   }
 
+  /** The admin's own choice, from the collapse button. Remembered across resizes. */
   sidebarCollapsed = signal(false);
+
+  /**
+   * True at or below the collapse breakpoint.
+   *
+   * The layout had no responsive behaviour at all: the 260 px sidebar stayed
+   * at full width on every screen, leaving 91 px for the page at 375 px, and
+   * every route overflowed by 132 px. D-025 decided the sidebar collapses to
+   * its 72 px rail at <=1024 px; it was never built.
+   */
+  readonly narrowViewport = signal(window.matchMedia(SIDEBAR_COLLAPSE_QUERY).matches);
+
+  /**
+   * What the template actually renders.
+   *
+   * Narrow screens force the collapsed rail; wide screens honour the admin's
+   * choice. Deriving it - rather than overwriting `sidebarCollapsed` on
+   * resize - means widening the window restores whatever the admin had
+   * picked, instead of silently forgetting it.
+   */
+  readonly effectiveCollapsed = computed(() => this.narrowViewport() || this.sidebarCollapsed());
   logoutConfirmOpen = signal(false);
 
   /**

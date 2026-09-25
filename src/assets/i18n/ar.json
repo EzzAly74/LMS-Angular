@@ -4,6 +4,8 @@
     "loading": "جاري التحميل..."
   },
   "nav": {
+    "expand_sidebar": "توسيع الشريط الجانبي",
+    "collapse_sidebar": "طي الشريط الجانبي",
     "group": {
       "main": "الرئيسية",
       "learning_ops": "العمليات التعليمية",

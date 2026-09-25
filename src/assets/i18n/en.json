@@ -4,6 +4,8 @@
     "loading": "Loading..."
   },
   "nav": {
+    "expand_sidebar": "Expand sidebar",
+    "collapse_sidebar": "Collapse sidebar",
     "group": {
       "main": "Main",
       "learning_ops": "Learning Operations",

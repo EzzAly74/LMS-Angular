@@ -94,6 +94,15 @@
   i {
     font-size: 11px;
   }
+
+  // The chevrons are directional: "collapse" points toward the sidebar's
+  // edge. In RTL the sidebar sits on the right, so an unmirrored icon points
+  // the wrong way - CLAUDE.md requires directional icons to mirror in RTL.
+  // Scoped via :host-context so it follows the document's `dir`, which
+  // LocaleService sets from the active language.
+  :host-context([dir='rtl']) & i {
+    transform: scaleX(-1);
+  }
 }
 
 /* ── Nav ─────────────────────────────────────────────────────────── */
