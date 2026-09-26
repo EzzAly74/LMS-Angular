@@ -16,6 +16,7 @@
   --transition-speed: 0.2s;
 
   /* NAS Design System ─ Deep Teal ramp (primary) */
+  --nas-teal-50: #f9fcfc;  /* expanded tree row (Figma 2325:117118) */
   --nas-teal-100: #f2fbfa;
   --nas-teal-200: #d5f2f0;
   --nas-teal-300: #aae5e1;
@@ -952,7 +953,10 @@ input[type="number"]::-webkit-outer-spin-button {
 .page-container {
   animation: nasFadeIn 0.2s ease;
 }
-html:lang(ar) {
+// Mirror the Job Titles pager arrows in RTL. Keyed on direction, not
+// language: `html:lang(ar)` was dropped by the build's CSS optimiser
+// ("Unknown pseudo-class :lang"), so the arrows never flipped in production.
+html[dir='rtl'] {
   .jt-pagination__btn {
     transform: scaleX(-1);
   }

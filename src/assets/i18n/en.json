@@ -323,7 +323,6 @@
     "no_results": "No assignments found.",
     "confirm_delete": "Delete Assignment",
     "review": "Review",
-    "questions": "Questions",
     "due_date": "Due Date",
     "pass_score": "Pass Score",
     "title_en": "Assignment title (English)",
@@ -340,7 +339,6 @@
     "save_draft": "Save Draft",
     "publish_assignment": "Publish Assignment",
     "added": "Assignment created.",
-    "updated": "Assignment updated.",
     "view_assignment": "View Assignment",
     "view_all": "View All",
     "summary_assignments": "created assignments",
@@ -652,7 +650,38 @@
     "modal_title": "Filter your results",
     "modal_for": "For",
     "modal_no_results": "No qualifications found",
-    "save_assignments": "Save Assignments"
+    "save_assignments": "Save Assignments",
+    "detail": {
+      "subtitle": "Job title details",
+      "search_label": "Search learners",
+      "search_placeholder": "Search by learner name or ID...",
+      "caption": "Learners holding this job title, with their qualification progress",
+      "col_learner": "Learner",
+      "col_assigned": "Assigned Qualification",
+      "col_completion": "Completion",
+      "id_label": "ID: {{id}}",
+      "qualification_count": {
+        "one": "{{count}} qualification",
+        "other": "{{count}} qualifications"
+      },
+      "qualifications_progress": {
+        "one": "{{done}} of {{count}} qualification",
+        "other": "{{done}} of {{count}} qualifications"
+      },
+      "courses_progress": {
+        "one": "{{done}} of {{count}} Course",
+        "other": "{{done}} of {{count}} Courses"
+      },
+      "granted_directly": "Granted directly",
+      "completion_of": "Completion for {{name}}",
+      "no_qualifications": "This job title requires no qualifications yet.",
+      "empty": "No learners hold this job title yet.",
+      "no_results": "No learners match your search.",
+      "not_found_title": "Job title not found",
+      "not_found": "This job title does not exist or was removed.",
+      "retry": "Retry",
+      "showing": "Showing {{from}}-{{to}} of {{total}}"
+    }
   },
   "qualifications": {
     "title": "Qualifications",
@@ -764,7 +793,6 @@
   "resources": {
     "title": "Resources",
     "subtitle": "Learning materials and references available to all employees",
-    "add": "Add Resource",
     "new_resource": "New Resource",
     "search_placeholder": "Search resources...",
     "no_results": "No resources found.",
@@ -1127,7 +1155,6 @@
     "edit": "Edit",
     "add_cohort": "Add Cohort",
     "add_module": "Module",
-    "cohort": "Cohort",
     "start": "Start",
     "end": "End",
     "enrolled_capacity": "Enrolled / Capacity",
@@ -1156,7 +1183,6 @@
     "avg_session_time": "Avg. Session Time",
     "avg_session_time_placeholder": "e.g. 3",
     "avg_session_time_helper": "Sets how long each attendance session stays open for this cohort.",
-    "hours": "hours",
     "cohort_start_placeholder": "30/12/2025",
     "cohort_end_placeholder": "30/01/2026",
     "learners": "learners",

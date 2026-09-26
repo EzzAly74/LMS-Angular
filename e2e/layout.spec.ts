@@ -1,5 +1,5 @@
-import { expect, Page, test } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { APIRequestContext, expect, Page, test } from '@playwright/test';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
@@ -29,7 +29,23 @@ const LOCALE_KEY = '2b_locale';
  *     being deleted is wasted effort.
  *   - ratings: replaced by Evaluations once that flow ships (Q-050).
  */
-const ROUTES = [
+/**
+ * A detail route needs a real record's id, which differs per database, so it
+ * is looked up when its test runs (not when the list is built: Playwright
+ * collects tests before global-setup, so a list extended from setup output
+ * silently misses entries). No record on this database -> the test is
+ * reported as skipped, never pointed at an invented id.
+ */
+interface DetailRoute {
+  name: string;
+  /** API list whose first row supplies the id. */
+  list: string;
+  path: (id: number) => string;
+}
+
+type Route = string | DetailRoute;
+
+const ROUTES: Route[] = [
   'dashboard',
   'courses',
   'categories',
@@ -48,7 +64,26 @@ const ROUTES = [
   'controllers',
   'audit-log',
   'settings',
-] as const;
+  { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (id) => `job-titles/${id}` },
+];
+
+const API_BASE = process.env['E2E_API_BASE'] ?? 'http://127.0.0.1:8000';
+
+/** The first record's id from an API list, authenticated as the harness admin. */
+async function firstId(request: APIRequestContext, list: string): Promise<number | undefined> {
+  const state = JSON.parse(readFileSync(resolve(__dirname, '.auth/admin.json'), 'utf8')) as {
+    origins: { localStorage: { name: string; value: string }[] }[];
+  };
+  const token = state.origins[0]?.localStorage.find((e) => e.name === '2b_token')?.value;
+  const res = await request.get(`${API_BASE}${list}`, {
+    params: { per_page: 1 },
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok()) return undefined;
+  const body = (await res.json()) as { result?: { id: number }[] | { data?: { id: number }[] } };
+  const rows = Array.isArray(body.result) ? body.result : body.result?.data;
+  return rows?.[0]?.id;
+}
 
 const LOCALES = [
   { code: 'en', dir: 'ltr' },
@@ -110,8 +145,18 @@ for (const locale of LOCALES) {
       );
     });
 
-    for (const route of ROUTES) {
-      test(`${route}`, async ({ page }, testInfo) => {
+    for (const entry of ROUTES) {
+      const name = typeof entry === 'string' ? entry : entry.name;
+      test(name, async ({ page, request }, testInfo) => {
+        let route: string;
+        if (typeof entry === 'string') {
+          route = entry;
+        } else {
+          const id = await firstId(request, entry.list);
+          test.skip(id === undefined, `${entry.name}: no record on this database to open`);
+          route = entry.path(id as number);
+        }
+
         const errors = watchForErrors(page);
 
         await page.goto(`/admin/${route}`);
@@ -176,7 +221,7 @@ for (const locale of LOCALES) {
 
         // Evidence for the human Figma review, taken before the error
         // assertion so a failing page still leaves a screenshot behind.
-        const dir = resolve(ARTIFACTS, route);
+        const dir = resolve(ARTIFACTS, name);
         mkdirSync(dir, { recursive: true });
         await page.screenshot({
           path: resolve(dir, `${testInfo.project.name}-${locale.code}.png`),

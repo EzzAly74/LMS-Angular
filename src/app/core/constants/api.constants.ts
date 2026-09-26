@@ -19,6 +19,8 @@ export const API = {
   DASHBOARD_PASSCODE_REGENERATE: `${API_BASE}/dashboard/passcode/regenerate`,
   DASHBOARD_PASSCODE_END: `${API_BASE}/dashboard/passcode/end`,
   JOB_TITLES:     `${API_BASE}/job-titles`,
+  /** Admin-only job-title reads, e.g. `{id}/learners` (backend B1). */
+  ADMIN_JOB_TITLES: `${API_BASE}/admin/job-titles`,
   QUALIFICATIONS: `${API_BASE}/qualification-skills`,
   RATINGS:        `${API_BASE}/ratings`,
   ADMIN_RATINGS:  `${API_BASE}/admin/ratings`,

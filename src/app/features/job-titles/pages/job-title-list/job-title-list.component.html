@@ -33,7 +33,9 @@
       @for (item of items(); track item.id) {
         <article class="jt-card">
           <header class="jt-card__head">
-            <h2 class="jt-card__name">{{ item.name }}</h2>
+            <h2 class="jt-card__name">
+              <a class="jt-card__link" [routerLink]="[item.id]">{{ item.name }}</a>
+            </h2>
             <span class="jt-card__pill">
               {{ item.employees_count ?? 0 }} {{ 'job_titles.employee' | translate }}
             </span>

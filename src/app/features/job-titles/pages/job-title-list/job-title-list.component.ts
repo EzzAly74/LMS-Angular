@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
@@ -50,7 +51,7 @@ interface Qualification {
 @Component({
   selector: 'app-job-title-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogModule, SkeletonModule, TranslateModule, NasIconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, DialogModule, SkeletonModule, TranslateModule, NasIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-title-list.component.html',
   styleUrl: './job-title-list.component.scss',

@@ -323,7 +323,6 @@
     "no_results": "لا توجد مهام.",
     "confirm_delete": "حذف المهمة",
     "review": "مراجعة",
-    "questions": "الأسئلة",
     "due_date": "تاريخ التسليم",
     "pass_score": "درجة النجاح",
     "title_en": "عنوان المهمة (إنجليزي)",
@@ -340,7 +339,6 @@
     "save_draft": "حفظ كمسودة",
     "publish_assignment": "نشر المهمة",
     "added": "تم إنشاء المهمة.",
-    "updated": "تم تحديث المهمة.",
     "view_assignment": "عرض المهمة",
     "view_all": "عرض الكل",
     "summary_assignments": "مهمة",
@@ -652,7 +650,50 @@
     "modal_title": "تصفية النتائج",
     "modal_for": "لـ",
     "modal_no_results": "لا توجد مؤهلات",
-    "save_assignments": "حفظ التعيينات"
+    "save_assignments": "حفظ التعيينات",
+    "detail": {
+      "subtitle": "تفاصيل المسمى الوظيفي",
+      "search_label": "البحث عن المتعلمين",
+      "search_placeholder": "ابحث باسم المتعلم أو رقمه...",
+      "caption": "المتعلمون الحاملون لهذا المسمى الوظيفي وتقدمهم في المؤهلات",
+      "col_learner": "المتعلم",
+      "col_assigned": "المؤهلات المعيّنة",
+      "col_completion": "نسبة الإنجاز",
+      "id_label": "الرقم: {{id}}",
+      "qualification_count": {
+        "zero": "لا توجد مؤهلات",
+        "one": "مؤهل واحد",
+        "two": "مؤهلان",
+        "few": "{{count}} مؤهلات",
+        "many": "{{count}} مؤهلًا",
+        "other": "{{count}} مؤهل"
+      },
+      "qualifications_progress": {
+        "zero": "{{done}} من {{count}} مؤهل",
+        "one": "{{done}} من مؤهل واحد",
+        "two": "{{done}} من مؤهلين",
+        "few": "{{done}} من {{count}} مؤهلات",
+        "many": "{{done}} من {{count}} مؤهلًا",
+        "other": "{{done}} من {{count}} مؤهل"
+      },
+      "courses_progress": {
+        "zero": "{{done}} من {{count}} دورة",
+        "one": "{{done}} من دورة واحدة",
+        "two": "{{done}} من دورتين",
+        "few": "{{done}} من {{count}} دورات",
+        "many": "{{done}} من {{count}} دورةً",
+        "other": "{{done}} من {{count}} دورة"
+      },
+      "granted_directly": "مُنح مباشرة",
+      "completion_of": "نسبة إنجاز {{name}}",
+      "no_qualifications": "لا يتطلب هذا المسمى الوظيفي أي مؤهلات بعد.",
+      "empty": "لا يوجد متعلمون بهذا المسمى الوظيفي بعد.",
+      "no_results": "لا يوجد متعلمون مطابقون لبحثك.",
+      "not_found_title": "المسمى الوظيفي غير موجود",
+      "not_found": "هذا المسمى الوظيفي غير موجود أو تم حذفه.",
+      "retry": "إعادة المحاولة",
+      "showing": "عرض {{from}}-{{to}} من {{total}}"
+    }
   },
   "qualifications": {
     "title": "المؤهلات",
@@ -764,7 +805,6 @@
   "resources": {
     "title": "الموارد",
     "subtitle": "مواد التعلم والمراجع المتاحة لجميع الموظفين",
-    "add": "إضافة مورد",
     "new_resource": "مورد جديد",
     "search_placeholder": "ابحث في الموارد...",
     "no_results": "لا توجد موارد.",
@@ -1127,7 +1167,6 @@
     "edit": "تعديل",
     "add_cohort": "إضافة مجموعة",
     "add_module": "وحدة",
-    "cohort": "المجموعة",
     "start": "البداية",
     "end": "النهاية",
     "enrolled_capacity": "المسجلون / السعة",
@@ -1156,7 +1195,6 @@
     "avg_session_time": "متوسط مدة الجلسة",
     "avg_session_time_placeholder": "مثال: 3",
     "avg_session_time_helper": "يحدد المدة التي تظل فيها جلسة الحضور مفتوحة لهذه المجموعة.",
-    "hours": "ساعات",
     "cohort_start_placeholder": "30/12/2025",
     "cohort_end_placeholder": "30/01/2026",
     "learners": "متعلم",

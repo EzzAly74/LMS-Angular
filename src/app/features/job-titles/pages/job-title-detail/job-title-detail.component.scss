@@ -1,0 +1,338 @@
+// Job title detail - Figma 2325:117118. Values are the design's, mapped to
+// the existing --nas-* tokens; layout uses logical properties so RTL needs
+// no duplicated rules beyond the two direction-bearing graphics (the bar
+// gradient and the pager arrows).
+
+.jtd {
+  gap: var(--nas-space-6);
+}
+
+// ── Heading ──────────────────────────────────────────────────────────────
+.jtd__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-1);
+}
+
+.jtd__title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 28.8px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+}
+
+.jtd__subtitle {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-color-text-muted);
+}
+
+// ── Search ───────────────────────────────────────────────────────────────
+// The search and the table sit 16px apart (Figma 2401:131622), closer than
+// the page's 24px rhythm.
+.jtd__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  margin-block-end: calc(var(--nas-space-4) - var(--nas-space-6));
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-100);
+
+  nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+
+  &:focus-within {
+    border-color: var(--nas-teal-700);
+    box-shadow: 0 0 0 3px var(--nas-teal-1000-16);
+  }
+}
+
+.jtd__search-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  color: var(--nas-color-text-strong);
+
+  &::placeholder { color: var(--nas-color-text-subtle); }
+}
+
+// ── Card + table ─────────────────────────────────────────────────────────
+.jtd__card {
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-xl);
+  box-shadow: 0 1px 2px 0 var(--nas-teal-1000-08);
+  overflow: hidden;
+}
+
+// The table keeps its columns legible and scrolls inside the card on narrow
+// screens, rather than being clipped (the LAYOUT-02 rule).
+.jtd__scroll {
+  overflow-x: auto;
+}
+
+.jtd__table {
+  inline-size: 100%;
+  min-inline-size: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.jtd__col-learner  { inline-size: 200px; }
+.jtd__col-assigned { inline-size: 240px; }
+
+.jtd__th {
+  block-size: 45px;
+  padding: var(--nas-space-3) var(--nas-space-5);
+  background: var(--nas-neutral-50);
+  border-block-end: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-muted);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.jtd__th-completion {
+  font-size: var(--nas-size-2xs);
+  line-height: 16px;
+  font-weight: var(--nas-weight-semibold);
+}
+
+.jtd__td {
+  padding: var(--nas-space-3) var(--nas-space-5);
+  vertical-align: middle;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  color: var(--nas-color-text-strong);
+}
+
+.jtd__row--parent {
+  block-size: 65px;
+  border-block-start: 1px solid var(--nas-color-border);
+
+  .jtd__td { padding-block: 14px; }
+
+  &:first-child { border-block-start: 0; }
+}
+
+.jtd__row--open { background: var(--nas-teal-50); }
+
+.jtd__row--child { block-size: 56px; }
+
+// Parent rows are ruled; the children of one learner are not, so each
+// learner reads as one block.
+.jtd__assigned-count { text-align: center; }
+
+// Names carry dir="auto" so a Latin name inside the Arabic layout (or the
+// reverse) is shaped and truncated in its own direction: without it, "Ava
+// Chen" in RTL is cut at the wrong end ("...va Chen"). match-parent keeps it
+// aligned with the column instead of following its own direction.
+.jtd__qual-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: match-parent;
+}
+
+.jtd__muted { color: var(--nas-color-text-muted); }
+
+// ── Learner cell (the expand toggle) ─────────────────────────────────────
+.jtd__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-3);
+  inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  border-radius: var(--nas-radius-sm);
+
+  &:focus-visible {
+    outline: 2px solid var(--nas-teal-700);
+    outline-offset: 4px;
+  }
+}
+
+.jtd__user-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+
+.jtd__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.jtd__name,
+.jtd__id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jtd__name {
+  text-align: match-parent;
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  font-weight: var(--nas-weight-semibold);
+}
+
+.jtd__id {
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  color: var(--nas-color-text-muted);
+}
+
+// ── Completion ───────────────────────────────────────────────────────────
+// A 401px block pushed to the cell's inline end; the header label uses the
+// same slot so it starts exactly where the bars start.
+.jtd__progress-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  inline-size: min(401px, 100%);
+  margin-inline-start: auto;
+}
+
+.jtd__progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-2);
+  font-size: var(--nas-size-2xs);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.jtd__percent { font-weight: var(--nas-weight-semibold); }
+
+.jtd__of { color: var(--nas-color-text-muted); }
+
+.jtd__bar {
+  display: block;
+  block-size: 8px;
+  border-radius: 4px;
+  background: var(--nas-neutral-300);
+  overflow: hidden;
+}
+
+.jtd__bar-fill {
+  display: block;
+  block-size: 100%;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--nas-teal-1000), var(--nas-teal-700));
+
+  :host-context([dir='rtl']) & {
+    background: linear-gradient(to left, var(--nas-teal-1000), var(--nas-teal-700));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: inline-size 300ms ease;
+  }
+}
+
+// ── Empty / error / not-found ────────────────────────────────────────────
+.jtd__message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-10) var(--nas-space-5);
+  color: var(--nas-color-text-muted);
+  text-align: center;
+
+  p { margin: 0; }
+}
+
+td.jtd__message { display: table-cell; }
+
+.jtd__retry {
+  margin-block-start: var(--nas-space-3);
+  padding: var(--nas-space-2) var(--nas-space-4);
+  border: 1px solid var(--nas-color-border-strong);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+// ── Pager ────────────────────────────────────────────────────────────────
+.jtd__pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+  padding: var(--nas-space-3) var(--nas-space-5);
+  border-block-start: 1px solid var(--nas-color-border);
+}
+
+.jtd__pager-info {
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-color-text-muted);
+}
+
+.jtd__pager-nav {
+  display: flex;
+  gap: var(--nas-space-4);
+}
+
+.jtd__pager-btn {
+  display: inline-flex;
+  padding: var(--nas-space-2);
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-300);
+  cursor: pointer;
+
+  img { display: block; }
+
+  &:hover:not([disabled]) { background: var(--nas-neutral-400); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+  &[disabled] { opacity: 0.4; cursor: not-allowed; }
+}
+
+// The asset is a down-pointing chevron: Figma rotates it 90deg for
+// "previous" and -90deg for "next". In RTL, previous points right.
+.jtd__pager-btn--prev img { transform: rotate(90deg); }
+.jtd__pager-btn--next img { transform: rotate(-90deg); }
+
+:host-context([dir='rtl']) {
+  .jtd__pager-btn--prev img { transform: rotate(-90deg); }
+  .jtd__pager-btn--next img { transform: rotate(90deg); }
+}
+
+.jtd__sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 767px) {
+  .jtd__pager { flex-wrap: wrap; }
+}

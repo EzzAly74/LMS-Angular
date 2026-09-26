@@ -1,0 +1,179 @@
+<div class="nas-page-container jtd">
+
+  <header class="jtd__head">
+    <h1 class="jtd__title">
+      @if (jobTitle(); as jt) {
+        {{ jt.name }}
+      } @else if (state() === 'not-found') {
+        {{ 'job_titles.detail.not_found_title' | translate }}
+      } @else {
+        <p-skeleton width="220px" height="28px" borderRadius="6px" />
+      }
+    </h1>
+    <p class="jtd__subtitle">{{ 'job_titles.detail.subtitle' | translate }}</p>
+  </header>
+
+  @if (state() === 'not-found') {
+    <div class="jtd__card jtd__message" role="status">
+      <nas-icon name="info" [size]="32" />
+      <p>{{ 'job_titles.detail.not_found' | translate }}</p>
+    </div>
+  } @else {
+    <div class="jtd__search">
+      <nas-icon name="magnifying-glass" [size]="20" />
+      <label class="jtd__sr-only" for="jtd-search">{{ 'job_titles.detail.search_label' | translate }}</label>
+      <input
+        id="jtd-search"
+        type="search"
+        class="jtd__search-input"
+        [placeholder]="'job_titles.detail.search_placeholder' | translate"
+        [ngModel]="search()"
+        (ngModelChange)="onSearch($event)"
+      />
+    </div>
+
+    <section class="jtd__card" [attr.aria-busy]="state() === 'loading'">
+      <div class="jtd__scroll">
+        <table class="jtd__table">
+          <caption class="jtd__sr-only">{{ 'job_titles.detail.caption' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="jtd__th jtd__col-learner">{{ 'job_titles.detail.col_learner' | translate }}</th>
+              <th scope="col" class="jtd__th jtd__col-assigned">{{ 'job_titles.detail.col_assigned' | translate }}</th>
+              <th scope="col" class="jtd__th jtd__col-completion">
+                <span class="jtd__progress-slot jtd__th-completion">{{ 'job_titles.detail.col_completion' | translate }}</span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @if (state() === 'loading') {
+              @for (s of skeletons; track s) {
+                <tr class="jtd__row">
+                  <td class="jtd__td"><p-skeleton width="70%" height="18px" /></td>
+                  <td class="jtd__td"><p-skeleton width="60%" height="16px" /></td>
+                  <td class="jtd__td"><span class="jtd__progress-slot"><p-skeleton height="8px" borderRadius="4px" /></span></td>
+                </tr>
+              }
+            } @else if (state() === 'error') {
+              <tr>
+                <td class="jtd__td jtd__message" colspan="3" role="alert">
+                  <p>{{ 'common.could_not_load' | translate }}</p>
+                  <button type="button" class="jtd__retry" (click)="reload()">
+                    {{ 'job_titles.detail.retry' | translate }}
+                  </button>
+                </td>
+              </tr>
+            } @else {
+              @for (learner of learners(); track learner.id) {
+                @let open = isExpanded(learner.id);
+                <tr class="jtd__row jtd__row--parent" [class.jtd__row--open]="open">
+                  <td class="jtd__td jtd__col-learner">
+                    <button
+                      type="button"
+                      class="jtd__toggle"
+                      [attr.aria-expanded]="open"
+                      [attr.aria-controls]="'jtd-q-' + learner.id"
+                      (click)="toggle(learner.id)"
+                    >
+                      <nas-icon class="jtd__user-icon" name="user" [size]="24" />
+                      <span class="jtd__who">
+                        <span class="jtd__name" dir="auto" [attr.title]="learner.name">{{ learner.name }}</span>
+                        @if (learner.employee_id) {
+                          <span class="jtd__id">{{ 'job_titles.detail.id_label' | translate: { id: learner.employee_id } }}</span>
+                        }
+                      </span>
+                    </button>
+                  </td>
+                  <td class="jtd__td jtd__col-assigned jtd__assigned-count">
+                    {{ plural('qualification_count', learner.qualifications_total) | translate: { count: learner.qualifications_total } }}
+                  </td>
+                  <td class="jtd__td jtd__col-completion">
+                    <span class="jtd__progress-slot">
+                      <span class="jtd__progress-meta">
+                        <span class="jtd__percent">{{ learner.completion_percent }}%</span>
+                        <span class="jtd__of">
+                          {{ plural('qualifications_progress', learner.qualifications_total) | translate: { done: learner.qualifications_completed, count: learner.qualifications_total } }}
+                        </span>
+                      </span>
+                      <span class="jtd__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                        [attr.aria-valuenow]="learner.completion_percent"
+                        [attr.aria-label]="'job_titles.detail.completion_of' | translate: { name: learner.name }">
+                        <span class="jtd__bar-fill" [style.inline-size.%]="learner.completion_percent"></span>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+
+                @if (open) {
+                  @for (q of learner.qualification_breakdown; track q.id; let last = $last) {
+                    <tr class="jtd__row jtd__row--child" [class.jtd__row--child-last]="last"
+                      [attr.id]="$first ? 'jtd-q-' + learner.id : null">
+                      <td class="jtd__td jtd__col-learner"></td>
+                      <td class="jtd__td jtd__col-assigned"><span class="jtd__qual-name" dir="auto" [attr.title]="q.name">{{ q.name }}</span></td>
+                      <td class="jtd__td jtd__col-completion">
+                        <span class="jtd__progress-slot">
+                          <span class="jtd__progress-meta">
+                            <span class="jtd__percent">{{ q.percent }}%</span>
+                            <span class="jtd__of">
+                              @if (q.granted_directly) {
+                                {{ 'job_titles.detail.granted_directly' | translate }}
+                              } @else {
+                                {{ plural('courses_progress', q.courses_total) | translate: { done: q.courses_completed, count: q.courses_total } }}
+                              }
+                            </span>
+                          </span>
+                          <span class="jtd__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                            [attr.aria-valuenow]="q.percent"
+                            [attr.aria-label]="'job_titles.detail.completion_of' | translate: { name: q.name }">
+                            <span class="jtd__bar-fill" [style.inline-size.%]="q.percent"></span>
+                          </span>
+                        </span>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr class="jtd__row jtd__row--child jtd__row--child-last" [attr.id]="'jtd-q-' + learner.id">
+                      <td class="jtd__td jtd__col-learner"></td>
+                      <td class="jtd__td jtd__qual-name jtd__muted" colspan="2">
+                        {{ 'job_titles.detail.no_qualifications' | translate }}
+                      </td>
+                    </tr>
+                  }
+                }
+              } @empty {
+                <tr>
+                  <td class="jtd__td jtd__message" colspan="3" role="status">
+                    <nas-icon name="tray" [size]="32" />
+                    <p>
+                      {{ (search() ? 'job_titles.detail.no_results' : 'job_titles.detail.empty') | translate }}
+                    </p>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (state() === 'ready' && total() > 0) {
+        <nav class="jtd__pager" [attr.aria-label]="'common.pagination' | translate">
+          <span class="jtd__pager-info">
+            {{ 'job_titles.detail.showing' | translate: { from: rangeStart(), to: rangeEnd(), total: total() } }}
+          </span>
+          <span class="jtd__pager-nav">
+            <button type="button" class="jtd__pager-btn jtd__pager-btn--prev"
+              [disabled]="page() === 1" (click)="goTo(page() - 1)"
+              [attr.aria-label]="'common.previous' | translate">
+              <img src="assets/icons/figma/arrow-down-old-system.svg" width="24" height="24" alt="" />
+            </button>
+            <button type="button" class="jtd__pager-btn jtd__pager-btn--next"
+              [disabled]="page() >= totalPages()" (click)="goTo(page() + 1)"
+              [attr.aria-label]="'common.next' | translate">
+              <img src="assets/icons/figma/arrow-down-old-system.svg" width="24" height="24" alt="" />
+            </button>
+          </span>
+        </nav>
+      }
+    </section>
+  }
+</div>
