@@ -1,0 +1,98 @@
+<div class="nas-page-container etl">
+
+  <header class="etl__head">
+    <h1 class="etl__title">{{ 'external_training.list.title' | translate }}</h1>
+    @if (stats(); as s) {
+      <p class="etl__meta">
+        <img src="assets/icons/figma/user-16.svg" width="16" height="16" alt="" />
+        {{ 'external_training.list.pending_meta' | translate: { count: s.pending } }}
+      </p>
+    }
+  </header>
+
+  <app-et-stats [stats]="stats()" />
+
+  <section class="etl__card" [attr.aria-busy]="state() === 'loading'">
+    <div class="etl__toolbar">
+      <label class="etl__search">
+        <nas-icon name="magnifying-glass" [size]="20" />
+        <span class="etl__sr-only">{{ 'external_training.list.search' | translate }}</span>
+        <input #term type="search" class="etl__search-input" [placeholder]="'external_training.list.search' | translate"
+          (input)="onSearch(term.value)" />
+      </label>
+      <div class="etl__chips" role="group" [attr.aria-label]="'external_training.list.filter_status' | translate">
+        <button type="button" class="etl__chip" [class.etl__chip--on]="status() === null" [attr.aria-pressed]="status() === null"
+          (click)="setStatus(null)">{{ 'external_training.list.all' | translate }}</button>
+        @for (s of statuses; track s) {
+          <button type="button" class="etl__chip" [class.etl__chip--on]="status() === s" [attr.aria-pressed]="status() === s"
+            (click)="setStatus(s)">{{ 'external_training.status.' + s | translate }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="etl__scroll">
+      <table class="etl__table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'external_training.col.learner' | translate }}</th>
+            <th scope="col">{{ 'external_training.col.course' | translate }}</th>
+            <th scope="col">{{ 'external_training.col.provider' | translate }}</th>
+            <th scope="col">{{ 'external_training.col.qualification' | translate }}</th>
+            <th scope="col">{{ 'external_training.col.submitted' | translate }}</th>
+            <th scope="col">{{ 'external_training.col.hours' | translate }}</th>
+            <th scope="col">{{ 'external_training.col.status' | translate }}</th>
+            <th scope="col"><span class="etl__sr-only">{{ 'external_training.col.actions' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @switch (state()) {
+            @case ('loading') {
+              @for (s of skeletons; track s) {
+                <tr>
+                  @for (c of [1, 2, 3, 4, 5, 6, 7, 8]; track c) { <td><p-skeleton height="18px" /></td> }
+                </tr>
+              }
+            }
+            @case ('error') {
+              <tr>
+                <td colspan="8" class="etl__message" role="alert">
+                  <p>{{ 'common.could_not_load' | translate }}</p>
+                  <button type="button" class="etl__retry" (click)="load()">{{ 'external_training.retry' | translate }}</button>
+                </td>
+              </tr>
+            }
+            @default {
+              @for (r of rows(); track r.id) {
+                <tr>
+                  <th scope="row" class="etl__learner"><bdi>{{ r.learner?.name ?? '-' }}</bdi></th>
+                  <td class="etl__strong"><bdi>{{ courseOf(r) }}</bdi></td>
+                  <td class="etl__muted"><bdi>{{ r.provider }}</bdi></td>
+                  <td class="etl__muted"><bdi>{{ r.qualification?.name ?? '-' }}</bdi></td>
+                  <td class="etl__date">{{ r.submitted_at | nasDate: locale.locale() }}</td>
+                  <td class="etl__hours">{{ 'external_training.hours_value' | translate: { hours: r.hours } }}</td>
+                  <td><span class="etl__status etl__status--{{ r.status }}">{{ 'external_training.status.' + r.status | translate }}</span></td>
+                  <td class="etl__action">
+                    <a class="etl__view" [routerLink]="['/admin/external-training', r.id]"
+                      [attr.aria-label]="'external_training.list.review_for' | translate: { name: r.learner?.name ?? '' }">
+                      <img src="assets/icons/figma/eye.svg" width="20" height="20" alt="" />
+                    </a>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="etl__message">
+                    <p>{{ (search() || status() ? 'external_training.list.no_results' : 'external_training.list.empty') | translate }}</p>
+                  </td>
+                </tr>
+              }
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (state() === 'ready' && total() > perPage) {
+      <nas-pager [page]="page()" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
+    }
+  </section>
+</div>

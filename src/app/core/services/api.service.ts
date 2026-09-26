@@ -93,6 +93,14 @@ export class ApiService {
     return this.http.delete<ApiResponse<T>>(url);
   }
 
+  /**
+   * The whole response body, typed by the caller - for endpoints whose useful
+   * data is not only `result` (e.g. a list with figures in `meta`).
+   */
+  getRaw<R>(url: string, params?: ApiParams): Observable<R> {
+    return this.http.get<R>(url, { params: this.buildParams(params) });
+  }
+
   /** A file download (xlsx / csv exports), with the same `key[]=v` array params as get(). */
   getBlob(url: string, params?: ApiParams): Observable<Blob> {
     return this.http.get(url, { params: this.buildParams(params), responseType: 'blob' });

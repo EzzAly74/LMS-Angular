@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-export type EvTileTone = 'amber' | 'teal' | 'sky';
+export type NasTileTone = 'amber' | 'teal' | 'sky' | 'red';
 
 /**
- * A header tile of the Evaluation detail pages - Figma 2169:108198,
- * 2169:108801, 2169:109264: a 44px tinted icon box, a 32px value, a caption.
+ * A header tile: a 44px tinted icon box, a 32px value, a caption. Drawn on the
+ * Evaluation detail pages (Figma 2169:108198, 2169:108801, 2169:109264) and the
+ * External Training pages (2181:116177, 2181:116391 - the red "Rejected" tile).
  *
  * `danger` paints the value red, as the failing-result frame (2169:109264)
  * does for a score below the pass limit; `suffix` stays in the default colour
@@ -14,7 +15,7 @@ export type EvTileTone = 'amber' | 'teal' | 'sky';
  * callers pass the file's own Icons/Fill/star instead (rule 5).
  */
 @Component({
-  selector: 'ev-stat-tile',
+  selector: 'nas-stat-tile',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -58,6 +59,7 @@ export type EvTileTone = 'amber' | 'teal' | 'sky';
     .st__icon--amber { background: rgba(235, 212, 166, 0.4); border-color: var(--nas-status-operational-3); }
     .st__icon--teal  { background: rgba(123, 174, 161, 0.3); border-color: var(--nas-status-operational-5); }
     .st__icon--sky   { background: var(--nas-sky-200); border-color: var(--nas-status-operational-2); }
+    .st__icon--red   { background: var(--nas-status-red-50); border-color: var(--nas-status-red-500-16); }
     .st__text { display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; }
     .st__value {
       margin: 0;
@@ -75,10 +77,10 @@ export type EvTileTone = 'amber' | 'teal' | 'sky';
     }
   `,
 })
-export class EvStatTileComponent {
+export class NasStatTileComponent {
   readonly icon     = input.required<string>();
   readonly iconSize = input(20);
-  readonly tone     = input<EvTileTone>('teal');
+  readonly tone     = input<NasTileTone>('teal');
   readonly value    = input.required<string>();
   readonly suffix   = input<string | null>(null);
   readonly label    = input.required<string>();

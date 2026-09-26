@@ -1,4 +1,4 @@
-<p-dialog
+<p-dialog #qdDlg
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
   (onHide)="restoreFocus()"
@@ -9,12 +9,11 @@
   [dismissableMask]="!saving()"
   [closeOnEscape]="!saving()"
   styleClass="qd"
-  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }"
-  [attr.aria-labelledby]="uid + '-title'">
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }">
   <ng-template pTemplate="headless">
     <form class="qd__card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <header class="qd__head">
-        <h2 class="qd__title" [id]="uid + '-title'">
+        <h2 class="qd__title" [id]="qdDlg.ariaLabelledBy">
           {{ (editing() ? 'qualifications.edit_qualification' : 'qualifications.new_qualification') | translate }}
         </h2>
         <button type="button" class="qd__close" (click)="close()" [disabled]="saving()" [attr.aria-label]="'common.close' | translate">

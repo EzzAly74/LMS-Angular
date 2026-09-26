@@ -1,0 +1,150 @@
+<div class="nas-page-container etr">
+
+  <nav class="etr__crumbs" [attr.aria-label]="'external_training.review.breadcrumb' | translate">
+    <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+    <a routerLink="/admin/external-training">{{ 'external_training.review.crumb' | translate }}</a>
+    <img class="etr__chev" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+    <span aria-current="page"><bdi>{{ request()?.learner?.name ?? '' }}</bdi></span>
+  </nav>
+
+  <header class="etr__head">
+    <div class="etr__head-text">
+      <h1 class="etr__title">{{ 'external_training.review.title' | translate }}</h1>
+      @if (stats(); as s) {
+        <p class="etr__meta">
+          <img src="assets/icons/figma/user-16.svg" width="16" height="16" alt="" />
+          {{ 'external_training.list.pending_meta' | translate: { count: s.pending } }}
+        </p>
+      }
+    </div>
+    <a class="etr__back" routerLink="/admin/external-training">{{ 'external_training.review.back' | translate }}</a>
+  </header>
+
+  <app-et-stats [stats]="stats()" />
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="etr__card"><p-skeleton height="300px" /></div>
+    }
+    @case ('not-found') {
+      <div class="etr__card etr__message" role="alert">
+        <p>{{ 'external_training.review.not_found' | translate }}</p>
+        <a class="etr__back" routerLink="/admin/external-training">{{ 'external_training.review.back' | translate }}</a>
+      </div>
+    }
+    @case ('error') {
+      <div class="etr__card etr__message" role="alert">
+        <p>{{ 'common.could_not_load' | translate }}</p>
+        <button type="button" class="etr__back" (click)="load()">{{ 'external_training.retry' | translate }}</button>
+      </div>
+    }
+    @default {
+      @if (request(); as r) {
+        <section class="etr__card" [attr.aria-labelledby]="'etr-title'">
+          <h2 class="etr__sr-only" id="etr-title">{{ r.title }}</h2>
+
+          @if (!pending()) {
+            <div class="etr__outcome etr__outcome--{{ r.status }}" role="status">
+              <p class="etr__outcome-title">
+                {{ 'external_training.review.outcome.' + r.status | translate }}
+                @if (r.decided_at) {
+                  · <span>{{ r.decided_at | nasDate: locale.locale() }}</span>
+                }
+                @if (r.decided_by) {
+                  · <bdi>{{ r.decided_by.name }}</bdi>
+                }
+              </p>
+              @if (r.rejection_reason) {
+                <p class="etr__outcome-reason"><span>{{ 'external_training.review.reason' | translate }}&nbsp;</span><bdi>{{ r.rejection_reason }}</bdi></p>
+              }
+            </div>
+          }
+
+          <dl class="etr__grid">
+            <div><dt>{{ 'external_training.field.title' | translate }}</dt><dd><bdi>{{ r.title }}</bdi></dd></div>
+            <div><dt>{{ 'external_training.field.provider' | translate }}</dt><dd><bdi>{{ r.provider }}</bdi></dd></div>
+            <div><dt>{{ 'external_training.field.start' | translate }}</dt><dd>{{ r.start_date | nasDate: locale.locale() }}</dd></div>
+            <div><dt>{{ 'external_training.field.end' | translate }}</dt><dd>{{ r.end_date | nasDate: locale.locale() }}</dd></div>
+            <div><dt>{{ 'external_training.field.hours' | translate }}</dt><dd>{{ 'external_training.hours_value' | translate: { hours: r.hours } }}</dd></div>
+            <div>
+              <dt>{{ 'external_training.field.cost' | translate }}</dt>
+              <dd>
+                @if (r.cost !== null) { <bdi dir="ltr">{{ r.cost }} {{ r.currency }}</bdi> } @else { - }
+              </dd>
+            </div>
+          </dl>
+
+          @if (pending()) {
+            <div class="etr__pickers">
+              <div class="etr__field">
+                <label class="etr__label" for="etr-qualification">{{ 'external_training.field.qualification' | translate }}</label>
+                <p-dropdown inputId="etr-qualification" [options]="options().qualifications" optionLabel="name" optionValue="id"
+                  [ngModel]="qualificationId()" (ngModelChange)="qualificationId.set($event)" [filter]="true" filterBy="name"
+                  [showClear]="true" [placeholder]="'external_training.review.select_qualification' | translate"
+                  styleClass="etr__dropdown" appendTo="body" />
+                <p class="etr__help">{{ 'external_training.review.qualification_help' | translate }}</p>
+              </div>
+              <div class="etr__field">
+                <label class="etr__label" for="etr-course">{{ 'external_training.field.course' | translate }}</label>
+                <p-dropdown inputId="etr-course" [options]="options().courses" optionLabel="title" optionValue="id"
+                  [ngModel]="courseId()" (ngModelChange)="courseId.set($event)" [filter]="true" filterBy="title"
+                  [showClear]="true" [placeholder]="'external_training.review.select_course' | translate"
+                  styleClass="etr__dropdown" appendTo="body" />
+                <p class="etr__help">{{ 'external_training.review.course_help' | translate }}</p>
+              </div>
+            </div>
+          } @else {
+            <dl class="etr__grid">
+              <div><dt>{{ 'external_training.field.qualification' | translate }}</dt><dd><bdi>{{ r.qualification?.name ?? '-' }}</bdi></dd></div>
+              <div><dt>{{ 'external_training.field.course' | translate }}</dt><dd><bdi>{{ r.course?.title ?? '-' }}</bdi></dd></div>
+            </dl>
+          }
+
+          <button type="button" class="etr__file" (click)="download()"
+            [attr.aria-label]="'external_training.review.download' | translate: { name: r.certificate.name }">
+            <span class="etr__file-icon" aria-hidden="true">
+              <img src="assets/icons/figma/file-page-28.svg" width="23" height="28" alt="" />
+              <span class="etr__file-badge">{{ format() }}</span>
+            </span>
+            <span class="etr__file-text">
+              <span class="etr__file-name"><bdi>{{ r.certificate.name }}</bdi></span>
+              <span class="etr__file-meta"><bdi dir="ltr">{{ size(r.certificate.size) }}</bdi> · {{ r.submitted_at | nasDate: locale.locale() }}</span>
+            </span>
+          </button>
+
+          <hr class="etr__rule" />
+
+          @if (pending()) {
+            <div class="etr__actions">
+              <button type="button" class="etr__btn etr__btn--ghost" [disabled]="busy()" (click)="rejectOpen.set(true)">
+                {{ 'external_training.review.reject' | translate }}
+              </button>
+              <button type="button" class="etr__btn etr__btn--primary" [disabled]="busy()" (click)="confirm.set('approve')">
+                {{ 'external_training.review.approve' | translate }}
+              </button>
+            </div>
+          } @else if (auth.isSuperAdmin()) {
+            <div class="etr__actions">
+              <button type="button" class="etr__btn etr__btn--ghost" [disabled]="busy()" (click)="confirm.set('reopen')">
+                {{ 'external_training.review.reopen' | translate }}
+              </button>
+            </div>
+          }
+        </section>
+      }
+    }
+  }
+</div>
+
+<app-reject-dialog [visible]="rejectOpen()" (visibleChange)="rejectOpen.set($event)" [busy]="busy()" [error]="rejectError()"
+  (submitted)="reject($event)" />
+
+<nas-confirm-modal
+  [visible]="confirm() !== null"
+  [title]="(confirm() === 'reopen' ? 'external_training.review.reopen' : 'external_training.review.approve_title') | translate"
+  [message]="(confirm() === 'reopen' ? 'external_training.review.reopen_text' : 'external_training.review.approve_text') | translate"
+  [confirmLabel]="(confirm() === 'reopen' ? 'external_training.review.reopen' : 'external_training.review.approve') | translate"
+  [cancelLabel]="'common.cancel' | translate"
+  [busy]="busy()"
+  (confirm)="confirm() === 'reopen' ? reopen() : approve()"
+  (cancel)="confirm.set(null)" />

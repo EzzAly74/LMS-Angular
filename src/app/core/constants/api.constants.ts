@@ -15,6 +15,8 @@ export const API = {
   ADMIN_LEARNERS: `${API_BASE}/admin/learners`,
   /** Admin qualification actions, e.g. `{id}/learners` bulk grant (D-045). */
   ADMIN_QUALIFICATIONS: `${API_BASE}/admin/qualification-skills`,
+  /** External Training review (B5 + D8, D-057). */
+  ADMIN_EXTERNAL_TRAINING: `${API_BASE}/admin/external-training`,
   /** Evaluation reporting (B3 + D4, D-054): `{id}/results`, `scores/{learner}/{course}`. */
   ADMIN_EVALUATIONS:                  `${API_BASE}/admin/evaluations`,
   ADMIN_EVALUATION_TEMPLATES:         `${API_BASE}/admin/evaluations/templates`,

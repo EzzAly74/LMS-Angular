@@ -46,18 +46,18 @@
 
         <div class="tr__tiles">
           @if (scoreValue(); as sv) {
-            <ev-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+            <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
               [value]="sv" [suffix]="scoreSuffix()" valueDir="ltr" [danger]="d.passed === false"
               [label]="(d.passed === false ? 'evaluations.submission.score_failed' : 'evaluations.submission.score') | translate" />
           } @else {
-            <ev-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+            <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
               [value]="'evaluations.result.unscored' | translate"
               [label]="'evaluations.submission.score' | translate" />
           }
-          <ev-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
+          <nas-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
             [value]="d.submitted_at ? (d.submitted_at | nasDate: locale()) : '-'"
             [label]="'evaluations.submission.submitted_on' | translate" />
-          <ev-stat-tile icon="assets/icons/figma/seal-question-20.svg" tone="sky"
+          <nas-stat-tile icon="assets/icons/figma/seal-question-20.svg" tone="sky"
             [value]="'' + d.answers.length"
             [label]="'evaluations.results.questions' | translate" />
         </div>

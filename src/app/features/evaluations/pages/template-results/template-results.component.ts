@@ -22,7 +22,7 @@ import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { EvQuestionCardComponent } from '../../components/ev-question-card/ev-question-card.component';
-import { EvStatTileComponent } from '../../components/ev-stat-tile/ev-stat-tile.component';
+import { NasStatTileComponent } from '../../../../shared/nas/nas-stat-tile/nas-stat-tile.component';
 import { TemplateQuestion, TemplateResults, formatScore } from '../../models/evaluation.model';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
@@ -37,7 +37,7 @@ type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 @Component({
   selector: 'app-evaluation-template-results',
   standalone: true,
-  imports: [RouterLink, TranslateModule, SkeletonModule, NasDatePipe, EvQuestionCardComponent, EvStatTileComponent],
+  imports: [RouterLink, TranslateModule, SkeletonModule, NasDatePipe, EvQuestionCardComponent, NasStatTileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './template-results.component.html',
   styleUrl: './template-results.component.scss',

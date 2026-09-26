@@ -42,7 +42,7 @@ async function setup(page: Page, rows = ROWS): Promise<string[]> {
   return listCalls;
 }
 
-const dialog = (page: Page) => page.getByRole('dialog');
+const dialog = (page: Page) => page.getByRole('dialog', { name: /Qualification/ });
 
 test('the list shows the Figma columns and every figure the API returns', async ({ page }) => {
   await setup(page);

@@ -125,6 +125,10 @@
   --nas-font-en: "Fira Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --nas-font-ar: "Almarai", "Segoe UI", Tahoma, sans-serif;
   --nas-font: var(--nas-font-en);
+  /* PrimeNG's theme sets its components in "Inter var", a font this app never
+     loads, so dropdowns, dialogs, menus and toasts fell back to a system face.
+     Point its variable at ours (UI-06). */
+  --font-family: var(--nas-font);
 
   /* Font weights */
   --nas-weight-regular: 400;
@@ -215,6 +219,7 @@ body {
 [dir="rtl"],
 [dir="rtl"] body {
   font-family: var(--nas-font-ar);
+  --font-family: var(--nas-font-ar);
 }
 [dir="rtl"] {
   .p-datatable .p-datatable-thead > tr > th,

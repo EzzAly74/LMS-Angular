@@ -25,6 +25,7 @@
     "assignments": "Assignments",
     "quizzes": "Quizzes",
     "learners": "Learners",
+    "external_training": "External Courses",
     "categories": "Categories",
     "certificates": "Certificates",
     "settings": "Settings",
@@ -905,6 +906,84 @@
       "export_csv": "Export CSV (.csv)",
       "imported": "Import complete. Qualifications created: {{count}}.",
       "too_many": "Too many requests. Wait a minute and try again."
+    }
+  },
+  "external_training": {
+    "retry": "Retry",
+    "hours_value": "{{hours}}h",
+    "stats_label": "External training summary",
+    "stats": {
+      "pending": "Pending",
+      "this_year": "Requests in {{year}}",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Accepted",
+      "rejected": "Rejected"
+    },
+    "col": {
+      "learner": "Learner",
+      "course": "Course",
+      "provider": "Provider",
+      "qualification": "Qualification",
+      "submitted": "Submitted",
+      "hours": "Hours",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "field": {
+      "title": "Course / Training Title",
+      "provider": "Training Provider",
+      "start": "Start Date",
+      "end": "End Date",
+      "hours": "Training Hours",
+      "cost": "Cost (optional)",
+      "qualification": "Qualification",
+      "course": "Internal course (optional)"
+    },
+    "list": {
+      "title": "External Training Requests",
+      "pending_meta": "{{count}} Pending",
+      "search": "Search by learner, training or provider…",
+      "filter_status": "Filter by status",
+      "all": "All",
+      "empty": "No external training requests yet.",
+      "no_results": "No request matches your search.",
+      "review_for": "Review the request from {{name}}"
+    },
+    "review": {
+      "breadcrumb": "Breadcrumb",
+      "crumb": "External Training",
+      "title": "Review External Training Request",
+      "back": "Back to Requests",
+      "not_found": "This request does not exist, or it was withdrawn.",
+      "select_qualification": "Select qualification",
+      "qualification_help": "Optional. The learner is granted this qualification when you approve.",
+      "select_course": "Select course",
+      "course_help": "Optional. Records the training against one of our courses.",
+      "download": "Download {{name}}",
+      "reject": "Reject",
+      "approve": "Approve",
+      "approve_title": "Approve this request?",
+      "approve_text": "The hours are added to the learner's training history, and the selected qualification, if any, is granted. A decision is final.",
+      "reopen": "Reopen request",
+      "reopen_text": "The request goes back to pending. A qualification granted by this approval is removed. This is recorded in the audit log.",
+      "approved": "The request was approved.",
+      "rejected": "The request was rejected.",
+      "reopened": "The request is pending again.",
+      "reason": "Reason:",
+      "outcome": {
+        "approved": "Accepted",
+        "rejected": "Rejected"
+      }
+    },
+    "reject": {
+      "title": "Rejection reason",
+      "label": "Write your reason below",
+      "placeholder": "Text area…",
+      "hint": "Shown to the learner only if the request is rejected.",
+      "submit": "Submit"
     }
   },
   "import_report": {

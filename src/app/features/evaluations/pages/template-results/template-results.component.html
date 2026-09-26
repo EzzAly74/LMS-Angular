@@ -49,18 +49,18 @@
 
         <div class="tr__tiles">
           @if (scoreValue(); as sv) {
-            <ev-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+            <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
               [value]="sv" [suffix]="scoreSuffix()" valueDir="ltr" [danger]="d.summary.passed === false"
               [label]="'evaluations.results.average_score' | translate" />
           } @else {
-            <ev-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+            <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
               [value]="'evaluations.result.unscored' | translate"
               [label]="'evaluations.results.average_score' | translate" />
           }
-          <ev-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
+          <nas-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
             [value]="d.summary.learners_scored + '/' + d.summary.learners_eligible" valueDir="ltr"
             [label]="'evaluations.results.learners_scored' | translate" />
-          <ev-stat-tile icon="assets/icons/figma/seal-question-20.svg" tone="sky"
+          <nas-stat-tile icon="assets/icons/figma/seal-question-20.svg" tone="sky"
             [value]="'' + d.template.questions"
             [label]="'evaluations.results.questions' | translate" />
         </div>

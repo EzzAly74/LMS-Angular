@@ -1,4 +1,4 @@
-<p-dialog
+<p-dialog #aqDlg
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
   (onHide)="restoreFocus()"
@@ -9,12 +9,11 @@
   [dismissableMask]="!saving()"
   [closeOnEscape]="!saving()"
   styleClass="aq"
-  [style]="{ width: '560px', maxWidth: 'calc(100vw - 32px)' }"
-  [attr.aria-labelledby]="uid + '-title'">
+  [style]="{ width: '560px', maxWidth: 'calc(100vw - 32px)' }">
   <ng-template pTemplate="headless">
     <form class="aq__card" (submit)="submit(); $event.preventDefault()">
       <header class="aq__head">
-        <h2 class="aq__title" [id]="uid + '-title'">{{ 'learners.assign.title' | translate }}</h2>
+        <h2 class="aq__title" [id]="aqDlg.ariaLabelledBy">{{ 'learners.assign.title' | translate }}</h2>
         <button type="button" class="aq__close" (click)="close()" [disabled]="saving()" [attr.aria-label]="'common.close' | translate">
           <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
         </button>

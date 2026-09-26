@@ -1,0 +1,112 @@
+// Rejection reason - Figma 2209:90462.
+
+::ng-deep .rjd {
+  &.p-dialog {
+    border-radius: var(--nas-radius-xl);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    background: transparent;
+  }
+  .p-dialog-content { padding: 0; background: transparent; }
+}
+
+// PrimeNG's dialog sets its own font-family; the modal uses the app's.
+.rjd__card { display: flex; flex-direction: column; font-family: var(--nas-font); background: var(--nas-color-bg-surface); }
+:host-context([dir='rtl']) .rjd__card { font-family: var(--nas-font-ar); }
+
+.rjd__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4) var(--nas-space-6) 17px;
+  border-block-end: 1px solid var(--nas-color-border);
+}
+
+.rjd__title { margin: 0; font-size: var(--nas-size-s); line-height: 24px; font-weight: var(--nas-weight-bold); color: var(--nas-color-text-strong); }
+
+.rjd__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover:not([disabled]) { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+}
+
+.rjd__body { display: flex; flex-direction: column; gap: var(--nas-space-2); padding: var(--nas-space-6); }
+
+.rjd__label { font-size: var(--nas-size-s); line-height: 19.2px; color: var(--nas-color-text-strong); }
+
+.rjd__input {
+  min-block-size: 100px;
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  font: inherit;
+  font-size: var(--nas-size-s);
+  color: var(--nas-color-text-strong);
+  resize: vertical;
+
+  &::placeholder { color: var(--nas-neutral-750); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
+  &[aria-invalid='true'] { border-color: var(--nas-status-red-700); }
+}
+
+.rjd__hint {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  margin: 0;
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-neutral-750);
+}
+
+.rjd__count { flex-shrink: 0; }
+
+.rjd__error { margin: 0; font-size: var(--nas-size-2xs); color: var(--nas-status-red-700); }
+
+.rjd__foot {
+  display: flex;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4) var(--nas-space-6);
+  border-block-start: 1px solid var(--nas-color-border);
+}
+
+.rjd__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border-radius: var(--nas-radius-md);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+  &:disabled { cursor: default; }
+
+  &--ghost { min-inline-size: 237px; border: 1px solid var(--nas-teal-1000); background: var(--nas-color-bg-surface); color: var(--nas-teal-1000); }
+  &--primary {
+    flex: 1;
+    border: 0;
+    background: var(--nas-teal-1000);
+    color: var(--nas-neutral-0);
+
+    &:disabled { background: #f0f0f0; color: #a3a3a3; }
+  }
+}
+
+@media (max-width: 767px) {
+  .rjd__head, .rjd__body, .rjd__foot { padding-inline: var(--nas-space-4); }
+  .rjd__btn--ghost { min-inline-size: 0; flex: 1; }
+}
