@@ -1,0 +1,253 @@
+<div class="nas-page-container ld">
+
+  @if (profileState() === 'not-found') {
+    <header class="ld__head">
+      <h1 class="ld__title">{{ 'learners.detail.not_found_title' | translate }}</h1>
+    </header>
+    <div class="ld__card ld__message" role="status">
+      <nas-icon name="info" [size]="32" />
+      <p>{{ 'learners.detail.not_found' | translate }}</p>
+      <a class="ld__back" routerLink="/admin/learners">{{ 'learners.detail.back' | translate }}</a>
+    </div>
+  } @else {
+    @let p = profile();
+    <header class="ld__head">
+      <h1 class="ld__title">
+        @if (p) { <bdi>{{ p.profile.name }}</bdi> } @else { <p-skeleton width="240px" height="28px" /> }
+      </h1>
+      <p class="ld__subtitle">{{ 'learners.subtitle' | translate }}</p>
+    </header>
+
+    @if (profileState() === 'error') {
+      <div class="ld__card ld__message" role="alert">
+        <p>{{ 'common.could_not_load' | translate }}</p>
+        <button type="button" class="ld__retry" (click)="loadAll()">{{ 'learners.retry' | translate }}</button>
+      </div>
+    } @else {
+      <div class="ld__cards">
+        <!-- Profile (Figma 2262:94330) -->
+        <section class="ld__card ld__profile" [attr.aria-busy]="!p">
+          <div class="ld__banner">
+            @if (p) {
+              <nas-avatar class="ld__avatar" [name]="p.profile.name" [src]="p.profile.image_url" size="lg" />
+              <div class="ld__who">
+                <h2 class="ld__name"><bdi>{{ p.profile.name }}</bdi></h2>
+                @if (p.profile.job_title) {
+                  <p class="ld__job"><bdi>{{ p.profile.job_title }}</bdi></p>
+                }
+              </div>
+            } @else {
+              <p-skeleton shape="circle" size="56px" />
+              <p-skeleton width="60%" height="24px" />
+            }
+          </div>
+          <hr class="ld__rule" />
+          <dl class="ld__info">
+            <div class="ld__info-row">
+              <dt><nas-icon name="user" [size]="16" />{{ 'learners.detail.learner_id' | translate }}</dt>
+              <dd dir="ltr">{{ p?.profile?.employee_id || '-' }}</dd>
+            </div>
+            <div class="ld__info-row">
+              <dt><nas-icon name="file-text" [size]="16" />{{ 'learners.detail.email' | translate }}</dt>
+              <dd dir="ltr">{{ p?.profile?.email || '-' }}</dd>
+            </div>
+            <div class="ld__info-row">
+              <dt><nas-icon name="puzzle-piece" [size]="16" />{{ 'learners.detail.department' | translate }}</dt>
+              <dd><bdi>{{ p?.profile?.department || '-' }}</bdi></dd>
+            </div>
+            <div class="ld__info-row">
+              <dt><nas-icon name="calendar-blank" [size]="16" />{{ 'learners.detail.last_active_course' | translate }}</dt>
+              <dd>
+                @if (p?.profile?.last_active_course; as course) {
+                  <bdi>{{ course }}</bdi>
+                  @if (p?.profile?.last_active_at; as at) { ({{ at | nasDate: locale() }}) }
+                } @else { - }
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Summary (Figma 2262:94606) -->
+        <section class="ld__card ld__summary" [attr.aria-labelledby]="'ld-summary'">
+          <h2 class="ld__summary-title" id="ld-summary">
+            <nas-icon name="list-checks" [size]="24" />{{ 'learners.detail.summary' | translate }}
+          </h2>
+          <hr class="ld__rule" />
+          @if (p) {
+            <dl class="ld__tiles">
+              <div class="ld__tile ld__tile--teal">
+                <dt>{{ 'learners.detail.tile.completed' | translate }}</dt>
+                <dd>{{ p.tiles.completed_courses }}</dd>
+              </div>
+              <div class="ld__tile">
+                <dt>{{ 'learners.detail.tile.active' | translate }}</dt>
+                <dd>{{ p.tiles.active_courses }}</dd>
+              </div>
+              <div class="ld__tile">
+                <dt>{{ 'learners.detail.tile.active_course' | translate }}</dt>
+                <dd>{{ p.tiles.active_course_progress_percent !== null ? p.tiles.active_course_progress_percent + '%' : '-' }}</dd>
+              </div>
+              <div class="ld__tile ld__tile--teal">
+                <dt>{{ 'learners.detail.tile.last_quiz' | translate }}</dt>
+                <dd dir="ltr">{{ p.tiles.last_quiz && p.tiles.last_quiz.score !== null ? p.tiles.last_quiz.score + '/' + p.tiles.last_quiz.max : '-' }}</dd>
+              </div>
+              <div class="ld__tile ld__tile--teal ld__tile--wide">
+                <dt>{{ 'learners.detail.tile.earned_qualifications' | translate }}</dt>
+                <dd>{{ p.tiles.earned_qualifications }}</dd>
+              </div>
+            </dl>
+          } @else {
+            <p-skeleton height="177px" borderRadius="12px" />
+          }
+        </section>
+      </div>
+    }
+
+    <!-- Active & Completed Courses (Figma 2262:94396) -->
+    <section class="ld__section" aria-labelledby="ld-courses">
+      <h2 class="ld__section-title" id="ld-courses">{{ 'learners.detail.courses_title' | translate }}</h2>
+      @let c = courses();
+      <div class="ld__card ld__table-card" [attr.aria-busy]="c.state === 'loading'">
+        <div class="ld__scroll">
+          <table class="ld__table ld__table--courses">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'learners.detail.col.course' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.qualification' | translate }}</th>
+                <th scope="col" class="ld__center">{{ 'learners.detail.col.attended' | translate }}</th>
+                <th scope="col" class="ld__center">{{ 'learners.detail.col.absent' | translate }}</th>
+                <th scope="col" class="ld__center">{{ 'learners.detail.col.status' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.progress' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.started_on' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.ended_on' | translate }}</th>
+                <th scope="col" class="ld__center">{{ 'learners.detail.col.preview' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (c.state === 'loading') {
+                @for (s of skeletons; track s) {
+                  <tr class="ld__row"><td colspan="9"><p-skeleton height="18px" /></td></tr>
+                }
+              } @else if (c.state === 'error') {
+                <tr><td colspan="9" class="ld__message" role="alert">
+                  <p>{{ 'common.could_not_load' | translate }}</p>
+                  <button type="button" class="ld__retry" (click)="coursesPage(c.page)">{{ 'learners.retry' | translate }}</button>
+                </td></tr>
+              } @else {
+                @for (row of c.rows; track row.course_id + ':' + row.cohort_id) {
+                  @let st = courseStatus(row);
+                  <tr class="ld__row">
+                    <td>
+                      <span class="ld__two-line">
+                        <span class="ld__strong"><bdi>{{ row.course || '-' }}</bdi></span>
+                        @if (row.cohort) { <span class="ld__sub"><bdi>{{ row.cohort }}</bdi></span> }
+                      </span>
+                    </td>
+                    <td><bdi>{{ qualificationNames(row) || '-' }}</bdi></td>
+                    <td class="ld__center" dir="ltr">{{ row.sessions_scheduled ? row.attended + '/' + row.sessions_scheduled : '---' }}</td>
+                    <td class="ld__center">{{ row.sessions_scheduled ? row.absent : '---' }}</td>
+                    <td class="ld__center"><nas-status-badge [tone]="st.tone">{{ st.key | translate }}</nas-status-badge></td>
+                    <td>
+                      @if (row.progress_percent !== null) {
+                        <span class="ld__progress">
+                          <span class="ld__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                            [attr.aria-valuenow]="row.progress_percent"
+                            [attr.aria-label]="'learners.detail.progress_of' | translate: { name: row.course }">
+                            <span class="ld__bar-fill ld__bar-fill--{{ tone(row.progress_percent) }}"
+                              [style.inline-size.%]="row.progress_percent"></span>
+                          </span>
+                          <span class="ld__strong">{{ row.progress_percent }}%</span>
+                        </span>
+                      } @else { <span class="ld__muted">-</span> }
+                    </td>
+                    <td class="ld__muted">{{ row.started_on ? (row.started_on | nasDate: locale()) : '-' }}</td>
+                    <td class="ld__muted">{{ row.ended_on ? (row.ended_on | nasDate: locale()) : '-' }}</td>
+                    <td class="ld__center">
+                      <a class="ld__eye" [routerLink]="['/admin/courses', row.course_id]"
+                        [attr.aria-label]="'learners.detail.open_course' | translate: { name: row.course }">
+                        <nas-icon name="eye" [size]="18" />
+                      </a>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="9" class="ld__message" role="status">
+                    <p>{{ 'learners.detail.no_courses' | translate }}</p>
+                  </td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (c.state === 'ready' && c.total > 0) {
+          <nas-pager [page]="c.page" [total]="c.total" [perPage]="perPage" rangeKey="learners.range" (pageChange)="coursesPage($event)" />
+        }
+      </div>
+    </section>
+
+    <!-- Quizzes / Assignments Performance (Figma 2221:92482) -->
+    <section class="ld__section" aria-labelledby="ld-performance">
+      <h2 class="ld__section-title" id="ld-performance">{{ 'learners.detail.performance_title' | translate }}</h2>
+      @let q = performance();
+      <div class="ld__card ld__table-card" [attr.aria-busy]="q.state === 'loading'">
+        <div class="ld__scroll">
+          <table class="ld__table ld__table--performance">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'learners.detail.col.item' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.course' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.type' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.grades' | translate }}</th>
+                <th scope="col" class="ld__center">{{ 'learners.detail.col.status' | translate }}</th>
+                <th scope="col">{{ 'learners.detail.col.last_updated' | translate }}</th>
+                <th scope="col" class="ld__center">{{ 'learners.detail.col.preview' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (q.state === 'loading') {
+                @for (s of skeletons; track s) {
+                  <tr class="ld__row"><td colspan="7"><p-skeleton height="18px" /></td></tr>
+                }
+              } @else if (q.state === 'error') {
+                <tr><td colspan="7" class="ld__message" role="alert">
+                  <p>{{ 'common.could_not_load' | translate }}</p>
+                  <button type="button" class="ld__retry" (click)="performancePage(q.page)">{{ 'learners.retry' | translate }}</button>
+                </td></tr>
+              } @else {
+                @for (row of q.rows; track row.kind + ':' + row.id) {
+                  <tr class="ld__row">
+                    <td>
+                      <span class="ld__two-line">
+                        <span class="ld__strong"><bdi>{{ row.name || '-' }}</bdi></span>
+                        <span class="ld__sub">{{ ('learners.detail.kind.' + row.kind) | translate }}</span>
+                      </span>
+                    </td>
+                    <td class="ld__wrap"><bdi>{{ row.course || '-' }}</bdi></td>
+                    <td>{{ row.type && row.type !== 'assignment' ? (('learners.detail.type.' + row.type) | translate) : '-' }}</td>
+                    <td dir="ltr" [class.ld__failed]="row.status === 'failed'">{{ row.grade_label || '---' }}</td>
+                    <td class="ld__center">
+                      <nas-status-badge [tone]="resultTone(row.status)">{{ ('learners.detail.result.' + row.status) | translate }}</nas-status-badge>
+                    </td>
+                    <td class="ld__muted">{{ row.last_updated ? (row.last_updated | nasDate: locale()) : '-' }}</td>
+                    <td class="ld__center">
+                      <a class="ld__eye" [routerLink]="previewLink(row)"
+                        [attr.aria-label]="'learners.detail.open_submission' | translate: { name: row.name }">
+                        <nas-icon name="eye" [size]="18" />
+                      </a>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="7" class="ld__message" role="status">
+                    <p>{{ 'learners.detail.no_performance' | translate }}</p>
+                  </td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (q.state === 'ready' && q.total > 0) {
+          <nas-pager [page]="q.page" [total]="q.total" [perPage]="perPage" rangeKey="learners.range" (pageChange)="performancePage($event)" />
+        }
+      </div>
+    </section>
+  }
+</div>

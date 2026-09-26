@@ -40,6 +40,7 @@ interface DetailRoute {
   name: string;
   /** API list whose first row supplies the id. */
   list: string;
+  params?: Record<string, string>;
   path: (id: number) => string;
 }
 
@@ -66,18 +67,19 @@ const ROUTES: Route[] = [
   'audit-log',
   'settings',
   { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (id) => `job-titles/${id}` },
+  { name: 'learners-detail', list: '/api/v1/admin/users', params: { role: 'learner' }, path: (id) => `learners/${id}` },
 ];
 
 const API_BASE = process.env['E2E_API_BASE'] ?? 'http://127.0.0.1:8000';
 
 /** The first record's id from an API list, authenticated as the harness admin. */
-async function firstId(request: APIRequestContext, list: string): Promise<number | undefined> {
+async function firstId(request: APIRequestContext, list: string, extra: Record<string, string> = {}): Promise<number | undefined> {
   const state = JSON.parse(readFileSync(resolve(__dirname, '.auth/admin.json'), 'utf8')) as {
     origins: { localStorage: { name: string; value: string }[] }[];
   };
   const token = state.origins[0]?.localStorage.find((e) => e.name === '2b_token')?.value;
   const res = await request.get(`${API_BASE}${list}`, {
-    params: { per_page: 1 },
+    params: { per_page: 1, ...extra },
     headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
   });
   if (!res.ok()) return undefined;
@@ -153,7 +155,7 @@ for (const locale of LOCALES) {
         if (typeof entry === 'string') {
           route = entry;
         } else {
-          const id = await firstId(request, entry.list);
+          const id = await firstId(request, entry.list, entry.params);
           test.skip(id === undefined, `${entry.name}: no record on this database to open`);
           route = entry.path(id as number);
         }

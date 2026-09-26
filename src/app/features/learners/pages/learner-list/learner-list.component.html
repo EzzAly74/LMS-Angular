@@ -98,7 +98,7 @@
                   <span class="ll__who">
                     <nas-avatar [name]="row.name" [src]="row.image" size="sm" />
                     <span class="ll__who-text">
-                      <span class="ll__name" dir="auto" [attr.title]="row.name">{{ row.name }}</span>
+                      <a class="ll__name" dir="auto" [attr.title]="row.name" [routerLink]="[row.id]">{{ row.name }}</a>
                       @if (row.job_title) {
                         <span class="ll__job" dir="auto">{{ row.job_title }}</span>
                       }

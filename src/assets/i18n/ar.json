@@ -141,6 +141,7 @@
     "success_title": "نجاح",
     "delete_title": "حذف",
     "could_not_load": "تعذّر التحميل. يُرجى إعادة المحاولة.",
+    "range_of": "{{from}}–{{to}} من {{total}}",
     "operation_failed": "فشلت العملية. يُرجى إعادة المحاولة.",
     "field_required": "هذا الحقل مطلوب.",
     "save_changes": "حفظ التغييرات",
@@ -1500,7 +1501,65 @@
     "range": "{{from}}–{{to}} من {{total}}",
     "empty": "لا يوجد متعلمون بعد.",
     "no_results": "لا يوجد متعلمون مطابقون لعوامل التصفية.",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "detail": {
+      "not_found_title": "المتعلم غير موجود",
+      "not_found": "هذا المتعلم غير موجود أو تم حذفه.",
+      "back": "العودة إلى المتعلمين",
+      "learner_id": "رقم المتعلم",
+      "email": "البريد الإلكتروني",
+      "department": "القسم",
+      "last_active_course": "آخر دورة نشطة",
+      "summary": "الملخص",
+      "tile": {
+        "completed": "الدورات المكتملة",
+        "active": "الدورات النشطة",
+        "active_course": "الدورة النشطة",
+        "last_quiz": "آخر اختبار",
+        "earned_qualifications": "المؤهلات المكتسبة"
+      },
+      "courses_title": "الدورات النشطة والمكتملة",
+      "performance_title": "أداء الاختبارات والمهام",
+      "col": {
+        "course": "الدورة",
+        "qualification": "المؤهل",
+        "attended": "الحضور",
+        "absent": "الغياب",
+        "status": "الحالة",
+        "progress": "التقدم",
+        "started_on": "تاريخ البدء",
+        "ended_on": "تاريخ الانتهاء",
+        "preview": "معاينة",
+        "item": "الاختبار/المهمة",
+        "type": "النوع",
+        "grades": "الدرجات",
+        "last_updated": "آخر تحديث"
+      },
+      "status": {
+        "completed": "مكتملة",
+        "in_progress": "قيد التقدم",
+        "not_started": "لم تبدأ"
+      },
+      "result": {
+        "pass": "ناجح",
+        "failed": "راسب",
+        "needs_review": "بحاجة إلى مراجعة"
+      },
+      "kind": {
+        "quiz": "اختبار",
+        "assignment": "مهمة"
+      },
+      "type": {
+        "pre": "قبلي",
+        "mid": "مرحلي",
+        "post": "بعدي"
+      },
+      "progress_of": "التقدم في {{name}}",
+      "open_course": "فتح {{name}}",
+      "open_submission": "فتح تسليم {{name}}",
+      "no_courses": "هذا المتعلم غير مسجل في أي دورة.",
+      "no_performance": "لا توجد تسليمات اختبارات أو مهام بعد."
+    }
   },
   "filter_picker": {
     "title": "تصفية النتائج",

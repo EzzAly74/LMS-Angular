@@ -1,0 +1,269 @@
+// Learner detail - Figma 2181:115043. Names are wrapped in <bdi>, not given
+// dir="auto": that isolates their direction without flipping the block's
+// alignment, so an Arabic name in the English layout still starts on the left.
+// Figma values mapped to --nas-* tokens;
+// logical properties, so RTL needs no mirrored rules (the pager handles its
+// own arrows).
+
+.ld { gap: var(--nas-space-6); }
+
+.ld__head { display: flex; flex-direction: column; gap: var(--nas-space-1); }
+
+.ld__title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 28.8px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+}
+
+.ld__subtitle { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-color-text-muted); }
+
+.ld__card {
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-neutral-200);
+  border-radius: var(--nas-radius-xl);
+}
+
+// ── Profile + Summary cards (538px each at 1440, 24px apart) ────────────
+.ld__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--nas-space-6);
+  align-items: stretch;
+}
+
+.ld__profile,
+.ld__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-5);
+  padding: var(--nas-space-6);
+}
+
+.ld__banner { display: flex; flex-direction: column; gap: var(--nas-space-2); }
+
+// Figma draws a 56px avatar; the shared lg is 48px.
+.ld__avatar ::ng-deep [data-size='lg'] { inline-size: 56px; block-size: 56px; font-size: 24px; font-weight: 700; }
+
+.ld__who { display: flex; flex-direction: column; }
+
+.ld__name {
+  margin: 0;
+  font-size: 24px;
+  line-height: 28.8px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+}
+
+.ld__job { margin: 0; font-size: var(--nas-size-s); line-height: 19.2px; color: var(--nas-color-text-subtle); }
+
+.ld__rule { inline-size: 100%; margin: 0; border: 0; border-block-start: 1px solid var(--nas-color-border); }
+
+.ld__info {
+  display: grid;
+  // minmax(0, 1fr), not the default auto: a grid item will not shrink below
+  // its content otherwise, and a long email pushed the card 32px past a
+  // 375px screen.
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--nas-space-4);
+  margin: 0;
+}
+
+.ld__info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+
+  dt {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nas-space-1);
+    font-size: var(--nas-size-2xs);
+    line-height: 14.4px;
+    color: var(--nas-neutral-800);
+    white-space: nowrap;
+  }
+
+  dd {
+    flex: 1 1 auto;
+    margin: 0;
+    min-inline-size: 0;
+    text-align: end;
+    font-size: var(--nas-size-xs);
+    line-height: 16.8px;
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.ld__summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  margin: 0;
+  font-size: 24px;
+  line-height: 28.8px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+
+  nas-icon { color: var(--nas-teal-700); }
+}
+
+.ld__tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--nas-space-3);
+  margin: 0;
+}
+
+.ld__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nas-space-2) var(--nas-space-4);
+  border-radius: var(--nas-radius-lg);
+  background: var(--nas-neutral-400);
+  color: var(--nas-color-text-strong);
+  text-align: center;
+
+  dt { font-size: var(--nas-size-2xs); line-height: 14.4px; font-weight: var(--nas-weight-medium); }
+  dd { margin: 0; font-size: var(--nas-size-s); line-height: 19.2px; font-weight: 700; }
+
+  &--teal { background: var(--nas-teal-200); }
+  &--wide { grid-column: 1 / -1; }
+}
+
+// ── Tables ───────────────────────────────────────────────────────────────
+.ld__section { display: flex; flex-direction: column; gap: var(--nas-space-4); }
+
+.ld__section-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+}
+
+.ld__table-card { border-color: var(--nas-color-border); overflow: hidden; }
+
+.ld__scroll { overflow-x: auto; }
+
+.ld__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+
+  th {
+    block-size: 45.5px;
+    padding: var(--nas-space-3) var(--nas-space-5);
+    background: var(--nas-neutral-50);
+    border-block-end: 1px solid var(--nas-color-border);
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-muted);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0 var(--nas-space-5);
+    font-size: var(--nas-size-xs);
+    color: var(--nas-color-text-strong);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+}
+
+.ld__table--courses { min-inline-size: 1080px; }
+.ld__table--performance { min-inline-size: 900px; }
+
+.ld__row { block-size: 92px; border-block-end: 1px solid var(--nas-color-border); }
+
+.ld__table .ld__center { text-align: center; }
+
+.ld__two-line { display: flex; flex-direction: column; gap: 2px; }
+
+.ld__strong { font-weight: var(--nas-weight-semibold); }
+
+.ld__sub { font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted); }
+
+.ld__muted { color: var(--nas-color-text-muted); }
+
+// "Advanced Excel for Finance" wraps onto two lines in the design.
+.ld__table .ld__wrap { white-space: normal; max-inline-size: 173px; }
+
+.ld__table .ld__failed { color: var(--nas-status-red-500); }
+
+.ld__progress { display: inline-flex; align-items: center; gap: var(--nas-space-2); }
+
+.ld__bar {
+  display: block;
+  inline-size: 80px;
+  block-size: 8px;
+  border-radius: 4px;
+  background: var(--nas-neutral-200);
+  overflow: hidden;
+}
+
+.ld__bar-fill {
+  display: block;
+  block-size: 100%;
+  border-radius: 4px;
+
+  &--low  { background: var(--nas-status-red-500); }
+  &--mid  { background: var(--nas-status-operational-2); }
+  &--full { background: var(--nas-status-green-500); }
+}
+
+.ld__eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  color: var(--nas-color-text-strong);
+
+  &:hover { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.ld__message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-10) var(--nas-space-5);
+  color: var(--nas-color-text-muted);
+  text-align: center;
+
+  p { margin: 0; }
+}
+
+.ld__table td.ld__message { display: table-cell; white-space: normal; }
+
+.ld__retry,
+.ld__back {
+  padding: var(--nas-space-2) var(--nas-space-4);
+  border: 1px solid var(--nas-color-border-strong);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+@media (max-width: 900px) {
+  .ld__cards { grid-template-columns: minmax(0, 1fr); }
+}

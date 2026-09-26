@@ -8,4 +8,10 @@ export const LEARNERS_ROUTES: Routes = [
     loadComponent: () => import('./pages/learner-list/learner-list.component').then(m => m.LearnerListComponent),
     title: 'Learners — 2B Academy',
   },
+  {
+    // D3 / Figma 2181:115043.
+    path: ':id',
+    loadComponent: () => import('./pages/learner-detail/learner-detail.component').then(m => m.LearnerDetailComponent),
+    title: 'Learner — 2B Academy',
+  },
 ];

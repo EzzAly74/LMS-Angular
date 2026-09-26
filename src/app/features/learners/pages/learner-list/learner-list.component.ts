@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
@@ -59,6 +60,7 @@ const EMPTY_FILTERS: LearnerFilters = {
   standalone: true,
   imports: [
     FormsModule,
+    RouterLink,
     TranslateModule,
     SkeletonModule,
     NasIconComponent,

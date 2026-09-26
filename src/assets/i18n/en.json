@@ -141,6 +141,7 @@
     "success_title": "Success",
     "delete_title": "Delete",
     "could_not_load": "Could not load. Please retry.",
+    "range_of": "{{from}}–{{to}} of {{total}}",
     "operation_failed": "The operation failed. Please retry.",
     "field_required": "This field is required.",
     "save_changes": "Save Changes",
@@ -1488,7 +1489,65 @@
     "range": "{{from}}–{{to}} of {{total}}",
     "empty": "No learners yet.",
     "no_results": "No learners match these filters.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "detail": {
+      "not_found_title": "Learner not found",
+      "not_found": "This learner does not exist or was removed.",
+      "back": "Back to learners",
+      "learner_id": "Learner ID",
+      "email": "Email",
+      "department": "Department",
+      "last_active_course": "Last Active Course",
+      "summary": "Summary",
+      "tile": {
+        "completed": "Completed Courses",
+        "active": "Active Courses",
+        "active_course": "Active Course",
+        "last_quiz": "Last Quiz",
+        "earned_qualifications": "Earned Qualification"
+      },
+      "courses_title": "Active & Completed Courses",
+      "performance_title": "Quizzes / Assignments Performance",
+      "col": {
+        "course": "Course",
+        "qualification": "Qualification",
+        "attended": "Attended",
+        "absent": "Absent",
+        "status": "Status",
+        "progress": "Progress",
+        "started_on": "Started on",
+        "ended_on": "Ended on",
+        "preview": "Preview",
+        "item": "Quiz/assignments",
+        "type": "Type",
+        "grades": "Grades",
+        "last_updated": "Last Updated"
+      },
+      "status": {
+        "completed": "Completed",
+        "in_progress": "In Progress",
+        "not_started": "Not started"
+      },
+      "result": {
+        "pass": "Pass",
+        "failed": "Failed",
+        "needs_review": "Needs Review"
+      },
+      "kind": {
+        "quiz": "Quiz",
+        "assignment": "Assignment"
+      },
+      "type": {
+        "pre": "Pre",
+        "mid": "Mid",
+        "post": "Post"
+      },
+      "progress_of": "Progress in {{name}}",
+      "open_course": "Open {{name}}",
+      "open_submission": "Open the submission for {{name}}",
+      "no_courses": "This learner is not enrolled in any course.",
+      "no_performance": "No quiz or assignment submissions yet."
+    }
   },
   "filter_picker": {
     "title": "Filter your results",
