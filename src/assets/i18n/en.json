@@ -754,11 +754,6 @@
       "export_xlsx": "Excel (.xlsx)",
       "export_csv": "CSV (.csv)",
       "imported": "Import complete. Templates: {{templates}}, questions: {{questions}}.",
-      "report_title": "Import not completed",
-      "rejected": "Nothing was imported. Problems found: {{count}}. Fix them and upload the file again.",
-      "row": "Row",
-      "column": "Column",
-      "problem": "Problem",
       "too_many": "Too many requests. Wait a minute and try again."
     }
   },
@@ -845,24 +840,79 @@
   "qualifications": {
     "title": "Qualifications",
     "subtitle": "Manage the qualification framework and linked courses",
-    "create": "Add Qualification",
     "new_qualification": "New Qualification",
     "edit_qualification": "Edit Qualification",
-    "name_en": "Name (English)",
-    "name_ar": "Name (Arabic)",
-    "name_en_placeholder": "e.g. Fire Safety Level 2",
-    "name_ar_placeholder": "اسم المؤهل بالعربية",
-    "courses_count": "Linked Courses",
-    "search_placeholder": "Search qualifications...",
-    "no_results": "No qualifications found.",
-    "qualification": "Qualification",
-    "linked_courses": "Linked Courses",
-    "enrolled": "Enrolled",
-    "course_word": "Course",
-    "courses_word": "Courses",
+    "name_en": "Qualification Name (English)",
+    "name_ar": "Qualification Name (Arabic)",
+    "name_en_placeholder": "e.g. Microsoft Office",
+    "name_ar_placeholder": "مثال: مايكروسوفت أوفيس",
+    "search_placeholder": "Search qualifications…",
+    "no_results": "No qualification matches your search.",
+    "empty": "No qualifications yet. Create one, or import a file.",
+    "no_group": "Nobody needs this qualification yet",
+    "retry": "Retry",
+    "actions_for": "Actions for {{name}}",
+    "created": "The qualification was created.",
+    "saved": "The qualification was saved.",
+    "deleted": "The qualification was deleted.",
     "confirm_delete": "Delete Qualification",
-    "saved": "Qualification saved.",
-    "deleted": "Qualification deleted."
+    "confirm_delete_text": "Delete \"{{name}}\"? It is removed from its courses and job titles, and learners granted it directly lose it. Courses and completions stay.",
+    "col": {
+      "qualification": "Qualification",
+      "linked_courses": "Linked Courses",
+      "enrolled": "Enrolled",
+      "certified": "Certified",
+      "completion": "Completion",
+      "job_titles": "Job titles",
+      "learners": "Learners",
+      "actions": "Actions"
+    },
+    "count": {
+      "courses": {
+        "one": "{{count}} Course",
+        "other": "{{count}} Courses"
+      },
+      "titles": {
+        "one": "{{count}} Title",
+        "other": "{{count}} Titles"
+      },
+      "learners": {
+        "one": "{{count}} Learner",
+        "other": "{{count}} Learners"
+      }
+    },
+    "dialog": {
+      "assignment": "Qualification assignment",
+      "search": "Search for job titles or learners",
+      "show": "Show",
+      "all": "All",
+      "job_titles": "Job Titles",
+      "learners": "Learners",
+      "selected": "{{count}} selected",
+      "employees": "{{count}} employees",
+      "no_matches": "Nothing matches your search.",
+      "learners_locked": "{{count}} learners hold this qualification directly - more than this list can show, so they are left as they are. Manage them from Learners."
+    },
+    "transfer": {
+      "import": "Import",
+      "importing": "Importing…",
+      "export": "Export",
+      "exporting": "Exporting…",
+      "template": "Download empty template",
+      "import_xlsx": "Import Excel (.xlsx)",
+      "import_csv": "Import CSV (.csv)",
+      "export_xlsx": "Export Excel (.xlsx)",
+      "export_csv": "Export CSV (.csv)",
+      "imported": "Import complete. Qualifications created: {{count}}.",
+      "too_many": "Too many requests. Wait a minute and try again."
+    }
+  },
+  "import_report": {
+    "title": "Import not completed",
+    "rejected": "Nothing was imported. Problems found: {{count}}. Fix them and upload the file again.",
+    "row": "Row",
+    "column": "Column",
+    "problem": "Problem"
   },
   "messages": {
     "title": "Messages",

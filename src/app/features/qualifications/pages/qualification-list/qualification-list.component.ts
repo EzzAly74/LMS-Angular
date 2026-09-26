@@ -1,187 +1,283 @@
 import {
-  ChangeDetectionStrategy, Component, OnInit, inject, signal,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {
-  ReactiveFormsModule, FormBuilder, Validators,
-} from '@angular/forms';
-import { DialogModule } from 'primeng/dialog';
-import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
-import { ApiService } from '../../../../core/services/api.service';
-import { API } from '../../../../core/constants/api.constants';
-import { pickLocalized } from '../../../../core/utils/localized';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem, MessageService } from 'primeng/api';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { pluralKey } from '../../../../core/utils/plural-key';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
+import { NasConfirmModalComponent } from '../../../../shared/nas/nas-confirm-modal/nas-confirm-modal.component';
+import { NasImportReportComponent } from '../../../../shared/nas/nas-import-report/nas-import-report.component';
+import {
+  NasActionMenuComponent,
+  NasActionMenuItem,
+} from '../../../../shared/nas/nas-action-menu/nas-action-menu.component';
+import { QualificationDialogComponent } from '../../components/qualification-dialog/qualification-dialog.component';
+import { QualificationImportError, QualificationRow } from '../../models/qualification.model';
+import { QualificationsApiService, TransferFormat } from '../../services/qualifications-api.service';
 
-interface Qualification {
-  id: number;
-  name: string;
-  name_en?: string;
-  name_ar?: string;
-  courses_count?: number;
-  enrolled_count?: number;
-  created_at?: string;
-}
+type LoadState = 'loading' | 'ready' | 'error';
+type Tone = 'high' | 'mid' | 'low';
 
+/**
+ * Qualifications - Figma 2066:100159 (D5).
+ *
+ * GET admin/qualification-skills. Every figure is measured against the
+ * people the qualification applies to (D-056): Certified is holders out of
+ * them, Completion their average progress through the linked courses.
+ *
+ * New Qualification / the row's Edit open the modal (2066:100876). Import
+ * (1983:44634) takes a whole file or nothing and lists every problem by row
+ * (D-034); Export (2066:99852) downloads the list as currently searched.
+ */
 @Component({
   selector: 'app-qualification-list',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, DialogModule, SkeletonModule,
-    ConfirmDialogModule, TranslateModule, NasPageHeaderComponent,
+    TranslateModule,
+    SkeletonModule,
+    MenuModule,
+    NasIconComponent,
+    NasPagerComponent,
+    NasConfirmModalComponent,
+    NasImportReportComponent,
+    NasActionMenuComponent,
+    QualificationDialogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './qualification-list.component.html',
   styleUrl: './qualification-list.component.scss',
 })
 export class QualificationListComponent implements OnInit {
-  private readonly api           = inject(ApiService);
-  private readonly confirmService = inject(ConfirmationService);
-  private readonly messageService = inject(MessageService);
-  private readonly localeService  = inject(LocaleService);
-  private readonly t              = inject(TranslateService);
-  private readonly fb             = inject(FormBuilder);
-
-  constructor() { withLocaleReload(() => this.load()); }
-
-  /* ── Reactive form ───────────────────────────────────────────── */
-  readonly form = this.fb.group({
-    name_en: ['', [Validators.required, Validators.maxLength(255)]],
-    name_ar: ['', [Validators.required, Validators.maxLength(255)]],
-  });
-
-  get nameEnCtrl() { return this.form.controls.name_en; }
-  get nameArCtrl() { return this.form.controls.name_ar; }
-
-  /* ── State ───────────────────────────────────────────────────── */
-  items     = signal<Qualification[]>([]);
-  total     = signal(0);
-  loading   = signal(true);
-  saving    = signal(false);
-  activeRow = signal<Qualification | null>(null);
+  private readonly api        = inject(QualificationsApiService);
+  private readonly toast      = inject(MessageService);
+  private readonly t          = inject(TranslateService);
+  private readonly locale     = inject(LocaleService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly perPage = 15;
-  page             = 1;
-  search           = '';
-  dialogVisible    = false;
-  editingId: number | null = null;
-
   readonly skeletons = [1, 2, 3, 4, 5];
 
-  private search$ = new Subject<string>();
+  readonly rows    = signal<QualificationRow[]>([]);
+  readonly total   = signal(0);
+  readonly page    = signal(1);
+  readonly search  = signal('');
+  readonly state   = signal<LoadState>('loading');
 
-  /* ── Lifecycle ───────────────────────────────────────────────── */
+  readonly dialogOpen = signal(false);
+  readonly editingId  = signal<number | null>(null);
+
+  readonly deleting     = signal<QualificationRow | null>(null);
+  readonly deleteBusy   = signal(false);
+
+  readonly importing    = signal(false);
+  readonly exporting    = signal(false);
+  readonly reportErrors = signal<QualificationImportError[]>([]);
+  readonly reportOpen   = signal(false);
+
+  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  private readonly search$ = new Subject<string>();
+  private rowMenuTarget: QualificationRow | null = null;
+
+  /** Rebuilt on language change so the labels follow it. */
+  readonly importItems = computed<NasActionMenuItem[]>(() => {
+    this.locale.locale();
+    return [
+      { id: 'template', label: this.t.instant('qualifications.transfer.template'), icon: 'download-simple' },
+      { id: 'xlsx', label: this.t.instant('qualifications.transfer.import_xlsx'), icon: 'file-text' },
+      { id: 'csv', label: this.t.instant('qualifications.transfer.import_csv'), icon: 'file-text' },
+    ];
+  });
+
+  readonly exportItems = computed<NasActionMenuItem[]>(() => {
+    this.locale.locale();
+    return [
+      { id: 'xlsx', label: this.t.instant('qualifications.transfer.export_xlsx'), icon: 'file-text' },
+      { id: 'csv', label: this.t.instant('qualifications.transfer.export_csv'), icon: 'file-text' },
+    ];
+  });
+
+  readonly rowMenu = computed<MenuItem[]>(() => {
+    this.locale.locale();
+    return [
+      { label: this.t.instant('common.edit'), command: () => this.rowMenuTarget && this.openEdit(this.rowMenuTarget) },
+      {
+        label: this.t.instant('common.delete'),
+        styleClass: 'ql__menu-danger',
+        command: () => this.rowMenuTarget && this.deleting.set(this.rowMenuTarget),
+      },
+    ];
+  });
+
+  /** Accept attribute for the picker, set just before it opens. */
+  readonly accept = signal('.xlsx');
+
+  constructor() {
+    withLocaleReload(() => this.load());
+  }
+
   ngOnInit(): void {
-    this.search$.pipe(debounceTime(400), distinctUntilChanged())
-      .subscribe(q => { this.search = q; this.page = 1; this.load(); });
+    this.search$
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(term => {
+        this.search.set(term);
+        this.page.set(1);
+        this.load();
+      });
     this.load();
   }
 
-  /* ── Data ────────────────────────────────────────────────────── */
   load(): void {
-    this.loading.set(true);
-    this.api.getPaginated<Qualification>(API.QUALIFICATIONS, {
-      page: this.page, per_page: this.perPage, search: this.search || undefined,
-    }).subscribe({
-      next:  res => { this.items.set(res.result.data); this.total.set(res.result.total); this.loading.set(false); },
-      error: ()  => this.loading.set(false),
+    this.state.set('loading');
+    const params: Record<string, string | number> = { page: this.page(), per_page: this.perPage };
+    if (this.search()) params['search'] = this.search();
+    this.api.list(params).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => {
+        this.rows.set(res.result.data);
+        this.total.set(res.result.total);
+        this.state.set('ready');
+      },
+      error: () => this.state.set('error'),
     });
   }
 
-  onSearch(term: string): void { this.search$.next(term); }
-
-  qualName(item: Qualification): string {
-    const locale = this.localeService.locale() === 'ar' ? 'ar' : 'en';
-    return (
-      pickLocalized(item.name, locale, '') ||
-      (locale === 'ar' ? (item.name_ar ?? '') : (item.name_en ?? '')) ||
-      (item.name_en ?? item.name_ar ?? '') ||
-      '—'
-    );
+  onSearch(term: string): void {
+    this.search$.next(term.trim());
   }
 
-  /* ── Dialog ──────────────────────────────────────────────────── */
+  onPage(p: number): void {
+    this.page.set(p);
+    this.load();
+  }
+
+  // ── Row figures ─────────────────────────────────────────────────────────
+  countKey(base: string, n: number): string {
+    return pluralKey(`qualifications.count.${base}`, n, this.locale.locale());
+  }
+
+  /** Figma: green 90%, slate 55%, red 41%. */
+  tone(percent: number): Tone {
+    if (percent >= 80) return 'high';
+    if (percent >= 50) return 'mid';
+    return 'low';
+  }
+
+  // ── Create / edit / delete ───────────────────────────────────────────────
   openCreate(): void {
-    this.editingId = null;
-    this.activeRow.set(null);
-    this.form.reset({ name_en: '', name_ar: '' });
-    this.dialogVisible = true;
+    this.editingId.set(null);
+    this.dialogOpen.set(true);
   }
 
-  openEdit(item: Qualification): void {
-    this.editingId = item.id;
-    this.activeRow.set(null);
-    this.form.reset({
-      name_en: item.name_en ?? item.name ?? '',
-      name_ar: item.name_ar ?? '',
-    });
-    this.dialogVisible = true;
+  openEdit(row: QualificationRow): void {
+    this.editingId.set(row.id);
+    this.dialogOpen.set(true);
   }
 
-  closeDialog(): void {
-    this.dialogVisible = false;
-    this.editingId = null;
-    this.form.reset({ name_en: '', name_ar: '' });
+  openRowMenu(menu: { toggle: (e: Event) => void }, row: QualificationRow, event: Event): void {
+    this.rowMenuTarget = row;
+    menu.toggle(event);
   }
 
-  save(): void {
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+  onSaved(): void {
+    if (this.editingId() === null) this.page.set(1);
+    this.load();
+  }
 
-    this.saving.set(true);
-    const v = this.form.getRawValue();
-    const payload = { name: { en: v.name_en!.trim(), ar: v.name_ar!.trim() } };
-
-    const req = this.editingId
-      ? this.api.put(`${API.QUALIFICATIONS}/${this.editingId}`, payload)
-      : this.api.post(API.QUALIFICATIONS, payload);
-
-    req.subscribe({
+  confirmDelete(): void {
+    const row = this.deleting();
+    if (!row) return;
+    this.deleteBusy.set(true);
+    this.api.delete(row.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.saving.set(false);
-        this.closeDialog();
+        this.deleteBusy.set(false);
+        this.deleting.set(null);
+        this.toast.add({ severity: 'success', summary: this.t.instant('common.success_title'), detail: this.t.instant('qualifications.deleted') });
+        if (this.rows().length === 1 && this.page() > 1) this.page.update(p => p - 1);
         this.load();
-        this.messageService.add({
-          severity: 'success',
-          summary:  this.t.instant('common.saved'),
-          detail:   this.t.instant('qualifications.saved'),
-        });
       },
-      error: () => this.saving.set(false),
+      // The error interceptor toasts the reason.
+      error: () => this.deleteBusy.set(false),
     });
   }
 
-  /* ── Row menu ────────────────────────────────────────────────── */
-  toggleRowMenu(item: Qualification, event: Event): void {
-    event.stopPropagation();
-    this.activeRow.set(this.activeRow()?.id === item.id ? null : item);
+  // ── Import / Export ──────────────────────────────────────────────────────
+  onImportPick(id: string): void {
+    if (id === 'template') {
+      this.api.importTemplate().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        error: (e: unknown) => this.fail(e),
+      });
+      return;
+    }
+    this.accept.set(id === 'csv' ? '.csv,text/csv' : '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // Let the new accept attribute render before the picker opens.
+    queueMicrotask(() => this.fileInput()?.nativeElement.click());
   }
 
-  closeAllMenus(): void { this.activeRow.set(null); }
+  onFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // the same file can be chosen again after a fix
+    if (!file) return;
 
-  confirmDelete(item: Qualification): void {
-    this.activeRow.set(null);
-    this.confirmService.confirm({
-      message: `${this.t.instant('confirm.delete_message')} (${item.name_en ?? item.name})`,
-      header:  this.t.instant('qualifications.confirm_delete'),
-      icon:    'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(`${API.QUALIFICATIONS}/${item.id}`).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary:  this.t.instant('common.deleted'),
-              detail:   this.t.instant('qualifications.deleted'),
-            });
-            this.load();
-          },
-        });
+    this.importing.set(true);
+    this.api.import(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: report => {
+        this.importing.set(false);
+        if (report.errors.length === 0) {
+          this.toast.add({
+            severity: 'success',
+            summary: this.t.instant('common.success_title'),
+            detail: this.t.instant('qualifications.transfer.imported', { count: report.created }),
+          });
+          this.page.set(1);
+          this.load();
+          return;
+        }
+        this.reportErrors.set(report.errors);
+        this.reportOpen.set(true);
+      },
+      error: (e: unknown) => {
+        this.importing.set(false);
+        this.fail(e);
       },
     });
+  }
+
+  onExportPick(id: string): void {
+    const format: TransferFormat = id === 'csv' ? 'csv' : 'xlsx';
+    this.exporting.set(true);
+    this.api.export(format, this.search()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.exporting.set(false),
+      error: (e: unknown) => {
+        this.exporting.set(false);
+        this.fail(e);
+      },
+    });
+  }
+
+  /** The API's message (422 / 429), else a generic one. */
+  private fail(e: unknown): void {
+    let detail = this.t.instant('common.operation_failed');
+    if (e instanceof HttpErrorResponse) {
+      const first = Object.values((e.error?.errors ?? {}) as Record<string, string[]>).flat()[0];
+      if (typeof first === 'string') detail = first;
+      else if (e.status === 429) detail = this.t.instant('qualifications.transfer.too_many');
+    }
+    this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail });
   }
 }

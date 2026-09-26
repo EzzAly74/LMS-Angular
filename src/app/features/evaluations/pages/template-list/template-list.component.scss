@@ -25,20 +25,6 @@
 
 .tl__edit { min-block-size: 36px; }
 
-.tl__report-lead { margin: 0 0 var(--nas-space-3); font-size: var(--nas-size-xs); color: var(--nas-color-text-strong); }
-
-.tl__report-scroll { max-block-size: 50vh; overflow: auto; border: 1px solid var(--nas-color-border); border-radius: var(--nas-radius-md); }
-
-.tl__report {
-  inline-size: 100%;
-  border-collapse: collapse;
-  font-size: var(--nas-size-2xs);
-
-  th, td { padding: var(--nas-space-2) var(--nas-space-3); text-align: start; border-block-end: 1px solid var(--nas-color-border); vertical-align: top; }
-  th { background: var(--nas-neutral-50); font-weight: var(--nas-weight-medium); color: var(--nas-color-text-muted); position: sticky; inset-block-start: 0; }
-  td:first-child { white-space: nowrap; }
-}
-
 // ── Recently Created cards ───────────────────────────────────────────────
 .tl__cards {
   display: grid;

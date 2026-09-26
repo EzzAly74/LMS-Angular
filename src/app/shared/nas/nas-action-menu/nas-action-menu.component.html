@@ -1,0 +1,28 @@
+<button #trigger type="button" class="nas-am__trigger" [disabled]="disabled()"
+  [attr.aria-expanded]="open()" [attr.aria-controls]="uid" (click)="toggle()">
+  <img [src]="icon()" width="16" height="16" alt="" />
+  {{ label() }}
+  <img class="nas-am__caret" [class.nas-am__caret--open]="open()" src="assets/icons/figma/caret-down-16.svg"
+    width="16" height="16" alt="" />
+</button>
+
+@if (open()) {
+  <div #panel class="nas-am__panel" [id]="uid" role="group" [attr.aria-labelledby]="uid + '-title'">
+    <div class="nas-am__head">
+      <p class="nas-am__title" [id]="uid + '-title'">{{ title() }}</p>
+      <button type="button" class="nas-am__close" [attr.aria-label]="'common.close' | translate" (click)="close()">
+        <nas-icon name="x" [size]="16" />
+      </button>
+    </div>
+    <ul class="nas-am__list">
+      @for (item of items(); track item.id) {
+        <li>
+          <button type="button" class="nas-am__item" (click)="choose(item)">
+            <nas-icon [name]="item.icon" [size]="16" />
+            {{ item.label }}
+          </button>
+        </li>
+      }
+    </ul>
+  </div>
+}

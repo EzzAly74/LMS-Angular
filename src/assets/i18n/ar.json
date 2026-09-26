@@ -770,11 +770,6 @@
       "export_xlsx": "Excel (.xlsx)",
       "export_csv": "CSV (.csv)",
       "imported": "تم استيراد النماذج: {{templates}}، والأسئلة: {{questions}}.",
-      "report_title": "لم يكتمل الاستيراد",
-      "rejected": "لم يُستورد أي شيء. عدد المشكلات: {{count}}. صحّحها ثم ارفع الملف مرة أخرى.",
-      "row": "الصف",
-      "column": "العمود",
-      "problem": "المشكلة",
       "too_many": "طلبات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى."
     }
   },
@@ -873,24 +868,91 @@
   "qualifications": {
     "title": "المؤهلات",
     "subtitle": "إدارة إطار المؤهلات والدورات المرتبطة بها",
-    "create": "إضافة مؤهل",
     "new_qualification": "مؤهل جديد",
     "edit_qualification": "تعديل المؤهل",
-    "name_en": "الاسم (إنجليزي)",
-    "name_ar": "الاسم (عربي)",
-    "name_en_placeholder": "e.g. Fire Safety Level 2",
-    "name_ar_placeholder": "اسم المؤهل بالعربية",
-    "courses_count": "الدورات المرتبطة",
-    "search_placeholder": "ابحث في المؤهلات...",
-    "no_results": "لا توجد مؤهلات.",
-    "qualification": "المؤهل",
-    "linked_courses": "الدورات المرتبطة",
-    "enrolled": "المسجلون",
-    "course_word": "دورة",
-    "courses_word": "دورات",
-    "confirm_delete": "حذف المؤهل",
+    "name_en": "اسم المؤهل (بالإنجليزية)",
+    "name_ar": "اسم المؤهل (بالعربية)",
+    "name_en_placeholder": "e.g. Microsoft Office",
+    "name_ar_placeholder": "مثال: مايكروسوفت أوفيس",
+    "search_placeholder": "ابحث في المؤهلات…",
+    "no_results": "لا يوجد مؤهل يطابق بحثك.",
+    "empty": "لا توجد مؤهلات بعد. أنشئ مؤهلًا أو استورد ملفًا.",
+    "no_group": "لا أحد يحتاج هذا المؤهل بعد",
+    "retry": "إعادة المحاولة",
+    "actions_for": "إجراءات {{name}}",
+    "created": "تم إنشاء المؤهل.",
     "saved": "تم حفظ المؤهل.",
-    "deleted": "تم حذف المؤهل."
+    "deleted": "تم حذف المؤهل.",
+    "confirm_delete": "حذف المؤهل",
+    "confirm_delete_text": "حذف \"{{name}}\"؟ سيُزال من دوراته ومسمياته الوظيفية، ويفقده المتعلمون الذين مُنحوه مباشرة. تبقى الدورات وما أُكمل منها.",
+    "col": {
+      "qualification": "المؤهل",
+      "linked_courses": "الدورات المرتبطة",
+      "enrolled": "المسجلون",
+      "certified": "الحاصلون عليه",
+      "completion": "الإنجاز",
+      "job_titles": "المسميات الوظيفية",
+      "learners": "المتعلمون",
+      "actions": "الإجراءات"
+    },
+    "count": {
+      "courses": {
+        "zero": "لا دورات",
+        "one": "دورة واحدة",
+        "two": "دورتان",
+        "few": "{{count}} دورات",
+        "many": "{{count}} دورة",
+        "other": "{{count}} دورة"
+      },
+      "titles": {
+        "zero": "لا مسميات",
+        "one": "مسمى واحد",
+        "two": "مسميان",
+        "few": "{{count}} مسميات",
+        "many": "{{count}} مسمى",
+        "other": "{{count}} مسمى"
+      },
+      "learners": {
+        "zero": "لا متعلمين",
+        "one": "متعلم واحد",
+        "two": "متعلمان",
+        "few": "{{count}} متعلمين",
+        "many": "{{count}} متعلمًا",
+        "other": "{{count}} متعلم"
+      }
+    },
+    "dialog": {
+      "assignment": "تعيين المؤهل",
+      "search": "ابحث عن مسميات وظيفية أو متعلمين",
+      "show": "عرض",
+      "all": "الكل",
+      "job_titles": "المسميات الوظيفية",
+      "learners": "المتعلمون",
+      "selected": "المحدد: {{count}}",
+      "employees": "عدد الموظفين: {{count}}",
+      "no_matches": "لا توجد نتائج مطابقة لبحثك.",
+      "learners_locked": "عدد المتعلمين الحاصلين على هذا المؤهل مباشرة {{count}}، وهو أكثر مما تعرضه هذه القائمة، لذا يبقون كما هم. يمكن إدارتهم من صفحة المتعلمين."
+    },
+    "transfer": {
+      "import": "استيراد",
+      "importing": "جارٍ الاستيراد…",
+      "export": "تصدير",
+      "exporting": "جارٍ التصدير…",
+      "template": "تنزيل قالب فارغ",
+      "import_xlsx": "استيراد Excel (.xlsx)",
+      "import_csv": "استيراد CSV (.csv)",
+      "export_xlsx": "تصدير Excel (.xlsx)",
+      "export_csv": "تصدير CSV (.csv)",
+      "imported": "اكتمل الاستيراد. عدد المؤهلات المُنشأة: {{count}}.",
+      "too_many": "طلبات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى."
+    }
+  },
+  "import_report": {
+    "title": "لم يكتمل الاستيراد",
+    "rejected": "لم يُستورد أي شيء. عدد المشكلات: {{count}}. صحّحها ثم ارفع الملف مرة أخرى.",
+    "row": "الصف",
+    "column": "العمود",
+    "problem": "المشكلة"
   },
   "messages": {
     "title": "الرسائل",

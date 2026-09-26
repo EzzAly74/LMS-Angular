@@ -16,7 +16,6 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MenuModule } from 'primeng/menu';
-import { DialogModule } from 'primeng/dialog';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { ApiParams, ApiService } from '../../../../core/services/api.service';
@@ -26,6 +25,7 @@ import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
 import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
+import { NasImportReportComponent } from '../../../../shared/nas/nas-import-report/nas-import-report.component';
 import {
   NasFilterOption,
   NasFilterPickerComponent,
@@ -68,10 +68,10 @@ type SortKey = 'created_at' | 'name';
     TranslateModule,
     SkeletonModule,
     MenuModule,
-    DialogModule,
     NasIconComponent,
     NasDatepickerComponent,
     NasPagerComponent,
+    NasImportReportComponent,
     NasFilterPickerComponent,
     NasDatePipe,
     EvScoreComponent,

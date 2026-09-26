@@ -295,30 +295,4 @@
   (apply)="onPick(pickerKey(), $event)" />
 
 <!-- Import report: nothing was written; every problem by row and column (D-034). -->
-<p-dialog [visible]="reportOpen()" (visibleChange)="reportOpen.set($event)" [modal]="true" [closable]="true"
-  [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="tl-report"
-  [style]="{ width: '640px', maxWidth: 'calc(100vw - 32px)' }" [header]="'evaluations.transfer.report_title' | translate">
-  @if (importReport(); as r) {
-    <p class="tl__report-lead" role="alert">{{ 'evaluations.transfer.rejected' | translate: { count: r.errors.length } }}</p>
-    <div class="tl__report-scroll">
-      <table class="tl__report">
-        <thead>
-          <tr>
-            <th scope="col">{{ 'evaluations.transfer.row' | translate }}</th>
-            <th scope="col">{{ 'evaluations.transfer.column' | translate }}</th>
-            <th scope="col">{{ 'evaluations.transfer.problem' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (e of r.errors; track $index) {
-            <tr>
-              <td>{{ e.row || '-' }}</td>
-              <td><bdi dir="ltr">{{ e.column ?? '-' }}</bdi></td>
-              <td>{{ e.message }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-</p-dialog>
+<nas-import-report [visible]="reportOpen()" (visibleChange)="reportOpen.set($event)" [errors]="importReport()?.errors ?? []" />

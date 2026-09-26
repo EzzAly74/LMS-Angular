@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiParams, ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
+import { saveBlob } from '../../../core/utils/save-blob';
 import {
   BuilderOptions,
   EvaluationTemplateDetail,
@@ -52,15 +53,4 @@ export class EvaluationTemplatesApiService {
     body.append('file', file, file.name);
     return this.api.post<ImportReport>(`${this.base}/import`, body).pipe(map(r => r.result));
   }
-}
-
-function saveBlob(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

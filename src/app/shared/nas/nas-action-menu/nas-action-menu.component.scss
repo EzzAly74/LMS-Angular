@@ -1,0 +1,112 @@
+// Import / Export menus - Figma 1983:44634 (import) and 2066:99852 (export).
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+.nas-am__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  block-size: 44px;
+  padding: var(--nas-space-1) var(--nas-space-3);
+  border: 1px solid var(--nas-neutral-500);
+  border-radius: 12px;
+  background: var(--nas-color-bg-surface);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 20px;
+  color: var(--nas-neutral-800);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+  &:disabled { cursor: default; opacity: 0.6; }
+}
+
+.nas-am__caret {
+  transition: transform 150ms ease;
+
+  &--open { transform: rotate(180deg); }
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+.nas-am__panel {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 20;
+  min-inline-size: 218px;
+  max-inline-size: calc(100vw - 32px);
+  overflow: hidden;
+  border: 1px solid var(--nas-color-border);
+  border-radius: 12px;
+  background: var(--nas-color-bg-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.nas-am__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border-block-end: 1px solid var(--nas-color-border);
+}
+
+.nas-am__title {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-semibold);
+  color: var(--nas-color-text-strong);
+}
+
+.nas-am__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 24px;
+  block-size: 24px;
+  margin: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--nas-neutral-750);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
+}
+
+.nas-am__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li + li { border-block-start: 1px solid var(--nas-color-border); }
+}
+
+.nas-am__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  inline-size: 100%;
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover { background: var(--nas-teal-100); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: -2px; }
+}

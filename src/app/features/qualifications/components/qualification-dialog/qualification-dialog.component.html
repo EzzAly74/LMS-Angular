@@ -1,0 +1,132 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="restoreFocus()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="!saving()"
+  [closeOnEscape]="!saving()"
+  styleClass="qd"
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }"
+  [attr.aria-labelledby]="uid + '-title'">
+  <ng-template pTemplate="headless">
+    <form class="qd__card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <header class="qd__head">
+        <h2 class="qd__title" [id]="uid + '-title'">
+          {{ (editing() ? 'qualifications.edit_qualification' : 'qualifications.new_qualification') | translate }}
+        </h2>
+        <button type="button" class="qd__close" (click)="close()" [disabled]="saving()" [attr.aria-label]="'common.close' | translate">
+          <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
+        </button>
+      </header>
+
+      <div class="qd__body">
+        @switch (state()) {
+          @case ('loading') {
+            <div class="qd__loading" [attr.aria-label]="'common.loading' | translate" role="status">
+              <p-skeleton height="44px" /><p-skeleton height="44px" /><p-skeleton height="220px" />
+            </div>
+          }
+          @case ('error') {
+            <div class="qd__message" role="alert">
+              <p>{{ 'common.could_not_load' | translate }}</p>
+              <button type="button" class="qd__btn qd__btn--ghost" (click)="retry()">{{ 'qualifications.retry' | translate }}</button>
+            </div>
+          }
+          @default {
+            @for (f of nameFields; track f.ctrl) {
+              @let ctrl = f.ctrl;
+              <div class="qd__field">
+                <label class="qd__label" [for]="uid + '-' + ctrl">
+                  {{ f.label | translate }} <span class="qd__required" aria-hidden="true">*</span>
+                </label>
+                <input class="qd__input" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir"
+                  [placeholder]="f.ph | translate" autocomplete="off" required [attr.maxlength]="nameMax"
+                  [class.qd__input--error]="fieldInvalid(ctrl)" [attr.aria-invalid]="fieldInvalid(ctrl)"
+                  [attr.aria-describedby]="fieldInvalid(ctrl) ? uid + '-' + ctrl + '-error' : null"
+                  (input)="clearFieldError(ctrl)" />
+                @if (fieldInvalid(ctrl)) {
+                  <p class="qd__error" [id]="uid + '-' + ctrl + '-error'" role="alert">
+                    @if (fieldErrors()[ctrl]; as msg) { {{ msg }} }
+                    @else if (form.controls[ctrl].hasError('maxlength')) { {{ 'errors.max_length' | translate: { max: nameMax } }} }
+                    @else { {{ 'errors.required' | translate }} }
+                  </p>
+                }
+              </div>
+            }
+
+            <fieldset class="qd__assign">
+              <legend class="qd__label">{{ 'qualifications.dialog.assignment' | translate }}</legend>
+              <div class="qd__panel">
+                <div class="qd__search">
+                  <nas-icon name="magnifying-glass" [size]="20" />
+                  <input #term type="search" class="qd__search-input" [value]="search()"
+                    [attr.aria-label]="'qualifications.dialog.search' | translate"
+                    [placeholder]="'qualifications.dialog.search' | translate" (input)="onSearch(term.value)" />
+                </div>
+
+                <div class="qd__chips" role="group" [attr.aria-label]="'qualifications.dialog.show' | translate">
+                  @for (c of filters; track c.value) {
+                    <button type="button" class="qd__chip" [class.qd__chip--on]="filter() === c.value"
+                      [attr.aria-pressed]="filter() === c.value" (click)="setFilter(c.value)">
+                      {{ c.key | translate }}
+                    </button>
+                  }
+                </div>
+
+                <div class="qd__list">
+                  <p class="qd__count" aria-live="polite">
+                    {{ 'qualifications.dialog.selected' | translate: { count: selectedCount() } }}
+                  </p>
+                  @if (!learnersEditable() && filter() !== 'job_titles') {
+                    <p class="qd__note">{{ 'qualifications.dialog.learners_locked' | translate: { count: learnersTotal() } }}</p>
+                  }
+                  <ul class="qd__rows" [attr.aria-busy]="searching()">
+                    @for (r of rows(); track r.key) {
+                      <li>
+                        <label class="qd__row">
+                          <input type="checkbox" class="qd__check" [checked]="r.checked"
+                            [disabled]="r.kind === 'learner' && !learnersEditable()" (change)="toggle(r)" />
+                          <span class="qd__row-name" dir="auto">{{ r.name }}</span>
+                          @if (r.kind === 'learner' && r.employeeId) {
+                            <span class="qd__row-id"><bdi>{{ r.employeeId }}</bdi></span>
+                          }
+                          @if (r.kind === 'job_title') {
+                            <span class="qd__badge"
+                              [attr.aria-label]="'qualifications.dialog.employees' | translate: { count: r.employees }">
+                              <bdi>{{ r.employees }}</bdi>
+                            </span>
+                          }
+                        </label>
+                      </li>
+                    } @empty {
+                      <li class="qd__note">
+                        {{ (searchFailed() ? 'common.could_not_load' : searching() ? 'common.loading' : 'qualifications.dialog.no_matches') | translate }}
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            </fieldset>
+          }
+        }
+      </div>
+
+      @if (serverError(); as msg) {
+        <p class="qd__alert" role="alert">{{ msg }}</p>
+      }
+
+      <footer class="qd__foot">
+        <button type="button" class="qd__btn qd__btn--ghost" (click)="close()" [disabled]="saving()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="submit" class="qd__btn qd__btn--primary" [disabled]="!canSubmit()">
+          <nas-icon [name]="editing() ? 'floppy-disk' : 'plus-circle'" [size]="20" />
+          {{ (saving() ? 'common.saving' : editing() ? 'common.save_changes' : 'qualifications.new_qualification') | translate }}
+        </button>
+      </footer>
+    </form>
+  </ng-template>
+</p-dialog>

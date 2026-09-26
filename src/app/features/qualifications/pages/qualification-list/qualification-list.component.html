@@ -1,148 +1,140 @@
-<p-confirmDialog />
+<div class="nas-page-container ql">
 
-<!-- ── Create / Edit Dialog ──────────────────────────────────────────── -->
-<p-dialog
-  [(visible)]="dialogVisible"
-  [header]="(editingId ? 'qualifications.edit_qualification' : 'qualifications.new_qualification') | translate"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [closable]="true"
-  [closeOnEscape]="true"
-  styleClass="nas-dialog"
-  [style]="{ width: '480px' }">
+  <header class="ql__head">
+    <div class="ql__head-text">
+      <h1 class="ql__title">{{ 'qualifications.title' | translate }}</h1>
+      <p class="ql__subtitle">{{ 'qualifications.subtitle' | translate }}</p>
+    </div>
+    <div class="ql__actions">
+      <button type="button" class="ql__new" (click)="openCreate()">
+        <nas-icon name="plus-circle" [size]="20" />
+        {{ 'qualifications.new_qualification' | translate }}
+      </button>
+      <nas-action-menu
+        [label]="(importing() ? 'qualifications.transfer.importing' : 'qualifications.transfer.import') | translate"
+        [title]="'qualifications.transfer.import' | translate"
+        icon="assets/icons/figma/file-arrow-down.svg"
+        [items]="importItems()" [disabled]="importing()" (picked)="onImportPick($event)" />
+      <nas-action-menu
+        [label]="(exporting() ? 'qualifications.transfer.exporting' : 'qualifications.transfer.export') | translate"
+        [title]="'qualifications.transfer.export' | translate"
+        icon="assets/icons/figma/export.svg"
+        [items]="exportItems()" [disabled]="exporting()" (picked)="onExportPick($event)" />
+      <input #fileInput type="file" class="ql__sr-only" tabindex="-1" aria-hidden="true" [accept]="accept()"
+        (change)="onFile($event)" />
+    </div>
+  </header>
 
-  <form class="nas-form" [formGroup]="form" (ngSubmit)="save()">
-    <div class="nas-form__field">
-      <label>{{ 'qualifications.name_en' | translate }} <span class="nas-form__required">*</span></label>
-      <input
-        class="nas-input"
-        [class.nas-input--error]="nameEnCtrl.invalid && nameEnCtrl.touched"
-        type="text"
-        formControlName="name_en"
-        [placeholder]="'qualifications.name_en_placeholder' | translate"
-        autocomplete="off" />
-      @if (nameEnCtrl.invalid && nameEnCtrl.touched) {
-        <span class="nas-form__error">
-          @if (nameEnCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
-          @else if (nameEnCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
-        </span>
-      }
+  <section class="ql__card" [attr.aria-busy]="state() === 'loading'">
+    <div class="ql__toolbar">
+      <label class="ql__search">
+        <nas-icon name="magnifying-glass" [size]="20" />
+        <span class="ql__sr-only">{{ 'qualifications.search_placeholder' | translate }}</span>
+        <input #term type="search" class="ql__search-input" [placeholder]="'qualifications.search_placeholder' | translate"
+          (input)="onSearch(term.value)" />
+      </label>
     </div>
 
-    <div class="nas-form__field">
-      <label>{{ 'qualifications.name_ar' | translate }} <span class="nas-form__required">*</span></label>
-      <input
-        class="nas-input"
-        [class.nas-input--error]="nameArCtrl.invalid && nameArCtrl.touched"
-        type="text"
-        formControlName="name_ar"
-        dir="rtl"
-        [placeholder]="'qualifications.name_ar_placeholder' | translate"
-        autocomplete="off" />
-      @if (nameArCtrl.invalid && nameArCtrl.touched) {
-        <span class="nas-form__error">
-          @if (nameArCtrl.hasError('required')) { {{ 'errors.required' | translate }} }
-          @else if (nameArCtrl.hasError('maxlength')) { {{ 'errors.max_length' | translate:{ max: 255 } }} }
-        </span>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">{{ 'common.cancel' | translate }}</button>
-    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="save()">
-      <i class="pi pi-check"></i>
-      {{ (editingId ? 'common.updated' : 'common.create') | translate }}
-    </button>
-  </ng-template>
-</p-dialog>
-
-<!-- ── Page ──────────────────────────────────────────────────────────── -->
-<div class="nas-page-container" (click)="closeAllMenus()">
-
-  <nas-page-header
-    [title]="'qualifications.title' | translate"
-    [subtitle]="'qualifications.subtitle' | translate">
-    <button type="button" class="nas-cta-btn" (click)="openCreate(); $event.stopPropagation()">
-      <i class="pi pi-plus-circle"></i>
-      {{ 'qualifications.new_qualification' | translate }}
-    </button>
-  </nas-page-header>
-
-  <div class="nas-card qual-table-card">
-    <!-- Search toolbar -->
-    <div class="qual-toolbar">
-      <div class="qual-search">
-        <i class="pi pi-search qual-search__icon"></i>
-        <input
-          type="text"
-          class="qual-search__input"
-          [placeholder]="'qualifications.search_placeholder' | translate"
-          (input)="onSearch($any($event.target).value)"
-        />
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="qual-table-wrap">
-      <table class="nas-table">
+    <div class="ql__scroll">
+      <table class="ql__table">
         <thead>
           <tr>
-            <th>{{ 'qualifications.qualification' | translate }}</th>
-            <th>{{ 'qualifications.linked_courses' | translate }}</th>
-            <th>{{ 'qualifications.enrolled' | translate }}</th>
-            <th></th>
+            <th scope="col">{{ 'qualifications.col.qualification' | translate }}</th>
+            <th scope="col">{{ 'qualifications.col.linked_courses' | translate }}</th>
+            <th scope="col">{{ 'qualifications.col.enrolled' | translate }}</th>
+            <th scope="col">{{ 'qualifications.col.certified' | translate }}</th>
+            <th scope="col">{{ 'qualifications.col.completion' | translate }}</th>
+            <th scope="col">{{ 'qualifications.col.job_titles' | translate }}</th>
+            <th scope="col">{{ 'qualifications.col.learners' | translate }}</th>
+            <th scope="col"><span class="ql__sr-only">{{ 'qualifications.col.actions' | translate }}</span></th>
           </tr>
         </thead>
         <tbody>
-          @if (loading()) {
-            @for (s of skeletons; track s) {
+          @switch (state()) {
+            @case ('loading') {
+              @for (s of skeletons; track s) {
+                <tr>
+                  @for (c of [1, 2, 3, 4, 5, 6, 7, 8]; track c) {
+                    <td><p-skeleton height="18px" /></td>
+                  }
+                </tr>
+              }
+            }
+            @case ('error') {
               <tr>
-                @for (c of [1,2,3,4]; track c) {
-                  <td><p-skeleton height="20px" /></td>
-                }
+                <td colspan="8" class="ql__message" role="alert">
+                  <p>{{ 'common.could_not_load' | translate }}</p>
+                  <button type="button" class="ql__retry" (click)="load()">{{ 'qualifications.retry' | translate }}</button>
+                </td>
               </tr>
             }
-          } @else {
-            @for (item of items(); track item.id) {
-              <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ qualName(item) }}</td>
-                <td>
-                  <span class="qual-courses-badge">
-                    {{ item.courses_count ?? 0 }}
-                    {{ ((item.courses_count ?? 0) === 1 ? 'qualifications.course_word' : 'qualifications.courses_word') | translate }}
-                  </span>
-                </td>
-                <td>{{ item.enrolled_count ?? 0 }}</td>
-                <td class="nas-table__action" (click)="$event.stopPropagation()">
-                  <div class="row-action-wrap">
-                    <button type="button" class="row-action-btn" (click)="toggleRowMenu(item, $event)">
-                      <i class="pi pi-ellipsis-h"></i>
-                    </button>
-                    @if (activeRow()?.id === item.id) {
-                      <div class="row-menu">
-                        <button type="button" class="row-menu__item" (click)="openEdit(item)">
-                          <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
-                        </button>
-                        <button type="button" class="row-menu__item row-menu__item--danger" (click)="confirmDelete(item)">
-                          <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
-                        </button>
+            @default {
+              @for (q of rows(); track q.id) {
+                <tr>
+                  <th scope="row" class="ql__name"><bdi>{{ q.name }}</bdi></th>
+                  <td><span class="ql__chip">{{ countKey('courses', q.courses_count) | translate: { count: q.courses_count } }}</span></td>
+                  <td><bdi>{{ q.enrolled_count }}</bdi></td>
+                  <td>
+                    <bdi dir="ltr">{{ q.certified_count }}/{{ q.learners_count }}</bdi>
+                  </td>
+                  <td>
+                    @if (q.completion_percent === null) {
+                      <span class="ql__none" [attr.aria-label]="'qualifications.no_group' | translate">-</span>
+                    } @else {
+                      <div class="ql__progress">
+                        <div class="ql__bar" role="progressbar" [attr.aria-valuenow]="q.completion_percent"
+                          aria-valuemin="0" aria-valuemax="100"
+                          [attr.aria-label]="'qualifications.col.completion' | translate">
+                          <div [class]="'ql__fill ql__fill--' + tone(q.completion_percent)"
+                            [style.inline-size.%]="q.completion_percent"></div>
+                        </div>
+                        <span class="ql__pct"><bdi dir="ltr">{{ q.completion_percent }}%</bdi></span>
                       </div>
                     }
-                  </div>
-                </td>
-              </tr>
-            }
-            @if (!items().length) {
-              <tr>
-                <td colspan="4" class="nas-table__empty">{{ 'qualifications.no_results' | translate }}</td>
-              </tr>
+                  </td>
+                  <td><span class="ql__chip">{{ countKey('titles', q.job_titles_count) | translate: { count: q.job_titles_count } }}</span></td>
+                  <td><span class="ql__chip">{{ countKey('learners', q.learners_count) | translate: { count: q.learners_count } }}</span></td>
+                  <td class="ql__action">
+                    <button type="button" class="ql__kebab" aria-haspopup="menu"
+                      [attr.aria-label]="'qualifications.actions_for' | translate: { name: q.name }"
+                      (click)="openRowMenu(rowMenuEl, q, $event)">
+                      <nas-icon name="dots-three" [size]="16" />
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="ql__message">
+                    <p>{{ (search() ? 'qualifications.no_results' : 'qualifications.empty') | translate }}</p>
+                  </td>
+                </tr>
+              }
             }
           }
         </tbody>
       </table>
     </div>
-  </div>
 
+    @if (state() === 'ready' && total() > perPage) {
+      <nas-pager [page]="page()" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
+    }
+  </section>
 </div>
+
+<p-menu #rowMenuEl [model]="rowMenu()" [popup]="true" appendTo="body" />
+
+<app-qualification-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [qualificationId]="editingId()" (saved)="onSaved()" />
+
+<nas-confirm-modal
+  [visible]="deleting() !== null"
+  [title]="'qualifications.confirm_delete' | translate"
+  [message]="'qualifications.confirm_delete_text' | translate: { name: deleting()?.name ?? '' }"
+  [confirmLabel]="'common.delete' | translate"
+  [cancelLabel]="'common.cancel' | translate"
+  [danger]="true"
+  [busy]="deleteBusy()"
+  (confirm)="confirmDelete()"
+  (cancel)="deleting.set(null)" />
+
+<nas-import-report [visible]="reportOpen()" (visibleChange)="reportOpen.set($event)" [errors]="reportErrors()" />
