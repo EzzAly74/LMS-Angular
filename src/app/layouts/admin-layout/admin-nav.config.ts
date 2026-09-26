@@ -42,6 +42,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
           { label: 'nav.courses',     route: '/admin/courses',     icon: '', viewKey: 'view-courses' },
           { label: 'nav.assignments', route: '/admin/assignments', icon: '', viewKey: 'view-assignments' },
           { label: 'nav.quizzes',     route: '/admin/quizzes',     icon: '', viewKey: 'view-quizzes' },
+          { label: 'nav.learners',    route: '/admin/learners',    icon: '', viewKey: 'view-users' },
           { label: 'nav.ratings',     route: '/admin/ratings',     icon: '', viewKey: 'view-ratings' },
         ],
       },

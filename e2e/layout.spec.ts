@@ -51,6 +51,7 @@ const ROUTES: Route[] = [
   'categories',
   'users',
   'job-titles',
+  'learners',
   'qualifications',
   'assignments',
   'quizzes',

@@ -1,0 +1,212 @@
+// "Filter your results" - Figma 1986:75113 (512px card, 16px radius).
+
+::ng-deep .nas-fp {
+  &.p-dialog {
+    border-radius: var(--nas-radius-xl);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .p-dialog-content {
+    padding: 0;
+    background: transparent;
+  }
+}
+
+.nas-fp__card {
+  display: flex;
+  flex-direction: column;
+  background: var(--nas-color-bg-surface);
+}
+
+.nas-fp__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4) var(--nas-space-6) 17px;
+  border-block-end: 1px solid var(--nas-color-border);
+}
+
+.nas-fp__title {
+  margin: 0;
+  font-size: var(--nas-size-s);
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+}
+
+.nas-fp__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.nas-fp__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-1);
+  padding: var(--nas-space-5) var(--nas-space-6) var(--nas-space-6);
+}
+
+.nas-fp__label {
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+}
+
+.nas-fp__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  margin-block-end: var(--nas-space-1);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+
+  nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+
+  &:focus-within { border-color: var(--nas-teal-700); box-shadow: 0 0 0 3px var(--nas-teal-1000-16); }
+}
+
+.nas-fp__search-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  color: var(--nas-color-text-strong);
+
+  &::placeholder { color: var(--nas-color-text-subtle); }
+}
+
+.nas-fp__list {
+  block-size: 224px;
+  overflow-y: auto;
+  padding: 1px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  scrollbar-width: thin;
+}
+
+.nas-fp__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-3);
+  min-block-size: 37px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-color-text-strong);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-50); }
+}
+
+// The native checkbox stays in the accessibility tree and takes the focus;
+// the drawn box is its visual.
+.nas-fp__native {
+  position: absolute;
+  opacity: 0;
+  inline-size: 16px;
+  block-size: 16px;
+  margin: 0;
+  inset-inline-start: var(--nas-space-3);
+}
+
+.nas-fp__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 16px;
+  block-size: 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 4px;
+  background: var(--nas-color-bg-surface);
+}
+
+.nas-fp__native:checked + .nas-fp__box {
+  border-color: var(--nas-teal-1000);
+  background: var(--nas-teal-1000);
+}
+
+.nas-fp__native:focus-visible + .nas-fp__box {
+  outline: 2px solid var(--nas-teal-700);
+  outline-offset: 2px;
+}
+
+.nas-fp__option-text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: match-parent;
+}
+
+.nas-fp__note {
+  margin: 0;
+  padding: var(--nas-space-4) var(--nas-space-3);
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-muted);
+}
+
+.nas-fp__foot {
+  display: flex;
+  gap: var(--nas-space-3);
+  padding: 17px var(--nas-space-6) var(--nas-space-4);
+  border-block-start: 1px solid var(--nas-color-border);
+  background: var(--nas-neutral-50);
+}
+
+.nas-fp__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border-radius: var(--nas-radius-md);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.nas-fp__btn--ghost {
+  inline-size: 113px;
+  border: 1px solid var(--nas-teal-1000);
+  background: transparent;
+  color: var(--nas-teal-1000);
+  box-shadow: 0 2px 5px 0 var(--nas-neutral-750-08), 0 0 0 0 var(--nas-neutral-750-16), 0 1px 1px 0 var(--nas-neutral-2000-12);
+
+  &:hover { background: var(--nas-teal-100); }
+}
+
+.nas-fp__btn--primary {
+  flex: 1 1 0;
+  border: 0;
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+  box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
+
+  &:hover { background: var(--nas-teal-950); }
+}

@@ -1,0 +1,70 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="restoreFocus()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [closeOnEscape]="true"
+  [focusOnShow]="true"
+  styleClass="nas-fp"
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }"
+  [attr.aria-labelledby]="uid + '-title'">
+  <ng-template pTemplate="headless">
+    <div class="nas-fp__card" role="document">
+      <header class="nas-fp__head">
+        <h2 class="nas-fp__title" [id]="uid + '-title'">{{ 'filter_picker.title' | translate }}</h2>
+        <button type="button" class="nas-fp__close" (click)="close()" [attr.aria-label]="'common.close' | translate">
+          <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
+        </button>
+      </header>
+
+      <div class="nas-fp__body">
+        <label class="nas-fp__label" [for]="uid + '-search'">{{ label() }}</label>
+        <div class="nas-fp__search">
+          <nas-icon name="magnifying-glass" [size]="20" />
+          <input
+            type="search"
+            class="nas-fp__search-input"
+            [id]="uid + '-search'"
+            [placeholder]="'common.quick_search' | translate"
+            [value]="search()"
+            (input)="onSearch(searchInput.value)"
+            #searchInput />
+        </div>
+
+        <div class="nas-fp__list" role="group" [attr.aria-labelledby]="uid + '-title'" [attr.aria-busy]="loading()">
+          @if (loading()) {
+            <p class="nas-fp__note">{{ 'common.loading' | translate }}</p>
+          } @else {
+            @for (o of filtered(); track o.id) {
+              <label class="nas-fp__option">
+                <input type="checkbox" class="nas-fp__native" [checked]="isChecked(o.id)" (change)="toggle(o.id)" />
+                <span class="nas-fp__box" aria-hidden="true">
+                  @if (isChecked(o.id)) {
+                    <img src="assets/icons/figma/checkbox-check.svg" width="12" height="12" alt="" />
+                  }
+                </span>
+                <span class="nas-fp__option-text" dir="auto">{{ o.label }}</span>
+              </label>
+            } @empty {
+              <p class="nas-fp__note">{{ 'filter_picker.no_options' | translate }}</p>
+            }
+          }
+        </div>
+      </div>
+
+      <footer class="nas-fp__foot">
+        <button type="button" class="nas-fp__btn nas-fp__btn--ghost" (click)="clear()">
+          {{ 'filter_picker.clear' | translate }}
+        </button>
+        <button type="button" class="nas-fp__btn nas-fp__btn--primary" (click)="submit()">
+          <nas-icon name="funnel" [size]="20" />
+          <span>{{ 'filter_picker.filter' | translate }}</span>
+        </button>
+      </footer>
+    </div>
+  </ng-template>
+</p-dialog>

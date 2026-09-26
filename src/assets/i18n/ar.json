@@ -25,6 +25,7 @@
     "blogs": "المدونات",
     "assignments": "المهام",
     "quizzes": "الاختبارات",
+    "learners": "المتعلمون",
     "categories": "التصنيفات",
     "certificates": "الشهادات",
     "settings": "الإعدادات",
@@ -1464,5 +1465,47 @@
 
     "upload_photo": "رفع صورة",
     "replace_photo": "استبدال الصورة"
+  },
+  "learners": {
+    "title": "المتعلمون",
+    "subtitle": "وجّه تقدم المتعلمين وتابعه بسهولة.",
+    "search_label": "البحث عن المتعلمين",
+    "search_placeholder": "ابحث باسم المتعلم أو رقمه",
+    "from": "من",
+    "to": "إلى",
+    "active_from": "آخر نشاط من",
+    "active_to": "آخر نشاط حتى",
+    "filters": "عوامل التصفية",
+    "chip": {
+      "instructors": "المدربون",
+      "learners": "المتعلمون",
+      "courses": "الدورات",
+      "qualification": "المؤهلات"
+    },
+    "chip_selected": "{{name}}، تم اختيار {{count}}",
+    "type": {
+      "online": "عن بُعد",
+      "offline": "حضوري",
+      "hybrid": "مدمج"
+    },
+    "col": {
+      "name": "اسم المتعلم",
+      "id": "رقم المتعلم",
+      "courses_earned": "الدورات المكتملة",
+      "qualification": "المؤهلات (%)",
+      "last_certification": "تاريخ آخر شهادة",
+      "last_activity": "آخر نشاط"
+    },
+    "qualification_of": "تقدم المؤهلات لـ {{name}}",
+    "range": "{{from}}–{{to}} من {{total}}",
+    "empty": "لا يوجد متعلمون بعد.",
+    "no_results": "لا يوجد متعلمون مطابقون لعوامل التصفية.",
+    "retry": "إعادة المحاولة"
+  },
+  "filter_picker": {
+    "title": "تصفية النتائج",
+    "clear": "مسح",
+    "filter": "تصفية",
+    "no_options": "لا توجد خيارات."
   }
 }

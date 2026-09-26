@@ -25,6 +25,7 @@
     "blogs": "Blogs",
     "assignments": "Assignments",
     "quizzes": "Quizzes",
+    "learners": "Learners",
     "categories": "Categories",
     "certificates": "Certificates",
     "settings": "Settings",
@@ -1452,5 +1453,47 @@
 
     "upload_photo": "Upload Photo",
     "replace_photo": "Replace Photo"
+  },
+  "learners": {
+    "title": "Learners",
+    "subtitle": "Direct and track learner progress with ease.",
+    "search_label": "Search learners",
+    "search_placeholder": "Search by learner's name or ID",
+    "from": "From",
+    "to": "To",
+    "active_from": "Last active from",
+    "active_to": "Last active to",
+    "filters": "Filters",
+    "chip": {
+      "instructors": "Instructors",
+      "learners": "Learners",
+      "courses": "Courses",
+      "qualification": "Qualification"
+    },
+    "chip_selected": "{{name}}, {{count}} selected",
+    "type": {
+      "online": "Online",
+      "offline": "Offline",
+      "hybrid": "Hybrid"
+    },
+    "col": {
+      "name": "Learner Name",
+      "id": "Learner ID",
+      "courses_earned": "Courses Earned",
+      "qualification": "Qualification (%)",
+      "last_certification": "Last Certification Date",
+      "last_activity": "Last Activity"
+    },
+    "qualification_of": "Qualification progress for {{name}}",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "empty": "No learners yet.",
+    "no_results": "No learners match these filters.",
+    "retry": "Retry"
+  },
+  "filter_picker": {
+    "title": "Filter your results",
+    "clear": "Clear",
+    "filter": "Filter",
+    "no_options": "Nothing to choose from."
   }
 }
