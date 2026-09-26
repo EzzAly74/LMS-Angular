@@ -34,6 +34,13 @@
         <p class="qc__note">{{ 'evaluations.text_note' | translate }}</p>
       }
     } @else {
+      @if (q.scale_label_min || q.scale_label_max) {
+        <p class="qc__scale-ends">
+          <span><bdi dir="ltr">1</bdi> - <bdi>{{ q.scale_label_min }}</bdi></span>
+          <span class="qc__scale-line" aria-hidden="true"></span>
+          <span><bdi dir="ltr">{{ q.scale_max }}</bdi> - <bdi>{{ q.scale_label_max }}</bdi></span>
+        </p>
+      }
       <ul class="qc__rows" role="list">
         @for (b of bars(); track b.value) {
           <li class="qc__row" [class.qc__row--on]="b.on">

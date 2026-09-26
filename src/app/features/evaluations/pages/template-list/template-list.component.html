@@ -9,6 +9,29 @@
       <h1 class="ev__title">{{ 'evaluations.templates.title' | translate }}</h1>
       <p class="ev__subtitle">{{ 'evaluations.templates.subtitle' | translate }}</p>
     </div>
+    <div class="tl__head-actions">
+      <a class="ev__btn ev__btn--primary tl__create" routerLink="new">
+        <nas-icon name="plus-circle" [size]="24" />
+        {{ 'evaluations.templates.create' | translate }}
+      </a>
+      <button type="button" class="ev__btn tl__menu-btn" aria-haspopup="menu" [disabled]="importing()"
+        (click)="importMenu.toggle($event)">
+        <img src="assets/icons/figma/file-arrow-down.svg" width="16" height="16" alt="" />
+        {{ (importing() ? 'evaluations.transfer.importing' : 'evaluations.transfer.import') | translate }}
+        <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
+      </button>
+      <p-menu #importMenu [model]="importItems()" [popup]="true" appendTo="body" />
+      <button type="button" class="ev__btn tl__menu-btn" aria-haspopup="menu" [disabled]="exporting()"
+        (click)="exportMenu.toggle($event)">
+        <img src="assets/icons/figma/export.svg" width="16" height="16" alt="" />
+        {{ (exporting() ? 'evaluations.transfer.exporting' : 'evaluations.transfer.export') | translate }}
+        <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
+      </button>
+      <p-menu #exportMenu [model]="exportItems()" [popup]="true" appendTo="body" />
+      <input #fileInput type="file" class="ev__sr-only" tabindex="-1" aria-hidden="true"
+        accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+        (change)="onFile($event)" />
+    </div>
   </header>
 
   <!-- Recently Created (Figma 2009:88432, the two newest templates) -->
@@ -45,7 +68,11 @@
                   </span>
                 }
               </div>
-              <p class="tl__tcard-scope">{{ 'evaluations.scope_all' | translate }}</p>
+              <p class="tl__tcard-scope">
+                <bdi>{{ t.course?.name ?? ('evaluations.builder.all_courses' | translate) }}</bdi>
+                ·
+                <bdi>{{ t.cohort?.name ?? ('evaluations.builder.all_cohorts' | translate) }}</bdi>
+              </p>
 
               <dl class="tl__stats">
                 <div>
@@ -75,6 +102,13 @@
 
               <div class="tl__tcard-foot">
                 <span class="tl__created">{{ 'evaluations.created_on' | translate: { date: (t.created_at | nasDate: locale()) } }}</span>
+                @if (!t.locked) {
+                  <a class="ev__btn ev__btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
+                    <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
+                    {{ 'common.edit' | translate }}
+                    <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
+                  </a>
+                }
                 <a class="ev__btn ev__btn--primary" [routerLink]="[t.id]">
                   {{ 'evaluations.templates.view_results' | translate }}
                   <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
@@ -208,7 +242,12 @@
                       <span class="ev__secondary">{{ 'evaluations.created_on' | translate: { date: (t.created_at | nasDate: locale()) } }}</span>
                     </span>
                   </td>
-                  <td class="ev__td tl__c-course"><span class="ev__ellipsis">{{ 'evaluations.scope_all_courses' | translate }}</span></td>
+                  <td class="ev__td tl__c-course">
+                    <span class="ev__cell-stack">
+                      <span class="ev__ellipsis"><bdi>{{ t.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></span>
+                      @if (t.cohort) { <span class="ev__secondary"><bdi>{{ t.cohort.name }}</bdi></span> }
+                    </span>
+                  </td>
                   <td class="ev__td tl__c-num">{{ t.questions }}</td>
                   <td class="ev__td tl__c-score"><ev-score [score]="t.score" [passed]="t.passed" /></td>
                   <td class="ev__td tl__c-date ev__muted">
@@ -254,3 +293,32 @@
   [selected]="picked()[pickerKey()]"
   [loading]="optionsLoading()"
   (apply)="onPick(pickerKey(), $event)" />
+
+<!-- Import report: nothing was written; every problem by row and column (D-034). -->
+<p-dialog [visible]="reportOpen()" (visibleChange)="reportOpen.set($event)" [modal]="true" [closable]="true"
+  [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="tl-report"
+  [style]="{ width: '640px', maxWidth: 'calc(100vw - 32px)' }" [header]="'evaluations.transfer.report_title' | translate">
+  @if (importReport(); as r) {
+    <p class="tl__report-lead" role="alert">{{ 'evaluations.transfer.rejected' | translate: { count: r.errors.length } }}</p>
+    <div class="tl__report-scroll">
+      <table class="tl__report">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'evaluations.transfer.row' | translate }}</th>
+            <th scope="col">{{ 'evaluations.transfer.column' | translate }}</th>
+            <th scope="col">{{ 'evaluations.transfer.problem' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of r.errors; track $index) {
+            <tr>
+              <td>{{ e.row || '-' }}</td>
+              <td><bdi dir="ltr">{{ e.column ?? '-' }}</bdi></td>
+              <td>{{ e.message }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</p-dialog>

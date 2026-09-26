@@ -6,6 +6,8 @@
 
 .tr__back { flex-shrink: 0; }
 
+.tr__head-actions { display: flex; align-items: center; gap: var(--nas-space-2); flex-wrap: wrap; }
+
 .tr__tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -82,6 +82,9 @@ const ROUTES: Route[] = [
   // D4 (Figma 2169:108198, 2017:52260, 2169:108801).
   { name: 'evaluations-results', list: '/api/v1/admin/evaluations/templates', path: (r) => r.id && `evaluations/${r.id}` },
   'evaluations/scores',
+  // Figma 2409:132793 / 2409:133222.
+  'evaluations/new',
+  { name: 'evaluations-edit', list: '/api/v1/admin/evaluations/templates', path: (r) => r.id && `evaluations/${r.id}/edit` },
   {
     name: 'evaluations-submission',
     list: '/api/v1/admin/evaluations/scores',

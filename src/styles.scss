@@ -84,6 +84,8 @@
   --nas-status-red-500: #f14437;
   --nas-status-red-500-08: rgba(241, 68, 55, 0.08);
   --nas-status-red-500-16: rgba(241, 68, 55, 0.16);
+  /* Error TEXT on white: red-500 is 3.6:1 and fails AA below 18px; this is 6.5:1. */
+  --nas-status-red-700: #b42318;
 
   --nas-status-amber-50: #fef4e6;
   --nas-status-amber-500: #f79008;

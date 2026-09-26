@@ -1,0 +1,231 @@
+<div class="nas-page-container ev tb">
+  <header class="ev__head">
+    <div class="ev__head-text">
+      <nav [attr.aria-label]="'evaluations.breadcrumb' | translate">
+        <ol class="ev__crumbs">
+          <li>
+            <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+            <a routerLink="/admin/evaluations">{{ 'evaluations.eyebrow' | translate }}</a>
+            <img class="ev__crumb-sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+          </li>
+          <li><span aria-current="page">{{ (editing() ? 'evaluations.builder.crumb_edit' : 'evaluations.builder.crumb_new') | translate }}</span></li>
+        </ol>
+      </nav>
+      <h1 class="ev__title">{{ (editing() ? 'evaluations.builder.title_edit' : 'evaluations.builder.title_new') | translate }}</h1>
+    </div>
+    @if (state() === 'ready') {
+      <div class="tb__actions">
+        <a class="ev__btn ev__btn--outline tb__cancel" routerLink="/admin/evaluations">{{ 'common.cancel' | translate }}</a>
+        <button type="submit" form="tb-form" class="ev__btn ev__btn--primary" [disabled]="!canPublish()">
+          <nas-icon name="paper-plane-tilt" [size]="20" />
+          {{ (saving() ? 'evaluations.builder.publishing' : editing() ? 'evaluations.builder.save' : 'evaluations.builder.publish') | translate }}
+        </button>
+      </div>
+    }
+  </header>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="tb__layout">
+        <div class="tb__main">
+          <p-skeleton height="420px" borderRadius="8px" />
+          <p-skeleton height="360px" borderRadius="8px" />
+        </div>
+        <p-skeleton height="200px" borderRadius="16px" />
+      </div>
+    }
+    @case ('not-found') {
+      <div class="tb__message" role="alert">
+        <p>{{ 'evaluations.results.not_found' | translate }}</p>
+        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+      </div>
+    }
+    @case ('locked') {
+      <div class="tb__message" role="alert">
+        <p>{{ 'evaluations.builder.locked' | translate }}</p>
+        @if (existing(); as t) {
+          <a class="ev__btn ev__btn--outline" [routerLink]="['/admin/evaluations', t.id]">{{ 'evaluations.templates.view_results' | translate }}</a>
+        }
+      </div>
+    }
+    @case ('error') {
+      <div class="tb__message" role="alert">
+        <p>{{ 'common.could_not_load' | translate }}</p>
+        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+      </div>
+    }
+    @default {
+      <div class="tb__layout">
+        <form id="tb-form" class="tb__main" [formGroup]="form" (ngSubmit)="publish()" novalidate>
+          @if (serverError(); as err) {
+            <p class="tb__alert" role="alert">{{ err }}</p>
+          }
+
+          <!-- General -->
+          <section class="tb__card" aria-labelledby="tb-general">
+            <h2 class="tb__card-title" id="tb-general">{{ 'evaluations.builder.general' | translate }}</h2>
+
+            <div class="tb__field">
+              <label class="tb__label" for="tb-name-en">{{ 'evaluations.builder.name_en' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+              <input id="tb-name-en" class="tb__input" formControlName="name_en" maxlength="191" dir="ltr" lang="en"
+                required [attr.aria-invalid]="showError(form.controls.name_en)"
+                [attr.aria-describedby]="showError(form.controls.name_en) ? 'tb-name-en-err' : null" />
+              @if (showError(form.controls.name_en)) {
+                <p class="tb__error" id="tb-name-en-err">{{ 'common.field_required' | translate }}</p>
+              }
+            </div>
+
+            <div class="tb__field">
+              <label class="tb__label" for="tb-name-ar">{{ 'evaluations.builder.name_ar' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+              <input id="tb-name-ar" class="tb__input" formControlName="name_ar" maxlength="191" dir="rtl" lang="ar"
+                required [attr.aria-invalid]="showError(form.controls.name_ar)"
+                [attr.aria-describedby]="showError(form.controls.name_ar) ? 'tb-name-ar-err' : null" />
+              @if (showError(form.controls.name_ar)) {
+                <p class="tb__error" id="tb-name-ar-err">{{ 'common.field_required' | translate }}</p>
+              }
+            </div>
+
+            <div class="tb__field">
+              <label class="tb__label" id="tb-course-label">{{ 'evaluations.builder.course' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+              <p-dropdown formControlName="course_id" [options]="courseOptions()" optionLabel="label" optionValue="value"
+                [filter]="courseOptions().length > 8" filterBy="label" appendTo="body" styleClass="tb-dropdown"
+                ariaLabelledBy="tb-course-label" [style]="{ width: '100%' }" />
+            </div>
+
+            @if (form.controls.course_id.value !== null) {
+              <div class="tb__field">
+                <label class="tb__label" id="tb-cohort-label">{{ 'evaluations.builder.cohort' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+                <p-dropdown formControlName="section_id" [options]="cohortOptions()" optionLabel="label" optionValue="value"
+                  appendTo="body" styleClass="tb-dropdown" ariaLabelledBy="tb-cohort-label" [style]="{ width: '100%' }" />
+              </div>
+            }
+
+            <div class="tb__field">
+              <label class="tb__label" id="tb-type-label">{{ 'evaluations.builder.default_type' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+              <p-dropdown formControlName="default_type" [options]="typeOptions()" optionLabel="label" optionValue="value"
+                appendTo="body" styleClass="tb-dropdown" ariaLabelledBy="tb-type-label" [style]="{ width: '100%' }" />
+              <p class="tb__hint">{{ 'evaluations.builder.default_type_hint' | translate }}</p>
+            </div>
+          </section>
+
+          <!-- Questions -->
+          <section class="tb__card" aria-labelledby="tb-questions">
+            <div class="tb__card-head">
+              <h2 class="tb__card-title" id="tb-questions">{{ 'evaluations.builder.questions' | translate }}</h2>
+              <button type="button" class="ev__btn ev__btn--primary tb__add" (click)="addQuestion()">
+                <nas-icon name="plus-circle" [size]="20" />
+                {{ 'evaluations.builder.add_question' | translate }}
+              </button>
+            </div>
+
+            @if (questions.length === 0) {
+              <p class="tb__empty" [class.tb__error]="submitted()" role="status">{{ 'evaluations.builder.no_questions' | translate }}</p>
+            }
+
+            <ol class="tb__questions" formArrayName="questions">
+              @for (q of questions.controls; track q; let i = $index) {
+                @let n = i + 1;
+                <li class="tb__q" [formGroupName]="i" [attr.aria-label]="'evaluations.question_n' | translate: { n: n }">
+                  <div class="tb__q-head">
+                    <span class="tb__q-no" aria-hidden="true">{{ n }}</span>
+                    <button type="button" class="ev__btn ev__btn--outline tb__remove" (click)="removeQuestion(i)"
+                      [attr.aria-label]="'evaluations.builder.remove_n' | translate: { n: n }">
+                      <nas-icon name="minus-circle" [size]="20" />
+                      {{ 'evaluations.builder.remove' | translate }}
+                    </button>
+                  </div>
+
+                  <div class="tb__row">
+                    <div class="tb__field">
+                      <label class="tb__label" [for]="'tb-q' + i + '-en'">{{ 'evaluations.builder.question_en' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+                      <input class="tb__input" [id]="'tb-q' + i + '-en'" formControlName="title_en" maxlength="500" dir="ltr" lang="en" required
+                        [attr.aria-invalid]="showError(q.controls.title_en)" />
+                      @if (showError(q.controls.title_en)) { <p class="tb__error">{{ 'common.field_required' | translate }}</p> }
+                    </div>
+                    <div class="tb__field">
+                      <label class="tb__label" [for]="'tb-q' + i + '-ar'">{{ 'evaluations.builder.question_ar' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+                      <input class="tb__input" [id]="'tb-q' + i + '-ar'" formControlName="title_ar" maxlength="500" dir="rtl" lang="ar" required
+                        [attr.aria-invalid]="showError(q.controls.title_ar)" />
+                      @if (showError(q.controls.title_ar)) { <p class="tb__error">{{ 'common.field_required' | translate }}</p> }
+                    </div>
+                  </div>
+
+                  <div class="tb__field">
+                    <label class="tb__label" [id]="'tb-q' + i + '-type'">{{ 'evaluations.builder.type' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
+                    <p-dropdown formControlName="type" [options]="typeOptions()" optionLabel="label" optionValue="value"
+                      appendTo="body" styleClass="tb-dropdown" [ariaLabelledBy]="'tb-q' + i + '-type'" [style]="{ width: '100%' }" />
+                  </div>
+
+                  @if (q.controls.type.value === 'five') {
+                    <span class="tb__stars" aria-hidden="true">
+                      @for (s of stars; track s) {
+                        <img src="assets/icons/figma/star-fill-amber.svg" width="24" height="24" alt="" />
+                      }
+                    </span>
+                  } @else {
+                    <div class="tb__row">
+                      @for (f of enLabels; track f.key) {
+                        <div class="tb__field">
+                          <label class="tb__label" [for]="'tb-q' + i + '-' + f.key">{{ 'evaluations.builder.label_en' | translate: { n: f.n } }} <span class="tb__req" aria-hidden="true">*</span></label>
+                          <input class="tb__input" [id]="'tb-q' + i + '-' + f.key" [formControlName]="f.key" [maxlength]="labelMax" dir="ltr" lang="en" required
+                            [attr.aria-invalid]="labelMissing(q, f.key)" />
+                          @if (labelMissing(q, f.key)) { <p class="tb__error">{{ 'common.field_required' | translate }}</p> }
+                        </div>
+                      }
+                    </div>
+                    <div class="tb__row">
+                      @for (f of arLabels; track f.key) {
+                        <div class="tb__field">
+                          <label class="tb__label" [for]="'tb-q' + i + '-' + f.key">{{ 'evaluations.builder.label_ar' | translate: { n: f.n } }} <span class="tb__req" aria-hidden="true">*</span></label>
+                          <input class="tb__input" [id]="'tb-q' + i + '-' + f.key" [formControlName]="f.key" [maxlength]="labelMax" dir="rtl" lang="ar" required
+                            [attr.aria-invalid]="labelMissing(q, f.key)" />
+                          @if (labelMissing(q, f.key)) { <p class="tb__error">{{ 'common.field_required' | translate }}</p> }
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <label class="tb__switch">
+                    <span>{{ 'evaluations.builder.required' | translate }}</span>
+                    <input type="checkbox" role="switch" class="tb__switch-input" formControlName="required" />
+                    <span class="tb__switch-track" aria-hidden="true"><span class="tb__switch-knob"></span></span>
+                  </label>
+                </li>
+              }
+            </ol>
+          </section>
+        </form>
+
+        <!-- Publish summary + business rule (Figma 2409:133345) -->
+        <aside class="tb__side" [attr.aria-label]="'evaluations.builder.summary' | translate">
+          <div class="tb__summary">
+            <h2 class="tb__summary-title">{{ 'evaluations.builder.summary' | translate }}</h2>
+            <dl class="tb__summary-list">
+              <div>
+                <dt>{{ 'evaluations.builder.scope' | translate }}</dt>
+                <dd class="tb__chips">
+                  <span class="tb__chip"><bdi>{{ scopeCourse() ?? ('evaluations.builder.all_courses' | translate) }}</bdi></span>
+                  <span class="tb__chip"><bdi>{{ scopeCohort() ?? ('evaluations.builder.all_cohorts' | translate) }}</bdi></span>
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'evaluations.builder.questions' | translate }}</dt>
+                <dd class="tb__summary-num">{{ questionCount() }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'evaluations.builder.highest_score' | translate }}</dt>
+                <dd class="tb__summary-big">
+                  @if (highestScore(); as h) { <bdi dir="ltr">{{ h }}/5.0</bdi> } @else { <span aria-label="-">-</span> }
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div class="tb__rule">
+            <h2 class="tb__rule-title">{{ 'evaluations.builder.rule_title' | translate }}</h2>
+            <p class="tb__rule-text">{{ 'evaluations.builder.rule_text' | translate: { limit: threshold() } }}</p>
+          </div>
+        </aside>
+      </div>
+    }
+  }
+</div>

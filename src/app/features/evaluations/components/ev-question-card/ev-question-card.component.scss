@@ -80,6 +80,20 @@
 .qc__avg-value { font-size: var(--nas-size-s); font-weight: var(--nas-weight-bold); color: var(--nas-color-text-strong); }
 .qc__avg-count { font-size: var(--nas-size-xs); color: var(--nas-neutral-800); }
 
+.qc__scale-ends {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-3);
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+
+  > span:not(.qc__scale-line) { flex-shrink: 0; }
+}
+
+.qc__scale-line { flex: 1 1 auto; block-size: 1px; background: var(--nas-color-border); }
+
 .qc__rows { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 
 .qc__row {

@@ -93,6 +93,11 @@ export class ApiService {
     return this.http.delete<ApiResponse<T>>(url);
   }
 
+  /** A file download (xlsx / csv exports), with the same `key[]=v` array params as get(). */
+  getBlob(url: string, params?: ApiParams): Observable<Blob> {
+    return this.http.get(url, { params: this.buildParams(params), responseType: 'blob' });
+  }
+
   private buildParams(params?: ApiParams): HttpParams {
     let p = new HttpParams();
     if (!params) return p;

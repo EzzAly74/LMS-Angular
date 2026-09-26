@@ -36,7 +36,15 @@
             </nav>
             <h1 class="ev__title"><bdi>{{ d.template.name }}</bdi></h1>
           </div>
-          <a class="ev__btn ev__btn--outline tr__back" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+          <div class="tr__head-actions">
+            @if (!d.template.locked) {
+              <a class="ev__btn ev__btn--primary" [routerLink]="['/admin/evaluations', d.template.id, 'edit']">
+                <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
+                {{ 'common.edit' | translate }}
+              </a>
+            }
+            <a class="ev__btn ev__btn--outline tr__back" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+          </div>
         </header>
 
         <div class="tr__tiles">
@@ -65,7 +73,11 @@
           <dl class="tr__facts">
             <div>
               <dt>{{ 'evaluations.results.course_assignment' | translate }}</dt>
-              <dd>{{ 'evaluations.scope_all_courses' | translate }}</dd>
+              <dd><bdi>{{ d.template.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></dd>
+            </div>
+            <div>
+              <dt>{{ 'evaluations.results.cohort_assignment' | translate }}</dt>
+              <dd><bdi>{{ d.template.cohort?.name ?? ('evaluations.builder.all_cohorts' | translate) }}</bdi></dd>
             </div>
             <div>
               <dt>{{ 'evaluations.results.last_scored' | translate }}</dt>

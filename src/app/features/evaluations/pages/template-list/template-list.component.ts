@@ -2,16 +2,22 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   OnInit,
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
+import { MenuModule } from 'primeng/menu';
+import { DialogModule } from 'primeng/dialog';
+import { MenuItem, MessageService } from 'primeng/api';
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { ApiParams, ApiService } from '../../../../core/services/api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
@@ -32,8 +38,10 @@ import {
   EvaluationFilterOptions,
   EvaluationResult,
   EvaluationTemplateRow,
+  ImportReport,
 } from '../../models/evaluation.model';
 import { ymd } from '../../evaluation-params';
+import { EvaluationTemplatesApiService, TransferFormat } from '../../services/evaluation-templates-api.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 type ChipKey = 'instructor_ids' | 'course_ids';
@@ -46,10 +54,10 @@ type SortKey = 'created_at' | 'name';
  * the responses each row aggregates; the checkboxes filter on the template's
  * score against the pass threshold (D-054); From/To bound the last response.
  *
- * Create / Edit / Import / Export are not drawn here: the legacy template
- * schema cannot hold what the builder (2010:50095) edits - scope, publish
- * state, bilingual questions - so they arrive with the D-032 tables rather
- * than as buttons that do nothing (D-054).
+ * Create Template opens the builder (2409:132793). Import takes a whole file
+ * or nothing and shows every problem by row (D-034); Export downloads the
+ * list as currently filtered. Edit is offered only on templates nobody has
+ * answered yet (decided 2026-09-26) - the API refuses it regardless.
  */
 @Component({
   selector: 'app-evaluation-template-list',
@@ -59,6 +67,8 @@ type SortKey = 'created_at' | 'name';
     RouterLink,
     TranslateModule,
     SkeletonModule,
+    MenuModule,
+    DialogModule,
     NasIconComponent,
     NasDatepickerComponent,
     NasPagerComponent,
@@ -75,6 +85,8 @@ export class EvaluationTemplateListComponent implements OnInit {
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly locale   = inject(LocaleService).locale;
+  private readonly transfer   = inject(EvaluationTemplatesApiService);
+  private readonly toast      = inject(MessageService);
 
   /** Figma: "Showing 1-8 of 8 templates". */
   readonly perPage   = 8;
@@ -108,6 +120,30 @@ export class EvaluationTemplateListComponent implements OnInit {
   readonly anyChip    = computed(() => this.picked().instructor_ids.length + this.picked().course_ids.length > 0);
   readonly narrowed   = computed(() => this.anyChip() || this.result().length > 0 || !!this.search() || !!this.from() || !!this.to());
   readonly lastPage   = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
+
+  /** Import / Export menus (Figma: outline buttons with a caret). */
+  readonly importing    = signal(false);
+  readonly exporting    = signal(false);
+  readonly importReport = signal<ImportReport | null>(null);
+  readonly reportOpen   = signal(false);
+  readonly importItems  = computed<MenuItem[]>(() => {
+    this.locale();
+    return [
+      { label: this.t.instant('evaluations.transfer.template_xlsx'), command: () => this.downloadTemplate('xlsx') },
+      { label: this.t.instant('evaluations.transfer.template_csv'),  command: () => this.downloadTemplate('csv') },
+      { separator: true },
+      { label: this.t.instant('evaluations.transfer.upload'), command: () => this.pickFile() },
+    ];
+  });
+  readonly exportItems = computed<MenuItem[]>(() => {
+    this.locale();
+    return [
+      { label: this.t.instant('evaluations.transfer.export_xlsx'), command: () => this.exportList('xlsx') },
+      { label: this.t.instant('evaluations.transfer.export_csv'),  command: () => this.exportList('csv') },
+    ];
+  });
+
+  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   private readonly fetch$  = new Subject<void>();
   private readonly search$ = new Subject<string>();
@@ -240,6 +276,69 @@ export class EvaluationTemplateListComponent implements OnInit {
 
   pickerLabel(key: ChipKey): string {
     return this.t.instant(this.chips.find(c => c.key === key)?.labelKey ?? '');
+  }
+
+  // ── Import / Export ────────────────────────────────────────────────────
+  onFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // the same file can be chosen again after a fix
+    if (!file) return;
+
+    this.importing.set(true);
+    this.transfer.import(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: report => {
+        this.importing.set(false);
+        if (report.errors.length === 0) {
+          this.toast.add({
+            severity: 'success',
+            summary: this.t.instant('common.success_title'),
+            detail: this.t.instant('evaluations.transfer.imported', { templates: report.created, questions: report.questions }),
+          });
+          this.reload();
+          this.loadRecent();
+          return;
+        }
+        this.importReport.set(report);
+        this.reportOpen.set(true);
+      },
+      error: (e: unknown) => {
+        this.importing.set(false);
+        this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.serverMessage(e) });
+      },
+    });
+  }
+
+  private pickFile(): void {
+    this.fileInput()?.nativeElement.click();
+  }
+
+  private downloadTemplate(format: TransferFormat): void {
+    this.transfer.importTemplate(format).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      error: (e: unknown) => this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.serverMessage(e) }),
+    });
+  }
+
+  private exportList(format: TransferFormat): void {
+    const { page: _page, per_page: _perPage, ...filters } = this.params();
+    this.exporting.set(true);
+    this.transfer.export(format, filters).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.exporting.set(false),
+      error: (e: unknown) => {
+        this.exporting.set(false);
+        this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.serverMessage(e) });
+      },
+    });
+  }
+
+  /** The API's message (422 / 429), else a generic one. */
+  private serverMessage(e: unknown): string {
+    if (e instanceof HttpErrorResponse) {
+      const first = Object.values((e.error?.errors ?? {}) as Record<string, string[]>).flat()[0];
+      if (typeof first === 'string') return first;
+      if (e.status === 429) return this.t.instant('evaluations.transfer.too_many');
+    }
+    return this.t.instant('common.operation_failed');
   }
 
   // ── Internals ──────────────────────────────────────────────────────────

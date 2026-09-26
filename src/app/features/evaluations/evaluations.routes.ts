@@ -13,6 +13,17 @@ export const EVALUATIONS_ROUTES: Routes = [
     title: 'Evaluation Templates — 2B Academy',
   },
   {
+    // Figma 2409:132793 / 2409:133222.
+    path: 'new',
+    loadComponent: () => import('./pages/template-builder/template-builder.component').then(m => m.EvaluationTemplateBuilderComponent),
+    title: 'Create Evaluation — 2B Academy',
+  },
+  {
+    path: ':id/edit',
+    loadComponent: () => import('./pages/template-builder/template-builder.component').then(m => m.EvaluationTemplateBuilderComponent),
+    title: 'Edit Evaluation — 2B Academy',
+  },
+  {
     path: 'scores',
     loadComponent: () => import('./pages/score-list/score-list.component').then(m => m.EvaluationScoreListComponent),
     title: 'Learner Scores — 2B Academy',

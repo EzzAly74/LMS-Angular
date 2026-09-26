@@ -608,7 +608,6 @@
     "scored_from": "Last scored from",
     "scored_to": "Last scored to",
     "created_on": "Created {{date}}",
-    "scope_all": "All evaluable courses · All cohorts",
     "scope_all_courses": "All evaluable courses",
     "id_label": "ID: {{id}}",
     "unknown_learner": "Unknown learner",
@@ -647,7 +646,8 @@
       "responses": {
         "one": "{{count}} Response",
         "other": "{{count}} Responses"
-      }
+      },
+      "create": "Create Template"
     },
     "scores": {
       "title": "View Learners scores",
@@ -668,7 +668,8 @@
       "last_scored": "Last Scored",
       "created": "Created",
       "view_scores": "View learner scores",
-      "no_questions": "This template has no questions."
+      "no_questions": "This template has no questions.",
+      "cohort_assignment": "Cohort Assignment"
     },
     "submission": {
       "not_found": "No evaluation was found for this learner and course.",
@@ -684,8 +685,9 @@
     "question_n": "Question {{n}}:",
     "qtype": {
       "five": "Star Evaluation",
-      "ten": "Evaluation Scale",
-      "text": "Written Answer"
+      "ten": "Scale 1–10",
+      "text": "Written Answer",
+      "scale": "Evaluation Scale"
     },
     "total_evaluations": {
       "one": "{{count}} total Evaluation",
@@ -702,7 +704,63 @@
     "average_of": "Average {{avg}} out of {{max}}, responses: {{count}}",
     "text_note": "Written answers are shown on each learner's result.",
     "most_given": "Most given answer",
-    "learner_answer": "This learner's answer"
+    "learner_answer": "This learner's answer",
+    "builder": {
+      "crumb_new": "Create Evaluation",
+      "crumb_edit": "Edit Evaluation",
+      "title_new": "Generate Evaluation",
+      "title_edit": "Edit Evaluation",
+      "publish": "Publish Evaluation",
+      "save": "Save Evaluation",
+      "publishing": "Publishing…",
+      "published": "The evaluation template was published.",
+      "updated": "The evaluation template was saved.",
+      "general": "General",
+      "name_en": "Template Name (English)",
+      "name_ar": "Template Name (Arabic)",
+      "course": "Course",
+      "cohort": "Cohort",
+      "all": "All",
+      "default_type": "Type of questions",
+      "default_type_hint": "New questions start with this type; each question can still have its own.",
+      "questions": "Questions",
+      "add_question": "Add Question",
+      "no_questions": "Add at least one question.",
+      "remove": "Remove",
+      "remove_n": "Remove question {{n}}",
+      "question_en": "Question (English)",
+      "question_ar": "Question (Arabic)",
+      "type": "Type",
+      "label_en": "Evaluation “{{n}}” (English)",
+      "label_ar": "Evaluation “{{n}}” (Arabic)",
+      "required": "Required",
+      "summary": "Publish summary",
+      "scope": "Scope",
+      "all_courses": "All Courses",
+      "all_cohorts": "All Cohorts",
+      "highest_score": "Highest score",
+      "rule_title": "Business rule",
+      "rule_text": "If a course's evaluation score falls below {{limit}}/5.0, the system notifies the admins and the course's instructors.",
+      "locked": "Learners have already answered this template, so it can no longer be edited."
+    },
+    "transfer": {
+      "import": "Import",
+      "importing": "Importing…",
+      "export": "Export",
+      "exporting": "Exporting…",
+      "template_xlsx": "Download template (.xlsx)",
+      "template_csv": "Download template (.csv)",
+      "upload": "Upload a file…",
+      "export_xlsx": "Excel (.xlsx)",
+      "export_csv": "CSV (.csv)",
+      "imported": "Import complete. Templates: {{templates}}, questions: {{questions}}.",
+      "report_title": "Import not completed",
+      "rejected": "Nothing was imported. Problems found: {{count}}. Fix them and upload the file again.",
+      "row": "Row",
+      "column": "Column",
+      "problem": "Problem",
+      "too_many": "Too many requests. Wait a minute and try again."
+    }
   },
   "forms": {
     "title": "Forms",
