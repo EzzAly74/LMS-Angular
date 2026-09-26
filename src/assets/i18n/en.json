@@ -593,17 +593,118 @@
     "template_preview_alt": "Template preview"
   },
   "evaluations": {
-    "title": "Evaluations",
-    "subtitle": "Manage evaluation forms and requirements",
-    "create": "Add Evaluation",
-    "type": "Type",
-    "category": "Category",
-    "is_required": "Required",
-    "optional": "Optional",
-    "search_placeholder": "Search evaluations...",
-    "no_results": "No evaluations found.",
-    "confirm_delete": "Delete Evaluation",
-    "deleted": "Evaluation deleted."
+    "eyebrow": "Evaluation",
+    "breadcrumb": "Breadcrumb",
+    "back_to_listing": "Back to listing",
+    "retry": "Retry",
+    "no_results": "No results match these filters.",
+    "filters": "Filters",
+    "chip_selected": "{{name}}, {{count}} selected",
+    "chip": {
+      "instructors": "Instructors",
+      "courses": "Courses",
+      "learners": "Learners"
+    },
+    "from": "From",
+    "to": "To",
+    "scored_from": "Last scored from",
+    "scored_to": "Last scored to",
+    "created_on": "Created {{date}}",
+    "scope_all": "All evaluable courses · All cohorts",
+    "scope_all_courses": "All evaluable courses",
+    "id_label": "ID: {{id}}",
+    "unknown_learner": "Unknown learner",
+    "learners_of": "{{scored}} scored out of {{total}}",
+    "result": {
+      "legend": "Result",
+      "passed": "Passed",
+      "failed": "Failed",
+      "unscored": "Unscored"
+    },
+    "col": {
+      "template": "Template Name",
+      "course": "Course",
+      "questions": "Questions",
+      "avg_score": "Avg Scoring",
+      "last_scored": "Last Scored",
+      "learners": "Learners",
+      "learner": "Learner",
+      "scoring": "Scoring",
+      "preview": "Preview"
+    },
+    "templates": {
+      "title": "Evaluation Templates",
+      "subtitle": "Create and manage evaluation templates to assess learner performance across courses.",
+      "recent": "Recently Created",
+      "all": "All Templates",
+      "search_label": "Search templates",
+      "empty": "No evaluation templates yet.",
+      "total_score": "Total Score",
+      "average_score": "Average Score",
+      "last_response": "Last Response on",
+      "last_updated": "Last Updated",
+      "view_results": "View results",
+      "view_results_of": "View results of {{name}}",
+      "range": "Showing {{from}}-{{to}} of {{total}} templates",
+      "responses": {
+        "one": "{{count}} Response",
+        "other": "{{count}} Responses"
+      }
+    },
+    "scores": {
+      "title": "View Learners scores",
+      "subtitle": "Each learner's evaluation of a course, scored out of 5.",
+      "search_label": "Search by learner, ID, course or template",
+      "template_scope": "Template:",
+      "clear_template": "Show every template",
+      "view_result_of": "View the result of {{name}}",
+      "empty": "No learner has submitted an evaluation yet.",
+      "range": "Showing {{from}}-{{to}} of {{total}}"
+    },
+    "results": {
+      "not_found": "This evaluation template no longer exists.",
+      "average_score": "Average Score",
+      "learners_scored": "Learners scored",
+      "questions": "Questions",
+      "course_assignment": "Course Assignment",
+      "last_scored": "Last Scored",
+      "created": "Created",
+      "view_scores": "View learner scores",
+      "no_questions": "This template has no questions."
+    },
+    "submission": {
+      "not_found": "No evaluation was found for this learner and course.",
+      "score": "Score",
+      "score_failed": "Score, below the pass mark",
+      "submitted_on": "Submitted On",
+      "course": "Course",
+      "instructor": "Instructor",
+      "pass_mark": "Pass mark",
+      "employee_id": "Employee ID",
+      "view_template": "View template results"
+    },
+    "question_n": "Question {{n}}:",
+    "qtype": {
+      "five": "Star Evaluation",
+      "ten": "Evaluation Scale",
+      "text": "Written Answer"
+    },
+    "total_evaluations": {
+      "one": "{{count}} total Evaluation",
+      "other": "{{count}} total Evaluations"
+    },
+    "stars": {
+      "one": "{{count}} star",
+      "other": "{{count}} stars"
+    },
+    "learner_count": {
+      "one": "{{count}} learner",
+      "other": "{{count}} learners"
+    },
+    "average_of": "Average {{avg}} out of {{max}}, responses: {{count}}",
+    "text_note": "Written answers are shown on each learner's result.",
+    "most_given": "Most given answer",
+    "learner_answer": "This learner's answer"
   },
   "forms": {
     "title": "Forms",

@@ -1,0 +1,172 @@
+// Question breakdown - Figma 2169:108198 ("star-rating-breakdown").
+:host { display: block; }
+
+.qc { position: relative; display: flex; flex-direction: column; gap: var(--nas-space-2); }
+
+.qc__label {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  margin: 0;
+  font-size: var(--nas-size-s);
+  line-height: 24px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+}
+
+.qc__type {
+  display: inline-flex;
+  align-items: center;
+  block-size: 18px;
+  padding: 2px var(--nas-space-2);
+  border-radius: 9999px;
+  background: var(--nas-status-operational-2);
+  font-size: var(--nas-size-2xs);
+  line-height: 14.4px;
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-neutral-100);
+  white-space: nowrap;
+}
+
+.qc__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  background: var(--nas-color-bg-surface);
+}
+
+.qc__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+}
+
+.qc__title-wrap { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
+
+.qc__title {
+  margin: 0;
+  font-size: var(--nas-size-s);
+  line-height: 19.2px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.qc__total {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-muted);
+}
+
+.qc__avg {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  background: var(--nas-teal-100);
+
+  img { display: block; }
+}
+
+.qc__avg-value { font-size: var(--nas-size-s); font-weight: var(--nas-weight-bold); color: var(--nas-color-text-strong); }
+.qc__avg-count { font-size: var(--nas-size-xs); color: var(--nas-neutral-800); }
+
+.qc__rows { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.qc__row {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  min-block-size: 20px;
+  padding-inline: 0;
+  border: 1px solid transparent;
+  border-radius: var(--nas-radius-md);
+
+  &--on {
+    padding: var(--nas-space-2);
+    border-color: var(--nas-teal-1000);
+    background: var(--nas-teal-100);
+  }
+}
+
+.qc__stars { display: inline-flex; gap: var(--nas-space-1); flex-shrink: 0; img { display: block; } }
+
+.qc__row-label {
+  flex-shrink: 0;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+  white-space: nowrap;
+
+  &--num { min-inline-size: 1.5em; }
+}
+
+.qc__track {
+  flex: 1 1 auto;
+  min-inline-size: 40px;
+  block-size: 8px;
+  border-radius: 9999px;
+  background: var(--nas-neutral-300);
+  overflow: hidden;
+}
+
+.qc__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: 9999px;
+  background: var(--nas-color-text-strong);
+}
+
+.qc__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-inline-size: 48px;
+  justify-content: flex-end;
+  font-size: var(--nas-size-s);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+
+  img { display: block; }
+}
+
+.qc__note { margin: 0; font-size: var(--nas-size-xs); color: var(--nas-color-text-muted); }
+
+.qc__answer {
+  margin: 0;
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border-inline-start: 3px solid var(--nas-teal-1000);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-50);
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-color-text-strong);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.qc__sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 480px) {
+  .qc__head { flex-direction: column; align-items: flex-start; }
+  .qc__stars img { inline-size: 12px; block-size: 12px; }
+}

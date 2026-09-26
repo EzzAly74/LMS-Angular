@@ -1,0 +1,88 @@
+// Template results - Figma 2169:108198. Also the base of the learner's result
+// page (2169:108801 / 2169:109264), which reuses these classes.
+@use '../../styles/evaluation-list';
+
+.tr__head { display: flex; }
+
+.tr__back { flex-shrink: 0; }
+
+.tr__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--nas-space-2);
+}
+
+.tr__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-5);
+  padding: var(--nas-space-6);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  background: var(--nas-color-bg-surface);
+}
+
+.tr__card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  padding-block-end: var(--nas-space-5);
+  border-block-end: 1px solid var(--nas-color-border);
+
+  img { flex-shrink: 0; }
+}
+
+.tr__card-title {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--nas-size-s);
+  line-height: 19.2px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.tr__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--nas-space-4) var(--nas-space-10);
+  margin: 0;
+
+  div { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
+  dt { font-size: var(--nas-size-xs); line-height: 16.8px; color: var(--nas-neutral-700); }
+  dd {
+    margin: 0;
+    font-size: var(--nas-size-s);
+    line-height: 19.2px;
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+    overflow-wrap: anywhere;
+  }
+}
+
+.tr__scores { align-self: flex-start; }
+
+.tr__questions { display: flex; flex-direction: column; gap: var(--nas-space-4); }
+
+.tr__empty,
+.tr__message {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-muted);
+}
+
+.tr__message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-10) var(--nas-space-5);
+  text-align: center;
+
+  p { margin: 0; }
+}
+
+@media (max-width: 767px) {
+  .tr__tiles { grid-template-columns: minmax(0, 1fr); }
+  .tr__card { padding: var(--nas-space-4); }
+}

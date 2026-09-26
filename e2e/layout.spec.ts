@@ -38,10 +38,19 @@ const LOCALE_KEY = '2b_locale';
  */
 interface DetailRoute {
   name: string;
-  /** API list whose first row supplies the id. */
+  /** API list whose first row supplies the ids. */
   list: string;
   params?: Record<string, string>;
-  path: (id: number) => string;
+  /** The route for that row; undefined when the row lacks what it needs. */
+  path: (row: FirstRow) => string | undefined;
+}
+
+/** The fields detail routes read from a list's first row. */
+interface FirstRow {
+  id?: number;
+  learner?: { id: number };
+  course?: { id: number };
+  template?: { id: number | null };
 }
 
 type Route = string | DetailRoute;
@@ -66,14 +75,22 @@ const ROUTES: Route[] = [
   'controllers',
   'audit-log',
   'settings',
-  { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (id) => `job-titles/${id}` },
-  { name: 'learners-detail', list: '/api/v1/admin/users', params: { role: 'learner' }, path: (id) => `learners/${id}` },
+  { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (r) => r.id && `job-titles/${r.id}` },
+  { name: 'learners-detail', list: '/api/v1/admin/users', params: { role: 'learner' }, path: (r) => r.id && `learners/${r.id}` },
+  // D4 (Figma 2169:108198, 2017:52260, 2169:108801).
+  { name: 'evaluations-results', list: '/api/v1/admin/evaluations/templates', path: (r) => r.id && `evaluations/${r.id}` },
+  'evaluations/scores',
+  {
+    name: 'evaluations-submission',
+    list: '/api/v1/admin/evaluations/scores',
+    path: (r) => r.learner && r.course && `evaluations/scores/${r.learner.id}/${r.course.id}?template=${r.template?.id ?? ''}`,
+  },
 ];
 
 const API_BASE = process.env['E2E_API_BASE'] ?? 'http://127.0.0.1:8000';
 
-/** The first record's id from an API list, authenticated as the harness admin. */
-async function firstId(request: APIRequestContext, list: string, extra: Record<string, string> = {}): Promise<number | undefined> {
+/** The first record of an API list, authenticated as the harness admin. */
+async function firstRow(request: APIRequestContext, list: string, extra: Record<string, string> = {}): Promise<FirstRow | undefined> {
   const state = JSON.parse(readFileSync(resolve(__dirname, '.auth/admin.json'), 'utf8')) as {
     origins: { localStorage: { name: string; value: string }[] }[];
   };
@@ -83,9 +100,13 @@ async function firstId(request: APIRequestContext, list: string, extra: Record<s
     headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
   });
   if (!res.ok()) return undefined;
-  const body = (await res.json()) as { result?: { id: number }[] | { data?: { id: number }[] } };
+  const body = (await res.json()) as { result?: FirstRow[] | { data?: FirstRow[] } };
   const rows = Array.isArray(body.result) ? body.result : body.result?.data;
-  return rows?.[0]?.id;
+  return rows?.[0];
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 const LOCALES = [
@@ -155,9 +176,10 @@ for (const locale of LOCALES) {
         if (typeof entry === 'string') {
           route = entry;
         } else {
-          const id = await firstId(request, entry.list, entry.params);
-          test.skip(id === undefined, `${entry.name}: no record on this database to open`);
-          route = entry.path(id as number);
+          const row = await firstRow(request, entry.list, entry.params);
+          const path = row ? entry.path(row) : undefined;
+          test.skip(!path, `${entry.name}: no record on this database to open`);
+          route = path as string;
         }
 
         const errors = watchForErrors(page);
@@ -168,7 +190,7 @@ for (const locale of LOCALES) {
         // Landed where we asked, rather than bounced to login or a 403 page.
         // A redirect here means the harness's admin lacks a permission or the
         // token was rejected - either way the screenshot would be meaningless.
-        await expect(page, `${route} redirected away`).toHaveURL(new RegExp(`/admin/${route}`));
+        await expect(page, `${route} redirected away`).toHaveURL(new RegExp(`/admin/${escapeRegExp(route)}`));
 
         // 1. Direction.
         await expect(page.locator('html')).toHaveAttribute('dir', locale.dir);

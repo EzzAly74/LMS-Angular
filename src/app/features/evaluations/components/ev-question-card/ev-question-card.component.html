@@ -1,0 +1,67 @@
+@let q = question();
+<section class="qc" [attr.aria-labelledby]="'qc-' + q.id">
+  <h3 class="qc__label" [id]="'qc-' + q.id">
+    {{ 'evaluations.question_n' | translate: { n: index() } }}
+    <span class="qc__type">{{ typeKey() | translate }}</span>
+  </h3>
+
+  <div class="qc__card">
+    <div class="qc__head">
+      <div class="qc__title-wrap">
+        <p class="qc__title"><bdi>{{ q.title }}</bdi></p>
+        @if (showTotal()) {
+          <p class="qc__total">{{ totalKey() | translate: { count: q.responses } }}</p>
+        }
+      </div>
+      @if (showTotal() && average(); as avg) {
+        <p class="qc__avg">
+          @if (type() === 'five') {
+            <img src="assets/icons/figma/star-fill-dark.svg" width="16" height="16" alt="" />
+            <span class="qc__avg-value" dir="ltr">{{ avg }}</span>
+          } @else {
+            <span class="qc__avg-value" dir="ltr">{{ avg }} / {{ q.scale_max }}</span>
+          }
+          <span class="qc__avg-count" dir="ltr">({{ q.responses }})</span>
+          <span class="qc__sr">{{ 'evaluations.average_of' | translate: { avg: avg, max: q.scale_max, count: q.responses } }}</span>
+        </p>
+      }
+    </div>
+
+    @if (type() === 'text' || !q.distribution) {
+      @if (answerText(); as text) {
+        <blockquote class="qc__answer"><bdi>{{ text }}</bdi></blockquote>
+      } @else {
+        <p class="qc__note">{{ 'evaluations.text_note' | translate }}</p>
+      }
+    } @else {
+      <ul class="qc__rows" role="list">
+        @for (b of bars(); track b.value) {
+          <li class="qc__row" [class.qc__row--on]="b.on">
+            @if (type() === 'five') {
+              <span class="qc__stars" aria-hidden="true">
+                @for (s of starSlots; track s) {
+                  <img [src]="s <= b.value ? 'assets/icons/figma/star-fill-amber.svg' : 'assets/icons/figma/star-empty.svg'"
+                    width="16" height="16" alt="" />
+                }
+              </span>
+              <span class="qc__row-label">{{ starsKey(b.value) | translate: { count: b.value } }}</span>
+            } @else {
+              <span class="qc__row-label qc__row-label--num" dir="ltr">{{ b.value }}</span>
+            }
+            <span class="qc__track" aria-hidden="true"><span class="qc__fill" [style.inline-size.%]="b.pct"></span></span>
+            @if (showCounts()) {
+              <span class="qc__count">
+                <img src="assets/icons/figma/users-16.svg" width="16" height="16" alt="" />
+                <span dir="ltr" aria-hidden="true">{{ b.count }}</span>
+                <span class="qc__sr">{{ countKey(b.count) | translate: { count: b.count } }}</span>
+              </span>
+            }
+            @if (b.on) {
+              <span class="qc__sr">{{ (showCounts() ? 'evaluations.most_given' : 'evaluations.learner_answer') | translate }}</span>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>

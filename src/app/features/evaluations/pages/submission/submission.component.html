@@ -1,0 +1,111 @@
+<div class="nas-page-container ev tr" [attr.aria-busy]="state() === 'loading'">
+  @switch (state()) {
+    @case ('loading') {
+      <div class="tr__head"><p-skeleton width="240px" height="28px" /></div>
+      <div class="tr__tiles">
+        @for (s of [0, 1, 2]; track s) { <p-skeleton height="111px" borderRadius="16px" /> }
+      </div>
+      <p-skeleton height="120px" borderRadius="12px" />
+      <p-skeleton height="220px" borderRadius="12px" />
+    }
+    @case ('not-found') {
+      <div class="tr__message" role="alert">
+        <p>{{ 'evaluations.submission.not_found' | translate }}</p>
+        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations/scores">{{ 'evaluations.back_to_listing' | translate }}</a>
+      </div>
+    }
+    @case ('error') {
+      <div class="tr__message" role="alert">
+        <p>{{ 'common.could_not_load' | translate }}</p>
+        <button type="button" class="ev__retry" (click)="retry()">{{ 'evaluations.retry' | translate }}</button>
+      </div>
+    }
+    @default {
+      @if (data(); as d) {
+        @let name = d.learner.name || ('evaluations.unknown_learner' | translate);
+        <header class="ev__head">
+          <div class="ev__head-text">
+            <nav [attr.aria-label]="'evaluations.breadcrumb' | translate">
+              <ol class="ev__crumbs">
+                <li>
+                  <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+                  <a routerLink="/admin/evaluations">{{ 'evaluations.eyebrow' | translate }}</a>
+                  <img class="ev__crumb-sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+                </li>
+                <li>
+                  <a routerLink="/admin/evaluations/scores">{{ 'evaluations.scores.title' | translate }}</a>
+                  <img class="ev__crumb-sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+                </li>
+                <li><span aria-current="page"><bdi>{{ name }}</bdi></span></li>
+              </ol>
+            </nav>
+            <h1 class="ev__title"><bdi>{{ name }}</bdi></h1>
+          </div>
+          <a class="ev__btn ev__btn--outline tr__back" routerLink="/admin/evaluations/scores">{{ 'evaluations.back_to_listing' | translate }}</a>
+        </header>
+
+        <div class="tr__tiles">
+          @if (scoreValue(); as sv) {
+            <ev-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+              [value]="sv" [suffix]="scoreSuffix()" valueDir="ltr" [danger]="d.passed === false"
+              [label]="(d.passed === false ? 'evaluations.submission.score_failed' : 'evaluations.submission.score') | translate" />
+          } @else {
+            <ev-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+              [value]="'evaluations.result.unscored' | translate"
+              [label]="'evaluations.submission.score' | translate" />
+          }
+          <ev-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
+            [value]="d.submitted_at ? (d.submitted_at | nasDate: locale()) : '-'"
+            [label]="'evaluations.submission.submitted_on' | translate" />
+          <ev-stat-tile icon="assets/icons/figma/seal-question-20.svg" tone="sky"
+            [value]="'' + d.answers.length"
+            [label]="'evaluations.results.questions' | translate" />
+        </div>
+
+        <section class="tr__card" aria-labelledby="sb-card-title">
+          <div class="tr__card-head">
+            <img src="assets/icons/figma/books-teal.svg" width="24" height="24" alt="" />
+            <h2 class="tr__card-title" id="sb-card-title"><bdi>{{ d.template.name }}</bdi></h2>
+          </div>
+          <dl class="tr__facts">
+            <div>
+              <dt>{{ 'evaluations.submission.course' | translate }}</dt>
+              <dd><bdi>{{ d.course.name }}</bdi></dd>
+            </div>
+            <div>
+              <dt>{{ 'evaluations.submission.instructor' | translate }}</dt>
+              <dd><bdi>{{ d.instructor.name || '-' }}</bdi></dd>
+            </div>
+            <div>
+              <dt>{{ 'evaluations.submission.pass_mark' | translate }}</dt>
+              <dd><bdi dir="ltr">{{ d.pass_threshold.toFixed(1) }}{{ scoreSuffix() }}</bdi></dd>
+            </div>
+            @if (d.learner.employee_id) {
+              <div>
+                <dt>{{ 'evaluations.submission.employee_id' | translate }}</dt>
+                <dd><bdi dir="ltr">{{ d.learner.employee_id }}</bdi></dd>
+              </div>
+            }
+          </dl>
+          @if (d.template.id !== null) {
+            <a class="ev__btn ev__btn--outline ev__btn--sm tr__scores" [routerLink]="['/admin/evaluations', d.template.id]">
+              {{ 'evaluations.submission.view_template' | translate }}
+            </a>
+          }
+        </section>
+
+        <div class="tr__questions">
+          @for (v of answers(); track v.answer.evaluation_id; let i = $index) {
+            @if (v.question; as q) {
+              <ev-question-card [index]="i + 1" [question]="q" [highlight]="v.highlight"
+                [showCounts]="false" [answerText]="v.answer.is_text ? answerText(v.answer) : null" />
+            } @else {
+              <ev-question-card [index]="i + 1" [question]="fallbackQuestion(v.answer)" [showTotal]="false"
+                [showCounts]="false" [answerText]="answerText(v.answer)" />
+            }
+          }
+        </div>
+      }
+    }
+  }
+</div>

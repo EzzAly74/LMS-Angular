@@ -89,9 +89,14 @@
   --nas-status-amber-500: #f79008;
   --nas-status-amber-500-08: rgba(247, 144, 8, 0.08);
   --nas-status-amber-500-16: rgba(247, 144, 8, 0.16);
+  /* Text on amber-50 badges (Figma "N Responses", 2009:88432); 5.6:1 on #fef4e6. */
+  --nas-status-amber-800: #a85e05;
 
   /* Mid-range progress (Figma colors/status/operational-2, learners list) */
   --nas-status-operational-2: #496e91;
+  /* Evaluation tile icon boxes (Figma operational-3 / -5, 2169:108198) */
+  --nas-status-operational-3: #ebd4a6;
+  --nas-status-operational-5: #7baea1;
 
   --nas-status-blue-50: #e8f1fe;
   --nas-status-blue-500: #2e7cf6;

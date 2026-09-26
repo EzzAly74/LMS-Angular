@@ -39,7 +39,7 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
       { path: 'assignments',    loadChildren: () => import('../../features/assignments/assignments.routes').then(m => m.ASSIGNMENTS_ROUTES),     data: { viewKey: 'view-assignments' } },
       { path: 'attendance',     loadChildren: () => import('../../features/attendance/attendance.routes').then(m => m.ATTENDANCE_ROUTES) },      // legacy, un-gated
       { path: 'certificates',   loadChildren: () => import('../../features/certificates/certificates.routes').then(m => m.CERTIFICATES_ROUTES), data: { viewKey: 'view-certificates' } },
-      { path: 'evaluations',    loadChildren: () => import('../../features/evaluations/evaluations.routes').then(m => m.EVALUATIONS_ROUTES) },   // legacy, un-gated
+      { path: 'evaluations',    loadChildren: () => import('../../features/evaluations/evaluations.routes').then(m => m.EVALUATIONS_ROUTES),   data: { viewKey: 'view-evaluations' } },
       { path: 'exams',          loadChildren: () => import('../../features/exams/exams.routes').then(m => m.EXAMS_ROUTES) },                     // legacy, un-gated
       { path: 'quizzes',        loadChildren: () => import('../../features/quizzes/quizzes.routes').then(m => m.QUIZZES_ROUTES),                 data: { viewKey: 'view-quizzes' } },
 

@@ -593,17 +593,134 @@
     "template_preview_alt": "معاينة القالب"
   },
   "evaluations": {
-    "title": "التقييمات",
-    "subtitle": "إدارة نماذج التقييم والمتطلبات",
-    "create": "إضافة تقييم",
-    "type": "النوع",
-    "category": "التصنيف",
-    "is_required": "إلزامي",
-    "optional": "اختياري",
-    "search_placeholder": "ابحث في التقييمات...",
-    "no_results": "لا توجد تقييمات.",
-    "confirm_delete": "حذف التقييم",
-    "deleted": "تم حذف التقييم."
+    "eyebrow": "التقييم",
+    "breadcrumb": "مسار التنقل",
+    "back_to_listing": "العودة إلى القائمة",
+    "retry": "إعادة المحاولة",
+    "no_results": "لا توجد نتائج مطابقة لعوامل التصفية هذه.",
+    "filters": "عوامل التصفية",
+    "chip_selected": "{{name}}، المحدد: {{count}}",
+    "chip": {
+      "instructors": "المحاضرون",
+      "courses": "الدورات",
+      "learners": "المتعلمون"
+    },
+    "from": "من",
+    "to": "إلى",
+    "scored_from": "آخر تقييم من",
+    "scored_to": "آخر تقييم إلى",
+    "created_on": "أُنشئ في {{date}}",
+    "scope_all": "كل الدورات القابلة للتقييم · كل المجموعات",
+    "scope_all_courses": "كل الدورات القابلة للتقييم",
+    "id_label": "الرقم: {{id}}",
+    "unknown_learner": "متعلم غير معروف",
+    "learners_of": "تم تقييم {{scored}} من أصل {{total}}",
+    "result": {
+      "legend": "النتيجة",
+      "passed": "ناجح",
+      "failed": "راسب",
+      "unscored": "بدون تقييم"
+    },
+    "col": {
+      "template": "اسم النموذج",
+      "course": "الدورة",
+      "questions": "الأسئلة",
+      "avg_score": "متوسط التقييم",
+      "last_scored": "آخر تقييم",
+      "learners": "المتعلمون",
+      "learner": "المتعلم",
+      "scoring": "التقييم",
+      "preview": "عرض"
+    },
+    "templates": {
+      "title": "نماذج التقييم",
+      "subtitle": "أنشئ نماذج التقييم وأدرها لقياس أداء المتعلمين في الدورات.",
+      "recent": "أُنشئت مؤخرًا",
+      "all": "كل النماذج",
+      "search_label": "البحث في النماذج",
+      "empty": "لا توجد نماذج تقييم بعد.",
+      "total_score": "الدرجة الكلية",
+      "average_score": "متوسط الدرجة",
+      "last_response": "آخر رد في",
+      "last_updated": "آخر تحديث",
+      "view_results": "عرض النتائج",
+      "view_results_of": "عرض نتائج {{name}}",
+      "range": "عرض {{from}}-{{to}} من أصل {{total}}",
+      "responses": {
+        "zero": "لا توجد ردود",
+        "one": "رد واحد",
+        "two": "ردّان",
+        "few": "{{count}} ردود",
+        "many": "{{count}} ردًا",
+        "other": "{{count}} رد"
+      }
+    },
+    "scores": {
+      "title": "درجات المتعلمين",
+      "subtitle": "تقييم كل متعلم لدورة، من 5.",
+      "search_label": "البحث بالمتعلم أو الرقم أو الدورة أو النموذج",
+      "template_scope": "النموذج:",
+      "clear_template": "عرض كل النماذج",
+      "view_result_of": "عرض نتيجة {{name}}",
+      "empty": "لم يرسل أي متعلم تقييمًا بعد.",
+      "range": "عرض {{from}}-{{to}} من أصل {{total}}"
+    },
+    "results": {
+      "not_found": "نموذج التقييم هذا لم يعد موجودًا.",
+      "average_score": "متوسط الدرجة",
+      "learners_scored": "المتعلمون الذين قيّموا",
+      "questions": "الأسئلة",
+      "course_assignment": "الدورات المخصصة",
+      "last_scored": "آخر تقييم",
+      "created": "تاريخ الإنشاء",
+      "view_scores": "عرض درجات المتعلمين",
+      "no_questions": "لا يحتوي هذا النموذج على أسئلة."
+    },
+    "submission": {
+      "not_found": "لم يُعثر على تقييم لهذا المتعلم في هذه الدورة.",
+      "score": "الدرجة",
+      "score_failed": "الدرجة، أقل من درجة النجاح",
+      "submitted_on": "تاريخ الإرسال",
+      "course": "الدورة",
+      "instructor": "المحاضر",
+      "pass_mark": "درجة النجاح",
+      "employee_id": "الرقم الوظيفي",
+      "view_template": "عرض نتائج النموذج"
+    },
+    "question_n": "السؤال {{n}}:",
+    "qtype": {
+      "five": "تقييم بالنجوم",
+      "ten": "مقياس تقييم",
+      "text": "إجابة مكتوبة"
+    },
+    "total_evaluations": {
+      "zero": "لا توجد تقييمات",
+      "one": "تقييم واحد",
+      "two": "تقييمان",
+      "few": "{{count}} تقييمات",
+      "many": "{{count}} تقييمًا",
+      "other": "{{count}} تقييم"
+    },
+    "stars": {
+      "zero": "بلا نجوم",
+      "one": "نجمة واحدة",
+      "two": "نجمتان",
+      "few": "{{count}} نجوم",
+      "many": "{{count}} نجمة",
+      "other": "{{count}} نجمة"
+    },
+    "learner_count": {
+      "zero": "لا يوجد متعلمون",
+      "one": "متعلم واحد",
+      "two": "متعلمان",
+      "few": "{{count}} متعلمين",
+      "many": "{{count}} متعلمًا",
+      "other": "{{count}} متعلم"
+    },
+    "average_of": "المتوسط {{avg}} من {{max}}، عدد الردود: {{count}}",
+    "text_note": "تظهر الإجابات المكتوبة في نتيجة كل متعلم.",
+    "most_given": "الإجابة الأكثر اختيارًا",
+    "learner_answer": "إجابة هذا المتعلم"
   },
   "forms": {
     "title": "النماذج",

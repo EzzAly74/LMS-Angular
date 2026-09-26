@@ -1,0 +1,316 @@
+// Chrome shared by the two Evaluation lists - Templates (Figma 2009:88432) and
+// View Learners scores (2017:52260): page head, search, chips, the table card
+// and its states. Emitted into each list component's own (scoped) styles.
+// Figma values mapped to --nas-* tokens; logical properties throughout.
+
+.ev { gap: var(--nas-space-6); }
+
+.ev__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+  flex-wrap: wrap;
+}
+
+.ev__head-text { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
+
+.ev__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+
+  img { flex-shrink: 0; }
+}
+
+.ev__crumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--nas-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-muted);
+
+  li { display: inline-flex; align-items: center; gap: var(--nas-space-2); }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
+  [aria-current='page'] { color: var(--nas-color-text-strong); font-weight: var(--nas-weight-medium); }
+}
+
+.ev__crumb-sep { display: block; }
+:host-context([dir='rtl']) .ev__crumb-sep { transform: scaleX(-1); }
+
+.ev__title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 28.8px;
+  font-weight: 700;
+  color: var(--nas-color-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.ev__subtitle {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-color-text-muted);
+}
+
+.ev__section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────────
+.ev__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  min-block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-4);
+  border-radius: var(--nas-radius-md);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.ev__btn--primary {
+  border: 0;
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+  &:hover { background: var(--nas-teal-950); }
+}
+
+.ev__btn--outline {
+  border: 1px solid var(--nas-teal-1000);
+  background: var(--nas-color-bg-surface);
+  color: var(--nas-teal-1000);
+  &:hover { background: var(--nas-teal-100); }
+}
+
+.ev__btn--sm { min-block-size: 32px; padding: var(--nas-space-1) var(--nas-space-3); }
+
+// ── Search, chips ────────────────────────────────────────────────────────
+.ev__filters { display: flex; flex-direction: column; gap: var(--nas-space-2); }
+
+.ev__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  flex-wrap: wrap;
+}
+
+.ev__search {
+  flex: 1 1 280px;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-100);
+
+  nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+  &:focus-within { border-color: var(--nas-teal-700); box-shadow: 0 0 0 3px var(--nas-teal-1000-16); }
+}
+
+.ev__search-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  color: var(--nas-color-text-strong);
+
+  &::placeholder { color: var(--nas-color-text-subtle); }
+}
+
+.ev__chips {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  flex-wrap: wrap;
+  min-block-size: 44px;
+}
+
+.ev__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  block-size: 32px;
+  padding: var(--nas-space-1) var(--nas-space-4);
+  border: 1px solid var(--nas-color-border-strong);
+  border-radius: 16px;
+  background: var(--nas-essential-background);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 19.6px;
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-subtle);
+  cursor: pointer;
+
+  &:hover { border-color: var(--nas-teal-700); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+
+  &--all { padding-inline: 40px; }
+
+  &--on {
+    background: var(--nas-teal-100);
+    border: 0.7px solid var(--nas-teal-1000);
+    color: var(--nas-teal-1000);
+  }
+}
+
+// ── Table card ───────────────────────────────────────────────────────────
+.ev__card {
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-xl);
+  box-shadow: 0 1px 2px 0 var(--nas-teal-1000-08);
+  overflow: hidden;
+}
+
+// Positioned, so the absolutely placed .ev__sr-only text in cells scrolls
+// with the table instead of escaping it and widening the page.
+.ev__scroll { position: relative; overflow-x: auto; }
+
+.ev__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ev__th {
+  block-size: 45.5px;
+  padding: var(--nas-space-3) var(--nas-space-5);
+  background: var(--nas-neutral-50);
+  border-block-end: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-muted);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.ev__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover { color: var(--nas-color-text-strong); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
+}
+
+.ev__row { border-block-end: 1px solid var(--nas-color-border); }
+
+.ev__td {
+  padding: var(--nas-space-4) var(--nas-space-5);
+  vertical-align: middle;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+}
+
+.ev__cell-stack { display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; }
+
+.ev__primary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--nas-weight-semibold);
+}
+
+.ev__secondary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-muted);
+}
+
+.ev__ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ev__muted { color: var(--nas-color-text-muted); }
+
+// Score with its pass / fail mark (Figma: 14px filled circle, then "4.0/5.0").
+.ev__score {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-1);
+  white-space: nowrap;
+  img { flex-shrink: 0; }
+}
+
+.ev__view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+
+  &:hover { background: var(--nas-neutral-50); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.ev__message {
+  padding: var(--nas-space-10) var(--nas-space-5);
+  text-align: center;
+  color: var(--nas-color-text-muted);
+
+  p { margin: var(--nas-space-3) 0 0; }
+}
+
+.ev__retry {
+  margin-block-start: var(--nas-space-3);
+  padding: var(--nas-space-2) var(--nas-space-4);
+  border: 1px solid var(--nas-color-border-strong);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.ev__sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
