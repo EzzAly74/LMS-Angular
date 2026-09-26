@@ -1,12 +1,22 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of, map } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, tap, catchError, of, map, retry, throwError, timer } from 'rxjs';
 import { Router } from '@angular/router';
 import { API } from '../constants/api.constants';
 import { ApiResponse } from '../models/api-response.model';
 import type { AuthAdmin } from '../models/auth.types';
 
 const TOKEN_KEY = '2b_token';
+
+/** The server rejected the token: the session is over. */
+function isRejected(err: unknown): boolean {
+  return err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403);
+}
+
+/** Offline, rate-limited or a server fault: says nothing about the token. */
+function isTransient(err: unknown): boolean {
+  return err instanceof HttpErrorResponse && (err.status === 0 || err.status === 429 || err.status >= 500);
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -59,17 +69,36 @@ export class AuthService {
       }));
   }
 
-  /** Validate stored token and refresh admin profile (call on app bootstrap). */
+  /**
+   * Validate the stored token and load the admin profile (app bootstrap).
+   *
+   * AUTH-01: this used to clear the session on ANY error, so a dropped
+   * connection, a 5xx or a 429 during startup deleted a perfectly valid token
+   * and logged the admin out. Now:
+   *   - 401/403 (the token was rejected)  -> the session ends, as before.
+   *   - offline / 429 / 5xx               -> retried twice with backoff; if it
+   *     still fails, the session is suspended in memory only. The guards then
+   *     show the login page (keeping the token signal would loop: authGuard
+   *     passes, the permission guard finds no view keys and falls back to
+   *     login, guestGuard sends it back), but the stored token survives, so
+   *     the next load restores the session instead of forcing a new login.
+   */
   bootstrapSession(): Observable<AuthAdmin | null> {
     if (!this._token()) return of(null);
     return this.http.get<ApiResponse<AuthAdmin>>(API.AUTH.ME).pipe(
+      retry({
+        count: 2,
+        delay: (err: unknown, attempt: number) =>
+          isTransient(err) ? timer(400 * attempt) : throwError(() => err),
+      }),
       map(res => res.result ?? null),
       tap(admin => {
         if (admin) this._admin.set(admin);
         else this.clearSession();
       }),
-      catchError(() => {
-        this.clearSession();
+      catchError((err: unknown) => {
+        if (isRejected(err)) this.clearSession();
+        else this.suspendSession();
         return of(null);
       }),
     );
@@ -84,6 +113,12 @@ export class AuthService {
   private storeSession(token: string): void {
     localStorage.setItem(TOKEN_KEY, token);
     this._token.set(token);
+  }
+
+  /** Forget the session for this page load without deleting the stored token. */
+  private suspendSession(): void {
+    this._token.set(null);
+    this._admin.set(null);
   }
 
   clearSession(): void {
