@@ -57,18 +57,8 @@ export interface ApiCourseRaw {
   cohorts_count?: number;
   enrolled_count?: number;
   completion_percent?: number;
-  rating?: number;
-  rating_count?: number;
-  comments_count?: number;
-  rating_distribution?: number[];
-  reviews?: Array<{
-    id: number;
-    rating: number;
-    comment?: string | null;
-    user_name?: string;
-    user_machine_code?: string | null;
-    created_at?: string;
-  }>;
+  evaluation_score?: number | null;
+  evaluation_submissions?: number;
   status?: CourseStatus;
   [key: string]: unknown;
 }
@@ -142,7 +132,7 @@ export function mapApiCourseListItem(raw: ApiCourseRaw): Course {
     cohorts_count:      raw.cohorts_count ?? 0,
     users_count:        raw.users_count ?? 0,
     completion_percent: raw.completion_percent,
-    rating:             raw.rating,
+    evaluation_score:   raw.evaluation_score ?? null,
     level:              mapCourseLevel(raw.level as string | null | undefined),
     updated_at:         raw.updated_at ?? raw.created_at,
   };
@@ -191,19 +181,9 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
     enrolled_count:           raw.enrolled_count ?? raw.users_count ?? 0,
     cohorts_count:            raw.cohorts_count ?? 0,
     completion_percent:       raw.completion_percent,
-    rating:                   raw.rating,
-    rating_count:             raw.rating_count ?? 0,
-    comments_count:           raw.comments_count ?? 0,
+    evaluation_score:         raw.evaluation_score ?? null,
+    evaluation_submissions:   raw.evaluation_submissions ?? 0,
     image:                    raw.image ?? null,
-    rating_distribution:      raw.rating_distribution ?? [0, 0, 0, 0, 0],
-    reviews:                  (raw.reviews ?? []).map(r => ({
-      id:                r.id,
-      user_name:         r.user_name ?? 'Unknown',
-      user_machine_code: r.user_machine_code ?? '',
-      rating:            r.rating,
-      comment:           r.comment ?? '',
-      created_at:        r.created_at ?? '',
-    })),
     cohorts:                  [],
   };
 }

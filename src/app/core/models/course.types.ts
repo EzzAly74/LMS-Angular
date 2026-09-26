@@ -19,7 +19,8 @@ export interface Course {
   cohorts_count?: number;
   users_count?: number;
   completion_percent?: number;
-  rating?: number;
+  /** /5 evaluation score (D-054); null = never evaluated. */
+  evaluation_score?: number | null;
   type?: CourseType;
   course_type?: ApiCourseType;
   level?: CourseLevel | null;
@@ -116,9 +117,9 @@ export interface CourseDetail {
   enrolled_count?: number;
   cohorts_count?: number;
   completion_percent?: number;
-  rating?: number;
-  rating_count?: number;
-  comments_count?: number;
+  /** /5 evaluation score (D-054); null = never evaluated. */
+  evaluation_score?: number | null;
+  evaluation_submissions?: number;
   certificate?: boolean;
   certificate_pass_percent?: number;
   delivery_type?: string;
@@ -130,8 +131,6 @@ export interface CourseDetail {
   qualifications?: Array<{ id: number; name: string }>;
   /** Planned session count — read-only on the course; seeds new cohorts. */
   number_of_sessions?: number | null;
-  rating_distribution?: number[];
-  reviews?: CourseReview[];
   cohorts?: Cohort[];
   learners?: CourseLearner[];
   /** Fully-qualified URL for the course thumbnail (or null). */
@@ -145,15 +144,6 @@ export interface CourseLearner {
   progress: number;
   status: 'completed' | 'in_progress' | 'not_started';
   enrolled_at: string;
-}
-
-export interface CourseReview {
-  id: number;
-  user_name: string;
-  user_machine_code?: string;
-  rating: number;
-  comment?: string;
-  created_at: string;
 }
 
 export interface CreateCoursePayload {

@@ -186,7 +186,7 @@ export class CourseListComponent implements OnInit {
       { field: 'cohorts',    header: this.t.instant('courses_list.col_cohorts'),    align: 'start' },
       { field: 'enrolled',   header: this.t.instant('courses_list.col_enrolled'),   align: 'start' },
       { field: 'completion', header: this.t.instant('courses_list.col_completion'), minWidth: '140px' },
-      { field: 'rating',     header: this.t.instant('courses_list.col_rating') },
+      { field: 'evaluation', header: this.t.instant('courses_list.col_evaluation') },
       { field: 'status',     header: this.t.instant('courses_list.col_status') },
       { field: 'actions',    header: '',                                            headerless: true, width: '60px', align: 'end' },
     ];

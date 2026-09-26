@@ -1,7 +1,12 @@
 :host { display: block; }
 
+// Scrolls inside itself when the tabs outgrow the screen (course detail at
+// 375 px was 500 px wide and widened the whole page).
 .nas-tabs {
   display: inline-flex;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
   gap: var(--nas-space-1);
   background: var(--nas-neutral-300);
   padding: var(--nas-space-1);
@@ -19,6 +24,8 @@
   color: var(--nas-color-text-muted);
   font-size:   var(--nas-size-2xs);
   font-weight: var(--nas-weight-medium);
+  flex-shrink: 0;
+  white-space: nowrap;
   cursor: pointer;
   transition: background var(--transition-speed),
               color var(--transition-speed);

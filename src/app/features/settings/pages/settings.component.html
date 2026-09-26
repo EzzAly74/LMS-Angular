@@ -142,31 +142,6 @@
         </header>
         <div class="ps-card__body ps-card__body--stack">
 
-          <!-- Abnormal Rating Threshold -->
-          <div class="ps-field ps-field--half">
-            <label for="abnormal_rating_threshold">{{ 'platform_settings.abnormal_rating' | translate }}</label>
-            <div class="ps-number">
-              <input id="abnormal_rating_threshold" type="number" min="0" inputmode="numeric"
-                     class="ps-input ps-input--number"
-                     formControlName="abnormal_rating_threshold" />
-              <div class="ps-number__steppers">
-                <button type="button" class="ps-number__step"
-                        (click)="adjust('abnormal_rating_threshold', +1)"
-                        tabindex="-1">
-                  <nas-icon name="caret-up" [size]="12" />
-                </button>
-                <button type="button" class="ps-number__step"
-                        (click)="adjust('abnormal_rating_threshold', -1)"
-                        tabindex="-1">
-                  <nas-icon name="caret-down" [size]="12" />
-                </button>
-              </div>
-            </div>
-            <p class="ps-help">{{ 'platform_settings.abnormal_rating_help' | translate }}</p>
-          </div>
-
-          <div class="ps-divider"></div>
-
           <!-- Certificate Awarded Based On -->
           <div class="ps-field">
             <label class="ps-field__label-required">

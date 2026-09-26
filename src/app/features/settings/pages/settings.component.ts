@@ -48,8 +48,7 @@ type CertificateBasis = 'attendance' | 'score' | 'both';
  * Two sections in one form:
  *   1. Enrolment & Attendance - default_cohort_size, academy close offset,
  *                               attendance toggle, passcode reset
- *   2. Grading & Certificates - abnormal_rating_threshold,
- *                               certificate_award_basis, min_passing_* (conditional)
+ *   2. Grading & Certificates - certificate_award_basis, min_passing_* (conditional)
  *
  * Three sections were removed on 2026-09-25 (I18N-03): General
  * (platform_name, default_language), About Us (about_*), and the "website
@@ -57,7 +56,9 @@ type CertificateBasis = 'attendance' | 'score' | 'both';
  * them was edited here and read nowhere - the Angular Website renders none
  * of them, and the human confirmed the mobile app does not use /settings.
  * why_us also stored Arabic hard-coded into one value, which D-051 forbids.
- * The course-ratings toggle went too: no code ever read it (I18N-04).
+ * The course-ratings toggle went too: no code ever read it (I18N-04). And on
+ * 2026-09-26 the abnormal-rating threshold, with ratings leaving the admin
+ * side: its only reader was the rating-drop alert, removed with them.
  *
  * Everything lives on the existing `settings` table — text/number/boolean
  * keys go through `PUT /admin/settings`, image keys go through
@@ -137,7 +138,6 @@ export class SettingsComponent implements OnInit {
       academy_close_offset_days: [0],
       course_attendance_enabled: [true],
       passcode_reset_seconds:    [30],
-      abnormal_rating_threshold: [30],
       certificate_award_basis:   ['attendance' as CertificateBasis],
       min_passing_attendance:    [70],
       min_passing_score:         [30],
@@ -192,7 +192,6 @@ export class SettingsComponent implements OnInit {
       academy_close_offset_days: this.numericValue(map['academy_default_close_offset_days'], 0),
       course_attendance_enabled: attendanceEnabled,
       passcode_reset_seconds:    this.numericValue(map['passcode_reset_seconds'], 30),
-      abnormal_rating_threshold: this.numericValue(map['abnormal_rating_threshold'], 30),
       certificate_award_basis:   basis,
       min_passing_attendance:    this.numericValue(map['min_passing_attendance'], 70),
       min_passing_score:         this.numericValue(map['min_passing_score'], 30),
@@ -229,7 +228,6 @@ export class SettingsComponent implements OnInit {
       put('academy_default_close_offset_days', f.academy_close_offset_days);
       put('course_attendance_enabled', f.course_attendance_enabled ? '1' : '0');
       put('passcode_reset_seconds',    f.passcode_reset_seconds);
-      put('abnormal_rating_threshold', f.abnormal_rating_threshold);
       put('certificate_award_basis',   f.certificate_award_basis);
       put('min_passing_attendance',    f.min_passing_attendance);
       put('min_passing_score',         f.min_passing_score);
@@ -285,14 +283,13 @@ export class SettingsComponent implements OnInit {
   }
 
   /* ── Stepper handlers ─────────────────────────────────── */
-  adjust(field: 'default_cohort_size' | 'abnormal_rating_threshold' | 'min_passing_score'
+  adjust(field: 'default_cohort_size' | 'min_passing_score'
               | 'min_passing_attendance' | 'passcode_reset_seconds' | 'academy_close_offset_days',
          delta: number): void {
     const ctrl = this.form.get(field);
     if (!ctrl) return;
     // Percentages are bounded 0–100; the other steppers are open-ended counts.
-    const isPercent = field === 'min_passing_score' || field === 'min_passing_attendance'
-                   || field === 'abnormal_rating_threshold';
+    const isPercent = field === 'min_passing_score' || field === 'min_passing_attendance';
     const next = Math.max(0, Number(ctrl.value || 0) + delta);
     ctrl.setValue(isPercent ? Math.min(100, next) : next);
   }

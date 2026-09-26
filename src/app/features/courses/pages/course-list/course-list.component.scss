@@ -53,21 +53,17 @@
   font-size: var(--nas-size-xs);
 }
 
-/* ── Rating ───────────────────────────────────────────────────────── */
-.rating-cell {
+/* ── Evaluation ─────────────────────────────────────────────────── */
+.evaluation-cell {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--nas-color-text-strong);
   font-size: var(--nas-size-xs);
-  i { color: #f79008; font-size: 13px; }
 
-  /* No reviews yet — dim the star + text so the column still reads as
-     numeric but doesn't compete with rows that have real ratings. */
-  &--empty {
-    color: var(--nas-color-text-muted);
-    i { color: var(--nas-neutral-400); }
-  }
+  img { flex-shrink: 0; display: block; }
+
+  &--empty { color: var(--nas-color-text-muted); }
 }
 
 /* ── Row action ──────────────────────────────────────────────────── */

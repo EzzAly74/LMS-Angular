@@ -55,8 +55,9 @@
                      [value]="completionLabel()"></nas-stat-card>
 
       <nas-stat-card icon="pi pi-star-fill" iconTone="sky"
-                     [label]="ratingLabel()"
-                     [value]="ratingValue()"></nas-stat-card>
+                     [label]="'course_detail.evaluation_average' | translate"
+                     [value]="evaluationValue()"
+                     [subline]="'course_detail.evaluations_count' | translate: { count: c.evaluation_submissions ?? 0 }"></nas-stat-card>
     </section>
 
     <!-- ── Tabs ──────────────────────────────────────────────────────── -->
@@ -99,29 +100,6 @@
                 </ul>
               </article>
             }
-
-            <article class="nas-card overview-ratings">
-              <h3 class="nas-section-title">{{ 'course_detail.learner_ratings' | translate }}</h3>
-              <div class="rating-summary">
-                <div class="rating-summary__score">
-                  <div class="rating-summary__value">{{ ratingValue() }}</div>
-                  <div class="rating-summary__meta">
-                    {{ 'course_detail.out_of' | translate }} • {{ c.rating_count ?? 0 }} {{ 'course_detail.reviews' | translate }}
-                  </div>
-                </div>
-                <ul class="rating-bars">
-                  @for (row of ratingDistributionRows(); track row.star) {
-                    <li class="rating-bars__row">
-                      <span class="rating-bars__star">{{ row.star }}</span>
-                      <div class="rating-bars__track">
-                        <div class="rating-bars__fill" [style.width.%]="row.pct"></div>
-                      </div>
-                      <span class="rating-bars__count">{{ row.value }}</span>
-                    </li>
-                  }
-                </ul>
-              </div>
-            </article>
           </div>
 
           <aside class="nas-card overview-settings">
@@ -362,57 +340,6 @@
               <h3>{{ 'course_detail.no_qualifications' | translate }}</h3>
               <p>{{ 'course_detail.no_qualifications_hint' | translate }}</p>
             </article>
-          }
-        </section>
-      }
-
-      <!-- RATINGS TAB -->
-      @case ('ratings') {
-        <section class="ratings-tab">
-          <header class="ratings-tab__head">
-            {{ c.rating_count ?? 0 }} {{ 'course_detail.reviews' | translate }}
-            ·
-            {{ c.comments_count ?? 0 }} {{ 'course_detail.with_comments' | translate }}
-          </header>
-          @if (c.reviews?.length) {
-            <div class="ratings-tab__list">
-              @for (r of c.reviews ?? []; track r.id) {
-                <article class="nas-card review-card">
-                  <header class="review-card__head">
-                    <div class="review-card__user">
-                      <nas-avatar [name]="r.user_name" />
-                      <div>
-                        <div class="review-card__name">{{ r.user_name }}</div>
-                        @if (r.user_machine_code) {
-                          <div class="review-card__code">{{ r.user_machine_code }}</div>
-                        }
-                      </div>
-                    </div>
-                    <div class="review-card__meta">
-                      <div class="review-card__rating">
-                        @for (i of [1,2,3,4,5]; track i) {
-                          <i class="pi pi-star-fill" [class.dim]="i > r.rating"></i>
-                        }
-                        <span class="review-card__score">{{ r.rating }}/5</span>
-                      </div>
-                      @if (r.created_at) {
-                        <div class="review-card__date">{{ r.created_at | date:'dd MMM yyyy' }}</div>
-                      }
-                    </div>
-                  </header>
-                  @if (r.comment) {
-                    <p class="review-card__comment">"{{ r.comment }}"</p>
-                  } @else {
-                    <p class="review-card__comment review-card__comment--muted">{{ 'course_detail.no_comments' | translate }}</p>
-                  }
-                </article>
-              }
-            </div>
-          } @else {
-            <div class="nas-card ratings-empty">
-              <i class="pi pi-star"></i>
-              <p>{{ 'course_detail.no_reviews_yet' | translate }}</p>
-            </div>
           }
         </section>
       }

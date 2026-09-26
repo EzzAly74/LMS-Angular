@@ -13,7 +13,6 @@ export interface DashboardStatistics {
   org_compliance_percent?: number;
   courses: number;
   users: number;
-  ratings: number;
   unanswered_questions: number;
   user_assignments: number;
   instructors?: number;

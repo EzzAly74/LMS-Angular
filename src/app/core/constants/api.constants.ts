@@ -32,8 +32,6 @@ export const API = {
   /** Admin-only job-title reads, e.g. `{id}/learners` (backend B1). */
   ADMIN_JOB_TITLES: `${API_BASE}/admin/job-titles`,
   QUALIFICATIONS: `${API_BASE}/qualification-skills`,
-  RATINGS:        `${API_BASE}/ratings`,
-  ADMIN_RATINGS:  `${API_BASE}/admin/ratings`,
   MESSAGES:            `${API_BASE}/messages`,
   MESSAGES_RECIPIENTS: `${API_BASE}/messages/recipients`,
   messageRead:         (id: number) => `${API_BASE}/messages/${id}/read`,

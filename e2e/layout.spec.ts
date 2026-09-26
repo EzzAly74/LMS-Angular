@@ -27,7 +27,8 @@ const LOCALE_KEY = '2b_locale';
  *   - exams, articles, forms: legacy sections the human approved removing
  *     (F1 in the 2026-09-25 answers). Verifying the layout of screens that are
  *     being deleted is wasted effort.
- *   - ratings: replaced by Evaluations once that flow ships (Q-050).
+ *   - ratings: removed from the admin side on 2026-09-26; Evaluation
+ *     replaces it.
  */
 /**
  * A detail route needs a real record's id, which differs per database, so it
@@ -77,6 +78,7 @@ const ROUTES: Route[] = [
   'settings',
   { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (r) => r.id && `job-titles/${r.id}` },
   { name: 'learners-detail', list: '/api/v1/admin/users', params: { role: 'learner' }, path: (r) => r.id && `learners/${r.id}` },
+  { name: 'courses-detail', list: '/api/v1/courses', path: (r) => r.id && `courses/${r.id}` },
   // D4 (Figma 2169:108198, 2017:52260, 2169:108801).
   { name: 'evaluations-results', list: '/api/v1/admin/evaluations/templates', path: (r) => r.id && `evaluations/${r.id}` },
   'evaluations/scores',

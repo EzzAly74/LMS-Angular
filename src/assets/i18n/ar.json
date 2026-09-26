@@ -19,7 +19,6 @@
     "users": "المستخدمون",
     "job_titles": "المسميات الوظيفية",
     "qualifications": "المؤهلات",
-    "ratings": "التقييمات",
     "messages": "الرسائل",
     "resources": "الموارد",
     "blogs": "المدونات",
@@ -51,7 +50,6 @@
     "my_exams": "اختباراتي",
     "my_assignments": "مهامي",
     "my_certificates": "شهاداتي",
-    "my_ratings": "تقييماتي",
     "my_questions": "أسئلتي"
   },
   "auth": {
@@ -836,28 +834,6 @@
     "saved": "تم حفظ المؤهل.",
     "deleted": "تم حذف المؤهل."
   },
-  "ratings": {
-    "title": "التقييمات",
-    "subtitle": "جميع تقييمات وتعليقات المتدربين عبر المنصة",
-    "instructor": "المدرب",
-    "total_ratings": "إجمالي التقييمات",
-    "average_score": "متوسط النقاط",
-    "five_star_reviews": "تقييمات 5 نجوم",
-    "low_ratings": "تقييمات منخفضة (≤2★)",
-    "instructors": "المدربون",
-    "learners": "المتدربون",
-    "courses": "الدورات",
-    "all": "الكل",
-    "quick_search": "بحث سريع...",
-    "search_placeholder": "ابحث في المتدربين أو التعليقات...",
-    "no_results": "لا توجد تقييمات.",
-    "filter_results": "تصفية النتائج",
-    "learner": "المتدرب",
-    "course": "الدورة",
-    "rating": "التقييم",
-    "comment": "التعليق",
-    "date": "التاريخ"
-  },
   "messages": {
     "title": "الرسائل",
     "compose": "إنشاء رسالة",
@@ -1261,11 +1237,9 @@
     "tab_learners": "المتدربون",
     "tab_content": "المحتوى",
     "tab_qualifications": "المؤهلات",
-    "tab_ratings": "التقييمات",
     "enrolled_learners": "المتدربون المسجلون",
     "cohorts": "المجموعات",
     "average_completion": "متوسط الإتمام",
-    "rating": "التقييم",
     "about_this_course": "عن هذه الدورة",
     "what_students_will_learn": "ماذا سيتعلم الطلاب",
     "requirements": "المتطلبات",
@@ -1275,13 +1249,7 @@
     "certificate": "الشهادة",
     "created_on": "أُنشئت في",
     "max_learners_per_cohort": "الحد الأقصى للمتدربين لكل مجموعة",
-    "learner_ratings": "تقييمات المتدربين",
-    "out_of": "من 5",
-    "reviews": "تقييمات",
     "comments_left": "تعليق",
-    "with_comments": "مع تعليقات",
-    "no_comments": "لا يوجد تعليق",
-    "no_reviews_yet": "لا توجد تقييمات بعد",
     "no_learners": "لا يوجد متعلمون مسجلون بعد",
     "edit": "تعديل",
     "add_cohort": "إضافة مجموعة",
@@ -1383,7 +1351,9 @@
     "instructions_en": "التعليمات (إنجليزي)",
     "instructions_ar": "التعليمات (عربي)",
     "instructions_placeholder": "تعليمات قصيرة سيراها المتدرب قبل فتح المحتوى.",
-    "create_module": "إنشاء وحدة"
+    "create_module": "إنشاء وحدة",
+    "evaluation_average": "متوسط التقييم",
+    "evaluations_count": "عدد التقييمات: {{count}}"
   },
   "add_course": {
     "title": "إضافة دورة جديدة",
@@ -1434,7 +1404,6 @@
     "col_cohorts": "المجموعات",
     "col_enrolled": "المسجلون",
     "col_completion": "الإتمام",
-    "col_rating": "التقييم",
     "col_status": "الحالة",
     "type_hybrid":        "مدمج",
     "type_external_link": "رابط خارجي",
@@ -1446,7 +1415,9 @@
     "course_updated": "تم تحديث الدورة",
     "empty_table": "لا توجد دورات.",
     "delete_title": "حذف الدورة",
-    "delete_message": "هل أنت متأكد من حذف {{name}}؟ سيفقد المتعلمون المسجلون الوصول إلى هذه الدورة."
+    "delete_message": "هل أنت متأكد من حذف {{name}}؟ سيفقد المتعلمون المسجلون الوصول إلى هذه الدورة.",
+    "col_evaluation": "التقييم",
+    "not_evaluated": "لم يُقيَّم بعد"
   },
   "course_detail_toasts": {
     "course_updated":  "تم تحديث الدورة",
@@ -1560,8 +1531,6 @@
     "seconds": "ثانية",
 
     "grading_certs": "التقييم والشهادات",
-    "abnormal_rating": "حد التقييم غير الطبيعي",
-    "abnormal_rating_help": "ينطلق التنبيه عند انخفاض متوسط التقييم بهذا المقدار خلال 7 أيام",
     "cert_basis": "تُمنح الشهادة بناءً على",
     "basis_attendance": "الحضور فقط",
     "basis_attendance_desc": "تُمنح الشهادة عند استيفاء المتعلم متطلبات الحضور",

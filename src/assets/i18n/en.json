@@ -19,7 +19,6 @@
     "users": "Users",
     "job_titles": "Job Titles",
     "qualifications": "Qualifications",
-    "ratings": "Ratings",
     "messages": "Messages",
     "resources": "Resources",
     "blogs": "Blogs",
@@ -51,7 +50,6 @@
     "my_exams": "My Exams",
     "my_assignments": "My Assignments",
     "my_certificates": "My Certificates",
-    "my_ratings": "My Ratings",
     "my_questions": "My Questions"
   },
   "auth": {
@@ -808,28 +806,6 @@
     "saved": "Qualification saved.",
     "deleted": "Qualification deleted."
   },
-  "ratings": {
-    "title": "Ratings",
-    "subtitle": "All learner ratings and comments across the platform",
-    "learner": "Learner",
-    "course": "Course",
-    "rating": "Rating",
-    "comment": "Comment",
-    "date": "Date",
-    "instructor": "Instructor",
-    "total_ratings": "Total Ratings",
-    "average_score": "Average Score",
-    "five_star_reviews": "5-Star Reviews",
-    "low_ratings": "Low Ratings (≤2★)",
-    "instructors": "Instructors",
-    "learners": "Learners",
-    "courses": "Courses",
-    "all": "All",
-    "quick_search": "Quick search...",
-    "search_placeholder": "Search learner or comment...",
-    "no_results": "No ratings found.",
-    "filter_results": "Filter your results"
-  },
   "messages": {
     "title": "Messages",
     "compose": "Compose Message",
@@ -1233,11 +1209,9 @@
     "tab_learners": "Learners",
     "tab_content": "Content",
     "tab_qualifications": "Qualifications",
-    "tab_ratings": "Ratings",
     "enrolled_learners": "Enrolled Learners",
     "cohorts": "Cohorts",
     "average_completion": "Average Completion",
-    "rating": "Rating",
     "about_this_course": "About this Course",
     "what_students_will_learn": "What students will learn",
     "requirements": "Requirements",
@@ -1247,13 +1221,7 @@
     "certificate": "Certificate",
     "created_on": "Created on",
     "max_learners_per_cohort": "Max Learners per Cohort",
-    "learner_ratings": "Learner Ratings",
-    "out_of": "out of 5",
-    "reviews": "reviews",
     "comments_left": "comments left",
-    "with_comments": "with comments",
-    "no_comments": "No comment left",
-    "no_reviews_yet": "No reviews yet",
     "no_learners": "No learners enrolled yet",
     "edit": "Edit",
     "add_cohort": "Add Cohort",
@@ -1355,7 +1323,9 @@
     "instructions_en": "Instructions (English)",
     "instructions_ar": "Instructions (Arabic)",
     "instructions_placeholder": "Short instruction learners will see before opening the content.",
-    "create_module": "Create Module"
+    "create_module": "Create Module",
+    "evaluation_average": "Evaluation average",
+    "evaluations_count": "Evaluations: {{count}}"
   },
   "add_course": {
     "title": "Add New Course",
@@ -1406,7 +1376,6 @@
     "col_cohorts": "Cohorts",
     "col_enrolled": "Enrolled",
     "col_completion": "Completion",
-    "col_rating": "Rating",
     "col_status": "Status",
     "type_hybrid":        "Hybrid",
     "type_external_link": "External Link",
@@ -1418,7 +1387,9 @@
     "course_updated": "Course updated",
     "empty_table": "No courses found.",
     "delete_title": "Delete Course",
-    "delete_message": "Are you sure you want to delete {{name}}? Learners enrolled in this course will lose access."
+    "delete_message": "Are you sure you want to delete {{name}}? Learners enrolled in this course will lose access.",
+    "col_evaluation": "Evaluation",
+    "not_evaluated": "Not evaluated yet"
   },
   "course_detail_toasts": {
     "course_updated":  "Course updated",
@@ -1532,8 +1503,6 @@
     "seconds": "Seconds",
 
     "grading_certs": "Grading & Certificates",
-    "abnormal_rating": "Abnormal Rating Threshold",
-    "abnormal_rating_help": "Alert fires when avg rating drops by this amount within 7 days",
     "cert_basis": "Certificate Awarded Based On",
     "basis_attendance": "Attendance only",
     "basis_attendance_desc": "Certificate is awarded once the learner meets the attendance requirement",

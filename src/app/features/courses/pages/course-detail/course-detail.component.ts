@@ -50,7 +50,6 @@ import type {
   CohortPayload,
   CohortStatus,
   CourseLearner,
-  CourseReview,
   CourseModule,
   ModuleContentType,
   ModuleLearnerScope,
@@ -69,15 +68,14 @@ import {
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pickLocalized } from '../../../../core/utils/localized';
 
-export type { CourseDetail, Cohort, CourseLearner, CourseReview };
+export type { CourseDetail, Cohort, CourseLearner };
 
 type DetailTab =
   | 'overview'
   | 'cohort'
   | 'learners'
   | 'content'
-  | 'qualifications'
-  | 'ratings';
+  | 'qualifications';
 
 /** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
 type ModuleFilter = 'all' | ModuleContentType;
@@ -226,30 +224,10 @@ export class CourseDetailComponent implements OnInit {
     })),
   );
 
-  ratingDistributionRows = computed(() => {
-    const d = this.course()?.rating_distribution ?? [0, 0, 0, 0, 0];
-    const max = Math.max(...d, 1);
-    return d.map((v, i) => ({ star: 5 - i, value: v, pct: (v / max) * 100 }));
-  });
-
-  ratingLabel = computed(() => {
-    const c = this.course();
-    // Read `langTick` so this computed re-evaluates after a locale switch
-    // (the underlying ngx-translate calls are not signal-tracked).
-    this.langTick();
-    const rating = this.t.instant('course_detail.rating');
-    const reviews = this.t.instant('course_detail.reviews');
-    return `${rating} (${c?.rating_count ?? 0} ${reviews})`;
-  });
-
-  /**
-   * Rating as a fixed-1 string. We always render a numeric placeholder
-   * ("0.0") instead of an em-dash so the score column keeps the visual
-   * weight Figma calls for even before any reviews have come in.
-   */
-  ratingValue = computed(() => {
-    const r = this.course()?.rating;
-    return (r && r > 0 ? r : 0).toFixed(1);
+  /** "4.3/5.0", or a dash when no learner has evaluated the course. */
+  evaluationValue = computed(() => {
+    const score = this.course()?.evaluation_score;
+    return score === null || score === undefined ? '-' : `${score.toFixed(1)}/5.0`;
   });
 
   /**
@@ -298,11 +276,6 @@ export class CourseDetailComponent implements OnInit {
         id: 'qualifications',
         label: this.t.instant('course_detail.tab_qualifications'),
         count: c?.qualifications?.length ?? 0,
-      },
-      {
-        id: 'ratings',
-        label: this.t.instant('course_detail.tab_ratings'),
-        count: c?.rating_count ?? 0,
       },
     ];
   });

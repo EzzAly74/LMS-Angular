@@ -76,13 +76,17 @@
       <nas-progress [value]="row.completion_percent ?? 0" />
     </ng-template>
 
-    <!-- Rating — always renders a numeric value (0.0 placeholder when no
-         reviews are in yet) so the column keeps its visual weight. -->
-    <ng-template nasCellTpl="rating" let-row>
-      <span class="rating-cell" [class.rating-cell--empty]="!(row.rating > 0)">
-        <i class="pi pi-star-fill"></i>
-        <span>{{ (row.rating ?? 0) | number:'1.1-1' }}</span>
-      </span>
+    <!-- Evaluation (Figma 2430:135164): the /5 score, or a dash when no
+         learner has evaluated the course - never a fake "0.0". -->
+    <ng-template nasCellTpl="evaluation" let-row>
+      @if (row.evaluation_score !== null && row.evaluation_score !== undefined) {
+        <span class="evaluation-cell">
+          <img src="assets/icons/figma/star-fill-amber.svg" width="16" height="16" alt="" />
+          <span>{{ row.evaluation_score | number:'1.1-1' }}</span>
+        </span>
+      } @else {
+        <span class="evaluation-cell evaluation-cell--empty" [attr.aria-label]="'courses_list.not_evaluated' | translate">-</span>
+      }
     </ng-template>
 
     <!-- Status -->
