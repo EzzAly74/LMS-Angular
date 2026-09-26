@@ -1,0 +1,193 @@
+// "Assign Qualification" - no Figma frame for the dialog (FG-25), so it uses
+// the "Filter your results" dialog's language (Figma 1986:75113).
+
+::ng-deep .aq {
+  &.p-dialog {
+    border-radius: var(--nas-radius-xl);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    background: transparent;
+  }
+  .p-dialog-content { padding: 0; background: transparent; }
+}
+
+.aq__card { display: flex; flex-direction: column; background: var(--nas-color-bg-surface); max-block-size: calc(100vh - 48px); }
+
+.aq__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4) var(--nas-space-6) 17px;
+  border-block-end: 1px solid var(--nas-color-border);
+}
+
+.aq__title { margin: 0; font-size: var(--nas-size-s); line-height: 24px; font-weight: 700; color: var(--nas-color-text-strong); }
+
+.aq__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover:not([disabled]) { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+.aq__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-5);
+  padding: var(--nas-space-5) var(--nas-space-6) var(--nas-space-6);
+  overflow-y: auto;
+}
+
+.aq__group { display: flex; flex-direction: column; gap: var(--nas-space-2); margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+
+.aq__legend { padding: 0; margin-block-end: var(--nas-space-1); font-size: var(--nas-size-xs); line-height: 21px; font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
+
+.aq__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+
+  nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+  &:focus-within { border-color: var(--nas-teal-700); box-shadow: 0 0 0 3px var(--nas-teal-1000-16); }
+}
+
+.aq__search-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+
+  &::placeholder { color: var(--nas-color-text-subtle); }
+}
+
+.aq__list {
+  block-size: 180px;
+  overflow-y: auto;
+  padding: 1px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  scrollbar-width: thin;
+}
+
+.aq__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-3);
+  min-block-size: 37px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-50); }
+}
+
+.aq__native { position: absolute; opacity: 0; inline-size: 16px; block-size: 16px; margin: 0; inset-inline-start: var(--nas-space-3); }
+
+.aq__box,
+.aq__radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 16px;
+  block-size: 16px;
+  border: 1px solid #d0d5dd;
+  background: var(--nas-color-bg-surface);
+}
+
+.aq__box { border-radius: 4px; }
+.aq__radio { border-radius: 50%; }
+
+.aq__native:checked + .aq__box { border-color: var(--nas-teal-1000); background: var(--nas-teal-1000); }
+.aq__native:checked + .aq__radio { border: 5px solid var(--nas-teal-1000); }
+.aq__native:focus-visible + .aq__box,
+.aq__native:focus-visible + .aq__radio { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+
+.aq__text { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.aq__modes { display: flex; gap: var(--nas-space-2); flex-wrap: wrap; }
+
+.aq__mode {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  block-size: 32px;
+  padding: var(--nas-space-1) var(--nas-space-4);
+  border: 1px solid var(--nas-color-border-strong);
+  border-radius: 16px;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-subtle);
+  cursor: pointer;
+
+  .aq__native { inset: 0; inline-size: 100%; block-size: 100%; cursor: pointer; }
+  &:focus-within { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+
+  &--on { background: var(--nas-teal-100); border: 0.7px solid var(--nas-teal-1000); color: var(--nas-teal-1000); }
+}
+
+.aq__count { margin: 0; font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted); }
+
+.aq__note { margin: 0; padding: var(--nas-space-4) var(--nas-space-3); font-size: var(--nas-size-xs); color: var(--nas-color-text-muted); }
+
+.aq__note--box { border: 1px solid var(--nas-color-border); border-radius: var(--nas-radius-lg); background: var(--nas-neutral-50); }
+
+.aq__note--warn { border-color: var(--nas-status-amber-500); background: var(--nas-status-amber-50); color: var(--nas-color-text-strong); }
+
+.aq__foot {
+  display: flex;
+  gap: var(--nas-space-3);
+  padding: 17px var(--nas-space-6) var(--nas-space-4);
+  border-block-start: 1px solid var(--nas-color-border);
+  background: var(--nas-neutral-50);
+}
+
+.aq__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border-radius: var(--nas-radius-md);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+  &[disabled] { opacity: 0.5; cursor: not-allowed; }
+}
+
+.aq__btn--ghost { inline-size: 113px; border: 1px solid var(--nas-teal-1000); background: transparent; color: var(--nas-teal-1000); }
+
+.aq__btn--primary {
+  flex: 1 1 0;
+  border: 0;
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+
+  &:hover:not([disabled]) { background: var(--nas-teal-950); }
+}
+
+// PrimeNG's dialog sets its own font-family, so without this the dialog
+// rendered in the theme font instead of Fira Sans / Almarai.
+.aq__card { font-family: var(--nas-font); }
+:host-context([dir='rtl']) .aq__card { font-family: var(--nas-font-ar); }

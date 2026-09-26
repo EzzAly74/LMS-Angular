@@ -210,3 +210,8 @@
 
   &:hover { background: var(--nas-teal-950); }
 }
+
+// PrimeNG's dialog sets its own font-family, so without this the dialog
+// rendered in the theme font instead of Fira Sans / Almarai.
+.nas-fp__card { font-family: var(--nas-font); }
+:host-context([dir='rtl']) .nas-fp__card { font-family: var(--nas-font-ar); }

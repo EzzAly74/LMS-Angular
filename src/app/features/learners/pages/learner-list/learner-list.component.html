@@ -5,6 +5,14 @@
       <h1 class="ll__title">{{ 'learners.title' | translate }}</h1>
       <p class="ll__subtitle">{{ 'learners.subtitle' | translate }}</p>
     </div>
+    <!-- Figma 1983:44955. Shown only with view-qualifications, the permission
+         the bulk-grant API enforces. -->
+    @if (canAssign()) {
+      <button type="button" class="ll__assign" aria-haspopup="dialog" (click)="assignOpen.set(true)">
+        <nas-icon name="plus-circle" [size]="20" />
+        <span>{{ 'learners.assign.button' | translate }}</span>
+      </button>
+    }
   </header>
 
   <div class="ll__filters">
@@ -168,6 +176,13 @@
     }
   </section>
 </div>
+
+<app-assign-qualification-dialog
+  [visible]="assignOpen()"
+  (visibleChange)="assignOpen.set($event)"
+  [filterParams]="filterParams()"
+  [matchingTotal]="total()"
+  (assigned)="retry()" />
 
 <nas-filter-picker
   [visible]="pickerVisible()"

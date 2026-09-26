@@ -25,6 +25,8 @@ import {
   NasFilterPickerComponent,
 } from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
 import { NasDatePipe, NasRelativeTimePipe } from '../../../../shared/pipes/nas-date.pipes';
+import { AuthService } from '../../../../core/services/auth.service';
+import { AssignQualificationDialogComponent } from '../../components/assign-qualification-dialog/assign-qualification-dialog.component';
 import {
   LEARNER_TYPES,
   LearnerFilterKey,
@@ -69,6 +71,7 @@ const EMPTY_FILTERS: LearnerFilters = {
     NasFilterPickerComponent,
     NasDatePipe,
     NasRelativeTimePipe,
+    AssignQualificationDialogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './learner-list.component.html',
@@ -79,6 +82,11 @@ export class LearnerListComponent implements OnInit {
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly locale   = inject(LocaleService).locale;
+  private readonly auth       = inject(AuthService);
+
+  /** UX only - POST admin/qualification-skills/{id}/learners enforces it. */
+  readonly canAssign  = computed(() => this.auth.hasView('view-qualifications'));
+  readonly assignOpen = signal(false);
 
   /** Figma: "1-15 of 109". */
   readonly perPage   = 15;
@@ -256,6 +264,12 @@ export class LearnerListComponent implements OnInit {
     if (pct >= 100) return 'full';
     if (pct >= 50) return 'mid';
     return 'low';
+  }
+
+  /** The current filters without paging, for "everyone matching" in the dialog. */
+  filterParams(): ApiParams {
+    const { page: _page, per_page: _perPage, ...rest } = this.params();
+    return rest;
   }
 
   // ── Internals ──────────────────────────────────────────────────────────

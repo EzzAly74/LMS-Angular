@@ -1490,6 +1490,22 @@
     "empty": "No learners yet.",
     "no_results": "No learners match these filters.",
     "retry": "Retry",
+    "assign": {
+      "button": "Assign Qualification",
+      "title": "Assign Qualification",
+      "qualification": "Qualification",
+      "search_qualification": "Search qualifications",
+      "learners": "Learners",
+      "mode_pick": "Choose learners",
+      "mode_matching": "Everyone matching the filters ({{count}})",
+      "selected": "Selected: {{count}}",
+      "matching_note": "The qualification will be granted to the {{count}} learners the current filters match.",
+      "too_many": "The current filters match {{count}} learners. One assignment can include at most {{max}}; narrow the filters first.",
+      "submit": "Assign ({{count}})",
+      "saving": "Assigning…",
+      "done_title": "Qualification assigned",
+      "done": "Granted to {{granted}}. Already held by {{held}}."
+    },
     "detail": {
       "not_found_title": "Learner not found",
       "not_found": "This learner does not exist or was removed.",

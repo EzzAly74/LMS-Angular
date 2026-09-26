@@ -1,0 +1,105 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="restoreFocus()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="!saving()"
+  [closeOnEscape]="!saving()"
+  styleClass="aq"
+  [style]="{ width: '560px', maxWidth: 'calc(100vw - 32px)' }"
+  [attr.aria-labelledby]="uid + '-title'">
+  <ng-template pTemplate="headless">
+    <form class="aq__card" (submit)="submit(); $event.preventDefault()">
+      <header class="aq__head">
+        <h2 class="aq__title" [id]="uid + '-title'">{{ 'learners.assign.title' | translate }}</h2>
+        <button type="button" class="aq__close" (click)="close()" [disabled]="saving()" [attr.aria-label]="'common.close' | translate">
+          <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
+        </button>
+      </header>
+
+      <div class="aq__body">
+        <!-- 1. The qualification -->
+        <fieldset class="aq__group">
+          <legend class="aq__legend">{{ 'learners.assign.qualification' | translate }}</legend>
+          <div class="aq__search">
+            <nas-icon name="magnifying-glass" [size]="20" />
+            <input type="search" class="aq__search-input" #qs
+              [attr.aria-label]="'learners.assign.search_qualification' | translate"
+              [placeholder]="'common.quick_search' | translate"
+              (input)="onQualSearch(qs.value)" />
+          </div>
+          <div class="aq__list" role="radiogroup" [attr.aria-label]="'learners.assign.qualification' | translate">
+            @for (o of filteredQuals(); track o.id) {
+              <label class="aq__option">
+                <input type="radio" class="aq__native" [name]="uid + '-q'" [value]="o.id"
+                  [checked]="qualification() === o.id" (change)="qualification.set(o.id)" />
+                <span class="aq__radio" aria-hidden="true"></span>
+                <span class="aq__text" dir="auto">{{ o.label }}</span>
+              </label>
+            } @empty {
+              <p class="aq__note">{{ 'filter_picker.no_options' | translate }}</p>
+            }
+          </div>
+        </fieldset>
+
+        <!-- 2. Who receives it -->
+        <fieldset class="aq__group">
+          <legend class="aq__legend">{{ 'learners.assign.learners' | translate }}</legend>
+          <div class="aq__modes" role="radiogroup" [attr.aria-label]="'learners.assign.learners' | translate">
+            <label class="aq__mode" [class.aq__mode--on]="mode() === 'pick'">
+              <input type="radio" class="aq__native" [name]="uid + '-m'" value="pick"
+                [checked]="mode() === 'pick'" (change)="mode.set('pick')" />
+              {{ 'learners.assign.mode_pick' | translate }}
+            </label>
+            <label class="aq__mode" [class.aq__mode--on]="mode() === 'matching'">
+              <input type="radio" class="aq__native" [name]="uid + '-m'" value="matching"
+                [checked]="mode() === 'matching'" (change)="mode.set('matching')" />
+              {{ 'learners.assign.mode_matching' | translate: { count: matchingTotal() } }}
+            </label>
+          </div>
+
+          @if (mode() === 'pick') {
+            <div class="aq__search">
+              <nas-icon name="magnifying-glass" [size]="20" />
+              <input type="search" class="aq__search-input" #ls
+                [attr.aria-label]="'learners.search_label' | translate"
+                [placeholder]="'learners.search_placeholder' | translate"
+                (input)="onLearnerSearch(ls.value)" />
+            </div>
+            <div class="aq__list" role="group" [attr.aria-busy]="learnersLoading()" [attr.aria-label]="'learners.assign.learners' | translate">
+              @for (o of learnerResults(); track o.id) {
+                <label class="aq__option">
+                  <input type="checkbox" class="aq__native" [checked]="isPicked(o.id)" (change)="togglePick(o)" />
+                  <span class="aq__box" aria-hidden="true">
+                    @if (isPicked(o.id)) { <img src="assets/icons/figma/checkbox-check.svg" width="12" height="12" alt="" /> }
+                  </span>
+                  <span class="aq__text" dir="auto">{{ o.label }}</span>
+                </label>
+              } @empty {
+                <p class="aq__note">{{ (learnersLoading() ? 'common.loading' : 'learners.no_results') | translate }}</p>
+              }
+            </div>
+            <p class="aq__count" aria-live="polite">{{ 'learners.assign.selected' | translate: { count: picked().size } }}</p>
+          } @else {
+            <p class="aq__note aq__note--box" [class.aq__note--warn]="tooMany()" aria-live="polite">
+              {{ (tooMany() ? 'learners.assign.too_many' : 'learners.assign.matching_note')
+                 | translate: { count: matchingTotal(), max: max } }}
+            </p>
+          }
+        </fieldset>
+      </div>
+
+      <footer class="aq__foot">
+        <button type="button" class="aq__btn aq__btn--ghost" (click)="close()" [disabled]="saving()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="submit" class="aq__btn aq__btn--primary" [disabled]="!canSubmit()">
+          {{ (saving() ? 'learners.assign.saving' : 'learners.assign.submit') | translate: { count: targetCount() } }}
+        </button>
+      </footer>
+    </form>
+  </ng-template>
+</p-dialog>

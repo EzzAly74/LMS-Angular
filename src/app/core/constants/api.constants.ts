@@ -13,6 +13,8 @@ export const API = {
   ADMIN_USERS:    `${API_BASE}/admin/users`,
   /** Admin learner profile + tables (backend B2 part 2). */
   ADMIN_LEARNERS: `${API_BASE}/admin/learners`,
+  /** Admin qualification actions, e.g. `{id}/learners` bulk grant (D-045). */
+  ADMIN_QUALIFICATIONS: `${API_BASE}/admin/qualification-skills`,
   ADMINS:              `${API_BASE}/admins`,
   ADMIN_CONTROLLERS:   `${API_BASE}/admin/controllers`,
   DASHBOARD:      `${API_BASE}/dashboard`,
