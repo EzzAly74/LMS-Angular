@@ -191,7 +191,10 @@
     "options_for": "Options for {{name}}",
     "no_keep_it": "No, Keep it",
     "added_by": "Added by",
-    "admins": "Admins"
+    "admins": "Admins",
+    "clear": "Clear",
+    "no_options": "Nothing to choose from",
+    "retry": "Try again"
   },
   "courses": {
     "title": "Courses",
@@ -1513,7 +1516,106 @@
     "instructions_placeholder": "Short instruction learners will see before opening the content.",
     "create_module": "Create Module",
     "evaluation_average": "Evaluation average",
-    "evaluations_count": "Evaluations: {{count}}"
+    "evaluations_count": "Evaluations: {{count}}",
+    "tab_quizzes": "Quizzes",
+    "tab_assignments": "Assignments",
+    "tab_evaluations": "Evaluations",
+    "not_found": "This course no longer exists.",
+    "back_to_courses": "Back to courses",
+    "breadcrumb": "Breadcrumb",
+    "updated_on": "Updated {{date}}",
+    "summary": "Course summary",
+    "sections": "Course sections",
+    "n_active": {
+      "one": "{{count}} Active",
+      "other": "{{count}} Active"
+    },
+    "evaluation_reviews": {
+      "one": "Evaluation ({{count}} review)",
+      "other": "Evaluation ({{count}} reviews)"
+    },
+    "not_evaluated": "Not evaluated yet",
+    "search_placeholder": "Search...",
+    "search_learners": "Search learners by name or employee ID",
+    "search_submissions": "Search submissions by learner name",
+    "search_qualifications": "Search qualifications",
+    "search_cohorts": "Search cohorts",
+    "filters_on": "{{count}} filters applied",
+    "no_results": "Nothing matches your search or filter.",
+    "action": "Action",
+    "account_inactive": "inactive account",
+    "view_learner": "View {{name}}'s profile",
+    "learners_range": "Showing {{from}}-{{to}} of {{total}} learners",
+    "submissions_range": "Showing {{from}}-{{to}} of {{total}} submissions",
+    "select_status": "Select status",
+    "select_learner": "Select learner",
+    "select_quiz": "Select quiz",
+    "select_assignment": "Select assignment",
+    "unnamed_cohort": "Unnamed cohort",
+    "quiz": "Quiz",
+    "assignment": "Assignment",
+    "submitted": "Submitted",
+    "score": "Score",
+    "attempts": "Attempts",
+    "passed": "passed",
+    "failed": "below the pass score",
+    "not_graded": "Not graded yet",
+    "view_submission": "View {{name}}'s submission for {{item}}",
+    "no_quiz_submissions": "No quiz submissions for this course yet.",
+    "no_assignment_submissions": "No assignment submissions for this course yet.",
+    "learner_status": {
+      "completed": "Completed",
+      "in_progress": "In Progress",
+      "not_started": "Not Started"
+    },
+    "submission_status": {
+      "graded": "Graded",
+      "pending": "Pending"
+    },
+    "reviews_count": {
+      "one": "{{count}} review",
+      "other": "{{count}} reviews"
+    },
+    "with_comments": {
+      "one": "{{count}} with comments",
+      "other": "{{count}} with comments"
+    },
+    "evaluation_template": "Template",
+    "question_type": "Question Type",
+    "mixed_types": "Mixed",
+    "no_evaluation_template": "No evaluation template applies to this course yet.",
+    "no_evaluation_template_hint": "Create a template for this course or for all courses to collect learner evaluations.",
+    "create_template": "Create Template",
+    "learner_evaluations": "Learner Evaluations",
+    "out_of_reviews": {
+      "one": "out of {{max}} · {{count}} review",
+      "other": "out of {{max}} · {{count}} reviews"
+    },
+    "star_row": "{{star}} stars: {{count}}",
+    "no_evaluations": "No learner has evaluated this course yet.",
+    "certificate_min": "Yes — min {{percent}}%",
+    "n_learners": {
+      "one": "{{count}} learner",
+      "other": "{{count}} learners"
+    },
+    "cohorts_count": {
+      "one": "{{count}} cohort",
+      "other": "{{count}} cohorts"
+    },
+    "enrolled_of_capacity": "{{name}}: {{enrolled}} of {{capacity}} enrolled, show learners",
+    "cohort_actions": "Actions for {{name}}",
+    "cohort_learners": "Learners of {{name}}",
+    "show_more": "Show more",
+    "cohort_empty": "No learners in this cohort yet.",
+    "done": "Done",
+    "untitled_module": "Untitled",
+    "modules_count": {
+      "one": "{{count}} module",
+      "other": "{{count}} modules"
+    },
+    "modules_minutes": "{{minutes}} min estimated learner time",
+    "edit_module_menu": "Edit module",
+    "delete_module_menu": "Delete module"
   },
   "courses_list": {
     "title": "All Courses",

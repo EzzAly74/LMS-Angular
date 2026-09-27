@@ -1,0 +1,126 @@
+// Evaluations tab - Figma 2266:130142 (the D4 results layout, one course).
+:host { display: flex; flex-direction: column; gap: var(--nas-space-6); min-inline-size: 0; }
+
+.et-loading { display: flex; flex-direction: column; gap: var(--nas-space-4); }
+
+.et-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+  flex-wrap: wrap;
+  margin-block-end: calc(var(--nas-space-2) * -1);
+}
+
+.et-line { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-color-text-muted); }
+
+.et-picker { display: flex; align-items: center; gap: var(--nas-space-2); min-inline-size: 0; }
+
+.et-picker__label { font-size: var(--nas-size-xs); font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
+
+:host ::ng-deep .et-picker__dropdown {
+  min-inline-size: 240px;
+  max-inline-size: 100%;
+  border-color: var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+}
+
+.et-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--nas-space-2);
+}
+
+.et-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-5);
+  padding: var(--nas-space-6);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  background: var(--nas-color-bg-surface);
+}
+
+.et-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  padding-block-end: var(--nas-space-5);
+  border-block-end: 1px solid var(--nas-color-border);
+
+  img { flex-shrink: 0; }
+}
+
+.et-card__title {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--nas-size-s);
+  line-height: 19.2px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.et-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--nas-space-4) var(--nas-space-10);
+  margin: 0;
+
+  div { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
+  // neutral-750, not Figma's #8c8c8c (3.4:1), for AA.
+  dt { font-size: var(--nas-size-xs); line-height: 16.8px; color: var(--nas-neutral-750); }
+  dd {
+    margin: 0;
+    font-size: var(--nas-size-s);
+    line-height: 19.2px;
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+    overflow-wrap: anywhere;
+  }
+}
+
+.et-questions { display: flex; flex-direction: column; gap: var(--nas-space-4); }
+
+.et-empty { margin: 0; font-size: var(--nas-size-xs); color: var(--nas-color-text-muted); }
+
+.et-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-10) var(--nas-space-5);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-xl);
+  background: var(--nas-color-bg-surface);
+  text-align: center;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-muted);
+
+  p { margin: 0; }
+}
+
+.et-message__title { color: var(--nas-color-text-strong); font-weight: var(--nas-weight-medium); }
+
+.et-btn {
+  display: inline-flex;
+  align-items: center;
+  block-size: 44px;
+  padding: 0 var(--nas-space-4);
+  border: 1px solid var(--nas-teal-1000);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  color: var(--nas-teal-1000);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+}
+
+@media (max-width: 767px) {
+  .et-tiles { grid-template-columns: minmax(0, 1fr); }
+  .et-card { padding: var(--nas-space-4); }
+}

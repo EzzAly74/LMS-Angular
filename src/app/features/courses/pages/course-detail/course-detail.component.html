@@ -1,728 +1,130 @@
-@if (loading()) {
-  <div class="nas-page-container">
-    <div class="detail-skeleton"></div>
-  </div>
-} @else {
-  @if (course(); as c) {
-  <div class="nas-page-container detail-page">
-
-    <!-- ── Breadcrumb + title ────────────────────────────────────────── -->
-    <nav class="detail-breadcrumb">
-      <i class="pi pi-book"></i>
-      <a routerLink="/admin/courses">{{ 'courses.title' | translate }}</a>
-      <i class="pi pi-chevron-right"></i>
-      <span>{{ c.title }}</span>
-    </nav>
-
-    <header class="detail-header">
-      <div class="detail-header__text">
-        <div class="detail-header__badges">
-          <nas-status-badge [tone]="typeTone(c.type)">{{ enumValueFromCode('course_type', c.type) }}</nas-status-badge>
-          <nas-status-badge [tone]="statusTone(c.status)" dot>{{ enumValueFromCode('course_status', c.status) }}</nas-status-badge>
+<div class="nas-page-container cd-page" [attr.aria-busy]="state() === 'loading'">
+  @switch (state()) {
+    @case ('loading') {
+      <div class="cd-page__skeleton" role="status" [attr.aria-label]="'common.loading' | translate">
+        <p-skeleton width="280px" height="18px" />
+        <p-skeleton width="420px" height="28px" />
+        <div class="cd-tiles">
+          @for (s of [0, 1, 2, 3]; track s) { <p-skeleton height="111px" borderRadius="16px" /> }
         </div>
-        <h1 class="detail-header__title">{{ c.title }}</h1>
-        <div class="detail-header__meta">
-          @if (c.instructor?.name) {
-            <span class="detail-header__meta-item"><i class="pi pi-user"></i> {{ c.instructor!.name }}</span>
-          }
-          @if (c.category?.name) {
-            <span class="detail-header__meta-item"><i class="pi pi-shield"></i> {{ c.category!.name }}</span>
-          }
-          @if (c.updated_at) {
-            <span class="detail-header__meta-item">{{ 'courses_list.updated_at' | translate }} {{ c.updated_at | date:'dd MMM yyyy' }}</span>
-          }
-        </div>
-      </div>
-      <button type="button" class="nas-edit-btn" (click)="openEditCourse()">
-        <i class="pi pi-pencil"></i>
-        <span>{{ 'course_detail.edit' | translate }}</span>
-      </button>
-    </header>
-
-    <!-- ── KPI strip ──────────────────────────────────────────────────── -->
-    <section class="kpi-row">
-      <nas-stat-card icon="pi pi-users" iconTone="teal"
-                     [label]="'course_detail.enrolled_learners' | translate"
-                     [value]="c.enrolled_count ?? 0"
-                     [subline]="(c.cohorts_count ?? 0) + ' ' + ('course_detail.cohorts' | translate)"></nas-stat-card>
-
-      <nas-stat-card icon="pi pi-tag" iconTone="amber"
-                     [label]="'course_detail.cohorts' | translate"
-                     [value]="c.cohorts_count ?? 0"></nas-stat-card>
-
-      <nas-stat-card icon="pi pi-check-circle" iconTone="green"
-                     [label]="'course_detail.average_completion' | translate"
-                     [value]="completionLabel()"></nas-stat-card>
-
-      <nas-stat-card icon="pi pi-star-fill" iconTone="sky"
-                     [label]="'course_detail.evaluation_average' | translate"
-                     [value]="evaluationValue()"
-                     [subline]="'course_detail.evaluations_count' | translate: { count: c.evaluation_submissions ?? 0 }"></nas-stat-card>
-    </section>
-
-    <!-- ── Tabs ──────────────────────────────────────────────────────── -->
-    <nas-tabs [tabs]="tabs()" [activeId]="activeTab()" (activeIdChange)="setTab($event)" />
-
-    <!-- ── Tab content ───────────────────────────────────────────────── -->
-    @switch (activeTab()) {
-
-      <!-- OVERVIEW -->
-      @case ('overview') {
-        <section class="overview-grid">
-          <div class="overview-grid__left">
-            <article class="nas-card overview-about">
-              <h3 class="nas-section-title">{{ 'course_detail.about_this_course' | translate }}</h3>
-              @if (c.description) {
-                <div class="rich-content" [innerHTML]="c.description"></div>
-              } @else {
-                <p class="empty-text">{{ 'course_detail.no_description' | translate }}</p>
-              }
-            </article>
-
-            @if (c.what_students_will_learn?.length) {
-              <article class="nas-card overview-list-card">
-                <h3 class="nas-section-title">{{ 'course_detail.what_students_will_learn' | translate }}</h3>
-                <ul class="overview-bullets">
-                  @for (point of c.what_students_will_learn; track $index) {
-                    <li>{{ point }}</li>
-                  }
-                </ul>
-              </article>
-            }
-
-            @if (c.requirements?.length) {
-              <article class="nas-card overview-list-card">
-                <h3 class="nas-section-title">{{ 'course_detail.requirements' | translate }}</h3>
-                <ul class="overview-bullets">
-                  @for (point of c.requirements; track $index) {
-                    <li>{{ point }}</li>
-                  }
-                </ul>
-              </article>
-            }
-          </div>
-
-          <aside class="nas-card overview-settings">
-            <h3 class="nas-section-title">{{ 'course_detail.course_settings' | translate }}</h3>
-            <dl class="settings-list">
-              <div>
-                <dt>{{ 'course_detail.delivery_type' | translate }}</dt>
-                <dd>{{ deliveryLabel() }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'course_detail.level' | translate }}</dt>
-                <dd>{{ levelLabel() }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'course_detail.certificate' | translate }}</dt>
-                <dd>
-                  {{ c.certificate ? ('common.yes' | translate) : ('common.no' | translate) }}
-                  @if (c.certificate && c.certificate_pass_percent) {
-                    — min {{ c.certificate_pass_percent }}%
-                  }
-                </dd>
-              </div>
-              <div>
-                <dt>{{ 'course_detail.created_on' | translate }}</dt>
-                <dd>{{ c.created_at ? (c.created_at | date:'dd MMM, yyyy') : '—' }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'course_detail.max_learners_per_cohort' | translate }}</dt>
-                <dd>{{ c.max_learners ? (c.max_learners + ' ' + ('course_detail.learners' | translate)) : '—' }}</dd>
-              </div>
-            </dl>
-          </aside>
-        </section>
-      }
-
-      <!-- COHORT TAB -->
-      @case ('cohort') {
-        <section class="cohort-tab">
-          <header class="cohort-tab__head">
-            <span class="cohort-tab__count">
-              {{ (c.cohorts?.length ?? 0) }} {{ 'course_detail.cohorts' | translate | lowercase }}
-            </span>
-            <button class="nas-cta-btn" (click)="openAddCohort()">
-              <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_cohort' | translate }}
-            </button>
-          </header>
-
-          <div class="nas-card">
-            <table class="nas-table">
-              <thead>
-                <tr>
-                  <th>{{ 'course_detail.cohort' | translate }}</th>
-                  <th>{{ 'course_detail.start' | translate }}</th>
-                  <th>{{ 'course_detail.end' | translate }}</th>
-                  <th>{{ 'course_detail.enrolled_capacity' | translate }}</th>
-                  <th>{{ 'course_detail.sessions' | translate }}</th>
-                  <th>{{ 'course_detail.status' | translate }}</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (cohort of c.cohorts ?? []; track cohort.id) {
-                  <tr>
-                    <td class="nas-table__primary">{{ cohort.name || '—' }}</td>
-                    <td>{{ cohort.start_date ? (cohort.start_date | date:'dd MMM yyyy') : '—' }}</td>
-                    <td>{{ cohort.end_date ? (cohort.end_date | date:'dd MMM yyyy') : '—' }}</td>
-                    <td>{{ cohort.enrolled }} / {{ cohortCapacity(cohort) }}</td>
-                    <td>{{ cohort.number_of_sessions ?? '—' }}</td>
-                    <td>
-                      <nas-status-badge [tone]="cohortStatusTone(cohort)" dot>
-                        {{ cohortStatusLabel(cohort) }}
-                      </nas-status-badge>
-                    </td>
-                    <td class="nas-table__action">
-                      <button class="row-action-btn" (click)="openCohortMenu($event, cohort, cohortMenu)">
-                        <i class="pi pi-ellipsis-h"></i>
-                      </button>
-                    </td>
-                  </tr>
-                }
-                @if (!(c.cohorts?.length)) {
-                  <tr><td colspan="7" class="nas-table__empty">
-                    {{ 'course_detail.no_cohorts' | translate }}
-                  </td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-      }
-
-      <!-- LEARNERS TAB -->
-      @case ('learners') {
-        <section class="learners-tab">
-          <div class="nas-card learners-card">
-            <table class="nas-table learners-table">
-              <thead>
-                <tr>
-                  <th class="learners-table__col-name">{{ 'course_detail.learner' | translate }}</th>
-                  <th class="learners-table__col-cohort">{{ 'course_detail.cohort' | translate }}</th>
-                  <th class="learners-table__col-progress">{{ 'course_detail.progress' | translate }}</th>
-                  <th class="learners-table__col-status">{{ 'course_detail.status' | translate }}</th>
-                  <th class="learners-table__col-date">{{ 'course_detail.enrolled' | translate }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (l of c.learners ?? []; track l.id) {
-                  <tr>
-                    <td>
-                      <div class="learner-cell">
-                        <span class="learner-cell__avatar"
-                              [class.learner-cell__avatar--active]="l.status !== 'not_started'">
-                          <nas-avatar size="sm" [name]="l.name" />
-                        </span>
-                        <span class="learner-cell__name">{{ l.name }}</span>
-                      </div>
-                    </td>
-                    <td class="learners-table__cohort">{{ l.cohort_name }}</td>
-                    <td class="learners-table__progress">
-                      <nas-progress [value]="l.progress"
-                                    [tone]="learnerProgressTone(l.progress)"
-                                    [tintValue]="true" />
-                    </td>
-                    <td>
-                      <!-- Figma 321:6791 renders status as plain coloured text,
-                           no pill — keep the column visually quiet so the
-                           progress bar carries the row. -->
-                      <span class="learners-table__status"
-                            [attr.data-status]="l.status">
-                        {{ learnerStatusLabel(l.status) }}
-                      </span>
-                    </td>
-                    <td class="learners-table__date">{{ l.enrolled_at | date:'dd MMM yyyy' }}</td>
-                  </tr>
-                }
-                @if (!(c.learners?.length)) {
-                  <tr><td colspan="5" class="nas-table__empty">{{ 'course_detail.no_learners' | translate }}</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-      }
-
-      <!-- CONTENT TAB -->
-      @case ('content') {
-        <section class="modules-tab">
-
-          <!-- Header: count line + Module CTA -->
-          <header class="modules-tab__head">
-            <span class="modules-tab__count">{{ modulesHeader() }}</span>
-            <button type="button" class="nas-modules-cta" (click)="openAddModule()">
-              <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_module' | translate }}
-            </button>
-          </header>
-
-          <!-- Filter chips — driven by the `module_content_type` enum so
-               the chip list and labels track whatever the backend ships. -->
-          <div class="modules-filters">
-            <label class="modules-filter">
-              <p-checkbox [binary]="true"
-                          [ngModel]="isFilterActive('all')"
-                          (onChange)="toggleModuleFilter('all')" />
-              <span>{{ 'common.all' | translate }}</span>
-            </label>
-            @for (opt of moduleContentTypeOpts(); track opt.id) {
-              <label class="modules-filter">
-                <p-checkbox [binary]="true"
-                            [ngModel]="isFilterActive($any(opt.code))"
-                            (onChange)="toggleModuleFilter($any(opt.code))" />
-                <span>{{ opt.value }}</span>
-              </label>
-            }
-          </div>
-
-          <!-- List -->
-          @if (modulesLoading()) {
-            <div class="modules-list">
-              @for (s of [1,2,3,4,5]; track s) {
-                <article class="module-row module-row--skeleton">
-                  <span class="module-row__index"></span>
-                  <div class="module-row__body">
-                    <div class="skeleton-line skeleton-line--lg"></div>
-                    <div class="skeleton-line skeleton-line--sm"></div>
-                  </div>
-                </article>
-              }
-            </div>
-          } @else if (!filteredModules().length) {
-            <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
-              <i class="pi pi-folder-open"></i>
-              <h3>{{ 'course_detail.no_modules' | translate }}</h3>
-              <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
-            </article>
-          } @else {
-            <div class="modules-list">
-              @for (m of filteredModules(); track m.id; let idx = $index) {
-                <article class="module-row">
-                  <span class="module-row__index">{{ idx + 1 }}</span>
-                  <div class="module-row__body">
-                    <div class="module-row__title-line">
-                      <span class="module-row__title">{{ moduleTitle(m) }}</span>
-                      <nas-status-badge [tone]="moduleChipTone(m.content_type)">
-                        {{ enumValueFromCode('module_content_type', m.content_type) }}
-                      </nas-status-badge>
-                    </div>
-                    <span class="module-row__sub">{{ moduleSubline(m) }}</span>
-                  </div>
-                  <div class="module-row__actions">
-                    <button type="button" class="row-action-btn" [title]="'common.edit' | translate"
-                            (click)="openEditModule(m)">
-                      <i class="pi pi-pencil"></i>
-                    </button>
-                    <button type="button" class="row-action-btn" [title]="'common.more' | translate"
-                            (click)="openModuleMenu($event, m, moduleMenu)">
-                      <i class="pi pi-ellipsis-h"></i>
-                    </button>
-                  </div>
-                </article>
-              }
-            </div>
-          }
-        </section>
-      }
-
-      <!-- QUALIFICATIONS TAB -->
-      @case ('qualifications') {
-        <section class="qual-list">
-          @for (q of c.qualifications ?? []; track q.id) {
-            <article class="nas-card qual-item">
-              <i class="pi pi-verified qual-item__icon"></i>
-              <span>{{ q.name }}</span>
-            </article>
-          }
-          @if (!(c.qualifications?.length)) {
-            <article class="nas-card placeholder-tab placeholder-tab--soft">
-              <i class="pi pi-verified"></i>
-              <h3>{{ 'course_detail.no_qualifications' | translate }}</h3>
-              <p>{{ 'course_detail.no_qualifications_hint' | translate }}</p>
-            </article>
-          }
-        </section>
-      }
-
-    }
-  </div>
-
-  <p-confirmDialog />
-
-  <!-- ── Module row menu (Edit / Delete) ─────────────────────────────── -->
-  <p-overlayPanel #moduleMenu>
-    @if (activeModule(); as m) {
-      <div class="row-menu">
-        <button class="row-menu__item" (click)="moduleMenu.hide(); openEditModule(m)">
-          <i class="pi pi-pencil"></i> Edit module
-        </button>
-        <button class="row-menu__item" (click)="confirmDeleteModule(m, moduleMenu)">
-          <i class="pi pi-trash"></i> Delete module
-        </button>
+        <p-skeleton height="36px" borderRadius="16px" />
+        <p-skeleton height="240px" borderRadius="16px" />
       </div>
     }
-  </p-overlayPanel>
-
-  <!-- ── Cohort row menu ─────────────────────────────────────────────── -->
-  <p-overlayPanel #cohortMenu>
-    @if (activeCohort(); as cohort) {
-      <div class="row-menu">
-        <button class="row-menu__item" (click)="openEditCohort(cohort, cohortMenu)">
-          <i class="pi pi-pencil"></i>{{ 'course_detail.edit_cohort' | translate }}
-        </button>
-        <button class="row-menu__item" (click)="openCohortAttendance(cohort, cohortMenu)">
-          <i class="pi pi-calendar"></i>{{ 'course_detail.view_attendance' | translate }}
-        </button>
+    @case ('not-found') {
+      <div class="cd-page__message" role="alert">
+        <p>{{ 'course_detail.not_found' | translate }}</p>
+        <a class="cd-page__back" routerLink="/admin/courses">{{ 'course_detail.back_to_courses' | translate }}</a>
       </div>
     }
-  </p-overlayPanel>
-
-  <!-- ── Cohort Attendance drawer (Figma 454:42768, 332:11156) ───────── -->
-  <nas-cohort-attendance-drawer
-    [courseId]="courseId()"
-    [cohortId]="attendanceCohortId()"
-    [cohortName]="attendanceCohortName()"
-    [visible]="showAttendance()"
-    (visibleChange)="showAttendance.set($event)" />
-
-  <!-- ── Cohort modal (Add/Edit) ── Figma 332:9988 / 332:10708 ───────── -->
-  <p-dialog
-    [visible]="showCohort()"
-    (visibleChange)="showCohort.set($event)"
-    [modal]="true"
-    [closable]="!saving()"
-    [draggable]="false"
-    [resizable]="false"
-    [closeOnEscape]="!saving()"
-    styleClass="nas-dialog cohort-dialog"
-    [style]="{ width: '460px', maxWidth: '95vw' }"
-    [header]="cohortEditMode() ? ('course_detail.edit_cohort' | translate) : ('course_detail.new_cohort' | translate)">
-
-    <form [formGroup]="cohortForm" (ngSubmit)="submitCohort()" class="nas-form cohort-form">
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.cohort_name_en' | translate }} <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="name_en"
-               [placeholder]="'course_detail.cohort_name_placeholder' | translate" />
+    @case ('error') {
+      <div class="cd-page__message" role="alert">
+        <p>{{ 'common.could_not_load' | translate }}</p>
+        <button type="button" class="cd-page__back" (click)="retry()">{{ 'common.retry' | translate }}</button>
       </div>
+    }
+    @default {
+      @if (course(); as c) {
+        <nav [attr.aria-label]="'course_detail.breadcrumb' | translate">
+          <ol class="cd-crumbs">
+            <li>
+              <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+              <a routerLink="/admin/courses">{{ 'courses.title' | translate }}</a>
+              <img class="cd-crumbs__sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+            </li>
+            <li><span aria-current="page"><bdi>{{ c.title }}</bdi></span></li>
+          </ol>
+        </nav>
 
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.cohort_name_ar' | translate }} <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="name_ar"
-               [placeholder]="'course_detail.cohort_name_placeholder' | translate" />
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.capacity' | translate }}</label>
-        <div class="duration-input">
-          <input type="number" class="duration-input__field"
-                 formControlName="capacity" min="1" max="10000" placeholder="30" />
-          <div class="duration-input__steppers">
-            <button type="button" class="duration-input__step"
-                    [attr.aria-label]="'course_detail.capacity' | translate"
-                    (click)="adjustCohortCapacity(1)">
-              <i class="pi pi-chevron-up"></i>
-            </button>
-            <button type="button" class="duration-input__step"
-                    [attr.aria-label]="'course_detail.capacity' | translate"
-                    (click)="adjustCohortCapacity(-1)">
-              <i class="pi pi-chevron-down"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.status' | translate }}</label>
-        <p-dropdown [options]="cohortStatusDropdownOpts()" optionLabel="value" optionValue="id"
-                    formControlName="status" styleClass="w-full" appendTo="body"
-                    [placeholder]="'course_detail.cohort_status_placeholder' | translate" />
-        @if (enumCode('cohort_status', cohortForm.value.status) === 'scheduled') {
-          <p class="cohort-form__hint">
-            <i class="pi pi-info-circle"></i>
-            {{ 'course_detail.cohort_status_helper' | translate }}
-          </p>
-        } @else if (enumCode('cohort_status', cohortForm.value.status) === 'open_for_enrollment') {
-          <p class="cohort-form__hint">
-            <i class="pi pi-info-circle"></i>
-            {{ 'course_detail.cohort_status_helper_open' | translate }}
-          </p>
-        }
-      </div>
-
-      <div class="nas-form__row">
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.cohort_start' | translate }} <span class="nas-required">*</span></label>
-          <nas-datepicker formControlName="start_date" placeholder="dd/mm/yyyy"
-                          [class.nas-input--error]="cohortForm.controls.start_date.invalid && cohortForm.controls.start_date.touched" />
-          @if (cohortForm.controls.start_date.invalid && cohortForm.controls.start_date.touched) {
-            <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
-          }
-        </div>
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.cohort_end' | translate }} <span class="nas-required">*</span></label>
-          <nas-datepicker formControlName="end_date" placeholder="dd/mm/yyyy"
-                          [class.nas-input--error]="cohortForm.controls.end_date.invalid && cohortForm.controls.end_date.touched" />
-          @if (cohortForm.controls.end_date.invalid && cohortForm.controls.end_date.touched) {
-            <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
-          }
-        </div>
-      </div>
-
-      <div class="nas-form__row">
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.number_of_sessions' | translate }} <span class="required">*</span></label>
-          <div class="duration-input">
-            <input type="number" class="duration-input__field"
-                   formControlName="number_of_sessions" min="1" max="1000"
-                   [placeholder]="'course_detail.number_of_sessions_placeholder' | translate" />
-            <div class="duration-input__steppers">
-              <button type="button" class="duration-input__step"
-                      [attr.aria-label]="'course_detail.number_of_sessions' | translate"
-                      (click)="adjustCohortSessions(1)">
-                <i class="pi pi-chevron-up"></i>
-              </button>
-              <button type="button" class="duration-input__step"
-                      [attr.aria-label]="'course_detail.number_of_sessions' | translate"
-                      (click)="adjustCohortSessions(-1)">
-                <i class="pi pi-chevron-down"></i>
-              </button>
+        <header class="cd-head">
+          <div class="cd-head__text">
+            <div class="cd-head__badges">
+              @if (typeLabel()) { <nas-status-badge [tone]="typeTone(c.type)">{{ typeLabel() }}</nas-status-badge> }
+              @if (statusLabel()) { <nas-status-badge [tone]="statusTone(c.status)">{{ statusLabel() }}</nas-status-badge> }
             </div>
-          </div>
-          @if (cohortForm.controls.number_of_sessions.invalid && cohortForm.controls.number_of_sessions.touched) {
-            <span class="nas-form__error">{{ 'errors.required' | translate }}</span>
-          }
-        </div>
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.avg_session_time' | translate }}</label>
-          <div class="nas-input-suffix">
-            <input type="number" class="nas-input" formControlName="avg_session_time"
-                   min="0.25" max="24" step="0.5"
-                   [placeholder]="'course_detail.avg_session_time_placeholder' | translate" />
-            <span class="nas-input-suffix__unit">{{ 'course_detail.hours' | translate }}</span>
-          </div>
-        </div>
-      </div>
-
-      <footer class="nas-form__footer">
-        <button type="button" class="nas-btn nas-btn--ghost"
-                (click)="showCohort.set(false)" [disabled]="saving()">
-          {{ 'common.cancel' | translate }}
-        </button>
-        <button type="submit" class="nas-btn nas-btn--primary"
-                [disabled]="saving() || cohortForm.invalid">
-          @if (saving()) {
-            <i class="pi pi-spin pi-spinner"></i>
-          } @else if (cohortEditMode()) {
-            <i class="pi pi-pencil"></i>
-          } @else {
-            <i class="pi pi-plus-circle"></i>
-          }
-          <span>
-            {{ cohortEditMode() ? ('course_detail.edit_cohort' | translate)
-                                : ('course_detail.add_cohort' | translate) }}
-          </span>
-        </button>
-      </footer>
-    </form>
-  </p-dialog>
-
-  <!-- ── Module modal (Add / Edit) ───────────────────────────────────── -->
-  <p-dialog
-    [visible]="showModule()"
-    (visibleChange)="showModule.set($event)"
-    [modal]="true"
-    [closable]="!moduleSaving()"
-    [draggable]="false"
-    [resizable]="false"
-    [closeOnEscape]="!moduleSaving()"
-    styleClass="nas-dialog module-dialog"
-    [style]="{ width: '480px', maxWidth: '95vw' }"
-    [header]="(moduleEditMode() ? 'course_detail.edit_module' : 'course_detail.new_module') | translate">
-
-    <form [formGroup]="moduleForm" (ngSubmit)="submitModule()" class="nas-form module-form">
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.module_title_en' | translate }} <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="title_en"
-               [placeholder]="'course_detail.module_title_en_placeholder' | translate" />
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.module_title_ar' | translate }} <span class="required">*</span></label>
-        <input class="nas-input" type="text" formControlName="title_ar"
-               [placeholder]="'course_detail.module_title_ar_placeholder' | translate" />
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.related_session_number' | translate }} <span class="required">*</span></label>
-        <p-dropdown [options]="sessionNumberOptions()"
-                    formControlName="session_number" styleClass="w-full" appendTo="body"
-                    [placeholder]="'course_detail.related_session_number_ph' | translate" />
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.content_type' | translate }} <span class="required">*</span></label>
-        <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
-                    formControlName="content_type" styleClass="w-full" appendTo="body"
-                    (onChange)="onModuleContentTypeChange()" />
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.learner_scope' | translate }} <span class="required">*</span></label>
-        <p-dropdown [options]="learnerScopeOpts()" optionLabel="value" optionValue="id"
-                    formControlName="learner_scope" styleClass="w-full" appendTo="body" />
-      </div>
-
-      @if (enumCode('module_learner_scope', moduleForm.value.learner_scope) === 'cohort') {
-        <div class="nas-form__field">
-          <label>{{ 'course_detail.cohort' | translate }} <span class="required">*</span></label>
-          @if (cohortDropdownOpts().length) {
-            <p-dropdown [options]="cohortDropdownOpts()" optionLabel="name" optionValue="id"
-                        formControlName="session_id"
-                        [placeholder]="'course_detail.select_cohort' | translate"
-                        appendTo="body"
-                        styleClass="w-full" />
-          } @else {
-            <div class="module-form__hint module-form__hint--warn">
-              {{ 'course_detail.no_cohorts_yet' | translate }}
-            </div>
-          }
-        </div>
-      }
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.approximate_duration' | translate }} <span class="required">*</span></label>
-        <div class="duration-input">
-          <input type="number" class="duration-input__field"
-                 formControlName="duration_minutes"
-                 min="0" max="1000" placeholder="30" />
-          <span class="duration-input__suffix">{{ 'course_detail.duration_minutes' | translate }}</span>
-          <div class="duration-input__steppers">
-            <button type="button" class="duration-input__step"
-                    [attr.aria-label]="'course_detail.increase_duration' | translate"
-                    (click)="adjustDuration(1)">
-              <i class="pi pi-chevron-up"></i>
-            </button>
-            <button type="button" class="duration-input__step"
-                    [attr.aria-label]="'course_detail.decrease_duration' | translate"
-                    (click)="adjustDuration(-1)">
-              <i class="pi pi-chevron-down"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      @if (moduleIsFileType()) {
-        <div class="nas-form__field">
-          <label>
-            {{ (moduleIsVideo() ? 'course_detail.video' : 'course_detail.document') | translate }}
-            <span class="required">*</span>
-          </label>
-          @if (moduleUploading()) {
-            <div class="module-upload-progress" role="status" aria-live="polite">
-              <div class="module-upload-progress__icon" [class.is-video]="moduleIsVideo()">
-                <i class="pi" [ngClass]="moduleIsVideo() ? 'pi-video' : 'pi-file'"></i>
-                <span class="module-upload-progress__ring"></span>
-              </div>
-              <div class="module-upload-progress__body">
-                <span class="module-upload-progress__name">{{ moduleUploadingName() || (moduleIsVideo() ? ('course_detail.upload_video' | translate) : ('course_detail.upload_file' | translate)) }}</span>
-                <span class="module-upload-progress__status">
-                  <span class="module-upload-progress__dot"></span>
-                  {{ 'course_detail.uploading' | translate }}
+            <h1 class="cd-head__title"><bdi>{{ c.title }}</bdi></h1>
+            <p class="cd-head__meta">
+              @if (c.instructor?.name) {
+                <span class="cd-head__meta-item">
+                  <img src="assets/icons/figma/user-16.svg" width="16" height="16" alt="" />
+                  <span class="cd-sr-only">{{ 'course_detail.instructor' | translate }}:</span>
+                  <bdi>{{ c.instructor!.name }}</bdi>
                 </span>
-                <div class="module-upload-progress__track">
-                  <span class="module-upload-progress__bar"></span>
-                </div>
-              </div>
-            </div>
-          } @else {
-            @if (moduleFileInfo(); as f) {
-              <div class="module-form__file">
-                <img class="module-form__file-icon"
-                     [src]="moduleIsVideo() ? 'assets/icons/phosphor/mp4.svg' : 'assets/icons/phosphor/pdf.svg'"
-                     [alt]="moduleIsVideo() ? 'MP4' : 'PDF'" />
-                <div class="module-form__file-meta">
-                  @if (f.url) {
-                    <a class="module-form__file-name" [href]="f.url" target="_blank" rel="noopener">{{ f.name }}</a>
-                  } @else {
-                    <span class="module-form__file-name">{{ f.name }}</span>
-                  }
-                  @if (f.size) {
-                    <span class="module-form__file-sub">{{ fileSizeLabel(f.size) }}</span>
-                  } @else {
-                    <span class="module-form__file-sub">{{ 'course_detail.existing_file' | translate }}</span>
-                  }
-                </div>
-                <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
-                  <i class="pi pi-trash"></i>
-                </button>
-              </div>
-            } @else {
-              <label class="module-form__upload">
-                <input type="file" hidden (change)="onModuleFileSelected($event)"
-                       [accept]="moduleIsVideo()
-                         ? 'video/mp4,video/quicktime,video/webm,video/x-m4v,video/ogg'
-                         : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,image/*'" />
-                <i class="pi pi-cloud-upload"></i>
-                <span>{{ (moduleIsVideo() ? 'course_detail.upload_video' : 'course_detail.upload_file') | translate }}</span>
-              </label>
+              }
+              @if (c.category?.name) {
+                <span class="cd-head__meta-item">
+                  <img src="assets/icons/figma/circles-three-plus-16.svg" width="16" height="16" alt="" />
+                  <span class="cd-sr-only">{{ 'course_detail.category' | translate }}:</span>
+                  <bdi>{{ c.category!.name }}</bdi>
+                </span>
+              }
+              @if (c.updated_at) {
+                <span class="cd-head__meta-item">{{ 'course_detail.updated_on' | translate: { date: (c.updated_at | nasDate: locale()) } }}</span>
+              }
+            </p>
+          </div>
+          <!-- Figma note on this button: "No delete option". -->
+          <button type="button" class="cd-head__edit" (click)="showEdit.set(true)">
+            <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
+            <span>{{ 'course_detail.edit' | translate }}</span>
+          </button>
+        </header>
+
+        <section class="cd-tiles" [attr.aria-label]="'course_detail.summary' | translate">
+          <nas-stat-tile icon="assets/icons/figma/users-20.svg" tone="purple"
+            [value]="'' + (c.enrolled_count ?? 0)" [label]="'course_detail.enrolled_learners' | translate">
+            <p class="cd-tiles__active">
+              <span class="cd-tiles__dot" aria-hidden="true"></span>
+              {{ learnersActiveKey() | translate: { count: c.in_progress_count ?? 0 } }}
+            </p>
+          </nas-stat-tile>
+          <nas-stat-tile icon="assets/icons/figma/broadcast-20.svg" tone="sky"
+            [value]="'' + cohorts().length" [label]="'course_detail.cohorts' | translate" />
+          <nas-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
+            [value]="completion() + '%'" valueDir="ltr" [label]="'course_detail.average_completion' | translate">
+            <span class="cd-tiles__bar" aria-hidden="true"><span class="cd-tiles__fill" [style.inline-size.%]="completion()"></span></span>
+          </nas-stat-tile>
+          <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+            [value]="scoreValue() ?? '-'" valueDir="ltr"
+            [label]="scoreValue() ? (reviewsKey() | translate: { count: c.evaluation_submissions ?? 0 }) : ('course_detail.not_evaluated' | translate)" />
+        </section>
+
+        <nas-tabs idPrefix="cd" [label]="'course_detail.sections' | translate"
+          [tabs]="tabs()" [activeId]="activeTab()" (activeIdChange)="setTab($event)" />
+
+        @let courseId = c.id;
+        <div class="cd-panel" role="tabpanel" [id]="'cd-panel-' + activeTab()" [attr.aria-labelledby]="'cd-tab-' + activeTab()">
+          @switch (activeTab()) {
+            @case ('overview') {
+              <app-course-overview-tab [course]="c" />
+            }
+            @case ('cohort') {
+              <app-course-cohorts-tab [courseId]="courseId" [course]="c" [cohorts]="cohorts()" (changed)="refresh()" />
+            }
+            @case ('learners') {
+              <app-course-learners-tab [courseId]="courseId" [cohorts]="cohorts()" />
+            }
+            @case ('content') {
+              <app-course-content-tab [courseId]="courseId" [cohorts]="cohorts()" [numberOfSessions]="c.number_of_sessions ?? null"
+                (countChange)="modulesCount.set($event)" />
+            }
+            @case ('quizzes') {
+              <app-course-submissions-tab kind="quiz" [courseId]="courseId" [cohorts]="cohorts()" />
+            }
+            @case ('assignments') {
+              <app-course-submissions-tab kind="assignment" [courseId]="courseId" [cohorts]="cohorts()" />
+            }
+            @case ('qualifications') {
+              <app-course-qualifications-tab [qualifications]="c.qualifications ?? []" />
+            }
+            @case ('evaluations') {
+              <app-course-evaluations-tab [courseId]="courseId" />
             }
           }
         </div>
-      } @else if (moduleIsArticle()) {
-        <div class="nas-form__field module-form__article">
-          <label>
-            {{ 'course_detail.article' | translate }}
-            <span class="required">*</span>
-          </label>
-          <nas-rich-text formControlName="content"
-                           areaMinHeight="138px"
-                           [placeholder]="'course_detail.article_placeholder' | translate" />
-        </div>
-      } @else if (moduleIsLink()) {
-        <div class="nas-form__field">
-          <label>
-            {{ 'course_detail.module_url' | translate }}
-            <span class="required">*</span>
-          </label>
-          <input class="nas-input" type="url" formControlName="video" placeholder="https://example.com" />
-          <p class="module-form__hint">{{ 'course_detail.content_link_hint' | translate }}</p>
-        </div>
+
+        <app-course-dialog [(visible)]="showEdit" [courseId]="courseId" (saved)="onCourseSaved()" />
       }
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.instructions_en' | translate }}</label>
-        <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_en"
-                  [placeholder]="'course_detail.instructions_placeholder' | translate"></textarea>
-      </div>
-
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.instructions_ar' | translate }}</label>
-        <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_ar"
-                  [placeholder]="'course_detail.instructions_placeholder' | translate"></textarea>
-      </div>
-
-      <label class="module-form__require">
-        <p-checkbox [binary]="true" formControlName="require_completion" />
-        <span>{{ 'course_detail.require_completion' | translate }}</span>
-      </label>
-
-      <footer class="nas-form__footer">
-        <button type="button" class="nas-btn nas-btn--ghost" (click)="showModule.set(false)" [disabled]="moduleSaving()">
-          {{ 'common.cancel' | translate }}
-        </button>
-        <button type="submit" class="nas-btn nas-btn--primary" [disabled]="moduleSaving()">
-          @if (moduleSaving()) { <i class="pi pi-spin pi-spinner"></i> }
-          @else if (moduleEditMode()) { <i class="pi pi-pencil"></i> }
-          @else { <i class="pi pi-plus-circle"></i> }
-          <span>{{ (moduleEditMode() ? 'course_detail.save_changes' : 'course_detail.create_module') | translate }}</span>
-        </button>
-      </footer>
-    </form>
-  </p-dialog>
-
-  <!-- ── Edit Course: the D6 Add / Edit Course modal, filled in ────────── -->
-  <app-course-dialog [(visible)]="showEdit" [courseId]="courseId()" (saved)="onCourseSaved()" />
+    }
   }
-}
+</div>

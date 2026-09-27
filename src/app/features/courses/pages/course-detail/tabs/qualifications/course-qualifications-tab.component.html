@@ -1,0 +1,31 @@
+<div class="cl-toolbar">
+  <div class="cl-search">
+    <nas-icon name="magnifying-glass" [size]="20" />
+    <label class="cl-sr-only" for="cd-qual-search">{{ 'course_detail.search_qualifications' | translate }}</label>
+    <input id="cd-qual-search" type="search" class="cl-search__input"
+      [placeholder]="'course_detail.search_placeholder' | translate"
+      [ngModel]="search()" (ngModelChange)="search.set($event)" />
+  </div>
+</div>
+
+<section class="cl-card" [attr.aria-label]="'course_detail.tab_qualifications' | translate">
+  @if (filtered().length) {
+    <ul class="qt-list" role="list">
+      @for (q of filtered(); track q.id) {
+        <li class="qt-item">
+          <span class="qt-icon" aria-hidden="true"><img src="assets/icons/figma/check-circle-20.svg" width="16" height="16" alt="" /></span>
+          <span class="cl-strong"><bdi>{{ q.name }}</bdi></span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="cl-state">
+      @if (qualifications().length) {
+        <p>{{ 'course_detail.no_results' | translate }}</p>
+      } @else {
+        <p class="cl-strong">{{ 'course_detail.no_qualifications' | translate }}</p>
+        <p>{{ 'course_detail.no_qualifications_hint' | translate }}</p>
+      }
+    </div>
+  }
+</section>

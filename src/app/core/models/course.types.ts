@@ -120,6 +120,12 @@ export interface CourseDetail {
   /** /5 evaluation score (D-054); null = never evaluated. */
   evaluation_score?: number | null;
   evaluation_submissions?: number;
+  /** Enrolled learners in progress - the header's "N Active" (D-059). */
+  in_progress_count?: number;
+  /** Tab counts (D2): modules, and quiz / assignment submissions. */
+  modules_count?: number;
+  quiz_submissions_count?: number;
+  assignment_submissions_count?: number;
   certificate?: boolean;
   certificate_pass_percent?: number;
   delivery_type?: string;

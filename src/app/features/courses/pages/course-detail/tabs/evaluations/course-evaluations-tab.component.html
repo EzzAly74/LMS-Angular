@@ -1,0 +1,85 @@
+@switch (state()) {
+  @case ('loading') {
+    <div class="et-loading" role="status" [attr.aria-label]="'common.loading' | translate">
+      <p-skeleton width="220px" height="18px" />
+      <div class="et-tiles">@for (s of [0, 1, 2]; track s) { <p-skeleton height="111px" borderRadius="16px" /> }</div>
+      <p-skeleton height="140px" borderRadius="16px" />
+      <p-skeleton height="240px" borderRadius="16px" />
+    </div>
+  }
+  @case ('error') {
+    <div class="et-message" role="alert">
+      <p>{{ 'common.could_not_load' | translate }}</p>
+      <button type="button" class="et-btn" (click)="load()">{{ 'common.retry' | translate }}</button>
+    </div>
+  }
+  @default {
+    @if (summary(); as s) {
+      <div class="et-top">
+        <p class="et-line">
+          {{ reviewsKey(s.reviews) | translate: { count: s.reviews } }} · {{ commentsKey(s.with_comments) | translate: { count: s.with_comments } }}
+        </p>
+        @if (s.templates.length > 1) {
+          <div class="et-picker">
+            <span class="et-picker__label" id="et-template-label">{{ 'course_detail.evaluation_template' | translate }}</span>
+            <p-dropdown ariaLabelledBy="et-template-label" [options]="s.templates" optionLabel="name" optionValue="id"
+              [ngModel]="templateId()" (ngModelChange)="pickTemplate($event)" appendTo="body" styleClass="et-picker__dropdown" />
+          </div>
+        }
+      </div>
+
+      @if (results(); as r) {
+        <div class="et-tiles">
+          @if (scoreValue(); as sv) {
+            <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+              [value]="sv" [suffix]="scoreSuffix()" valueDir="ltr" [danger]="r.summary.passed === false"
+              [label]="'evaluations.results.average_score' | translate" />
+          } @else {
+            <nas-stat-tile icon="assets/icons/figma/star-fill-amber.svg" [iconSize]="16" tone="amber"
+              [value]="'evaluations.result.unscored' | translate" [label]="'evaluations.results.average_score' | translate" />
+          }
+          <nas-stat-tile icon="assets/icons/figma/check-circle-20.svg" tone="teal"
+            [value]="r.summary.learners_scored + '/' + r.summary.learners_eligible" valueDir="ltr"
+            [label]="'evaluations.results.learners_scored' | translate" />
+          <nas-stat-tile icon="assets/icons/figma/seal-question-20.svg" tone="sky"
+            [value]="'' + r.template.questions" [label]="'evaluations.results.questions' | translate" />
+        </div>
+
+        <section class="et-card" aria-labelledby="et-card-title">
+          <div class="et-card__head">
+            <img src="assets/icons/figma/books-teal.svg" width="24" height="24" alt="" />
+            <h2 class="et-card__title" id="et-card-title"><bdi>{{ r.template.name }}</bdi></h2>
+          </div>
+          <dl class="et-facts">
+            <div>
+              <dt>{{ 'evaluations.results.course_assignment' | translate }}</dt>
+              <dd><bdi>{{ r.template.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></dd>
+            </div>
+            <div>
+              <dt>{{ 'evaluations.results.cohort_assignment' | translate }}</dt>
+              <dd><bdi>{{ r.template.cohort?.name ?? ('evaluations.builder.all_cohorts' | translate) }}</bdi></dd>
+            </div>
+            <div>
+              <dt>{{ 'course_detail.question_type' | translate }}</dt>
+              <dd>{{ questionTypeKey() ? (questionTypeKey()! | translate) : '-' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <div class="et-questions">
+          @for (q of r.questions; track q.id; let i = $index) {
+            <ev-question-card [index]="i + 1" [question]="q" [highlight]="mode(q)" />
+          } @empty {
+            <p class="et-empty">{{ 'evaluations.results.no_questions' | translate }}</p>
+          }
+        </div>
+      } @else {
+        <div class="et-message">
+          <p class="et-message__title">{{ 'course_detail.no_evaluation_template' | translate }}</p>
+          <p>{{ 'course_detail.no_evaluation_template_hint' | translate }}</p>
+          <a class="et-btn" routerLink="/admin/evaluations/new">{{ 'course_detail.create_template' | translate }}</a>
+        </div>
+      }
+    }
+  }
+}

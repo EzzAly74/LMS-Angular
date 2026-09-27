@@ -1,0 +1,153 @@
+// Overview tab - Figma 2266:128869: main column + 361 px settings card, 16 px gaps.
+:host { display: block; min-inline-size: 0; }
+
+.ov {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 361px);
+  gap: var(--nas-space-6);
+  align-items: start;
+
+  @media (max-width: 1024px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ov__main { display: flex; flex-direction: column; gap: var(--nas-space-4); min-inline-size: 0; }
+
+.ov__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-4);
+  padding: 21px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-xl);
+  background: var(--nas-color-bg-surface);
+  box-shadow: 0 1px 1px 0 var(--nas-teal-1000-08);
+  min-inline-size: 0;
+}
+
+.ov__title {
+  margin: 0;
+  font-size: var(--nas-size-s);
+  line-height: 24px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+}
+
+.ov__rich {
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-neutral-800);
+  overflow-wrap: anywhere;
+
+  :where(p) { margin: 0 0 var(--nas-space-2); }
+  :where(p:last-child) { margin: 0; }
+}
+
+.ov__muted { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-color-text-muted); }
+
+.ov__small { margin: 0; font-size: var(--nas-size-2xs); line-height: 18px; color: var(--nas-neutral-750); }
+
+.ov__bullets {
+  margin: 0;
+  padding-inline-start: var(--nas-space-5, 20px);
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-neutral-800);
+
+  li + li { margin-block-start: var(--nas-space-1); }
+}
+
+.ov__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--nas-teal-1000);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ov__sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+// ── Learner Evaluations ────────────────────────────────────────────────
+.ov-eval {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-6);
+
+  @media (max-width: 479px) { flex-direction: column; align-items: stretch; }
+}
+
+.ov-eval__score { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+
+.ov-eval__value {
+  margin: 0;
+  font-size: 48px;
+  line-height: 48px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+}
+
+.ov-eval__bars { flex: 1; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; min-inline-size: 0; }
+
+.ov-eval__row { display: flex; align-items: center; gap: var(--nas-space-2); }
+
+.ov-eval__star { inline-size: 10px; text-align: center; }
+
+.ov-eval__track {
+  flex: 1;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--nas-neutral-300);
+  overflow: hidden;
+}
+
+.ov-eval__fill { display: block; block-size: 100%; border-radius: inherit; background: var(--nas-status-green-500); }
+
+.ov-eval__count { inline-size: 24px; text-align: end; }
+
+// ── Course Settings ────────────────────────────────────────────────────
+.ov-settings__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  min-block-size: 24px;
+}
+
+// 48 px, drawn overlapping the 24 px heading line (top -13 px) so the
+// header keeps its height.
+.ov-settings__image {
+  flex-shrink: 0;
+  inline-size: 48px;
+  block-size: 48px;
+  margin-block: -13px -11px;
+  border-radius: var(--nas-radius-md);
+  object-fit: cover;
+}
+
+.ov-settings__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-3);
+  margin: 0;
+  padding-block-start: 13px;
+  border-block-start: 1px solid var(--nas-color-border);
+
+  div { display: flex; flex-direction: column; gap: 2px; }
+  dt { font-size: var(--nas-size-2xs); line-height: 18px; color: var(--nas-neutral-750); }
+  dd {
+    margin: 0;
+    font-size: var(--nas-size-xs);
+    line-height: 21px;
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+  }
+}

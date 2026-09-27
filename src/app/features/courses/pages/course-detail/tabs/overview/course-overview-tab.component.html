@@ -1,0 +1,105 @@
+@let c = course();
+<div class="ov">
+  <div class="ov__main">
+    <section class="ov__card" aria-labelledby="ov-about">
+      <h2 class="ov__title" id="ov-about">{{ 'course_detail.about_this_course' | translate }}</h2>
+      @if (c.description) {
+        <div class="ov__rich" [innerHTML]="c.description"></div>
+      } @else {
+        <p class="ov__muted">{{ 'course_detail.no_description' | translate }}</p>
+      }
+    </section>
+
+    @if (c.what_students_will_learn?.length) {
+      <section class="ov__card" aria-labelledby="ov-learn">
+        <h2 class="ov__title" id="ov-learn">{{ 'course_detail.what_students_will_learn' | translate }}</h2>
+        <ul class="ov__bullets">
+          @for (point of c.what_students_will_learn; track $index) { <li><bdi>{{ point }}</bdi></li> }
+        </ul>
+      </section>
+    }
+
+    @if (c.requirements?.length) {
+      <section class="ov__card" aria-labelledby="ov-req">
+        <h2 class="ov__title" id="ov-req">{{ 'course_detail.requirements' | translate }}</h2>
+        <ul class="ov__bullets">
+          @for (point of c.requirements; track $index) { <li><bdi>{{ point }}</bdi></li> }
+        </ul>
+      </section>
+    }
+
+    @if (canSeeEvaluations()) {
+      <section class="ov__card" aria-labelledby="ov-eval">
+        <h2 class="ov__title" id="ov-eval">{{ 'course_detail.learner_evaluations' | translate }}</h2>
+        @if (evaluation(); as e) {
+          @if (e.reviews > 0) {
+            <div class="ov-eval">
+              <div class="ov-eval__score">
+                <p class="ov-eval__value" dir="ltr">{{ e.average !== null ? e.average.toFixed(1) : '-' }}</p>
+                <p class="ov__small">{{ reviewsKey(e.reviews) | translate: { max: e.scale_max, count: e.reviews } }}</p>
+              </div>
+              <ul class="ov-eval__bars" role="list">
+                @for (b of bars(); track b.value) {
+                  <li class="ov-eval__row">
+                    <span class="ov__small ov-eval__star" dir="ltr">{{ b.value }}</span>
+                    <span class="ov-eval__track" aria-hidden="true"><span class="ov-eval__fill" [style.inline-size.%]="b.pct"></span></span>
+                    <span class="ov__small ov-eval__count" dir="ltr">{{ b.count }}</span>
+                    <span class="ov__sr">{{ 'course_detail.star_row' | translate: { star: b.value, count: b.count } }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <p class="ov__muted">{{ 'course_detail.no_evaluations' | translate }}</p>
+          }
+        } @else if (evaluationFailed()) {
+          <p class="ov__muted" role="alert">
+            {{ 'common.could_not_load' | translate }}
+            <button type="button" class="ov__link" (click)="loadEvaluation()">{{ 'common.retry' | translate }}</button>
+          </p>
+        } @else {
+          <p class="ov__muted" role="status">{{ 'common.loading' | translate }}</p>
+        }
+      </section>
+    }
+  </div>
+
+  <aside class="ov__card ov-settings" aria-labelledby="ov-settings">
+    <div class="ov-settings__head">
+      <h2 class="ov__title" id="ov-settings">{{ 'course_detail.course_settings' | translate }}</h2>
+      @if (c.image) {
+        <img class="ov-settings__image" [src]="c.image" width="48" height="48" alt="" loading="lazy" />
+      }
+    </div>
+    <dl class="ov-settings__list">
+      <div>
+        <dt>{{ 'course_detail.delivery_type' | translate }}</dt>
+        <dd>{{ deliveryLabel() }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'course_detail.level' | translate }}</dt>
+        <dd>{{ levelLabel() }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'course_detail.certificate' | translate }}</dt>
+        <dd>
+          @if (!c.certificate) {
+            {{ 'common.no' | translate }}
+          } @else if (c.certificate_pass_percent) {
+            {{ 'course_detail.certificate_min' | translate: { percent: c.certificate_pass_percent } }}
+          } @else {
+            {{ 'common.yes' | translate }}
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>{{ 'course_detail.created_on' | translate }}</dt>
+        <dd>{{ c.created_at ? (c.created_at | nasDate: locale()) : '-' }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'course_detail.max_learners_per_cohort' | translate }}</dt>
+        <dd>{{ c.max_learners ? (learnersKey(c.max_learners) | translate: { count: c.max_learners }) : '-' }}</dd>
+      </div>
+    </dl>
+  </aside>
+</div>

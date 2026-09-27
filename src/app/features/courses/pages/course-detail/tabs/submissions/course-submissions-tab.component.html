@@ -1,0 +1,121 @@
+@let quiz = isQuiz();
+@let cols = 8;
+<div class="cl-toolbar">
+  <div class="cl-search">
+    <nas-icon name="magnifying-glass" [size]="20" />
+    <label class="cl-sr-only" [for]="'cd-' + kind() + '-search'">{{ 'course_detail.search_submissions' | translate }}</label>
+    <input [id]="'cd-' + kind() + '-search'" type="search" class="cl-search__input"
+      [placeholder]="'course_detail.search_placeholder' | translate"
+      [ngModel]="query().search" (ngModelChange)="onSearch($event)" />
+  </div>
+  <button type="button" class="cl-filter" [class.cl-filter--on]="activeFilters() > 0" aria-haspopup="dialog"
+    (click)="filterOpen.set(true)">
+    <nas-icon name="funnel" [size]="20" />
+    <span>{{ 'common.filter' | translate }}</span>
+    @if (activeFilters() > 0) {
+      <span class="cl-filter__badge" [attr.aria-label]="'course_detail.filters_on' | translate: { count: activeFilters() }">{{ activeFilters() }}</span>
+    }
+  </button>
+</div>
+
+<section class="cl-card" [attr.aria-busy]="state() === 'loading'"
+  [attr.aria-label]="(quiz ? 'course_detail.tab_quizzes' : 'course_detail.tab_assignments') | translate">
+  <div class="cl-scroll" tabindex="0" [attr.aria-label]="(quiz ? 'course_detail.tab_quizzes' : 'course_detail.tab_assignments') | translate">
+    <table class="cl-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'course_detail.learner' | translate }}</th>
+          @if (quiz) {
+            <th scope="col">{{ 'course_detail.cohorts' | translate }}</th>
+            <th scope="col">{{ 'course_detail.instructor' | translate }}</th>
+            <th scope="col">{{ 'course_detail.quiz' | translate }}</th>
+          } @else {
+            <th scope="col">{{ 'course_detail.instructor' | translate }}</th>
+            <th scope="col">{{ 'course_detail.assignment' | translate }}</th>
+            <th scope="col">{{ 'course_detail.cohort' | translate }}</th>
+          }
+          <th scope="col">{{ 'course_detail.submitted' | translate }}</th>
+          <th scope="col">{{ 'course_detail.score' | translate }}</th>
+          @if (quiz) {
+            <th scope="col" class="cl-center">{{ 'course_detail.attempts' | translate }}</th>
+          } @else {
+            <th scope="col">{{ 'course_detail.status' | translate }}</th>
+          }
+          <th scope="col" class="cl-center">{{ 'common.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @switch (state()) {
+          @case ('loading') {
+            <tr><td [attr.colspan]="cols"><p class="cl-state" role="status">{{ 'common.loading' | translate }}</p></td></tr>
+          }
+          @case ('error') {
+            <tr><td [attr.colspan]="cols">
+              <div class="cl-state" role="alert">
+                <p>{{ 'common.could_not_load' | translate }}</p>
+                <button type="button" class="cl-retry" (click)="reload()">{{ 'common.retry' | translate }}</button>
+              </div>
+            </td></tr>
+          }
+          @default {
+            @for (row of rows(); track row.id) {
+              <tr>
+                <td class="cl-strong"><bdi>{{ row.user?.name ?? '-' }}</bdi></td>
+                @if (quiz) {
+                  <td><bdi>{{ row.learner_cohort?.name ?? '-' }}</bdi></td>
+                  <td><bdi>{{ row.instructor_name ?? '-' }}</bdi></td>
+                  <td><bdi>{{ title(row) }}</bdi></td>
+                } @else {
+                  <td><bdi>{{ row.instructor_name ?? '-' }}</bdi></td>
+                  <td><bdi>{{ title(row) }}</bdi></td>
+                  <td><bdi>{{ row.learner_cohort?.name ?? '-' }}</bdi></td>
+                }
+                <td class="cl-small">{{ (row.submitted_at ?? row.created_at) ? ((row.submitted_at ?? row.created_at) | nasDate: locale()) : '-' }}</td>
+                <td>
+                  @if (row.score_percent !== null) {
+                    <span [class]="scoreClass(row)" dir="ltr">{{ row.score_percent }}%</span>
+                    @if (row.passed !== null) {
+                      <span class="cl-sr-only">{{ (row.passed ? 'course_detail.passed' : 'course_detail.failed') | translate }}</span>
+                    }
+                  } @else {
+                    <span aria-hidden="true">-</span>
+                    <span class="cl-sr-only">{{ 'course_detail.not_graded' | translate }}</span>
+                  }
+                </td>
+                @if (quiz) {
+                  <td class="cl-center" dir="ltr">{{ row.attempts ?? 1 }}</td>
+                } @else {
+                  <td>
+                    <nas-status-badge [tone]="row.status === 'graded' ? 'success' : 'warning'">
+                      {{ 'course_detail.submission_status.' + row.status | translate }}
+                    </nas-status-badge>
+                  </td>
+                }
+                <td class="cl-center">
+                  <a class="cl-eye" [routerLink]="detailLink(row)"
+                    [attr.aria-label]="'course_detail.view_submission' | translate: { name: row.user?.name ?? '', item: title(row) }">
+                    <img src="assets/icons/figma/eye.svg" width="20" height="20" alt="" />
+                  </a>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="cols">
+                <p class="cl-state">
+                  {{ (hasQuery() ? 'course_detail.no_results' : (quiz ? 'course_detail.no_quiz_submissions' : 'course_detail.no_assignment_submissions')) | translate }}
+                </p>
+              </td></tr>
+            }
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (state() === 'ready' && total() > perPage) {
+    <div class="cl-pager">
+      <nas-pager [page]="query().page" [total]="total()" [perPage]="perPage" rangeKey="course_detail.submissions_range"
+        (pageChange)="goTo($event)" />
+    </div>
+  }
+</section>
+
+<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />

@@ -1,1087 +1,255 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
+  DestroyRef,
   computed,
+  effect,
   inject,
+  input,
   signal,
+  untracked,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import {
-  FormsModule,
-  ReactiveFormsModule,
-  FormBuilder,
-  Validators,
-} from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
-import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
-import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
 import { forkJoin } from 'rxjs';
-import {
-  NasStatCardComponent,
-  NasTabsComponent,
-  NasTab,
-  NasStatusBadgeComponent,
-  NasProgressComponent,
-  NasAvatarComponent,
-  NasDatepickerComponent,
-  CohortAttendanceDrawerComponent,
-  NasRichTextComponent,
-} from '../../../../shared/nas';
-import type { NasProgressTone } from '../../../../shared/nas/nas-progress/nas-progress.component';
+import { NasTabsComponent, NasTab, NasStatusBadgeComponent } from '../../../../shared/nas';
+import { NasStatTileComponent } from '../../../../shared/nas/nas-stat-tile/nas-stat-tile.component';
 import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
+import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { CoursesApiService } from '../../services/courses-api.service';
 import { CourseDialogComponent } from '../../components/course-dialog/course-dialog.component';
 import { EnumsService } from '../../../../core/services/enums.service';
-import type {
-  CourseDetail,
-  Cohort,
-  CohortPayload,
-  CohortStatus,
-  CourseLearner,
-  CourseModule,
-  ModuleContentType,
-  ModuleLearnerScope,
-  ModulePayload,
-  ModuleUploadResult,
-  CourseType,
-} from '../../../../core/models/course.types';
+import { AuthService } from '../../../../core/services/auth.service';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { pluralKey } from '../../../../core/utils/plural-key';
+import type { CourseDetail, Cohort } from '../../../../core/models/course.types';
 import {
   mapApiCourseDetail,
-  mapEnrollmentToLearner,
   mapApiCohort,
   type ApiCourseRaw,
-  type ApiEnrollmentRaw,
   type ApiCohortRaw,
 } from '../../../../core/utils/course-mapper';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
-import { pickLocalized } from '../../../../core/utils/localized';
+import { CourseOverviewTabComponent } from './tabs/overview/course-overview-tab.component';
+import { CourseCohortsTabComponent } from './tabs/cohorts/course-cohorts-tab.component';
+import { CourseLearnersTabComponent } from './tabs/learners/course-learners-tab.component';
+import { CourseContentTabComponent } from './tabs/content/course-content-tab.component';
+import { CourseSubmissionsTabComponent } from './tabs/submissions/course-submissions-tab.component';
+import { CourseQualificationsTabComponent } from './tabs/qualifications/course-qualifications-tab.component';
+import { CourseEvaluationsTabComponent } from './tabs/evaluations/course-evaluations-tab.component';
 
-export type { CourseDetail, Cohort, CourseLearner };
+export type { CourseDetail, Cohort };
 
-type DetailTab =
+export type DetailTab =
   | 'overview'
   | 'cohort'
   | 'learners'
   | 'content'
-  | 'qualifications';
+  | 'quizzes'
+  | 'assignments'
+  | 'qualifications'
+  | 'evaluations';
 
-/** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
-type ModuleFilter = 'all' | ModuleContentType;
+const TABS: readonly DetailTab[] = ['overview', 'cohort', 'learners', 'content', 'quizzes', 'assignments', 'qualifications', 'evaluations'];
 
+/** The tabs that need a permission beyond view-courses, and which one. */
+const TAB_VIEW_KEY: Partial<Record<DetailTab, string>> = {
+  quizzes: 'view-quizzes',
+  assignments: 'view-assignments',
+  evaluations: 'view-evaluations',
+};
+
+type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
+
+/**
+ * Course Details (D2, Figma 2266:128868): breadcrumb, header, the four stat
+ * tiles, the tab pills and the active tab. Each tab is its own component that
+ * loads its own data (DB-15: this page was a 1,400-line component). The page
+ * keeps the course and its cohorts, which the header and several tabs share.
+ *
+ * The active tab is the `?tab=` query parameter, so a submission's back link
+ * and a browser refresh return to it. Quizzes, Assignments and Evaluations
+ * are listed only for an admin holding their view permission; the server
+ * enforces the same permissions on their endpoints.
+ */
 @Component({
   selector: 'app-course-detail',
   standalone: true,
   imports: [
-    CourseDialogComponent,
-    CommonModule,
     RouterLink,
-    FormsModule,
-    ReactiveFormsModule,
     TranslateModule,
-    DatePipe,
-    DialogModule,
-    DropdownModule,
-    CheckboxModule,
     SkeletonModule,
-    OverlayPanelModule,
-    ConfirmDialogModule,
-    NasStatCardComponent,
     NasTabsComponent,
     NasStatusBadgeComponent,
-    NasProgressComponent,
-    NasAvatarComponent,
-    NasDatepickerComponent,
-    CohortAttendanceDrawerComponent,
-    NasRichTextComponent,
+    NasStatTileComponent,
+    NasDatePipe,
+    CourseDialogComponent,
+    CourseOverviewTabComponent,
+    CourseCohortsTabComponent,
+    CourseLearnersTabComponent,
+    CourseContentTabComponent,
+    CourseSubmissionsTabComponent,
+    CourseQualificationsTabComponent,
+    CourseEvaluationsTabComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-detail.component.html',
   styleUrl: './course-detail.component.scss',
 })
-export class CourseDetailComponent implements OnInit {
+export class CourseDetailComponent {
   private readonly coursesApi = inject(CoursesApiService);
   private readonly enums = inject(EnumsService);
-  private readonly fb = inject(FormBuilder);
-  private readonly route = inject(ActivatedRoute);
-  private readonly toast = inject(MessageService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly t = inject(TranslateService);
-  private readonly confirm = inject(ConfirmationService);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly locale = inject(LocaleService).locale;
+
+  /** Route param and `?tab=`, bound by withComponentInputBinding. */
+  readonly id = input.required<string>();
+  readonly tab = input<string | undefined>();
+
+  readonly courseId = computed(() => {
+    const n = Number(this.id());
+    return Number.isInteger(n) && n > 0 ? n : null;
+  });
+
+  readonly state = signal<LoadState>('loading');
+  readonly course = signal<CourseDetail | null>(null);
+  readonly cohorts = signal<Cohort[]>([]);
+  /** The Content tab's own count once it has loaded, fresher than the course's. */
+  readonly modulesCount = signal<number | null>(null);
+
+  readonly showEdit = signal(false);
+
+  /** Bumped on every locale switch: `instant()` below is not signal-tracked. */
+  private readonly langTick = signal(0);
+
+  readonly visibleTabs = computed<DetailTab[]>(() =>
+    TABS.filter(t => !TAB_VIEW_KEY[t] || this.auth.hasView(TAB_VIEW_KEY[t])),
+  );
+
+  readonly activeTab = computed<DetailTab>(() => {
+    const wanted = this.tab() as DetailTab | undefined;
+    return wanted && this.visibleTabs().includes(wanted) ? wanted : 'overview';
+  });
+
+  readonly tabs = computed<NasTab[]>(() => {
+    this.langTick();
+    const c = this.course();
+    const counts: Record<DetailTab, number | string | null> = {
+      overview: null,
+      cohort: this.cohorts().length,
+      learners: c?.enrolled_count ?? 0,
+      content: this.modulesCount() ?? c?.modules_count ?? 0,
+      quizzes: c?.quiz_submissions_count ?? 0,
+      assignments: c?.assignment_submissions_count ?? 0,
+      qualifications: c?.qualifications?.length ?? 0,
+      evaluations: c?.evaluation_score != null ? c.evaluation_score.toFixed(1) : null,
+    };
+    return this.visibleTabs().map(id => ({ id, label: this.t.instant(`course_detail.tab_${id}`), count: counts[id] }));
+  });
+
+  readonly typeLabel = computed(() => this.enumLabel('course_type', this.course()?.type));
+  readonly statusLabel = computed(() => this.enumLabel('course_status', this.course()?.status));
+
+  /** "4.3", or null when nobody has evaluated the course. */
+  readonly scoreValue = computed(() => {
+    const s = this.course()?.evaluation_score;
+    return s === null || s === undefined ? null : s.toFixed(1);
+  });
+
+  readonly completion = computed(() => Math.max(0, Math.min(100, this.course()?.completion_percent ?? 0)));
 
   constructor() {
-    withLocaleReload(() => {
-      this.langTick.update((v) => v + 1);
+    effect(() => {
       const id = this.courseId();
-      if (id) this.load(id);
+      untracked(() => (id === null ? this.state.set('not-found') : this.load(id)));
+    }, { allowSignalWrites: true });
+
+    withLocaleReload(() => {
+      this.langTick.update(v => v + 1);
+      const id = this.courseId();
+      if (id !== null && this.state() === 'ready') this.load(id, true);
     });
   }
 
-  /** Bumped on every locale switch so `computed()` derivations that call
-   *  `TranslateService.instant()` (which is not signal-tracked) re-evaluate. */
-  langTick = signal(0);
-
-  loading = signal(true);
-  course = signal<CourseDetail | null>(null);
-  courseId = signal<number | null>(null);
-  activeTab = signal<DetailTab>('overview');
-  activeCohort = signal<Cohort | null>(null);
-
-  showCohort = signal(false);
-  cohortEditMode = signal(false);
-  saving = signal(false);
-
-  /* ── Cohort Attendance drawer state ─────────────────────────────────── */
-  /**
-   * The drawer needs the cohort's `course_sections.id` (NOT the legacy
-   * session-as-cohort id). The Cohort mapper exposes it as `section_id`;
-   * we store both ids + the optimistic name so the drawer header shows
-   * something useful while the API request is in flight.
-   */
-  showAttendance = signal(false);
-  attendanceCohortId = signal<number | null>(null);
-  attendanceCohortName = signal<string>('');
-
-  /* ── Edit Course: the D6 modal (components/course-dialog) ─────────── */
-  showEdit = signal(false);
-
-  /**
-   * Course-type dropdown options — driven by the backend `course_type`
-   * enum so labels localize automatically and the option set stays in
-   * sync with the validator on the server.
-   */
-  courseTypeOpts = this.enums.options('course_type');
-  /** Difficulty level — backend `course_level` enum. */
-  courseLevelOpts = this.enums.options('course_level');
-
-  sectionOptions = computed(() =>
-    (this.course()?.sections ?? []).map((s) => ({
-      id: s.id,
-      name: s.name ?? `Section ${s.id}`,
-    })),
-  );
-
-  /** "4.3/5.0", or a dash when no learner has evaluated the course. */
-  evaluationValue = computed(() => {
-    const score = this.course()?.evaluation_score;
-    return score === null || score === undefined ? '-' : `${score.toFixed(1)}/5.0`;
-  });
-
-  /**
-   * Completion percent display. The card always renders a numeric value
-   * — even before any lecture progress is recorded — so the stat column
-   * keeps the visual weight Figma calls for instead of an em-dash.
-   */
-  completionLabel = computed(() => {
-    const p = this.course()?.completion_percent;
-    return `${p ?? 0}%`;
-  });
-
-  /** Localized delivery label — looked up from the `course_type` enum. */
-  deliveryLabel = computed(() => {
-    const code = this.course()?.type;
-    if (!code) return '—';
-    return this.courseTypeOpts().find((o) => o.code === code)?.value ?? '—';
-  });
-
-  /** Localized level label — looked up from the `course_level` enum. */
-  levelLabel = computed(() => {
-    const code = this.course()?.level;
-    if (!code) return '—';
-    return this.courseLevelOpts().find((o) => o.code === code)?.value ?? '—';
-  });
-
-  tabs = computed<NasTab[]>(() => {
-    const c = this.course();
-    // Force re-evaluation when the locale changes so the tab labels
-    // refresh; `t.instant` itself is not signal-tracked.
-    this.langTick();
-    return [
-      { id: 'overview', label: this.t.instant('course_detail.tab_overview') },
-      {
-        id: 'cohort',
-        label: this.t.instant('course_detail.tab_cohort'),
-        count: c?.cohorts?.length ?? c?.cohorts_count ?? 0,
-      },
-      {
-        id: 'learners',
-        label: this.t.instant('course_detail.tab_learners'),
-        count: c?.learners?.length ?? c?.enrolled_count ?? 0,
-      },
-      { id: 'content', label: this.t.instant('course_detail.tab_content') },
-      {
-        id: 'qualifications',
-        label: this.t.instant('course_detail.tab_qualifications'),
-        count: c?.qualifications?.length ?? 0,
-      },
-    ];
-  });
-
-  /**
-   * Cohort dialog form. Bilingual name + capacity + status + dates per
-   * Figma 332:9988 (new) and 332:10708 (edit). All non-name fields are
-   * nullable so admins can defer a final decision until the cohort is
-   * actually scheduled.
-   */
-  cohortForm = this.fb.group({
-    name_en: ['', [Validators.required, Validators.maxLength(255)]],
-    name_ar: ['', [Validators.required, Validators.maxLength(255)]],
-    capacity: [
-      null as number | null,
-      [Validators.min(1), Validators.max(10000)],
-    ],
-    status: [null as number | null],
-    // Planned session count (Figma 332:10708). Defaults from the course,
-    // editable per cohort; once this many sessions are held the cohort
-    // completes (and raising it re-opens an already-completed cohort).
-    number_of_sessions: [
-      null as number | null,
-      [Validators.required, Validators.min(1), Validators.max(1000)],
-    ],
-    start_date: [null as Date | null, Validators.required],
-    end_date: [null as Date | null, Validators.required],
-    // Average session length in hours (Figma 332:9988). Drives the live
-    // attendance-window length for this cohort's sessions.
-    avg_session_time: [
-      null as number | null,
-      [Validators.min(0.25), Validators.max(24)],
-    ],
-  });
-
-  /** Cohort-status dropdown — driven by the backend `cohort_status` enum. */
-  cohortStatusOpts = this.enums.options('cohort_status');
-
-  /**
-   * The only two statuses an admin may pick manually (Figma 332:10708):
-   * `scheduled` and `open_for_enrollment`. `active`/`completed` are
-   * derived from the cohort's dates, and `inactive` is set elsewhere, so
-   * none of those appear in the dialog dropdown.
-   */
-  cohortStatusDropdownOpts = computed(() =>
-    this.cohortStatusOpts().filter(
-      (o) => o.code === 'scheduled' || o.code === 'open_for_enrollment',
-    ),
-  );
-
-  /* ── Content tab — modules state ──────────────────────────────────── */
-  modules = signal<CourseModule[]>([]);
-  modulesLoading = signal(false);
-  /** Active filter chips. Mutating this signal recomputes `filteredModules()`. */
-  moduleFilters = signal<Set<ModuleFilter>>(new Set<ModuleFilter>(['all']));
-  showModule = signal(false);
-  moduleEditMode = signal(false);
-  moduleSaving = signal(false);
-  activeModule = signal<CourseModule | null>(null);
-
-  /** True while a video/document upload is in flight for the module form. */
-  moduleUploading = signal(false);
-  /** Name of the file currently being uploaded (shown in the progress card). */
-  moduleUploadingName = signal<string | null>(null);
-  /** Most recent successful upload (fresh file picked in the dialog). */
-  moduleUpload = signal<ModuleUploadResult | null>(null);
-  /**
-   * View model for the attached-file chip — drives the "File Title.mp4 · 313 MB"
-   * row. Populated from a fresh upload or, on edit, from the persisted
-   * `file_name`/`file_url`. `null` renders the upload dropzone instead.
-   */
-  moduleFileInfo = signal<{
-    name: string;
-    size: number | null;
-    url: string | null;
-  } | null>(null);
-
-  /** Module content-type dropdown — backend `module_content_type` enum. */
-  moduleContentTypeOpts = this.enums.options('module_content_type');
-
-  /** Module learner-scope dropdown — backend `module_learner_scope` enum. */
-  learnerScopeOpts = this.enums.options('module_learner_scope');
-
-  /** Cohort dropdown options for the Specific-Cohort scope. */
-  cohortDropdownOpts = computed(() =>
-    (this.course()?.cohorts ?? []).map((c) => ({
-      id: c.id,
-      name: c.name || `Cohort ${c.id}`,
-    })),
-  );
-
-  /** "Related to session number" options — 1..N from the course's planned sessions. */
-  sessionNumberOptions = computed<number[]>(() => {
-    const n = this.course()?.number_of_sessions ?? 0;
-    const count = n && n > 0 ? n : 12;
-    return Array.from({ length: count }, (_, i) => i + 1);
-  });
-
-  moduleForm = this.fb.group({
-    title_en: ['', Validators.required],
-    title_ar: ['', Validators.required],
-    session_number: [null as number | null, Validators.required],
-    content_type: [null as number | null, Validators.required],
-    learner_scope: [null as number | null, Validators.required],
-    session_id: [null as number | null],
-    duration_minutes: [
-      30 as number | null,
-      [Validators.required, Validators.min(0)],
-    ],
-    video: [''],
-    // Rich-text HTML body — used only by the "article" content type.
-    content: [''],
-    instructions_en: [''],
-    instructions_ar: [''],
-    require_completion: [false],
-  });
-
-  /**
-   * Helper for templates that need to compare a form's enum-id value
-   * against a known string code (e.g. "is this module learner_scope ==
-   * 'cohort'?"). Returns null when the enum hasn't loaded yet so callers
-   * can default safely.
-   */
-  enumCode(
-    name: Parameters<EnumsService['codeForId']>[0],
-    id: number | null | undefined,
-  ): string | null {
-    if (id === null || id === undefined) return null;
-    return this.enums.codeForId(name, id);
-  }
-
-  /** Convenience method — find an option's localized `value` from its `code`. */
-  enumValueFromCode(
-    name: Parameters<EnumsService['options']>[0],
-    code: string | null | undefined,
-  ): string {
-    if (!code) return '';
-    return (
-      this.enums
-        .options(name)()
-        .find((o) => o.code === code)?.value ?? code
-    );
-  }
-
-  /** Filtered list — driven by the chip selection. */
-  filteredModules = computed(() => {
-    const filters = this.moduleFilters();
-    const list = this.modules();
-    if (filters.has('all') || filters.size === 0) return list;
-    return list.filter((m) => filters.has(m.content_type));
-  });
-
-  /** "12 modules · 310 min estimated learner time" header text. */
-  modulesHeader = computed(() => {
-    const list = this.modules();
-    const totalMin = list.reduce(
-      (sum, m) => sum + (m.duration_minutes ?? 0),
-      0,
-    );
-    const count = list.length;
-    const noun = count === 1 ? 'module' : 'modules';
-    return totalMin > 0
-      ? `${count} ${noun} · ${totalMin} min estimated learner time`
-      : `${count} ${noun}`;
-  });
-
-  ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      const id = Number(params.get('id'));
-      if (id) {
-        this.courseId.set(id);
-        this.load(id);
-      }
-    });
-  }
-
-  load(id: number): void {
-    this.loading.set(true);
+  load(id: number, quiet = false): void {
+    if (!quiet) this.state.set('loading');
     forkJoin({
       course: this.coursesApi.getById(id),
-      // Cohorts now live on `course_sections` directly. Pulling them in
-      // the same `forkJoin` as the course + enrollments means the detail
-      // page is a single round-trip on load.
       cohorts: this.coursesApi.listCohorts(id),
-      // Pull every enrollment (online + offline) in a single shot. The
-      // endpoint paginates, but for the detail page we want the full list
-      // so we ask for a generous per_page. Failures don't block the page.
-      enrollments: this.coursesApi.listLearners(id, { per_page: 100 }),
-    }).subscribe({
-      next: ({ course, cohorts, enrollments }) => {
-        const raw = course.result as unknown as ApiCourseRaw;
-        const mapped = mapApiCourseDetail(raw);
-        const cohortRows = Array.isArray(cohorts.result)
-          ? (cohorts.result as ApiCohortRaw[]).map(mapApiCohort)
-          : [];
-        const rawLearners = (enrollments.result?.data ??
-          []) as ApiEnrollmentRaw[];
-        const learners = rawLearners.map(mapEnrollmentToLearner);
-        this.course.set({
-          ...mapped,
-          cohorts: cohortRows,
-          cohorts_count: cohortRows.length || mapped.cohorts_count || 0,
-          learners,
-          // Prefer the actual list length when the server returned rows,
-          // otherwise fall back to the scalar count from the detail resource.
-          enrolled_count: learners.length || mapped.enrolled_count || 0,
-        });
-        this.loading.set(false);
-        this.loadModules(id);
-      },
-      error: () => this.loading.set(false),
-    });
-  }
-
-  setTab(t: string): void {
-    this.activeTab.set(t as DetailTab);
-    if (t === 'content') {
-      const id = this.courseId();
-      if (id && !this.modules().length) this.loadModules(id);
-    }
-  }
-
-  /* ── Content tab — modules CRUD ───────────────────────────────────── */
-  loadModules(courseId: number): void {
-    this.modulesLoading.set(true);
-    this.coursesApi.listModules(courseId).subscribe({
-      next: (res) => {
-        this.modules.set(Array.isArray(res.result) ? res.result : []);
-        this.modulesLoading.set(false);
-      },
-      error: () => this.modulesLoading.set(false),
-    });
-  }
-
-  /** Toggle a filter chip. `all` is mutually exclusive with the type chips. */
-  toggleModuleFilter(filter: ModuleFilter): void {
-    const current = new Set(this.moduleFilters());
-    if (filter === 'all') {
-      this.moduleFilters.set(new Set<ModuleFilter>(['all']));
-      return;
-    }
-    current.delete('all');
-    current.has(filter) ? current.delete(filter) : current.add(filter);
-    if (current.size === 0) current.add('all');
-    this.moduleFilters.set(current);
-  }
-
-  isFilterActive(filter: ModuleFilter): boolean {
-    return this.moduleFilters().has(filter);
-  }
-
-  /** Module title in current locale, defensive against bilingual JSON. */
-  moduleTitle(m: CourseModule, locale: 'en' | 'ar' = 'en'): string {
-    return pickLocalized(m.title, locale, 'Untitled');
-  }
-
-  /** Pretty duration: minutes < 60 → "30 min", otherwise → "2 hrs". */
-  moduleDurationLabel(m: CourseModule): string {
-    const min = m.duration_minutes ?? 0;
-    if (!min) return '';
-    if (min % 60 === 0) {
-      const hrs = min / 60;
-      return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'}`;
-    }
-    if (min >= 60) {
-      const hrs = Math.floor(min / 60);
-      const mins = min % 60;
-      return `${hrs}h ${mins}m`;
-    }
-    return `${min} min`;
-  }
-
-  /** Tone for the content-type chip on the row. */
-  moduleChipTone(t: ModuleContentType): 'teal' | 'success' | 'sky' | 'neutral' {
-    switch (t) {
-      case 'video':
-        return 'teal';
-      case 'article':
-        return 'success';
-      case 'link':
-        return 'sky';
-      case 'document':
-        return 'neutral';
-    }
-  }
-
-  openAddModule(): void {
-    this.moduleEditMode.set(false);
-    this.activeModule.set(null);
-    this.moduleUpload.set(null);
-    this.moduleFileInfo.set(null);
-    this.moduleUploading.set(false);
-    // Defaults map to the canonical first option per Figma — translate
-    // the codes into enum ids the dropdowns are bound to. Returns null
-    // if the enum hasn't loaded yet; the user can still pick.
-    this.moduleForm.reset({
-      title_en: '',
-      title_ar: '',
-      session_number: null,
-      content_type: this.enums.idForCode('module_content_type', 'video'),
-      learner_scope: this.enums.idForCode('module_learner_scope', 'all'),
-      session_id: null,
-      duration_minutes: 30,
-      video: '',
-      content: '',
-      instructions_en: '',
-      instructions_ar: '',
-      require_completion: false,
-    });
-    this.showModule.set(true);
-  }
-
-  openEditModule(m: CourseModule): void {
-    this.moduleEditMode.set(true);
-    this.activeModule.set(m);
-    this.moduleUpload.set(null);
-    this.moduleUploading.set(false);
-    // Re-hydrate the attached-file chip for uploaded video/document modules so
-    // the editor shows the existing file (and a way to replace it) instead of
-    // an empty dropzone.
-    this.moduleFileInfo.set(
-      m.type === 'file' && m.video
-        ? { name: m.file_name || m.video, size: null, url: m.file_url ?? null }
-        : null,
-    );
-    this.moduleForm.reset({
-      title_en: pickLocalized(m.title, 'en'),
-      title_ar: pickLocalized(m.title, 'ar'),
-      session_number: m.session_number ?? null,
-      content_type: this.enums.idForCode('module_content_type', m.content_type),
-      learner_scope: this.enums.idForCode(
-        'module_learner_scope',
-        m.learner_scope,
-      ),
-      session_id: m.session_id ?? null,
-      duration_minutes: m.duration_minutes ?? 30,
-      video: m.video ?? '',
-      content: m.content ?? '',
-      instructions_en: pickLocalized(m.instructions, 'en'),
-      instructions_ar: pickLocalized(m.instructions, 'ar'),
-      require_completion: m.require_completion,
-    });
-    this.showModule.set(true);
-  }
-
-  /* ── Content-type aware helpers (drive the conditional file/URL field) ─── */
-
-  /** `true` when the chosen content type stores an uploaded file (video/document). */
-  moduleIsFileType(): boolean {
-    const code = this.enumCode(
-      'module_content_type',
-      this.moduleForm.value.content_type,
-    );
-    return code === 'video' || code === 'document';
-  }
-
-  moduleIsVideo(): boolean {
-    return (
-      this.enumCode(
-        'module_content_type',
-        this.moduleForm.value.content_type,
-      ) === 'video'
-    );
-  }
-
-  moduleIsLink(): boolean {
-    return (
-      this.enumCode(
-        'module_content_type',
-        this.moduleForm.value.content_type,
-      ) === 'link'
-    );
-  }
-
-  moduleIsArticle(): boolean {
-    return (
-      this.enumCode(
-        'module_content_type',
-        this.moduleForm.value.content_type,
-      ) === 'article'
-    );
-  }
-
-  /** Switching content type clears any previously attached file / URL / body. */
-  onModuleContentTypeChange(): void {
-    this.moduleUpload.set(null);
-    this.moduleFileInfo.set(null);
-    this.moduleForm.patchValue({ video: '', content: '' });
-    this.moduleForm.controls.video.setErrors(null);
-    this.moduleForm.controls.content.setErrors(null);
-  }
-
-  /** Upload the picked file immediately, then keep its storage path on the form. */
-  onModuleFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
-    input.value = '';
-    if (!file) return;
-
-    const id = this.courseId();
-    if (!id) return;
-
-    this.moduleUploadingName.set(file.name);
-    this.moduleUploading.set(true);
-    this.coursesApi.uploadModuleFile(id, file).subscribe({
-      next: (res) => {
-        const r = res.result;
-        if (r) {
-          this.moduleUpload.set(r);
-          this.moduleFileInfo.set({ name: r.name, size: r.size, url: r.url });
-          this.moduleForm.patchValue({ video: r.path });
-          this.moduleForm.controls.video.setErrors(null);
-        }
-        this.moduleUploading.set(false);
-        this.moduleUploadingName.set(null);
-      },
-      error: () => {
-        this.moduleUploading.set(false);
-        this.moduleUploadingName.set(null);
-      },
-    });
-  }
-
-  clearModuleFile(): void {
-    this.moduleUpload.set(null);
-    this.moduleFileInfo.set(null);
-    this.moduleForm.patchValue({ video: '' });
-  }
-
-  /** Pretty file size from raw bytes for the attached-file chip. */
-  fileSizeLabel(bytes: number): string {
-    const kb = bytes / 1024;
-    if (kb < 1024) return `${Math.round(kb)} KB`;
-    return `${(kb / 1024).toFixed(1)} MB`;
-  }
-
-  /**
-   * Manual stepper for the "Approximate Duration" input. We render the input
-   * as a plain `<input type="number">` so the project-wide rule that hides
-   * the native spinners still applies, then drive these chevron buttons from
-   * the reactive form. Clamped to the same range as the field's validators.
-   */
-  adjustDuration(delta: number): void {
-    const current = Number(this.moduleForm.value.duration_minutes ?? 0);
-    const next = Math.max(0, Math.min(1000, current + delta));
-    this.moduleForm.patchValue({ duration_minutes: next });
-  }
-
-  /** True when the rich-text editor has no meaningful text content. */
-  private isRichTextEmpty(html: string): boolean {
-    const text = html
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    return text.length === 0;
-  }
-
-  submitModule(): void {
-    if (this.moduleUploading()) return;
-    if (this.moduleForm.invalid) {
-      this.moduleForm.markAllAsTouched();
-      return;
-    }
-    const id = this.courseId();
-    if (!id) return;
-
-    const v = this.moduleForm.getRawValue();
-    // Translate the numeric enum ids back to their string codes — both
-    // because the backend storage column is a varchar and because the
-    // type-payload (`type: 'file' | 'url'`) is derived from the code.
-    const contentTypeCode = this.enums.codeForId(
-      'module_content_type',
-      v.content_type ?? null,
-    ) as ModuleContentType | null;
-    const learnerScopeCode = this.enums.codeForId(
-      'module_learner_scope',
-      v.learner_scope ?? null,
-    ) as ModuleLearnerScope | null;
-    if (!contentTypeCode || !learnerScopeCode) return;
-
-    // Video/Document store an uploaded file (`video` = storage path, `type` =
-    // file); External Link stores a URL in `video`; Article stores rich-text
-    // HTML in the dedicated `content` field (`video` stays empty).
-    const isFile =
-      contentTypeCode === 'video' || contentTypeCode === 'document';
-    const isArticle = contentTypeCode === 'article';
-    const videoValue = (v.video ?? '').trim();
-    const contentValue = (v.content ?? '').trim();
-
-    const contentMissing = isArticle
-      ? this.isRichTextEmpty(contentValue)
-      : !videoValue;
-    if (contentMissing) {
-      // Flag the field the admin actually edits for this content type.
-      this.moduleForm.controls[isArticle ? 'content' : 'video'].setErrors({
-        required: true,
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ course, cohorts }) => {
+          this.course.set(mapApiCourseDetail(course.result as unknown as ApiCourseRaw));
+          this.cohorts.set(Array.isArray(cohorts.result) ? (cohorts.result as unknown as ApiCohortRaw[]).map(mapApiCohort) : []);
+          this.state.set('ready');
+        },
+        error: (err: unknown) => {
+          if (quiet) return;
+          this.state.set(err instanceof HttpErrorResponse && err.status === 404 ? 'not-found' : 'error');
+        },
       });
-      this.moduleForm.markAllAsTouched();
-      return;
-    }
-
-    const body: ModulePayload = {
-      title: {
-        en: (v.title_en ?? '').trim(),
-        ar: (v.title_ar ?? '').trim(),
-      },
-      instructions:
-        v.instructions_en || v.instructions_ar
-          ? {
-              en: (v.instructions_en ?? '').trim(),
-              ar: (v.instructions_ar ?? '').trim(),
-            }
-          : null,
-      content_type: contentTypeCode,
-      learner_scope: learnerScopeCode,
-      session_number: v.session_number ?? null,
-      session_id: learnerScopeCode === 'cohort' ? (v.session_id ?? null) : null,
-      duration_minutes: v.duration_minutes ?? null,
-      type: isArticle ? 'article' : isFile ? 'file' : 'url',
-      video: isArticle ? null : videoValue,
-      content: isArticle ? contentValue : null,
-      file_name: isFile
-        ? (this.moduleUpload()?.name ?? this.activeModule()?.file_name ?? null)
-        : null,
-      require_completion: !!v.require_completion,
-    };
-
-    this.moduleSaving.set(true);
-    const editing = this.moduleEditMode() && this.activeModule();
-    const req$ = editing
-      ? this.coursesApi.updateModule(id, this.activeModule()!.id, body)
-      : this.coursesApi.createModule(id, body);
-
-    req$.subscribe({
-      next: () => {
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant(
-            editing
-              ? 'course_detail_toasts.module_updated'
-              : 'course_detail_toasts.module_added',
-          ),
-        });
-        this.moduleSaving.set(false);
-        this.showModule.set(false);
-        this.loadModules(id);
-      },
-      error: () => this.moduleSaving.set(false),
-    });
   }
 
-  confirmDeleteModule(m: CourseModule, overlay: OverlayPanel): void {
-    overlay.hide();
+  retry(): void {
     const id = this.courseId();
-    if (!id) return;
-    this.confirm.confirm({
-      message: this.t.instant('course_detail_toasts.module_delete_message', {
-        name: this.moduleTitle(m),
-      }),
-      header: this.t.instant('course_detail_toasts.module_delete_title'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.coursesApi.deleteModule(id, m.id).subscribe({
-          next: () => {
-            this.toast.add({
-              severity: 'success',
-              detail: this.t.instant('course_detail_toasts.module_deleted'),
-            });
-            this.loadModules(id);
-          },
-        });
-      },
+    if (id !== null) this.load(id);
+  }
+
+  setTab(id: string): void {
+    void this.router.navigate([], {
+      queryParams: { tab: id === 'overview' ? null : id },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
-  /** Open the row's overflow menu and remember which module triggered it. */
-  openModuleMenu(ev: Event, m: CourseModule, overlay: OverlayPanel): void {
-    this.activeModule.set(m);
-    overlay.toggle(ev);
-  }
-
-  /** "Cohort A · 30 min" subline shown under each module title in tight rows. */
-  moduleSubline(m: CourseModule): string {
-    const parts: string[] = [];
-    const dur = this.moduleDurationLabel(m);
-    if (dur) parts.push(dur);
-    if (m.learner_scope === 'cohort' && m.session_id) {
-      const cohort = (this.course()?.cohorts ?? []).find(
-        (c) => c.id === m.session_id,
-      );
-      if (cohort?.name) parts.push(cohort.name);
-    }
-    return parts.join(' · ');
-  }
-
-  /* ── Edit Course dialog ────────────────────────────────────────────── */
-  openEditCourse(): void {
-    if (this.course()) this.showEdit.set(true);
+  /** A child tab changed data the header or other tabs show (cohorts, enrolment counts). */
+  refresh(): void {
+    const id = this.courseId();
+    if (id !== null) this.load(id, true);
   }
 
   onCourseSaved(): void {
-    const id = this.courseId();
-    if (id) this.load(id);
+    this.refresh();
   }
 
-  openAddCohort(): void {
-    this.cohortEditMode.set(false);
-    this.activeCohort.set(null);
-    this.cohortForm.reset({
-      name_en: '',
-      name_ar: '',
-      capacity: 30,
-      // Default to the canonical "Scheduled" choice so the helper hint
-      // shows immediately, matching the Figma "New Cohort" dialog.
-      status: this.enums.idForCode('cohort_status', 'scheduled'),
-      // Inherit the course's planned session count as the editable default.
-      number_of_sessions: this.course()?.number_of_sessions ?? null,
-      start_date: null,
-      end_date: null,
-      avg_session_time: null,
-    });
-    this.showCohort.set(true);
+  learnersActiveKey(): string {
+    return pluralKey('course_detail.n_active', this.course()?.in_progress_count ?? 0, this.locale());
   }
 
-  openEditCohort(cohort: Cohort, overlay: OverlayPanel): void {
-    overlay.hide();
-    this.cohortEditMode.set(true);
-    this.activeCohort.set(cohort);
-    this.cohortForm.reset({
-      // Prefer the dedicated translations from the resource. Fall back
-      // to the localized `name` if the backend hasn't shipped the pair
-      // yet (older cohorts created before this migration).
-      name_en: cohort.name_en ?? cohort.name ?? '',
-      name_ar: cohort.name_ar ?? cohort.name ?? '',
-      capacity: cohort.capacity ?? null,
-      // The dropdown only offers the two manual choices. Map the cohort's
-      // effective status back onto one of them: `open_for_enrollment`
-      // stays as-is, everything else (scheduled / active / completed)
-      // falls back to `scheduled`.
-      status: this.enums.idForCode(
-        'cohort_status',
-        cohort.status === 'open_for_enrollment'
-          ? 'open_for_enrollment'
-          : 'scheduled',
-      ),
-      number_of_sessions:
-        cohort.number_of_sessions ?? this.course()?.number_of_sessions ?? null,
-      start_date: cohort.start_date ? new Date(cohort.start_date) : null,
-      end_date: cohort.end_date ? new Date(cohort.end_date) : null,
-      avg_session_time: cohort.avg_session_time ?? null,
-    });
-    this.showCohort.set(true);
+  reviewsKey(): string {
+    return pluralKey('course_detail.evaluation_reviews', this.course()?.evaluation_submissions ?? 0, this.locale());
   }
 
-  submitCohort(): void {
-    if (this.cohortForm.invalid) {
-      this.cohortForm.markAllAsTouched();
-      return;
-    }
-    const id = this.courseId();
-    if (!id) return;
-
-    this.saving.set(true);
-    const v = this.cohortForm.getRawValue();
-    // Translate enum id back to its string code. Cohorts are stored with
-    // a string status column, so the API expects the canonical code.
-    const statusCode = this.enums.codeForId(
-      'cohort_status',
-      v.status ?? null,
-    ) as CohortStatus | null;
-    const body: CohortPayload = {
-      name: {
-        en: (v.name_en ?? '').trim(),
-        ar: (v.name_ar ?? '').trim(),
-      },
-      start_date: v.start_date ? this.toIso(v.start_date) : null,
-      end_date: v.end_date ? this.toIso(v.end_date) : null,
-      capacity: v.capacity ?? null,
-      status: statusCode ?? null,
-      number_of_sessions: v.number_of_sessions ?? null,
-      avg_session_time: v.avg_session_time ?? null,
-    };
-
-    const editing = this.cohortEditMode() && this.activeCohort();
-    const req = editing
-      ? this.coursesApi.updateCohort(id, this.activeCohort()!.id, body)
-      : this.coursesApi.createCohort(id, body);
-
-    req.subscribe({
-      next: () => {
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant(
-            editing
-              ? 'course_detail_toasts.cohort_updated'
-              : 'course_detail_toasts.cohort_created',
-          ),
-        });
-        this.saving.set(false);
-        this.showCohort.set(false);
-        this.load(id);
-      },
-      error: () => this.saving.set(false),
-    });
+  typeTone(s?: string): NasStatusTone {
+    return s === 'hybrid' ? 'success' : s === 'online' ? 'teal' : s === 'external_link' ? 'sky' : 'neutral';
   }
 
-  /**
-   * Stepper for the Capacity number field. Mirrors `adjustMaxLearners` on
-   * the Edit Course dialog so admins get the same up/down chevron UX in
-   * both places without dragging in PrimeNG's full p-inputNumber widget.
-   */
-  adjustCohortCapacity(delta: number): void {
-    const current = Number(this.cohortForm.value.capacity ?? 0);
-    const next = Math.max(1, Math.min(10000, current + delta));
-    this.cohortForm.patchValue({ capacity: next });
-  }
-
-  /** Stepper for the cohort "Number of Sessions" field (Figma 332:10708). */
-  adjustCohortSessions(delta: number): void {
-    const current = Number(this.cohortForm.value.number_of_sessions ?? 0);
-    const next = Math.max(1, Math.min(1000, current + delta));
-    this.cohortForm.patchValue({ number_of_sessions: next });
-  }
-
-  deleteCohort(cohort: Cohort, overlay: OverlayPanel): void {
-    overlay.hide();
-    const id = this.courseId();
-    if (!id) return;
-    this.coursesApi.deleteCohort(id, cohort.id).subscribe({
-      next: () => {
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant('course_detail_toasts.cohort_deleted'),
-        });
-        this.load(id);
-      },
-    });
-  }
-
-  openCohortMenu(ev: Event, cohort: Cohort, overlay: OverlayPanel): void {
-    this.activeCohort.set(cohort);
-    overlay.toggle(ev);
-  }
-
-  /**
-   * Open the right-edge "Attendance Record" drawer for the given cohort.
-   * Cohort.id is the same as the `course_sections.id` the attendance
-   * endpoint expects, so no extra lookup is needed.
-   */
-  openCohortAttendance(cohort: Cohort, overlay: OverlayPanel): void {
-    overlay.hide();
-    this.attendanceCohortId.set(cohort.id);
-    this.attendanceCohortName.set(cohort.name || '');
-    this.showAttendance.set(true);
-  }
-
-  private toIso(d: Date): string {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
-      .toISOString()
-      .slice(0, 10);
-  }
-
-  statusTone(s: string): 'success' | 'warning' | 'info' | 'danger' | 'neutral' {
+  statusTone(s?: string): NasStatusTone {
     switch (s) {
-      case 'completed':
       case 'active':
+      case 'completed':
         return 'success';
       case 'pending':
-      case 'in_progress':
         return 'warning';
       case 'upcoming':
         return 'info';
       case 'inactive':
-      case 'not_started':
         return 'danger';
       default:
         return 'neutral';
     }
   }
 
-  /**
-   * Friendly label for the learner status pill — driven by the
-   * `enrollment_status` backend enum so the wording stays consistent
-   * with the rest of the admin UI and re-localizes on Arabic.
-   */
-  learnerStatusLabel(s: CourseLearner['status']): string {
-    return this.enumValueFromCode('enrollment_status', s);
-  }
-
-  /**
-   * Progress-bar tone — pixel-matched to Figma 321:6791:
-   *   - 100%        → success (#0fb86a, bright green)
-   *   - 50-99%      → info (#496e91, navy "operational-2")
-   *   - 1-49% and 0%→ danger (#f14437, red)
-   *
-   * The percentage text inherits the same tone via the `tintValue` flag
-   * passed to `<nas-progress>` so the colour pairing in the Figma mock
-   * stays consistent for the bar and the trailing label.
-   */
-  learnerProgressTone(p: number): NasProgressTone {
-    if (p >= 100) return 'success';
-    if (p >= 50) return 'info';
-    return 'danger';
-  }
-
-  typeTone(s?: string): 'teal' | 'neutral' | 'success' | 'sky' {
-    return s === 'hybrid'
-      ? 'success'
-      : s === 'online'
-        ? 'teal'
-        : s === 'external_link'
-          ? 'sky'
-          : 'neutral';
-  }
-
-  /**
-   * Map a stored cohort status to its Figma chip label. `scheduled`
-   * displays as "Up Coming" whenever the start date is in the future
-   * (matches the cohort table mock in node 332:9988); anything else
-   * shows the localized label sourced from the `cohort_status` enum.
-   */
-  cohortStatusLabel(cohort: Cohort): string {
-    const s = cohort.status;
-    if (s === 'scheduled') {
-      const start = cohort.start_date ? new Date(cohort.start_date) : null;
-      const isFuture =
-        start instanceof Date && !isNaN(start.getTime()) && start > new Date();
-      if (isFuture) return this.t.instant('course_detail.up_coming');
-    }
-    return this.enumValueFromCode('cohort_status', s);
-  }
-
-  /**
-   * Resolved capacity for the "Enrolled / Capacity" cell.
-   *
-   * The Figma cohort table always renders the column as `N / M` (e.g.
-   * "8 / 30"), never a bare enrolled count. When a cohort hasn't had its
-   * own `capacity` set yet — common for cohorts created before the
-   * additive migration landed — we fall back to the course's per-cohort
-   * cap (`max_learners`) so the cell stays informative without faking
-   * data. The chain is:
-   *
-   *   1. `cohort.capacity`     (explicit per-cohort override)
-   *   2. `course.max_learners` (per-course default)
-   *   3. `0`                   (last resort — keeps the slash format)
-   *
-   * Everything in this chain comes straight from the API; nothing here
-   * is hard-coded.
-   */
-  cohortCapacity(cohort: Cohort): number {
-    return cohort.capacity ?? this.course()?.max_learners ?? 0;
-  }
-
-  /** Tone for the cohort status chip — derived the same way as the label. */
-  cohortStatusTone(cohort: Cohort): NasStatusTone {
-    const s = cohort.status;
-    if (s === 'completed' || s === 'active') return 'success';
-    if (s === 'open_for_enrollment') return 'teal';
-    if (s === 'inactive') return 'danger';
-    // scheduled — Up Coming visually = info, plain Scheduled = neutral
-    const start = cohort.start_date ? new Date(cohort.start_date) : null;
-    const isFuture =
-      start instanceof Date && !isNaN(start.getTime()) && start > new Date();
-    return isFuture ? 'info' : 'neutral';
+  private enumLabel(name: 'course_type' | 'course_status', code: string | undefined): string {
+    if (!code) return '';
+    return this.enums.options(name)().find(o => o.code === code)?.value ?? code;
   }
 }

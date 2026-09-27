@@ -1,0 +1,63 @@
+<p-dialog #clDlg
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="restoreFocus()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="cld"
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }">
+  <ng-template pTemplate="headless">
+    <div class="cld__card">
+      <header class="cld__head">
+        <h2 class="cld__title" [id]="clDlg.ariaLabelledBy"><bdi>{{ cohortName() }}</bdi></h2>
+        <button type="button" class="cld__close" (click)="visible.set(false)" [attr.aria-label]="'common.close' | translate">
+          <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
+        </button>
+      </header>
+
+      <div class="cld__body">
+        <label class="cld__label" for="cld-search">{{ 'course_detail.tab_learners' | translate }}</label>
+        <div class="cld__search">
+          <nas-icon name="magnifying-glass" [size]="20" />
+          <input id="cld-search" type="search" class="cld__search-input" [placeholder]="'common.quick_search' | translate"
+            [ngModel]="search()" (ngModelChange)="onSearch($event)" />
+        </div>
+
+        <div class="cld__list" tabindex="0" [attr.aria-label]="'course_detail.cohort_learners' | translate: { name: cohortName() }"
+          [attr.aria-busy]="state() === 'loading'">
+          @switch (state()) {
+            @case ('loading') { <p class="cld__state" role="status">{{ 'common.loading' | translate }}</p> }
+            @case ('error') {
+              <div class="cld__state" role="alert">
+                <p>{{ 'common.could_not_load' | translate }}</p>
+                <button type="button" class="cld__more" (click)="retry()">{{ 'common.retry' | translate }}</button>
+              </div>
+            }
+            @default {
+              @if (rows().length) {
+                <ul role="list" class="cld__rows">
+                  @for (r of rows(); track r.id) { <li class="cld__row"><bdi>{{ r.user?.name ?? '-' }}</bdi></li> }
+                </ul>
+                @if (rows().length < total()) {
+                  <button type="button" class="cld__more" (click)="more()">{{ 'course_detail.show_more' | translate }}</button>
+                }
+              } @else {
+                <p class="cld__state">{{ (search() ? 'course_detail.no_results' : 'course_detail.cohort_empty') | translate }}</p>
+              }
+            }
+          }
+        </div>
+      </div>
+
+      <footer class="cld__foot">
+        <button type="button" class="cld__done" (click)="visible.set(false)">
+          <img src="assets/icons/figma/check-circle-20.svg" width="20" height="20" alt="" class="cld__done-icon" />
+          {{ 'course_detail.done' | translate }}
+        </button>
+      </footer>
+    </div>
+  </ng-template>
+</p-dialog>

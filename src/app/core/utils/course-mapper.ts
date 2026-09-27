@@ -59,6 +59,11 @@ export interface ApiCourseRaw {
   completion_percent?: number;
   evaluation_score?: number | null;
   evaluation_submissions?: number;
+  /** Course Details header and tab counts (D2). */
+  in_progress_count?: number;
+  modules_count?: number;
+  quiz_submissions_count?: number;
+  assignment_submissions_count?: number;
   status?: CourseStatus;
   [key: string]: unknown;
 }
@@ -191,6 +196,10 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
     completion_percent:       raw.completion_percent,
     evaluation_score:         raw.evaluation_score ?? null,
     evaluation_submissions:   raw.evaluation_submissions ?? 0,
+    in_progress_count:        raw.in_progress_count ?? 0,
+    modules_count:            raw.modules_count ?? 0,
+    quiz_submissions_count:   raw.quiz_submissions_count ?? 0,
+    assignment_submissions_count: raw.assignment_submissions_count ?? 0,
     image:                    raw.image ?? null,
     cohorts:                  [],
   };

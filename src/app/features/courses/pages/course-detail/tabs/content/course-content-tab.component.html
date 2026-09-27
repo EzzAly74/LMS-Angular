@@ -1,0 +1,288 @@
+<section class="modules-tab">
+
+  <!-- Header: count line + Module CTA -->
+  <header class="modules-tab__head">
+    <span class="modules-tab__count">{{ modulesHeader() }}</span>
+    <button type="button" class="nas-modules-cta" (click)="openAddModule()">
+      <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_module' | translate }}
+    </button>
+  </header>
+
+  <!-- Filter chips — driven by the `module_content_type` enum so
+       the chip list and labels track whatever the backend ships. -->
+  <div class="modules-filters">
+    <label class="modules-filter">
+      <p-checkbox [binary]="true"
+                  [ngModel]="isFilterActive('all')"
+                  (onChange)="toggleModuleFilter('all')" />
+      <span>{{ 'common.all' | translate }}</span>
+    </label>
+    @for (opt of moduleContentTypeOpts(); track opt.id) {
+      <label class="modules-filter">
+        <p-checkbox [binary]="true"
+                    [ngModel]="isFilterActive($any(opt.code))"
+                    (onChange)="toggleModuleFilter($any(opt.code))" />
+        <span>{{ opt.value }}</span>
+      </label>
+    }
+  </div>
+
+  <!-- List -->
+  @if (modulesLoading()) {
+    <div class="modules-list">
+      @for (s of [1,2,3,4,5]; track s) {
+        <article class="module-row module-row--skeleton">
+          <span class="module-row__index"></span>
+          <div class="module-row__body">
+            <div class="skeleton-line skeleton-line--lg"></div>
+            <div class="skeleton-line skeleton-line--sm"></div>
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (!filteredModules().length) {
+    <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
+      <i class="pi pi-folder-open"></i>
+      <h3>{{ 'course_detail.no_modules' | translate }}</h3>
+      <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
+    </article>
+  } @else {
+    <div class="modules-list">
+      @for (m of filteredModules(); track m.id; let idx = $index) {
+        <article class="module-row">
+          <span class="module-row__index">{{ idx + 1 }}</span>
+          <div class="module-row__body">
+            <div class="module-row__title-line">
+              <span class="module-row__title">{{ moduleTitle(m) }}</span>
+              <nas-status-badge [tone]="moduleChipTone(m.content_type)">
+                {{ enumValueFromCode('module_content_type', m.content_type) }}
+              </nas-status-badge>
+            </div>
+            <span class="module-row__sub">{{ moduleSubline(m) }}</span>
+          </div>
+          <div class="module-row__actions">
+            <button type="button" class="row-action-btn" [title]="'common.edit' | translate"
+                    (click)="openEditModule(m)">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button type="button" class="row-action-btn" [title]="'common.more' | translate"
+                    (click)="openModuleMenu($event, m, moduleMenu)">
+              <i class="pi pi-ellipsis-h"></i>
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>
+
+<p-confirmDialog />
+
+<!-- ── Module row menu (Edit / Delete) ─────────────────────────────── -->
+<p-overlayPanel #moduleMenu>
+  @if (activeModule(); as m) {
+    <div class="row-menu">
+      <button class="row-menu__item" (click)="moduleMenu.hide(); openEditModule(m)">
+        <i class="pi pi-pencil"></i> {{ 'course_detail.edit_module_menu' | translate }}
+      </button>
+      <button class="row-menu__item" (click)="confirmDeleteModule(m, moduleMenu)">
+        <i class="pi pi-trash"></i> {{ 'course_detail.delete_module_menu' | translate }}
+      </button>
+    </div>
+  }
+</p-overlayPanel>
+
+<!-- ── Module modal (Add / Edit) ───────────────────────────────────── -->
+<p-dialog
+  [visible]="showModule()"
+  (visibleChange)="showModule.set($event)"
+  [modal]="true"
+  [closable]="!moduleSaving()"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="!moduleSaving()"
+  styleClass="nas-dialog module-dialog"
+  [style]="{ width: '480px', maxWidth: '95vw' }"
+  [header]="(moduleEditMode() ? 'course_detail.edit_module' : 'course_detail.new_module') | translate">
+
+  <form [formGroup]="moduleForm" (ngSubmit)="submitModule()" class="nas-form module-form">
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.module_title_en' | translate }} <span class="required">*</span></label>
+      <input class="nas-input" type="text" formControlName="title_en"
+             [placeholder]="'course_detail.module_title_en_placeholder' | translate" />
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.module_title_ar' | translate }} <span class="required">*</span></label>
+      <input class="nas-input" type="text" formControlName="title_ar"
+             [placeholder]="'course_detail.module_title_ar_placeholder' | translate" />
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.related_session_number' | translate }} <span class="required">*</span></label>
+      <p-dropdown [options]="sessionNumberOptions()"
+                  formControlName="session_number" styleClass="w-full" appendTo="body"
+                  [placeholder]="'course_detail.related_session_number_ph' | translate" />
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.content_type' | translate }} <span class="required">*</span></label>
+      <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
+                  formControlName="content_type" styleClass="w-full" appendTo="body"
+                  (onChange)="onModuleContentTypeChange()" />
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.learner_scope' | translate }} <span class="required">*</span></label>
+      <p-dropdown [options]="learnerScopeOpts()" optionLabel="value" optionValue="id"
+                  formControlName="learner_scope" styleClass="w-full" appendTo="body" />
+    </div>
+
+    @if (enumCode('module_learner_scope', moduleForm.value.learner_scope) === 'cohort') {
+      <div class="nas-form__field">
+        <label>{{ 'course_detail.cohort' | translate }} <span class="required">*</span></label>
+        @if (cohortDropdownOpts().length) {
+          <p-dropdown [options]="cohortDropdownOpts()" optionLabel="name" optionValue="id"
+                      formControlName="session_id"
+                      [placeholder]="'course_detail.select_cohort' | translate"
+                      appendTo="body"
+                      styleClass="w-full" />
+        } @else {
+          <div class="module-form__hint module-form__hint--warn">
+            {{ 'course_detail.no_cohorts_yet' | translate }}
+          </div>
+        }
+      </div>
+    }
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.approximate_duration' | translate }} <span class="required">*</span></label>
+      <div class="duration-input">
+        <input type="number" class="duration-input__field"
+               formControlName="duration_minutes"
+               min="0" max="1000" placeholder="30" />
+        <span class="duration-input__suffix">{{ 'course_detail.duration_minutes' | translate }}</span>
+        <div class="duration-input__steppers">
+          <button type="button" class="duration-input__step"
+                  [attr.aria-label]="'course_detail.increase_duration' | translate"
+                  (click)="adjustDuration(1)">
+            <i class="pi pi-chevron-up"></i>
+          </button>
+          <button type="button" class="duration-input__step"
+                  [attr.aria-label]="'course_detail.decrease_duration' | translate"
+                  (click)="adjustDuration(-1)">
+            <i class="pi pi-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (moduleIsFileType()) {
+      <div class="nas-form__field">
+        <label>
+          {{ (moduleIsVideo() ? 'course_detail.video' : 'course_detail.document') | translate }}
+          <span class="required">*</span>
+        </label>
+        @if (moduleUploading()) {
+          <div class="module-upload-progress" role="status" aria-live="polite">
+            <div class="module-upload-progress__icon" [class.is-video]="moduleIsVideo()">
+              <i class="pi" [ngClass]="moduleIsVideo() ? 'pi-video' : 'pi-file'"></i>
+              <span class="module-upload-progress__ring"></span>
+            </div>
+            <div class="module-upload-progress__body">
+              <span class="module-upload-progress__name">{{ moduleUploadingName() || (moduleIsVideo() ? ('course_detail.upload_video' | translate) : ('course_detail.upload_file' | translate)) }}</span>
+              <span class="module-upload-progress__status">
+                <span class="module-upload-progress__dot"></span>
+                {{ 'course_detail.uploading' | translate }}
+              </span>
+              <div class="module-upload-progress__track">
+                <span class="module-upload-progress__bar"></span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          @if (moduleFileInfo(); as f) {
+            <div class="module-form__file">
+              <img class="module-form__file-icon"
+                   [src]="moduleIsVideo() ? 'assets/icons/phosphor/mp4.svg' : 'assets/icons/phosphor/pdf.svg'"
+                   [alt]="moduleIsVideo() ? 'MP4' : 'PDF'" />
+              <div class="module-form__file-meta">
+                @if (f.url) {
+                  <a class="module-form__file-name" [href]="f.url" target="_blank" rel="noopener">{{ f.name }}</a>
+                } @else {
+                  <span class="module-form__file-name">{{ f.name }}</span>
+                }
+                @if (f.size) {
+                  <span class="module-form__file-sub">{{ fileSizeLabel(f.size) }}</span>
+                } @else {
+                  <span class="module-form__file-sub">{{ 'course_detail.existing_file' | translate }}</span>
+                }
+              </div>
+              <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          } @else {
+            <label class="module-form__upload">
+              <input type="file" hidden (change)="onModuleFileSelected($event)"
+                     [accept]="moduleIsVideo()
+                       ? 'video/mp4,video/quicktime,video/webm,video/x-m4v,video/ogg'
+                       : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,image/*'" />
+              <i class="pi pi-cloud-upload"></i>
+              <span>{{ (moduleIsVideo() ? 'course_detail.upload_video' : 'course_detail.upload_file') | translate }}</span>
+            </label>
+          }
+        }
+      </div>
+    } @else if (moduleIsArticle()) {
+      <div class="nas-form__field module-form__article">
+        <label>
+          {{ 'course_detail.article' | translate }}
+          <span class="required">*</span>
+        </label>
+        <nas-rich-text formControlName="content"
+                         areaMinHeight="138px"
+                         [placeholder]="'course_detail.article_placeholder' | translate" />
+      </div>
+    } @else if (moduleIsLink()) {
+      <div class="nas-form__field">
+        <label>
+          {{ 'course_detail.module_url' | translate }}
+          <span class="required">*</span>
+        </label>
+        <input class="nas-input" type="url" formControlName="video" placeholder="https://example.com" />
+        <p class="module-form__hint">{{ 'course_detail.content_link_hint' | translate }}</p>
+      </div>
+    }
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.instructions_en' | translate }}</label>
+      <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_en"
+                [placeholder]="'course_detail.instructions_placeholder' | translate"></textarea>
+    </div>
+
+    <div class="nas-form__field">
+      <label>{{ 'course_detail.instructions_ar' | translate }}</label>
+      <textarea class="nas-input nas-textarea" rows="3" formControlName="instructions_ar"
+                [placeholder]="'course_detail.instructions_placeholder' | translate"></textarea>
+    </div>
+
+    <label class="module-form__require">
+      <p-checkbox [binary]="true" formControlName="require_completion" />
+      <span>{{ 'course_detail.require_completion' | translate }}</span>
+    </label>
+
+    <footer class="nas-form__footer">
+      <button type="button" class="nas-btn nas-btn--ghost" (click)="showModule.set(false)" [disabled]="moduleSaving()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="submit" class="nas-btn nas-btn--primary" [disabled]="moduleSaving()">
+        @if (moduleSaving()) { <i class="pi pi-spin pi-spinner"></i> }
+        @else if (moduleEditMode()) { <i class="pi pi-pencil"></i> }
+        @else { <i class="pi pi-plus-circle"></i> }
+        <span>{{ (moduleEditMode() ? 'course_detail.save_changes' : 'course_detail.create_module') | translate }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>

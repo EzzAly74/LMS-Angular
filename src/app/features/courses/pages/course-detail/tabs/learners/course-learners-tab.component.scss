@@ -1,0 +1,20 @@
+// Learners tab - Figma 2266:129915.
+@use '../../styles/list';
+
+.lt-learner { display: inline-flex; align-items: center; gap: 10px; }
+
+.lt-avatar { position: relative; display: inline-flex; flex-shrink: 0; }
+
+// Account status dot (Q-054): green when active, grey otherwise.
+.lt-dot {
+  position: absolute;
+  inset-block-end: -1px;
+  inset-inline-end: -1px;
+  inline-size: 10px;
+  block-size: 10px;
+  border: 2px solid var(--nas-color-bg-surface);
+  border-radius: 50%;
+  background: var(--nas-neutral-600);
+
+  &--on { background: var(--nas-status-green-500); }
+}

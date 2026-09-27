@@ -1,0 +1,126 @@
+// Filter modal - Figma 2463:138054 (512 px; two dropdowns per row, Clear 113 px + Filter).
+
+::ng-deep .fd {
+  &.p-dialog {
+    border-radius: var(--nas-radius-xl);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    background: transparent;
+  }
+  .p-dialog-content { padding: 0; background: transparent; }
+}
+
+.fd__card {
+  font-family: var(--nas-font);
+  display: flex;
+  flex-direction: column;
+  max-block-size: 90vh;
+  background: var(--nas-color-bg-surface);
+}
+
+.fd__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4) var(--nas-space-6) 17px;
+  border-block-end: 1px solid var(--nas-color-border);
+}
+
+.fd__title {
+  margin: 0;
+  font-size: var(--nas-size-s);
+  line-height: 24px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong);
+}
+
+.fd__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+}
+
+.fd__body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--nas-space-4);
+  padding: var(--nas-space-6) var(--nas-space-6) var(--nas-space-10, 40px);
+  overflow-y: auto;
+}
+
+.fd__field { display: flex; flex-direction: column; gap: 10px; min-inline-size: 0; }
+
+.fd__label {
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-color-text-strong);
+}
+
+:host ::ng-deep .fd__dropdown,
+::ng-deep .fd .fd__dropdown {
+  inline-size: 100%;
+  min-block-size: 44px;
+  border-color: var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+
+  .p-dropdown-label { font-size: var(--nas-size-xs); padding-block: 12px; }
+  .p-dropdown-label.p-placeholder { color: var(--nas-neutral-750); }
+}
+
+.fd__foot {
+  display: grid;
+  grid-template-columns: 113px minmax(0, 1fr);
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4) var(--nas-space-6);
+  border-block-start: 1px solid var(--nas-color-border);
+}
+
+.fd__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border-radius: var(--nas-radius-md);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+
+  &--outline {
+    border: 1px solid var(--nas-teal-1000);
+    background: var(--nas-color-bg-surface);
+    color: var(--nas-teal-1000);
+    &:hover { background: var(--nas-neutral-200); }
+  }
+
+  &--primary {
+    border: 0;
+    background: var(--nas-teal-1000);
+    color: var(--nas-neutral-100);
+    &:hover:not(:disabled) { background: var(--nas-teal-950); }
+    // Drawn disabled (grey) until a choice changes; neutral-750 keeps the
+    // label at AA on the grey fill.
+    &:disabled { background: var(--nas-neutral-300); color: var(--nas-neutral-750); cursor: default; }
+  }
+}
+
+@media (max-width: 479px) {
+  .fd__body { grid-template-columns: minmax(0, 1fr); padding-block-end: var(--nas-space-6); }
+  .fd__head, .fd__foot { padding-inline: var(--nas-space-4); }
+  .fd__body { padding-inline: var(--nas-space-4); }
+}

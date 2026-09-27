@@ -1,13 +1,16 @@
-<div class="nas-tabs" role="tablist">
+<div class="nas-tabs" role="tablist" [attr.aria-label]="label || null" (keydown)="onKeydown($event)">
   @for (tab of tabs; track tab.id) {
     <button type="button"
             role="tab"
             class="nas-tab"
+            [id]="idPrefix + '-tab-' + tab.id"
+            [attr.aria-controls]="idPrefix + '-panel-' + tab.id"
             [class.active]="tab.id === activeId"
             [attr.aria-selected]="tab.id === activeId"
+            [attr.tabindex]="tab.id === activeId ? 0 : -1"
             (click)="select(tab.id)">
       <span>{{ tab.label }}</span>
-      @if (tab.count != null) { <span class="nas-tab__count">{{ tab.count }}</span> }
+      @if (hasCount(tab)) { <span class="nas-tab__count">{{ tab.count }}</span> }
     </button>
   }
 </div>

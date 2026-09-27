@@ -1,0 +1,28 @@
+// Qualifications tab - Figma 2266:130342 (64 px rows, 32 px tinted check icon).
+@use '../../styles/list';
+
+.qt-list { margin: 0; padding: 0; list-style: none; }
+
+.qt-item {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-3);
+  min-block-size: 64px;
+  padding: var(--nas-space-4) var(--nas-space-5, 20px);
+  border-block-start: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+
+  &:first-child { border-block-start: 0; }
+}
+
+.qt-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 50%;
+  background: var(--nas-teal-100);
+}

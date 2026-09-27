@@ -1,0 +1,54 @@
+<p-dialog #fdDlg
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="restoreFocus()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="fd"
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }">
+  <ng-template pTemplate="headless">
+    <form class="fd__card" (ngSubmit)="submit()" novalidate>
+      <header class="fd__head">
+        <h2 class="fd__title" [id]="fdDlg.ariaLabelledBy">{{ 'common.filter' | translate }}</h2>
+        <button type="button" class="fd__close" (click)="visible.set(false)" [attr.aria-label]="'common.close' | translate">
+          <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
+        </button>
+      </header>
+
+      <div class="fd__body">
+        @for (f of fields(); track f.key) {
+          <div class="fd__field">
+            <span class="fd__label" [id]="uid + '-' + f.key">{{ f.label }}</span>
+            <p-dropdown
+              [ariaLabelledBy]="uid + '-' + f.key"
+              [options]="f.options"
+              optionLabel="label"
+              optionValue="id"
+              [ngModel]="value(f.key)"
+              (ngModelChange)="set(f.key, $event)"
+              [ngModelOptions]="{ standalone: true }"
+              [showClear]="true"
+              [filter]="f.options.length > 8"
+              filterBy="label"
+              [placeholder]="f.placeholder"
+              [emptyMessage]="'common.no_options' | translate"
+              [emptyFilterMessage]="'common.no_results' | translate"
+              appendTo="body"
+              styleClass="fd__dropdown" />
+          </div>
+        }
+      </div>
+
+      <footer class="fd__foot">
+        <button type="button" class="fd__btn fd__btn--outline" (click)="clear()">{{ 'common.clear' | translate }}</button>
+        <button type="submit" class="fd__btn fd__btn--primary" [disabled]="!changed()">
+          <nas-icon name="funnel" [size]="20" />
+          {{ 'common.filter' | translate }}
+        </button>
+      </footer>
+    </form>
+  </ng-template>
+</p-dialog>

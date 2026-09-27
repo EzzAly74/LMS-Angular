@@ -1,53 +1,59 @@
-:host { display: block; }
+// Pill tabs - Figma 2266:128869 (32 px pills, 8 px apart, radius 16).
+:host { display: block; min-inline-size: 0; }
 
-// Scrolls inside itself when the tabs outgrow the screen (course detail at
-// 375 px was 500 px wide and widened the whole page).
+// Scrolls inside itself when the tabs outgrow the screen, so the page never
+// widens at 375 px.
 .nas-tabs {
-  display: inline-flex;
+  display: flex;
+  gap: var(--nas-space-2);
   max-inline-size: 100%;
   overflow-x: auto;
   scrollbar-width: thin;
-  gap: var(--nas-space-1);
-  background: var(--nas-neutral-300);
-  padding: var(--nas-space-1);
-  border-radius: var(--nas-radius-full);
+  padding-block: 2px; // room for the focus ring
 }
 
 .nas-tab {
   display: inline-flex;
   align-items: center;
   gap: var(--nas-space-2);
-  background: transparent;
-  border: none;
-  padding: var(--nas-space-2) 14px;
-  border-radius: var(--nas-radius-full);
-  color: var(--nas-color-text-muted);
-  font-size:   var(--nas-size-2xs);
-  font-weight: var(--nas-weight-medium);
   flex-shrink: 0;
+  block-size: 32px;
+  padding: var(--nas-space-1) var(--nas-space-4);
+  border: 1px solid var(--nas-neutral-500);
+  border-radius: 16px;
+  background: var(--nas-essential-background);
+  // Figma draws inactive labels #adadae (2.2:1); neutral-750 meets AA.
+  color: var(--nas-neutral-750);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 19.6px;
+  font-weight: var(--nas-weight-medium);
   white-space: nowrap;
   cursor: pointer;
-  transition: background var(--transition-speed),
-              color var(--transition-speed);
+  transition: background var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
 
-  &:hover { color: var(--nas-color-text-strong); }
+  &:hover { color: var(--nas-color-text-strong); border-color: var(--nas-neutral-700); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
 
   &.active {
-    background: var(--nas-color-bg-surface);
-    color:      var(--nas-color-text-strong);
-    box-shadow: var(--nas-shadow-xs);
+    border-color: var(--nas-teal-1000);
+    background: var(--nas-teal-100);
+    color: var(--nas-teal-1000);
   }
 
   &__count {
-    background: var(--nas-neutral-400);
-    color:      var(--nas-color-text-muted);
-    font-size:  var(--nas-size-3xs);
-    padding: 1px var(--nas-space-2);
-    border-radius: var(--nas-radius-full);
+    padding: 2px var(--nas-space-1);
+    border-radius: 50px;
+    background: var(--nas-teal-100);
+    color: var(--nas-neutral-750);
+    font-size: var(--nas-size-2xs);
+    line-height: 14.4px;
+    font-weight: var(--nas-weight-regular, 400);
   }
 
-  &.active .nas-tab__count {
-    background: var(--nas-teal-200);
-    color:      var(--nas-teal-800);
-  }
+  &.active .nas-tab__count { color: var(--nas-teal-1000); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nas-tab { transition: none; }
 }

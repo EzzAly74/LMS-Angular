@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-export type NasTileTone = 'amber' | 'teal' | 'sky' | 'red';
+export type NasTileTone = 'amber' | 'teal' | 'sky' | 'red' | 'purple';
 
 /**
  * A header tile: a 44px tinted icon box, a 32px value, a caption. Drawn on the
@@ -10,6 +10,9 @@ export type NasTileTone = 'amber' | 'teal' | 'sky' | 'red';
  * `danger` paints the value red, as the failing-result frame (2169:109264)
  * does for a score below the pass limit; `suffix` stays in the default colour
  * ("2.3" red, "/5.0" not).
+ *
+ * Projected content sits under the caption: the Course Details header adds
+ * "● N Active" and the completion bar there (Figma 2266:128869).
  *
  * The average-score tile's icon is drawn in Figma as a "⭐" emoji (FG-04);
  * callers pass the file's own Icons/Fill/star instead (rule 5).
@@ -28,6 +31,7 @@ export type NasTileTone = 'amber' | 'teal' | 'sky' | 'red';
           <bdi [attr.dir]="valueDir()"><span [class.st__danger]="danger()">{{ value() }}</span>@if (suffix()) {<span>{{ suffix() }}</span>}</bdi>
         </p>
         <p class="st__label">{{ label() }}</p>
+        <ng-content />
       </div>
     </div>
   `,
@@ -60,6 +64,7 @@ export type NasTileTone = 'amber' | 'teal' | 'sky' | 'red';
     .st__icon--teal  { background: rgba(123, 174, 161, 0.3); border-color: var(--nas-status-operational-5); }
     .st__icon--sky   { background: var(--nas-sky-200); border-color: var(--nas-status-operational-2); }
     .st__icon--red   { background: var(--nas-status-red-50); border-color: var(--nas-status-red-500-16); }
+    .st__icon--purple { background: rgba(191, 170, 224, 0.6); border-color: var(--nas-status-operational-4); }
     .st__text { display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; }
     .st__value {
       margin: 0;

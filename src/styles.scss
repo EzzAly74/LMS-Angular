@@ -79,6 +79,8 @@
   --nas-status-green-500-08: rgba(15, 184, 106, 0.08);
   --nas-status-green-500-16: rgba(15, 184, 106, 0.16);
   --nas-status-green-500-40: rgba(15, 184, 106, 0.4);
+  /* Green for 12-14 px text: #0fb86a is 2.5:1 on white, this is 5.2:1 (AA). */
+  --nas-status-green-700: #0a7d48;
 
   --nas-status-red-50: #fdecea;
   --nas-status-red-500: #f14437;
@@ -99,6 +101,8 @@
   /* Evaluation tile icon boxes (Figma operational-3 / -5, 2169:108198) */
   --nas-status-operational-3: #ebd4a6;
   --nas-status-operational-5: #7baea1;
+  /* Course Details enrolled-learners tile (Figma operational-4, 2266:128869) */
+  --nas-status-operational-4: #bfaae0;
 
   --nas-status-blue-50: #e8f1fe;
   --nas-status-blue-500: #2e7cf6;
