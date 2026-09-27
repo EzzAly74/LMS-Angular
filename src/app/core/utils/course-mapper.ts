@@ -63,8 +63,16 @@ export interface ApiCourseRaw {
   [key: string]: unknown;
 }
 
-const LOCALE: 'en' | 'ar' =
-  (typeof document !== 'undefined' && document.documentElement.lang === 'ar') ? 'ar' : 'en';
+/**
+ * The UI language, read when a row is mapped - never cached. It used to be a
+ * module constant, fixed at first import, so after a language switch the page
+ * re-fetched but kept picking the old language out of `{ en, ar }` titles
+ * until a refresh. `LocaleService.switch()` sets `<html lang>` before it tells
+ * pages to reload, so this read is always current.
+ */
+function uiLocale(): 'en' | 'ar' {
+  return typeof document !== 'undefined' && document.documentElement.lang === 'ar' ? 'ar' : 'en';
+}
 
 const flattenLocalized = <T extends { name?: MaybeLocalized } | { title?: MaybeLocalized } | undefined | null>(
   rel: T,
@@ -73,7 +81,7 @@ const flattenLocalized = <T extends { name?: MaybeLocalized } | { title?: MaybeL
   if (!rel) return null;
   const r = rel as Record<string, unknown>;
   const raw = r[key] as MaybeLocalized;
-  const name = pickLocalized(raw, LOCALE, '');
+  const name = pickLocalized(raw, uiLocale(), '');
   return { ...(r as object), name } as Omit<NonNullable<T>, 'name' | 'title'> & { name: string };
 };
 
@@ -121,7 +129,7 @@ export function mapApiCourseListItem(raw: ApiCourseRaw): Course {
   const instructor = raw.instructors?.[0] ?? raw.instructor ?? null;
   return {
     id:                 raw.id,
-    title:              pickLocalized(raw.title, LOCALE, ''),
+    title:              pickLocalized(raw.title, uiLocale(), ''),
     type:               mapCourseType(raw.course_type),
     course_type:        raw.course_type === 'online' ? 'online' : 'offline',
     status:             mapCourseStatus(raw.status, raw.active),
@@ -155,10 +163,10 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
   const instructor = raw.instructors?.[0] ?? raw.instructor ?? null;
   return {
     id:                       raw.id,
-    title:                    pickLocalized(raw.title, LOCALE, ''),
-    description:              pickLocalized(raw.description, LOCALE, ''),
-    what_students_will_learn: pickLocalizedList(raw.what_students_will_learn, LOCALE),
-    requirements:             pickLocalizedList(raw.requirements, LOCALE),
+    title:                    pickLocalized(raw.title, uiLocale(), ''),
+    description:              pickLocalized(raw.description, uiLocale(), ''),
+    what_students_will_learn: pickLocalizedList(raw.what_students_will_learn, uiLocale()),
+    requirements:             pickLocalizedList(raw.requirements, uiLocale()),
     type:                     mapCourseType(raw.course_type),
     status:                   mapCourseStatus(raw.status, raw.active),
     category:                 flattenLocalized(raw.category),
@@ -166,13 +174,13 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
     instructors:              raw.instructors?.map(i => flattenLocalized(i)!).filter(Boolean) as CourseDetail['instructors'],
     sections:                 raw.sections?.map(s => ({
       id:   s.id,
-      name: pickLocalized(s.name ?? s.title, LOCALE, `Section ${s.id}`),
+      name: pickLocalized(s.name ?? s.title, uiLocale(), `Section ${s.id}`),
     })),
     qualifications:           raw.qualification_skills?.map(q => flattenLocalized(q)!).filter(Boolean) as CourseDetail['qualifications'],
     qualification_skills:     raw.qualification_skills?.map(q => flattenLocalized(q)!).filter(Boolean) as CourseDetail['qualification_skills'],
     certificate:              raw.certificate,
     certificate_pass_percent: raw.certificate_pass_percent,
-    delivery_type:            displayName(raw.course_type, LOCALE, ''),
+    delivery_type:            displayName(raw.course_type, uiLocale(), ''),
     level:                    mapCourseLevel(raw.level as string | null | undefined),
     max_learners:             raw.max_learners,
     number_of_sessions:       raw.number_of_sessions ?? null,
@@ -233,8 +241,8 @@ export function mapEnrollmentToLearner(raw: ApiEnrollmentRaw): CourseLearner {
 
   return {
     id:          raw.id,
-    name:        pickLocalized(raw.user?.name, LOCALE, 'Unknown learner'),
-    cohort_name: pickLocalized(raw.group?.name, LOCALE, '—'),
+    name:        pickLocalized(raw.user?.name, uiLocale(), 'Unknown learner'),
+    cohort_name: pickLocalized(raw.group?.name, uiLocale(), '—'),
     progress,
     status,
     enrolled_at: raw.created_at ?? '',
@@ -282,7 +290,7 @@ function normalizeCohortStatus(s: string | null | undefined): CohortStatus {
 export function mapApiCohort(raw: ApiCohortRaw): Cohort {
   return {
     id:         raw.id,
-    name:       pickLocalized(raw.name, LOCALE, ''),
+    name:       pickLocalized(raw.name, uiLocale(), ''),
     name_en:    raw.name_translations?.en ?? null,
     name_ar:    raw.name_translations?.ar ?? null,
     start_date: raw.start_date ?? null,

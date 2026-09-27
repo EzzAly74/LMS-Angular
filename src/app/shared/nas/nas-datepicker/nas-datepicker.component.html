@@ -53,7 +53,7 @@
     <table class="nasdp__grid">
       <thead>
         <tr>
-          @for (w of weekdays; track w) {
+          @for (w of weekdays(); track w) {
             <th>{{ w }}</th>
           }
         </tr>
@@ -83,10 +83,10 @@
 
     <div class="nasdp__foot">
       <button type="button" class="nasdp__link" (click)="goToday()">
-        {{ todayLabel }}
+        {{ todayLabel() }}
       </button>
       <button type="button" class="nasdp__link" (click)="clear()">
-        {{ clearLabel }}
+        {{ clearLabel() }}
       </button>
     </div>
   </div>

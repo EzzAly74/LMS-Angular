@@ -16,6 +16,7 @@ import { ExternalTrainingRequest, RequestStats, ReviewOptions } from '../../mode
 import { ExternalTrainingApiService } from '../../services/external-training-api.service';
 import { EtStatsComponent } from '../../components/et-stats/et-stats.component';
 import { RejectDialogComponent } from '../../components/reject-dialog/reject-dialog.component';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 type Confirm = 'approve' | 'reopen' | null;
@@ -76,6 +77,17 @@ export class ExternalTrainingReviewComponent {
       const id = Number(this.id());
       untracked(() => this.load(id));
     }, { allowSignalWrites: true });
+    // A language switch re-reads the names (qualification, course, pickers) in
+    // the new language, keeping whatever the reviewer has already picked.
+    withLocaleReload(() => this.refreshForLocale());
+  }
+
+  private refreshForLocale(): void {
+    const id = Number(this.id());
+    if (this.state() !== 'ready' || !Number.isInteger(id) || id < 1) return;
+    this.api.get(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: r => this.request.set(r), error: () => undefined });
+    this.loadStats();
+    this.api.options().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: o => this.options.set(o), error: () => undefined });
   }
 
   protected load(id = Number(this.id())): void {

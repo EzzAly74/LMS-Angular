@@ -37,6 +37,7 @@ import {
   SCALE_LABEL_MAX,
   formatScore,
 } from '../../models/evaluation.model';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found' | 'locked';
 
@@ -162,6 +163,13 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
     return s === null || s === undefined ? null : formatScore(s);
   });
   readonly threshold = computed(() => formatScore(this.options()?.pass_threshold ?? 3));
+
+  constructor() {
+    // Course and cohort names come from the API in the page's language; the
+    // form the admin is editing is left alone.
+    withLocaleReload(() =>
+      this.api.options().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: o => this.options.set(o), error: () => undefined }));
+  }
 
   ngOnInit(): void {
     // A cohort only belongs to one course: changing the course clears it.

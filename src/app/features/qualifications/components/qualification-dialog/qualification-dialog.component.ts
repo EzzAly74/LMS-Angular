@@ -31,6 +31,7 @@ import {
   QualificationPayload,
 } from '../../models/qualification.model';
 import { QualificationsApiService } from '../../services/qualifications-api.service';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -155,6 +156,11 @@ export class QualificationDialogComponent {
       const id = this.qualificationId();
       untracked(() => this.open(id));
     }, { allowSignalWrites: true });
+
+    // Job-title names are localized: re-run the search in the new language.
+    withLocaleReload(() => {
+      if (this.visible()) this.query$.next({ search: this.search(), type: this.filter() });
+    });
 
     this.query$
       .pipe(

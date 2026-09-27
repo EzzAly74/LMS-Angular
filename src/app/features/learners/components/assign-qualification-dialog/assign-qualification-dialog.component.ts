@@ -21,6 +21,7 @@ import { ApiParams, ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { LearnerRow } from '../../models/learner.model';
+import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 /** The bulk-grant API accepts at most this many learners per call. */
 export const MAX_BULK_GRANT = 500;
@@ -102,6 +103,14 @@ export class AssignQualificationDialogComponent {
       if (!this.visible()) return;
       untracked(() => this.reset());
     }, { allowSignalWrites: true });
+
+    // The qualification list is cached per session; a language switch drops
+    // it (re-reading it now if the dialog is open) so names never stay in the
+    // old language.
+    withLocaleReload(() => {
+      this.qualifications.set([]);
+      if (this.visible()) this.loadQualifications();
+    });
 
     this.learnerSearch$
       .pipe(
@@ -209,11 +218,13 @@ export class AssignQualificationDialogComponent {
     this.mode.set('pick');
     this.picked.set(new Map());
     this.learnerSearch$.next('');
-    if (this.qualifications().length === 0) {
-      this.api
-        .get<{ id: number; name: string }[]>(API.QUALIFICATIONS_ACTIVE)
-        .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-        .subscribe(res => this.qualifications.set((res?.result ?? []).map(q => ({ id: q.id, label: q.name }))));
-    }
+    if (this.qualifications().length === 0) this.loadQualifications();
+  }
+
+  private loadQualifications(): void {
+    this.api
+      .get<{ id: number; name: string }[]>(API.QUALIFICATIONS_ACTIVE)
+      .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => this.qualifications.set((res?.result ?? []).map(q => ({ id: q.id, label: q.name }))));
   }
 }

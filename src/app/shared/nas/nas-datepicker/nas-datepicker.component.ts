@@ -17,6 +17,7 @@ import {
   signal,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { LocaleService } from '../../../core/services/locale.service';
 
 interface DayCell {
   date: Date;
@@ -87,16 +88,13 @@ export class NasDatepickerComponent implements ControlValueAccessor, OnDestroy {
   private panelView?: EmbeddedViewRef<void>;
   private removeListeners: Array<() => void> = [];
 
-  private readonly locale =
-    (typeof document !== 'undefined' && document.documentElement.lang) || 'en';
+  // The live UI language - a picker left open across a language switch
+  // relabels itself instead of keeping the language it was created in.
+  private readonly locale = inject(LocaleService).locale;
 
-  protected readonly weekdays = this.buildWeekdays();
-  protected readonly todayLabel = this.locale.startsWith('ar')
-    ? 'اليوم'
-    : 'Today';
-  protected readonly clearLabel = this.locale.startsWith('ar')
-    ? 'مسح'
-    : 'Clear';
+  protected readonly weekdays = computed(() => this.buildWeekdays(this.locale()));
+  protected readonly todayLabel = computed(() => (this.locale() === 'ar' ? 'اليوم' : 'Today'));
+  protected readonly clearLabel = computed(() => (this.locale() === 'ar' ? 'مسح' : 'Clear'));
 
   protected onTouched: () => void = () => {};
   private onChange: (v: Date | null) => void = () => {};
@@ -104,7 +102,7 @@ export class NasDatepickerComponent implements ControlValueAccessor, OnDestroy {
   // ── Derived view state ──────────────────────────────────────────────
   protected readonly monthLabel = computed(() => {
     const v = this.view();
-    const month = new Intl.DateTimeFormat(this.locale, {
+    const month = new Intl.DateTimeFormat(this.locale(), {
       month: 'long',
     }).format(v);
     return `${month} ${v.getFullYear()}`;
@@ -342,8 +340,8 @@ export class NasDatepickerComponent implements ControlValueAccessor, OnDestroy {
     return false;
   }
 
-  private buildWeekdays(): string[] {
-    const fmt = new Intl.DateTimeFormat(this.locale, { weekday: 'short' });
+  private buildWeekdays(locale: string): string[] {
+    const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
     const out: string[] = [];
     for (let i = 0; i < 7; i++) {
       out.push(fmt.format(new Date(2023, 0, 1 + i))); // 2023-01-01 is a Sunday
