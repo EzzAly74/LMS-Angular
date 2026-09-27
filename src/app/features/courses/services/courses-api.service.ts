@@ -8,6 +8,7 @@ import type {
   CourseModule, ModulePayload, ModuleUploadResult, CohortAttendance,
   Cohort, CohortPayload,
 } from '../../../core/models/course.types';
+import type { CourseFormSource } from '../models/course-form.model';
 
 @Injectable({ providedIn: 'root' })
 export class CoursesApiService {
@@ -38,6 +39,17 @@ export class CoursesApiService {
 
   update(id: number, payload: FormData | Record<string, unknown>): Observable<ApiResponse<Course>> {
     return this.api.put<Course>(courseUrl.detail(id), payload);
+  }
+
+  /** Multipart edit: Laravel cannot parse a multipart PUT, so POST with `_method=PUT`. */
+  updateMultipart(id: number, payload: FormData): Observable<ApiResponse<Course>> {
+    payload.set('_method', 'PUT');
+    return this.api.post<Course>(courseUrl.detail(id), payload);
+  }
+
+  /** The raw detail payload, typed as the Add / Edit Course modal reads it. */
+  getForForm(id: number): Observable<ApiResponse<CourseFormSource>> {
+    return this.api.get<CourseFormSource>(courseUrl.detail(id));
   }
 
   delete(id: number): Observable<ApiResponse<void>> {

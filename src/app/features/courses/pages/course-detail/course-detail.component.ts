@@ -18,7 +18,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { SkeletonModule } from 'primeng/skeleton';
 import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -31,19 +30,15 @@ import {
   NasStatusBadgeComponent,
   NasProgressComponent,
   NasAvatarComponent,
-  NasPhotoUploadComponent,
   NasDatepickerComponent,
   CohortAttendanceDrawerComponent,
   NasRichTextComponent,
 } from '../../../../shared/nas';
-import { NasLocaleInputComponent } from '../../../../shared/nas/nas-locale-input/nas-locale-input.component';
-import type { LocalizedText } from '../../../../core/models/localized.types';
 import type { NasProgressTone } from '../../../../shared/nas/nas-progress/nas-progress.component';
 import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
 import { CoursesApiService } from '../../services/courses-api.service';
-import { ApiService } from '../../../../core/services/api.service';
+import { CourseDialogComponent } from '../../components/course-dialog/course-dialog.component';
 import { EnumsService } from '../../../../core/services/enums.service';
-import { API } from '../../../../core/constants/api.constants';
 import type {
   CourseDetail,
   Cohort,
@@ -84,6 +79,7 @@ type ModuleFilter = 'all' | ModuleContentType;
   selector: 'app-course-detail',
   standalone: true,
   imports: [
+    CourseDialogComponent,
     CommonModule,
     RouterLink,
     FormsModule,
@@ -92,7 +88,6 @@ type ModuleFilter = 'all' | ModuleContentType;
     DatePipe,
     DialogModule,
     DropdownModule,
-    InputNumberModule,
     CheckboxModule,
     SkeletonModule,
     OverlayPanelModule,
@@ -102,8 +97,6 @@ type ModuleFilter = 'all' | ModuleContentType;
     NasStatusBadgeComponent,
     NasProgressComponent,
     NasAvatarComponent,
-    NasPhotoUploadComponent,
-    NasLocaleInputComponent,
     NasDatepickerComponent,
     CohortAttendanceDrawerComponent,
     NasRichTextComponent,
@@ -114,7 +107,6 @@ type ModuleFilter = 'all' | ModuleContentType;
 })
 export class CourseDetailComponent implements OnInit {
   private readonly coursesApi = inject(CoursesApiService);
-  private readonly api = inject(ApiService);
   private readonly enums = inject(EnumsService);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -155,19 +147,8 @@ export class CourseDetailComponent implements OnInit {
   attendanceCohortId = signal<number | null>(null);
   attendanceCohortName = signal<string>('');
 
-  /* ── Edit Course dialog state ─────────────────────────────────────── */
+  /* ── Edit Course: the D6 modal (components/course-dialog) ─────────── */
   showEdit = signal(false);
-  editSaving = signal(false);
-  categoryOpts = signal<Array<{ id: number; name: string }>>([]);
-  instructorOpts = signal<Array<{ id: number; name: string }>>([]);
-  /**
-   * Qualifications skill list — mirrors the Add Course dialog so the
-   * Edit dialog can offer the same checklist. Populated on first open
-   * to keep the page-load request count low.
-   */
-  qualOptions = signal<Array<{ id: number; name: string }>>([]);
-  /** Cheap-and-cached: only fetched the first time the Edit dialog opens. */
-  private lookupsLoaded = false;
 
   /**
    * Course-type dropdown options — driven by the backend `course_type`
@@ -177,45 +158,6 @@ export class CourseDetailComponent implements OnInit {
   courseTypeOpts = this.enums.options('course_type');
   /** Difficulty level — backend `course_level` enum. */
   courseLevelOpts = this.enums.options('course_level');
-
-  /**
-   * Edit Course form — kept field-for-field aligned with the Add Course
-   * dialog over on `course-list` (single bilingual `nas-locale-input`
-   * for title/description, yes-no toggles, cohort dates and the
-   * qualifications checklist). The legacy `active` toggle is gone:
-   * course status now follows cohort dates on the backend, so toggling
-   * a checkbox here would be lying to admins about how the system
-   * actually behaves.
-   */
-  editForm = this.fb.group({
-    title: this.fb.control<LocalizedText>(
-      { en: '', ar: '' },
-      Validators.required,
-    ),
-    type: [null as number | null, Validators.required],
-    category_id: [null as number | null, Validators.required],
-    level: [null as number | null, Validators.required],
-    instructor_id: [null as number | null, Validators.required],
-    certificate: [true, Validators.required],
-    require_instructor: [true, Validators.required],
-    description: this.fb.control<LocalizedText>(
-      { en: '', ar: '' },
-      Validators.required,
-    ),
-    hours: [1, [Validators.required, Validators.min(1)]],
-    max_learners: [30, [Validators.required, Validators.min(1)]],
-    cohort_start: [null as Date | null],
-    cohort_end: [null as Date | null],
-    qualification_ids: [[] as number[]],
-    image: [null as File | null],
-  });
-
-  /**
-   * Preview URL bound to the `nas-photo-upload` widget on the Edit dialog.
-   * Starts at the server-side `image` (when present) so admins see the
-   * current photo before they decide to replace it.
-   */
-  editPhotoPreview = signal<string | null>(null);
 
   sectionOptions = computed(() =>
     (this.course()?.sections ?? []).map((s) => ({
@@ -450,41 +392,6 @@ export class CourseDetailComponent implements OnInit {
         this.load(id);
       }
     });
-
-    // Warm the Edit Course dropdown lookups + qualifications list as
-    // soon as the page mounts. The Edit dialog can otherwise sit on a
-    // blank checklist for ~100ms while the request flies — preloading
-    // makes the dialog feel instant when the admin actually opens it.
-    this.preloadEditLookups();
-  }
-
-  /**
-   * Eagerly fetch the three dropdown / checklist payloads used by the
-   * Edit Course dialog. Idempotent — `lookupsLoaded` guards against
-   * duplicate fetches if the admin happens to open the dialog before
-   * `ngOnInit`'s preload completes.
-   */
-  private preloadEditLookups(): void {
-    if (this.lookupsLoaded) return;
-    this.lookupsLoaded = true;
-    this.api
-      .get<Array<{ id: number; name: string }>>(API.CATEGORIES_ACTIVE)
-      .subscribe({
-        next: (r) =>
-          this.categoryOpts.set(Array.isArray(r.result) ? r.result : []),
-      });
-    this.api
-      .get<Array<{ id: number; name: string }>>(API.INSTRUCTORS_ALL)
-      .subscribe({
-        next: (r) =>
-          this.instructorOpts.set(Array.isArray(r.result) ? r.result : []),
-      });
-    this.api
-      .get<Array<{ id: number; name: string }>>(API.QUALIFICATIONS_ACTIVE)
-      .subscribe({
-        next: (r) =>
-          this.qualOptions.set(Array.isArray(r.result) ? r.result : []),
-      });
   }
 
   load(id: number): void {
@@ -908,201 +815,13 @@ export class CourseDetailComponent implements OnInit {
   }
 
   /* ── Edit Course dialog ────────────────────────────────────────────── */
-  /**
-   * Open the inline edit dialog. We lazily fetch the category /
-   * instructor / qualification lookup lists on the first open so the
-   * page-load cost stays cheap, then re-fetch the canonical course
-   * record so the form patches against fully-bilingual title /
-   * description payloads (the cached `course()` signal only holds the
-   * already-localized strings).
-   */
   openEditCourse(): void {
-    const c = this.course();
-    if (!c) return;
-    // Defensive fallback — ngOnInit normally warms these on page
-    // mount, but if the dialog somehow opens before that resolves we
-    // kick the same idempotent loader off here too.
-    this.preloadEditLookups();
-
-    // Open the dialog immediately with empty bilingual fields; the API
-    // refetch below populates them with the correct EN/AR values.
-    // Using a single localized string for both fields would show the
-    // wrong language in one of the inputs (the bug we are fixing).
-    this.editForm.reset({
-      title: { en: '', ar: '' },
-      description: { en: '', ar: '' },
-      type:
-        this.enums.idForCode('course_type', c.type ?? null) ??
-        this.enums.idForCode('course_type', 'hybrid') ??
-        null,
-      category_id: c.category?.id ?? null,
-      level:
-        this.enums.idForCode(
-          'course_level',
-          (c.level ?? null) as string | null,
-        ) ??
-        this.enums.idForCode('course_level', 'beginner') ??
-        null,
-      instructor_id: c.instructor?.id ?? c.instructors?.[0]?.id ?? null,
-      certificate: !!c.certificate,
-      // No persisted column for the "review content" gate yet — open in
-      // the "yes, instructor reviews" position to match the Add form's
-      // default. Hook to a real column when the API adds one.
-      require_instructor: true,
-      hours: 1,
-      max_learners: c.max_learners ?? 30,
-      cohort_start: null,
-      cohort_end: null,
-      qualification_ids: (c.qualification_skills ?? c.qualifications ?? [])
-        .map((q) => q.id)
-        .filter((id) => Number.isFinite(id)),
-      image: null,
-    });
-    this.editPhotoPreview.set(c.image ?? null);
-    this.showEdit.set(true);
-
-    // Pull the raw bilingual payload so the locale-input populates both
-    // EN and AR independently instead of mirroring a single localized
-    // string. Also seeds the cohort_start / cohort_end pickers from the
-    // first cohort, matching the Add Course dialog's hint.
-    if (c.id) {
-      this.coursesApi.getById(c.id).subscribe({
-        next: (res) => {
-          const r = res.result as unknown as ApiCourseRaw;
-          const title = this.toLocalized(r.title);
-          const desc = this.toLocalized(r.description);
-          const firstSection = (
-            r as {
-              sections?: Array<{
-                start_date?: string | null;
-                end_date?: string | null;
-              }>;
-            }
-          ).sections?.[0];
-          const qualIds = Array.isArray(r.qualification_skills)
-            ? r.qualification_skills
-                .map((q) => Number((q as { id?: number }).id))
-                .filter((id) => Number.isFinite(id))
-            : (this.editForm.value.qualification_ids ?? []);
-
-          this.editForm.patchValue({
-            title: title,
-            description: desc,
-            hours: r.hours ?? this.editForm.value.hours ?? 1,
-            cohort_start: firstSection?.start_date
-              ? new Date(firstSection.start_date)
-              : null,
-            cohort_end: firstSection?.end_date
-              ? new Date(firstSection.end_date)
-              : null,
-            qualification_ids: qualIds,
-          });
-        },
-      });
-    }
+    if (this.course()) this.showEdit.set(true);
   }
 
-  /** Normalize the backend's localized field into our bilingual shape. */
-  private toLocalized(v: unknown): LocalizedText {
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      const obj = v as { en?: string; ar?: string };
-      return { en: obj.en ?? '', ar: obj.ar ?? '' };
-    }
-    const s = typeof v === 'string' ? v : '';
-    return { en: s, ar: s };
-  }
-
-  /**
-   * Format a JS Date as `YYYY-MM-DD` in *local* time so the day the
-   * admin clicked is the day stored. `toISOString()` slices in UTC,
-   * which would silently roll the date back a day for negative-offset
-   * locales.
-   */
-  private toIsoDate(d: Date): string {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
-      .toISOString()
-      .slice(0, 10);
-  }
-
-  onEditPhotoPicked(file: File): void {
-    this.editForm.patchValue({ image: file });
-    const reader = new FileReader();
-    reader.onload = () => this.editPhotoPreview.set(reader.result as string);
-    reader.readAsDataURL(file);
-  }
-
-  /** Clearing only resets the *pending* replacement; the existing
-   *  server-side image stays until a new file is uploaded (the backend
-   *  update endpoint has no "remove image" path). */
-  onEditPhotoCleared(): void {
-    this.editForm.patchValue({ image: null });
-    this.editPhotoPreview.set(null);
-  }
-
-  submitEditCourse(): void {
-    if (this.editForm.invalid) {
-      this.editForm.markAllAsTouched();
-      return;
-    }
+  onCourseSaved(): void {
     const id = this.courseId();
-    if (!id || this.editSaving()) return;
-
-    const v = this.editForm.getRawValue();
-    const title = (v.title ?? {}) as LocalizedText;
-    const desc = (v.description ?? {}) as LocalizedText;
-    const titleEn = (title.en ?? '').trim();
-    const titleAr = (title.ar ?? '').trim();
-    const descEn = (desc.en ?? '').trim();
-    const descAr = (desc.ar ?? '').trim();
-
-    // The dropdown is bound to the numeric enum id; CourseRequest's
-    // AcceptsEnumIds trait normalizes it to the string code on the way in.
-    const fd = new FormData();
-    fd.append('_method', 'PUT');
-    fd.append('title[en]', titleEn || titleAr);
-    fd.append('title[ar]', titleAr || titleEn);
-    fd.append('description[en]', descEn || descAr);
-    fd.append('description[ar]', descAr || descEn);
-    fd.append('course_type', String(v.type ?? ''));
-    fd.append('category_id', String(v.category_id ?? ''));
-    if (v.level !== null && v.level !== undefined) {
-      fd.append('level', String(v.level));
-    }
-    fd.append('instructors[]', String(v.instructor_id ?? ''));
-    fd.append('hours', String(v.hours ?? 1));
-    fd.append('max_learners', String(v.max_learners ?? 30));
-    fd.append('certificate', v.certificate ? '1' : '0');
-    // Cohort calendar — the backend creates / upserts the first
-    // CourseSection row from these so editing the course in-place
-    // can drive cohort status changes (Figma 332:9988).
-    if (v.cohort_start instanceof Date) {
-      fd.append('cohort_start', this.toIsoDate(v.cohort_start));
-    }
-    if (v.cohort_end instanceof Date) {
-      fd.append('cohort_end', this.toIsoDate(v.cohort_end));
-    }
-    Array.from(new Set(v.qualification_ids ?? [])).forEach((qid: number) =>
-      fd.append('qualification_skill_ids[]', String(qid)),
-    );
-    if (v.image instanceof File) {
-      fd.append('image', v.image);
-    }
-
-    this.editSaving.set(true);
-    // Laravel can't parse multipart payloads on PUT, so we POST with
-    // `_method=PUT` to invoke the update controller action.
-    this.api.post(`${API.COURSES}/${id}`, fd).subscribe({
-      next: () => {
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant('course_detail_toasts.course_updated'),
-        });
-        this.editSaving.set(false);
-        this.showEdit.set(false);
-        this.load(id);
-      },
-      error: () => this.editSaving.set(false),
-    });
+    if (id) this.load(id);
   }
 
   openAddCohort(): void {

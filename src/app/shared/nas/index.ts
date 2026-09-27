@@ -5,8 +5,6 @@ export * from './nas-page-header/nas-page-header.component';
 export * from './nas-pill-tabs/nas-pill-tabs.component';
 export * from './nas-tabs/nas-tabs.component';
 export * from './nas-avatar/nas-avatar.component';
-export * from './nas-locale-input/nas-locale-input.component';
-export * from './nas-points-input/nas-points-input.component';
 export * from './nas-datepicker/nas-datepicker.component';
 export * from './nas-shimmer/nas-shimmer.component';
 export * from './nas-data-table/nas-data-table.component';

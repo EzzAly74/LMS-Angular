@@ -15,7 +15,7 @@
   font-family: var(--nas-font);
   display: flex;
   flex-direction: column;
-  max-block-size: calc(100vh - 48px);
+  max-block-size: 90vh; // inside PrimeNG's 90% dialog cap, so the footer never clips
   background: var(--nas-color-bg-surface);
 }
 

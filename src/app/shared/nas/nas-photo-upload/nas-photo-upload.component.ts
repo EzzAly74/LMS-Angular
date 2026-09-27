@@ -34,9 +34,11 @@ import { NasIconComponent } from '../nas-icon/nas-icon.component';
 export class NasPhotoUploadComponent {
   @Input() value: string | null = null;
   @Input() ratio?: string;
-  @Input() formats = 'PNG, JPG, JPEG, WEBP, SVG, GIF';
+  // No SVG (D-044): the server rejects it - it is a script-capable document,
+  // not a photo - so the picker must neither offer nor advertise it.
+  @Input() formats = 'PNG, JPG, JPEG, WEBP, GIF';
   @Input() maxLabel = 'common.max_file_size_3mb';
-  @Input() accept = 'image/png,image/jpeg,image/webp,image/svg+xml,image/gif';
+  @Input() accept = 'image/png,image/jpeg,image/webp,image/gif';
   /**
    * Optional overrides for the CTA button label. Lets callers (e.g. the
    * Courses Add/Edit dialog) match Figma's "Add Photo / Replace Photo"

@@ -8,7 +8,7 @@
       <span class="photo-upload__icon"><nas-icon name="upload-simple" [size]="24" /></span>
 
       @if (ratio) {
-        <div class="photo-upload__ratio">Ratio: {{ ratio }}</div>
+        <div class="photo-upload__ratio">{{ 'common.ratio' | translate: { ratio } }}</div>
       }
 
       <div class="photo-upload__formats">{{ formats }}</div>
@@ -26,7 +26,7 @@
     <div class="photo-upload__preview" [title]="fileName() || ''">
       <img [src]="value" alt="" />
       <button type="button" class="photo-upload__clear" (click)="onClear()"
-              [attr.aria-label]="'Clear'">
+              [attr.aria-label]="'common.remove' | translate">
         <nas-icon name="x" [size]="14" />
       </button>
     </div>

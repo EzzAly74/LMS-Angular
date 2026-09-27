@@ -11,7 +11,7 @@
   .p-dialog-content { padding: 0; background: transparent; }
 }
 
-.aq__card { display: flex; flex-direction: column; background: var(--nas-color-bg-surface); max-block-size: calc(100vh - 48px); }
+.aq__card { display: flex; flex-direction: column; background: var(--nas-color-bg-surface); max-block-size: 90vh; }
 
 .aq__head {
   display: flex;

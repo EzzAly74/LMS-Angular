@@ -9,7 +9,7 @@
       <p class="dashboard-greeting__date">{{ today | date:'fullDate' }}</p>
       <app-passcode-widget />
     </div>
-    <button type="button" class="dashboard-add-btn" routerLink="/admin/courses">
+    <button type="button" class="dashboard-add-btn" routerLink="/admin/courses" [queryParams]="{ new: 1 }">
       <i class="pi pi-plus-circle"></i>
       <span>{{ 'dashboard.add_course' | translate }}</span>
     </button>
