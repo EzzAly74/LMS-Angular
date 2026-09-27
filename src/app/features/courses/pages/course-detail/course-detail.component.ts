@@ -405,7 +405,7 @@ export class CourseDetailComponent implements OnInit {
       // Pull every enrollment (online + offline) in a single shot. The
       // endpoint paginates, but for the detail page we want the full list
       // so we ask for a generous per_page. Failures don't block the page.
-      enrollments: this.coursesApi.listEnrollments(id, { per_page: 200 }),
+      enrollments: this.coursesApi.listLearners(id, { per_page: 100 }),
     }).subscribe({
       next: ({ course, cohorts, enrollments }) => {
         const raw = course.result as unknown as ApiCourseRaw;

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../../../core/services/api.service';
-import { API, courseUrl } from '../../../core/constants/api.constants';
+import { ApiService, ApiParams } from '../../../core/services/api.service';
+import { API, API_BASE, courseUrl } from '../../../core/constants/api.constants';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
 import type {
   Course, CourseSession, CreateCoursePayload,
@@ -9,6 +9,8 @@ import type {
   Cohort, CohortPayload,
 } from '../../../core/models/course.types';
 import type { CourseFormSource } from '../models/course-form.model';
+import type { CourseEvaluationSummary, CourseLearnerRow, CourseSubmissionRow } from '../models/course-detail.model';
+import type { TemplateResults } from '../../evaluations/models/evaluation.model';
 
 @Injectable({ providedIn: 'root' })
 export class CoursesApiService {
@@ -121,15 +123,36 @@ export class CoursesApiService {
     return this.api.delete(courseUrl.lecture(courseId, moduleId));
   }
 
-  /* ── Enrollments (powers the Course → Learners tab) ──────────────── */
+  /* ── Enrollments (Course Details Learners tab, cohort learners modal) ── */
 
   /**
-   * Paginated list of every learner enrolled in a course. The backend
-   * endpoint covers both online (no group_id) and offline (with group_id)
-   * enrollments in a single response, with the user + group eager-loaded.
+   * One page of a course's learners with progress. Filters: `search` (name or
+   * employee id), `status` (progress band), `group_id` (a cohort of this
+   * course); `per_page` up to 100.
    */
-  listEnrollments(courseId: number, params?: Record<string, string | number | undefined>) {
-    return this.api.getPaginated<unknown>(courseUrl.enrollments(courseId), params);
+  listLearners(courseId: number, params?: ApiParams): Observable<PaginatedResponse<CourseLearnerRow>> {
+    return this.api.getPaginated<CourseLearnerRow>(courseUrl.enrollments(courseId), params);
+  }
+
+  /* ── Quizzes / Assignments tabs: the admin submission lists, one course ── */
+
+  quizSubmissions(courseId: number, params?: ApiParams): Observable<PaginatedResponse<CourseSubmissionRow>> {
+    return this.api.getPaginated<CourseSubmissionRow>(`${API.ADMIN_QUIZZES}/submissions`, { ...params, course_id: courseId });
+  }
+
+  assignmentSubmissions(courseId: number, params?: ApiParams): Observable<PaginatedResponse<CourseSubmissionRow>> {
+    return this.api.getPaginated<CourseSubmissionRow>(`${API.ADMIN_ASSIGNMENTS}/submissions`, { ...params, course_id: courseId });
+  }
+
+  /* ── Evaluations (Overview card, Evaluations tab) ─────────────────── */
+
+  evaluationSummary(courseId: number): Observable<ApiResponse<CourseEvaluationSummary>> {
+    return this.api.get<CourseEvaluationSummary>(`${API_BASE}/admin/courses/${courseId}/evaluation-summary`);
+  }
+
+  /** One template's per-question results, counting this course's answers only. */
+  templateResults(templateId: number, courseId: number): Observable<ApiResponse<TemplateResults>> {
+    return this.api.get<TemplateResults>(`${API.ADMIN_EVALUATIONS}/${templateId}/results`, { course_id: courseId });
   }
 
   /* ── Cohort Attendance (powers the right-edge drawer on the detail page) ── */

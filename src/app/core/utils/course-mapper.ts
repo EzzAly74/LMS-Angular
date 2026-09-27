@@ -197,55 +197,28 @@ export function mapApiCourseDetail(raw: ApiCourseRaw): CourseDetail {
 }
 
 /**
- * Raw shape returned by `GET /api/v1/courses/{course}/enrollments`. The
- * backend ships the bare `UsersCourse` pivot row with `user` and `group`
- * eager-loaded, so localized fields arrive as full bilingual JSON.
+ * One row of `GET /api/v1/courses/{course}/enrollments` (CourseLearnerResource,
+ * D2): the learner, their cohort, lecture progress and its status band, all
+ * resolved by the backend in the request locale.
  */
 export interface ApiEnrollmentRaw {
   id: number;
-  user_id?: number;
-  group_id?: number | null;
-  created_at?: string;
-  /**
-   * Computed inline by the backend (FLOOR(completed_lectures * 100 / total)).
-   * MySQL returns `DECIMAL` as a string, so we accept both shapes here.
-   */
-  progress_percent?: number | string | null;
-  user?: {
-    id: number;
-    name?: MaybeLocalized;
-    machine_code?: string;
-    department_name?: string;
-    image?: string | null;
-  } | null;
-  group?: {
-    id: number;
-    name?: MaybeLocalized;
-  } | null;
+  user: { id: number; name: string; employee_id: string | null; active: boolean } | null;
+  cohort: { id: number; name: string | null } | null;
+  progress: number;
+  status: CourseLearner['status'];
+  enrolled_at: string | null;
 }
 
-/**
- * Map a raw enrollment pivot record into a flat learner row for the table.
- * Progress comes from the backend correlated sub-select; the status is
- * derived locally so the Figma "Completed / In Progress / Not Started"
- * chips don't need a separate column on the wire.
- */
+/** Map an enrolment row into the flat learner row the table binds to. */
 export function mapEnrollmentToLearner(raw: ApiEnrollmentRaw): CourseLearner {
-  const progress = Math.max(0, Math.min(100,
-    Math.round(Number(raw.progress_percent ?? 0)) || 0,
-  ));
-  const status: CourseLearner['status'] =
-    progress >= 100 ? 'completed'
-  : progress > 0   ? 'in_progress'
-  :                  'not_started';
-
   return {
     id:          raw.id,
-    name:        pickLocalized(raw.user?.name, uiLocale(), 'Unknown learner'),
-    cohort_name: pickLocalized(raw.group?.name, uiLocale(), '—'),
-    progress,
-    status,
-    enrolled_at: raw.created_at ?? '',
+    name:        raw.user?.name || '—',
+    cohort_name: raw.cohort?.name || '—',
+    progress:    Math.max(0, Math.min(100, Math.round(Number(raw.progress) || 0))),
+    status:      raw.status,
+    enrolled_at: raw.enrolled_at ?? '',
   };
 }
 
