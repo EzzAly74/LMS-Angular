@@ -49,9 +49,10 @@ export const permissionGuard: CanActivateFn = (
 
 /**
  * Pick the first sidebar destination the admin actually has access to.
- * Used as a soft "redirect away from forbidden" target. Falls back to
- * the login page only if the admin holds zero `view-*` permissions —
- * which would itself be a misconfiguration worth surfacing.
+ * Used as a soft "redirect away from forbidden" target. An admin holding
+ * zero `view-*` permissions goes to the un-gated no-access page. Not to
+ * login: the guest guard sends a signed-in admin straight back, and the two
+ * guards looped forever, freezing the tab (DB-24).
  */
 export function fallbackRoute(auth: AuthService): string {
   for (const item of ADMIN_NAV_ITEMS) {
@@ -60,5 +61,5 @@ export function fallbackRoute(auth: AuthService): string {
     if (!key) continue;            // skip un-gated items as defaults
     if (auth.hasView(key)) return item.route;
   }
-  return '/auth/login';
+  return '/admin/no-access';
 }

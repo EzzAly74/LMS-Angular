@@ -53,6 +53,10 @@
     "my_certificates": "My Certificates",
     "my_questions": "My Questions"
   },
+  "no_access": {
+    "title": "No access yet",
+    "message": "Your account is signed in, but no part of the Dashboard has been assigned to it. Ask an administrator to give your role access."
+  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

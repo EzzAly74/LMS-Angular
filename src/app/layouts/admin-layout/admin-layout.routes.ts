@@ -19,6 +19,13 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
+      // No viewKey on purpose: the fallback for an admin with no view-* at all (DB-24).
+      {
+        path: 'no-access',
+        loadComponent: () => import('../../features/no-access/no-access.component').then(m => m.NoAccessComponent),
+        title: 'No access — 2B Academy',
+      },
+
       // ── Dashboard ──────────────────────────────────────────────────
       {
         path: 'dashboard',

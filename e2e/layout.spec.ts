@@ -94,6 +94,8 @@ const ROUTES: Route[] = [
     list: '/api/v1/admin/evaluations/scores',
     path: (r) => r.learner && r.course && `evaluations/scores/${r.learner.id}/${r.course.id}?template=${r.template?.id ?? ''}`,
   },
+  // DB-24: fallback for an admin with no view-* permission (no Figma frame).
+  'no-access',
   // D8 (Figma 2181:116177, 2181:116391).
   'external-training',
   { name: 'external-training-review', list: '/api/v1/admin/external-training', path: (r) => r.id && `external-training/${r.id}` },
