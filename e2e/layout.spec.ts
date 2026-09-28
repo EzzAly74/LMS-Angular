@@ -79,6 +79,10 @@ const ROUTES: Route[] = [
   { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (r) => r.id && `job-titles/${r.id}` },
   { name: 'learners-detail', list: '/api/v1/admin/users', params: { role: 'learner' }, path: (r) => r.id && `learners/${r.id}` },
   { name: 'courses-detail', list: '/api/v1/courses', path: (r) => r.id && `courses/${r.id}` },
+  // D2 Course Details tabs (Figma 2266:128868); overview is the default above.
+  ...(['cohort', 'learners', 'content', 'quizzes', 'assignments', 'qualifications', 'evaluations'] as const).map(
+    (tab): DetailRoute => ({ name: `courses-detail-${tab}`, list: '/api/v1/courses', path: (r) => r.id && `courses/${r.id}?tab=${tab}` }),
+  ),
   // D4 (Figma 2169:108198, 2017:52260, 2169:108801).
   { name: 'evaluations-results', list: '/api/v1/admin/evaluations/templates', path: (r) => r.id && `evaluations/${r.id}` },
   'evaluations/scores',

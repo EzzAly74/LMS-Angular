@@ -91,6 +91,9 @@
 // Scrolls sideways inside the card on narrow screens; focusable so a
 // keyboard user can scroll it too.
 .cl-scroll {
+  // Containing block for the table's visually hidden labels (.cl-sr-only is
+  // absolute): without it they escaped the scroll box and widened the page.
+  position: relative;
   overflow-x: auto;
   &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: -2px; }
 }

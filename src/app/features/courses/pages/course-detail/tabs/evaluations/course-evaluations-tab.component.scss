@@ -14,12 +14,12 @@
 
 .et-line { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-color-text-muted); }
 
-.et-picker { display: flex; align-items: center; gap: var(--nas-space-2); min-inline-size: 0; }
+.et-picker { display: flex; align-items: center; flex-wrap: wrap; gap: var(--nas-space-2); min-inline-size: 0; max-inline-size: 100%; }
 
 .et-picker__label { font-size: var(--nas-size-xs); font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
 
 :host ::ng-deep .et-picker__dropdown {
-  min-inline-size: 240px;
+  min-inline-size: min(240px, 100%);
   max-inline-size: 100%;
   border-color: var(--nas-color-border);
   border-radius: var(--nas-radius-md);
