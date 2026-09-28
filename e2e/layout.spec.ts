@@ -96,6 +96,13 @@ const ROUTES: Route[] = [
   },
   // DB-24: fallback for an admin with no view-* permission (no Figma frame).
   'no-access',
+  // Quiz / assignment forms (Figma 1982:41913, 1983:44040) and reviews (2393:120281).
+  'quizzes/new',
+  'assignments/new',
+  { name: 'quizzes-edit', list: '/api/v1/admin/quizzes', path: (r) => r.id && `quizzes/${r.id}/edit` },
+  { name: 'assignments-edit', list: '/api/v1/admin/assignments', path: (r) => r.id && `assignments/${r.id}/edit` },
+  { name: 'quizzes-submission', list: '/api/v1/admin/quizzes/submissions', path: (r) => r.id && `quizzes/submissions/${r.id}` },
+  { name: 'assignments-submission', list: '/api/v1/admin/assignments/submissions', path: (r) => r.id && `assignments/submissions/${r.id}` },
   // D8 (Figma 2181:116177, 2181:116391).
   'external-training',
   { name: 'external-training-review', list: '/api/v1/admin/external-training', path: (r) => r.id && `external-training/${r.id}` },
