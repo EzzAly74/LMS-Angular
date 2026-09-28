@@ -6,7 +6,21 @@
 
 export type AssignmentStatus = 'draft' | 'active';
 export type AssignmentCohortScope = 'all' | 'specific';
-export type AssignmentQuestionType = 'mcq' | 'yes_no' | 'open' | 'reorder';
+export type AssignmentQuestionType = 'mcq' | 'yes_no' | 'open' | 'reorder' | 'file';
+
+/** Types a person scores by hand: no correct answer (D-033). */
+export const MANUAL_QUESTION_TYPES: readonly AssignmentQuestionType[] = ['open', 'file'];
+
+/**
+ * A stored file as the API describes it (D-064): never a path. The
+ * Dashboard downloads through its own API base, not `download_url`.
+ */
+export interface StoredFile {
+  name: string | null;
+  size: number;
+  uploaded_at: string | null;
+  download_url: string;
+}
 export type SubmissionStatus = 'graded' | 'pending';
 
 export interface CourseLite {
@@ -33,6 +47,8 @@ export interface AssignmentQuestion {
   correct_answer_ar: string | null;
   explanation_en: string | null;
   explanation_ar: string | null;
+  /** File questions: the instructor's attachment ("Assignment file"). */
+  attachment?: StoredFile | null;
 }
 
 /** List-view (paginated) shape — matches AdminAssignmentListResource. */
@@ -122,6 +138,8 @@ export interface SubmissionAnswer {
   is_correct: boolean | null;
   answer: AnswerPayload | null;
   feedback: string | null;
+  /** File questions: the learner's upload ("Learner answer"). */
+  file: StoredFile | null;
   question: AssignmentQuestion | null;
 }
 
@@ -142,6 +160,9 @@ export interface SubmissionDetail {
     total_score: number;
   } | null;
   course_title: string | null;
+  /** Delivery badge ("Hybrid"): the course's course_type. */
+  course_type: string | null;
+  category_name: string | null;
   instructor_name: string | null;
   user: {
     id: number;
@@ -152,7 +173,10 @@ export interface SubmissionDetail {
   user_file_url: string | null;
   total_score: number | null;
   max_score: number;
+  /** Null while any answer awaits a score (B-129). */
   score_percent: number | null;
+  pending_answers: number;
+  updated_at: string | null;
   feedback: string | null;
   status: SubmissionStatus;
   submitted_at: string | null;

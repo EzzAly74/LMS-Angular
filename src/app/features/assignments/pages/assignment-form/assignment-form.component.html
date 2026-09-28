@@ -213,6 +213,44 @@
               </div>
             </div>
 
+            <!-- ── File question: the assignment file (Figma 1983:44040 / 1983:43199) ── -->
+            @if (questionType(i) === 'file') {
+              @let g = q.controls;
+              <div class="af-field">
+                <span class="af-label" [id]="'af-file-' + i">{{ 'assignments.form_file' | translate }} <span class="af-req">*</span></span>
+                @if (g.pending.value; as f) {
+                  <div class="af-file">
+                    <nas-file-card class="af-file__card" [name]="f.name" [size]="f.size" />
+                    <button type="button" class="af-file__remove" (click)="removeAttachment(i)"
+                      [attr.aria-label]="'assignments.remove_file' | translate: { name: f.name }">
+                      <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
+                    </button>
+                  </div>
+                } @else if (g.attachment.value && !g.dropAttachment.value) {
+                  @let a = g.attachment.value!;
+                  <div class="af-file">
+                    <nas-file-card class="af-file__card" [name]="a.name ?? ''" [size]="a.size" [date]="a.uploaded_at" (open)="downloadAttachment(i)" />
+                    <button type="button" class="af-file__remove" (click)="removeAttachment(i)"
+                      [attr.aria-label]="'assignments.remove_file' | translate: { name: a.name ?? '' }">
+                      <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
+                    </button>
+                  </div>
+                } @else {
+                  <input #afPicker class="af-sr-only" type="file" [id]="'af-file-input-' + i"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg"
+                    [attr.aria-labelledby]="'af-file-' + i" (change)="onAttachmentPick(i, $event)" />
+                  <button type="button" class="af-upload" (click)="afPicker.click()" [attr.aria-describedby]="'af-file-hint-' + i">
+                    <nas-icon name="upload-simple" [size]="16" />
+                    {{ 'assignments.upload_file' | translate }}
+                  </button>
+                }
+                <p class="af-hint" [id]="'af-file-hint-' + i">{{ 'assignments.file_hint' | translate }}</p>
+                @if (g.fileError.value; as err) {
+                  <p class="af-error" role="alert">{{ ('assignments.file_' + err) | translate }}</p>
+                }
+              </div>
+            }
+
             <!-- ── MCQ / Reorder options ──────────────────── -->
             @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
               <div class="af-field">
@@ -269,7 +307,7 @@
             }
 
             <!-- ── Correct answer / grading key ────────────────── -->
-            @if (questionType(i) !== 'open') {
+            @if (!isManual(i)) {
               <div class="af-row af-row--cols2">
                 <div class="af-field">
                   <label class="af-label">

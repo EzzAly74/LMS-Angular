@@ -1,29 +1,31 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
+  DestroyRef,
   OnInit,
   computed,
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import {
-  NasStatusBadgeComponent,
-} from '../../../../shared/nas';
+import { NasStatusBadgeComponent, NasStatusTone } from '../../../../shared/nas';
+import { NasFileCardComponent } from '../../../../shared/nas/nas-file-card/nas-file-card.component';
+import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { EnumsService } from '../../../../core/services/enums.service';
 import { AssignmentsApiService } from '../../services/assignments-api.service';
-import type {
-  AssignmentQuestionType,
-  SubmissionAnswer,
-  SubmissionDetail,
+import {
+  MANUAL_QUESTION_TYPES,
+  type AssignmentQuestion,
+  type AssignmentQuestionType,
+  type SubmissionAnswer,
+  type SubmissionDetail,
 } from '../../models/assignment.types';
 
 interface QuestionRow {
@@ -31,53 +33,85 @@ interface QuestionRow {
   position: number;
 }
 
+/**
+ * Assignment submission review - Figma 2393:120281 (not yet scored),
+ * 2393:121481 (scored, Edit) and 2393:121817 (editing, Update Score).
+ *
+ * Header, three stat cards, then one card per question. File questions
+ * (D-033 / D-064) show the learner's upload and the assignment's own file;
+ * questions a person scores (open, file) carry the Score form. The other
+ * types keep their read-only review.
+ */
 @Component({
   selector: 'app-submission-detail',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     RouterLink,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasStatusBadgeComponent,
+    NasFileCardComponent,
+    NasDatePipe,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './submission-detail.component.html',
   styleUrl:    './submission-detail.component.scss',
 })
-export class SubmissionDetailComponent implements OnInit, OnDestroy {
-  private readonly api      = inject(AssignmentsApiService);
-  private readonly route    = inject(ActivatedRoute);
-  private readonly router   = inject(Router);
-  private readonly toast    = inject(MessageService);
-  private readonly t        = inject(TranslateService);
-  private readonly destroy$ = new Subject<void>();
+export class SubmissionDetailComponent implements OnInit {
+  private readonly api        = inject(AssignmentsApiService);
+  private readonly route      = inject(ActivatedRoute);
+  private readonly router     = inject(Router);
+  private readonly toast      = inject(MessageService);
+  private readonly t          = inject(TranslateService);
+  private readonly enums      = inject(EnumsService);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly locale   = inject(LocaleService).locale;
 
-  readonly loading    = signal(true);
-  readonly detail     = signal<SubmissionDetail | null>(null);
-  readonly editingAnswerId = signal<number | null>(null);
-  readonly editingScore    = signal<number>(0);
-  readonly editingFeedback = signal<string>('');
-  readonly savingAnswerId  = signal<number | null>(null);
+  readonly loading = signal(true);
+  readonly failed  = signal(false);
+  readonly detail  = signal<SubmissionDetail | null>(null);
 
-  readonly questionRows = computed<QuestionRow[]>(() => {
-    const list = this.detail()?.answers ?? [];
-    return list
+  /** Scored answers reopened with Edit (2393:121817). */
+  readonly editing  = signal<ReadonlySet<number>>(new Set());
+  /** Score / feedback typed but not saved, per answer. */
+  readonly drafts   = signal<Readonly<Record<number, string>>>({});
+  readonly feedback = signal<Readonly<Record<number, string>>>({});
+  readonly saving   = signal<number | null>(null);
+  readonly downloading = signal<string | null>(null);
+
+  readonly questionRows = computed<QuestionRow[]>(() =>
+    (this.detail()?.answers ?? [])
       .filter((a): a is SubmissionAnswer => !!a)
       .sort((a, b) => (a.question?.position ?? 0) - (b.question?.position ?? 0))
-      .map((a, i) => ({ answer: a, position: i + 1 }));
+      .map((a, i) => ({ answer: a, position: i + 1 })),
+  );
+
+  readonly title = computed(() => {
+    const a = this.detail()?.assignment;
+    if (!a) return this.t.instant('assignments.submission');
+    return this.locale() === 'ar' ? (a.title_ar || a.title) : (a.title || a.title_ar || '');
   });
 
+  /** Taken once, outside any computed, as EnumsService documents. */
+  private readonly courseTypes = this.enums.options('course_type');
+
+  readonly typeLabel = computed(() => {
+    const code = this.detail()?.course_type;
+    return code ? (this.courseTypes().find(o => o.code === code)?.value ?? code) : '';
+  });
+
+  /** "--" until every answer is scored (Figma draws "--%" and "-- / 20"). */
+  readonly scored = computed(() => {
+    const d = this.detail();
+    return !!d && d.total_score !== null && d.pending_answers === 0;
+  });
+
+  private submissionId = 0;
+
   constructor() {
-    // Refetch the submission whenever the UI locale changes so question
-    // text, feedback and learner answers come back localized.
-    withLocaleReload(() => {
-      const id = Number(this.route.snapshot.paramMap.get('id'));
-      if (id && !Number.isNaN(id)) this.load(id);
-    });
+    // Question text, titles and names come back localised: refetch on a switch.
+    withLocaleReload(() => { if (this.submissionId) this.load(); });
   }
 
   ngOnInit(): void {
@@ -86,20 +120,15 @@ export class SubmissionDetailComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/assignments']);
       return;
     }
-    this.load(id);
+    this.submissionId = id;
+    this.load();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  /* ── Loaders ─────────────────────────────────────────────────── */
-
-  private load(id: number): void {
+  load(): void {
     this.loading.set(true);
-    this.api.getSubmission(id)
-      .pipe(takeUntil(this.destroy$))
+    this.failed.set(false);
+    this.api.getSubmission(this.submissionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: res => {
           this.detail.set(res.result);
@@ -107,66 +136,133 @@ export class SubmissionDetailComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.loading.set(false);
-          this.router.navigate(['/admin/assignments']);
+          this.failed.set(true);
         },
       });
   }
 
-  /* ── Inline grading (open questions) ─────────────────────────── */
+  /* ── Scoring (open + file questions) ─────────────────────────── */
 
-  startEdit(answer: SubmissionAnswer): void {
-    if (answer.question?.type !== 'open') return;
-    this.editingAnswerId.set(answer.id);
-    this.editingScore.set(answer.awarded_score ?? 0);
-    this.editingFeedback.set(answer.feedback ?? '');
+  isManual(type: AssignmentQuestionType | undefined): boolean {
+    return !!type && MANUAL_QUESTION_TYPES.includes(type);
   }
 
-  cancelEdit(): void {
-    this.editingAnswerId.set(null);
+  /** The form shows until the answer is scored, and again after Edit. */
+  showForm(a: SubmissionAnswer): boolean {
+    return a.awarded_score === null || this.editing().has(a.id);
   }
 
-  saveEdit(answer: SubmissionAnswer): void {
-    const submission = this.detail();
-    if (!submission || !answer) return;
+  draft(a: SubmissionAnswer): string {
+    return this.drafts()[a.id] ?? '';
+  }
 
-    const max = answer.question?.score ?? 0;
-    const raw = Number(this.editingScore());
-    const safe = Math.max(0, Math.min(Number.isFinite(raw) ? raw : 0, max));
+  setDraft(a: SubmissionAnswer, value: string | number | null): void {
+    this.drafts.update(d => ({ ...d, [a.id]: value === null ? '' : String(value) }));
+  }
 
-    this.savingAnswerId.set(answer.id);
-    this.api.gradeAnswer(submission.id, answer.id, {
-      awarded_score: safe,
-      feedback: this.editingFeedback() || null,
-    }).subscribe({
-      next: res => {
-        this.detail.set(res.result.submission);
-        this.editingAnswerId.set(null);
-        this.savingAnswerId.set(null);
-        this.toast.add({ severity: 'success', detail: this.t.instant('submission_score_updated') });
+  feedbackDraft(a: SubmissionAnswer): string {
+    return this.feedback()[a.id] ?? a.feedback ?? '';
+  }
+
+  setFeedback(a: SubmissionAnswer, value: string): void {
+    this.feedback.update(f => ({ ...f, [a.id]: value }));
+  }
+
+  /** A whole number from 0 to the question's points; null otherwise. */
+  parsedScore(a: SubmissionAnswer): number | null {
+    const raw = this.draft(a).trim();
+    if (!/^\d+$/.test(raw)) return null;
+    const n = Number(raw);
+    return n <= (a.question?.score ?? 0) ? n : null;
+  }
+
+  scoreInvalid(a: SubmissionAnswer): boolean {
+    return this.draft(a).trim() !== '' && this.parsedScore(a) === null;
+  }
+
+  startEdit(a: SubmissionAnswer): void {
+    this.setDraft(a, a.awarded_score);
+    this.setFeedback(a, a.feedback ?? '');
+    this.editing.update(s => new Set(s).add(a.id));
+  }
+
+  cancel(a: SubmissionAnswer): void {
+    this.drafts.update(d => { const n = { ...d }; delete n[a.id]; return n; });
+    this.editing.update(s => { const n = new Set(s); n.delete(a.id); return n; });
+  }
+
+  save(a: SubmissionAnswer): void {
+    const score = this.parsedScore(a);
+    const d = this.detail();
+    if (score === null || !d || this.saving() !== null) return;
+
+    this.saving.set(a.id);
+    const fb = a.question?.type === 'open' ? this.feedbackDraft(a) : (a.feedback ?? '');
+    this.api.gradeAnswer(d.id, a.id, { awarded_score: score, feedback: fb.trim() || null })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.detail.set(res.result.submission);
+          this.cancel(a);
+          this.saving.set(null);
+          this.toast.add({ severity: 'success', detail: this.t.instant('submission_score_updated') });
+        },
+        error: () => this.saving.set(null),
+      });
+  }
+
+  /* ── Files ───────────────────────────────────────────────────── */
+
+  downloadAnswer(a: SubmissionAnswer): void {
+    const d = this.detail();
+    if (!d || !a.file) return;
+    this.download(`a${a.id}`, this.api.downloadAnswerFile(d.id, a.id, a.file.name ?? 'answer'));
+  }
+
+  downloadAttachment(q: AssignmentQuestion): void {
+    const d = this.detail();
+    if (!d?.assignment || !q.id || !q.attachment) return;
+    this.download(`q${q.id}`, this.api.downloadAttachment(d.assignment.id, q.id, q.attachment.name ?? 'attachment'));
+  }
+
+  private download(key: string, request: ReturnType<AssignmentsApiService['downloadAnswerFile']>): void {
+    if (this.downloading()) return;
+    this.downloading.set(key);
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.downloading.set(null),
+      error: () => {
+        this.downloading.set(null);
+        this.toast.add({ severity: 'error', detail: this.t.instant('assignments.download_failed') });
       },
-      error: () => this.savingAnswerId.set(null),
     });
   }
 
-  /* ── Type-specific helpers for the template ─────────────────── */
+  /* ── Localised text ──────────────────────────────────────────── */
 
-  questionTypeLabel(type: AssignmentQuestionType | undefined): string {
-    switch (type) {
-      case 'mcq':     return this.t.instant('quiz_types.mcq');
-      case 'yes_no':  return this.t.instant('quiz_types.yes_no');
-      case 'open':    return this.t.instant('quiz_types.open');
-      case 'reorder': return this.t.instant('quiz_types.reorder');
-      default:        return '';
-    }
+  questionText(q: AssignmentQuestion | null): string {
+    if (!q) return '';
+    return this.locale() === 'ar' ? (q.question_ar || q.question_en) : (q.question_en || q.question_ar || '');
   }
 
-  /** True if a given option label is the correct answer. */
+  questionTypeLabel(type: AssignmentQuestionType | undefined): string {
+    return type ? this.t.instant(`quiz_types.${type}`) : '';
+  }
+
+  statusTone(): NasStatusTone {
+    return this.detail()?.assignment?.status === 'active' ? 'success' : 'neutral';
+  }
+
+  typeTone(s: string | null | undefined): NasStatusTone {
+    return s === 'hybrid' ? 'success' : s === 'online' ? 'teal' : s === 'external_link' ? 'sky' : 'neutral';
+  }
+
+  /* ── Read-only review of the auto-graded types ──────────────── */
+
   isCorrectOption(answer: SubmissionAnswer, optionLabel: string): boolean {
     const correct = answer.question?.correct_answer_en?.trim().toLowerCase();
     return !!correct && optionLabel.trim().toLowerCase() === correct;
   }
 
-  /** True if a given option label was the learner's selected answer. */
   isLearnerOption(answer: SubmissionAnswer, optionLabel: string): boolean {
     const raw = answer.answer;
     if (!raw || !('value' in raw)) return false;
@@ -200,22 +296,6 @@ export class SubmissionDetailComponent implements OnInit, OnDestroy {
 
   isYesNoCorrect(answer: SubmissionAnswer, value: 'yes' | 'no'): boolean {
     return (answer.question?.correct_answer_en ?? '').toLowerCase() === value;
-  }
-
-  /* ── Header helpers ──────────────────────────────────────────── */
-
-  statusBadgeTone(): 'success' | 'danger' | 'neutral' {
-    const d = this.detail();
-    if (!d || !d.assignment) return 'neutral';
-    return d.assignment.status === 'active' ? 'success' : 'neutral';
-  }
-
-  passLabelTone(): 'success' | 'danger' {
-    const d = this.detail();
-    if (!d) return 'danger';
-    const pass = d.assignment?.pass_score ?? null;
-    if (pass === null || d.total_score === null) return 'success';
-    return d.total_score >= pass ? 'success' : 'danger';
   }
 
   back(): void {

@@ -24,6 +24,7 @@ export type EnumName =
   | 'locale'
   | 'cohort_scope'
   | 'question_type'
+  | 'assignment_question_type'
   | 'dashboard_range'
   | 'role_color'
   | 'role_guard'

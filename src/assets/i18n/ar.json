@@ -77,6 +77,7 @@
     "brand_subtitle": "نظام إدارة التعلم NAS"
   },
   "common": {
+    "download_file": "تنزيل {{name}}",
     "ratio": "النسبة: {{ratio}}",
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -322,6 +323,30 @@
     "select_to_view": "اختر دورة لعرض اختباراتها."
   },
   "assignments": {
+    "form_file": "الملف",
+    "upload_file": "رفع ملف",
+    "remove_file": "إزالة {{name}}",
+    "file_hint": "PDF أو Word أو Excel أو PowerPoint أو PNG أو JPG، حتى 10 ميجابايت.",
+    "file_type": "اختر ملف PDF أو Word أو Excel أو PowerPoint أو PNG أو JPG.",
+    "file_size": "يجب ألا يزيد حجم الملف على 10 ميجابايت.",
+    "toast_created": "تم إنشاء الواجب.",
+    "toast_updated": "تم تحديث الواجب.",
+    "breadcrumb": "مسار التنقل",
+    "learner": "المتعلم",
+    "course": "الدورة",
+    "category": "التصنيف",
+    "updated_on": "آخر تحديث {{date}}",
+    "summary": "ملخص التسليم",
+    "question_n": "السؤال {{n}}:",
+    "pts": "نقطة",
+    "no_file": "لم يُرفع أي ملف بعد.",
+    "assignment_file": "ملف الواجب",
+    "learner_choice": "(اختيار المتعلم)",
+    "score": "الدرجة",
+    "update_score": "تحديث الدرجة",
+    "score_range": "أدخل عددًا صحيحًا من 0 إلى {{max}}.",
+    "save": "حفظ",
+    "download_failed": "تعذّر تنزيل الملف. حاول مرة أخرى.",
     "title": "المهام",
     "subtitle": "متابعة المهام التي يراها المتدربون والتقييمات المُسلَّمة",
     "create": "إضافة مهمة",
@@ -1168,6 +1193,7 @@
     "download": "تنزيل"
   },
   "quiz_types": {
+    "file": "ملف",
     "mcq": "اختيار من متعدد",
     "yes_no": "نعم / لا",
     "open": "سؤال مفتوح",

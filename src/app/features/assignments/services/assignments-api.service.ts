@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { saveBlob } from '../../../core/utils/save-blob';
 import { ApiService, ApiParams } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
 import type {
+  StoredFile,
   Assignment,
   AssignmentListItem,
   AssignmentOption,
@@ -86,5 +88,29 @@ export class AssignmentsApiService {
       `${API.ADMIN_ASSIGNMENTS}/submissions/${submissionId}/answers/${answerId}/grade`,
       body,
     );
+  }
+
+  /* ── File questions (D-064) ─────────────────────────────────── */
+
+  /** The learner's uploaded answer, saved under its original name. */
+  downloadAnswerFile(submissionId: number, answerId: number, name: string): Observable<void> {
+    return this.api.getBlob(`${API.ADMIN_ASSIGNMENTS}/submissions/${submissionId}/answers/${answerId}/file`)
+      .pipe(map(blob => saveBlob(blob, name)));
+  }
+
+  /** The instructor's attachment on a file question. */
+  downloadAttachment(assignmentId: number, questionId: number, name: string): Observable<void> {
+    return this.api.getBlob(`${API.ADMIN_ASSIGNMENTS}/${assignmentId}/questions/${questionId}/attachment`)
+      .pipe(map(blob => saveBlob(blob, name)));
+  }
+
+  uploadAttachment(assignmentId: number, questionId: number, file: File): Observable<ApiResponse<StoredFile>> {
+    const body = new FormData();
+    body.append('file', file);
+    return this.api.post<StoredFile>(`${API.ADMIN_ASSIGNMENTS}/${assignmentId}/questions/${questionId}/attachment`, body);
+  }
+
+  removeAttachment(assignmentId: number, questionId: number): Observable<ApiResponse<void>> {
+    return this.api.delete(`${API.ADMIN_ASSIGNMENTS}/${assignmentId}/questions/${questionId}/attachment`);
   }
 }

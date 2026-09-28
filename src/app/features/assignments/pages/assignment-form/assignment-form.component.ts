@@ -19,8 +19,10 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Subject, forkJoin, takeUntil, startWith } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { Observable, Subject, forkJoin, map, of, switchMap, takeUntil, startWith } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { NasFileCardComponent } from '../../../../shared/nas/nas-file-card/nas-file-card.component';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -30,7 +32,9 @@ import { NasStatusBadgeComponent } from '../../../../shared/nas';
 import { AssignmentsApiService } from '../../services/assignments-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
+import { MANUAL_QUESTION_TYPES } from '../../models/assignment.types';
 import type {
+  StoredFile,
   Assignment,
   AssignmentQuestion,
   AssignmentQuestionType,
@@ -43,6 +47,8 @@ import type {
 interface CourseOpt { id: number; title: string; }
 
 interface QuestionGroup {
+  /** Sent back on save so the question is updated in place (B-128). */
+  id: FormControl<number | null>;
   type: FormControl<AssignmentQuestionType>;
   score: FormControl<number>;
   question_en: FormControl<string>;
@@ -53,7 +59,16 @@ interface QuestionGroup {
   correct_answer_ar: FormControl<string>;
   explanation_en: FormControl<string>;
   explanation_ar: FormControl<string>;
+  /** File questions (D-064): the stored attachment, a file chosen but not yet uploaded, a removal. */
+  attachment: FormControl<StoredFile | null>;
+  pending: FormControl<File | null>;
+  dropAttachment: FormControl<boolean>;
+  fileError: FormControl<'type' | 'size' | null>;
 }
+
+/** Same limits as the API (AssignmentFileRules, D-064). */
+const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+const ATTACHMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg'];
 
 @Component({
   selector: 'app-assignment-form',
@@ -68,6 +83,8 @@ interface QuestionGroup {
     ToastModule,
     TranslateModule,
     NasStatusBadgeComponent,
+    NasFileCardComponent,
+    NasIconComponent,
   ],
   providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,6 +93,7 @@ interface QuestionGroup {
 })
 export class AssignmentFormComponent implements OnInit, OnDestroy {
   private readonly api        = inject(AssignmentsApiService);
+  private readonly t = inject(TranslateService);
   private readonly coursesApi = inject(CoursesApiService);
   private readonly enums      = inject(EnumsService);
   private readonly route      = inject(ActivatedRoute);
@@ -95,7 +113,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   readonly scopeOptions = this.enums.options('cohort_scope');
 
   /** Question-type dropdown — backend `question_type` enum. */
-  readonly questionTypeOptions = this.enums.options('question_type');
+  readonly questionTypeOptions = this.enums.options('assignment_question_type');
 
   /* ── Form ────────────────────────────────────────────────────── */
 
@@ -318,7 +336,9 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     if (!v.questions.length) return false;
     for (const q of v.questions) {
       if (!q.type || !q.question_en) return false;
-      if (q.type !== 'open' && !q.correct_answer_en) return false;
+      if (!MANUAL_QUESTION_TYPES.includes(q.type) && !q.correct_answer_en) return false;
+      // Figma marks a file question's File as required.
+      if (q.type === 'file' && !q.pending && (!q.attachment || q.dropAttachment)) return false;
       if ((q.type === 'mcq' || q.type === 'reorder') && (q.options_en?.filter(Boolean).length ?? 0) < 2) return false;
     }
     return true;
@@ -355,7 +375,8 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       cohort_ids:      value.cohort_scope === 'specific' ? value.cohort_ids : [],
       pass_score:      value.pass_score,
       status,
-      questions: value.questions.map((q: AssignmentQuestion) => ({
+      questions: value.questions.map(q => ({
+        ...(q.id ? { id: q.id } : {}),
         type: q.type,
         score: Number(q.score) || 0,
         question_en: q.question_en,
@@ -374,16 +395,22 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       ? this.api.update(this.assignmentId()!, payload)
       : this.api.create(payload);
 
-    obs$.subscribe({
-      next: res => {
+    const editing = !!this.assignmentId();
+    obs$.pipe(
+      // Attachments need the saved question ids, so they go second (D-064).
+      switchMap(res => this.syncAttachments(res.result).pipe(map(() => res.result))),
+    ).subscribe({
+      next: saved => {
         this.saving.set(false);
         this.toast.add({
           severity: 'success',
-          detail: this.assignmentId() ? 'Assignment updated.' : 'Assignment created.',
+          detail: this.t.instant(editing ? 'assignments.toast_updated' : 'assignments.toast_created'),
         });
-        const id = res.result.id;
-        if (!this.assignmentId()) {
-          this.router.navigate(['/admin/assignments', id, 'edit']);
+        if (!editing) {
+          this.router.navigate(['/admin/assignments', saved.id, 'edit']);
+        } else {
+          this.populateForm(saved);
+          this.fetchAssignment(saved.id);
         }
       },
       error: () => this.saving.set(false),
@@ -392,6 +419,56 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
 
   cancel(): void {
     this.router.navigate(['/admin/assignments']);
+  }
+
+  /* ── File questions (D-064) ──────────────────────────────────── */
+
+  onAttachmentPick(i: number, event: Event): void {
+    const el = event.target as HTMLInputElement;
+    const file = el.files?.[0] ?? null;
+    el.value = '';
+    if (!file) return;
+    const g = this.questions.at(i).controls;
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!ATTACHMENT_EXTENSIONS.includes(ext)) { g.fileError.setValue('type'); return; }
+    if (file.size > ATTACHMENT_MAX_BYTES) { g.fileError.setValue('size'); return; }
+    g.fileError.setValue(null);
+    g.pending.setValue(file);
+  }
+
+  removeAttachment(i: number): void {
+    const g = this.questions.at(i).controls;
+    if (g.pending.value) g.pending.setValue(null);
+    else g.dropAttachment.setValue(true);
+    g.fileError.setValue(null);
+  }
+
+  downloadAttachment(i: number): void {
+    const g = this.questions.at(i).controls;
+    const a = g.attachment.value;
+    const id = this.assignmentId();
+    if (!a || !id || !g.id.value) return;
+    this.api.downloadAttachment(id, g.id.value, a.name ?? 'attachment').subscribe({
+      error: () => this.toast.add({ severity: 'error', detail: this.t.instant('assignments.download_failed') }),
+    });
+  }
+
+  isManual(i: number): boolean {
+    return MANUAL_QUESTION_TYPES.includes(this.questionType(i));
+  }
+
+  /** Upload chosen files and remove dropped ones, matched to the saved questions by position. */
+  private syncAttachments(saved: Assignment): Observable<unknown> {
+    const savedQs = [...(saved.questions ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    const calls = this.questions.controls.flatMap((group, i): Observable<unknown>[] => {
+      const g = group.controls;
+      const qid = savedQs[i]?.id;
+      if (!qid || g.type.value !== 'file') return [];
+      if (g.pending.value) return [this.api.uploadAttachment(saved.id, qid, g.pending.value)];
+      if (g.dropAttachment.value && g.attachment.value) return [this.api.removeAttachment(saved.id, qid)];
+      return [];
+    });
+    return calls.length ? forkJoin(calls) : of(null);
   }
 
   /* ── Internal helpers ───────────────────────────────────────── */
@@ -421,6 +498,11 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       correct_answer_ar: this.fb.nonNullable.control<string>(q.correct_answer_ar ?? ''),
       explanation_en:    this.fb.nonNullable.control<string>(q.explanation_en ?? ''),
       explanation_ar:    this.fb.nonNullable.control<string>(q.explanation_ar ?? ''),
+      id:                this.fb.control<number | null>(q.id ?? null),
+      attachment:        this.fb.control<StoredFile | null>(q.attachment ?? null),
+      pending:           this.fb.control<File | null>(null),
+      dropAttachment:    this.fb.nonNullable.control(false),
+      fileError:         this.fb.control<'type' | 'size' | null>(null),
     });
   }
 
