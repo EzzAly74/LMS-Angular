@@ -198,6 +198,8 @@
     "admins": "المسؤولون",
     "clear": "مسح",
     "no_options": "لا توجد خيارات",
+    "n_selected": "تم اختيار {0}",
+    "type_to_search": "اكتب للبحث",
     "retry": "إعادة المحاولة"
   },
   "courses": {
@@ -817,23 +819,24 @@
   "job_titles": {
     "title": "المسميات الوظيفية",
     "subtitle": "حدّد متطلبات المؤهلات لكل مسمى وظيفي",
-    "assign_qualifications": "تعيين المؤهلات",
-    "assign_qualification": "تعيين مؤهل",
-    "qualifications_assigned": "المؤهلات المعيّنة",
     "employee": "موظف",
     "learners": "متعلمون",
     "qualifications": "مؤهلات",
     "compliance": "الالتزام",
-    "empty": "لا توجد مسميات وظيفية مطابقة للبحث.",
-    "modal_title": "تصفية النتائج",
-    "modal_for": "لـ",
-    "modal_no_results": "لا توجد مؤهلات",
-    "save_assignments": "حفظ التعيينات",
+    "empty": "لا توجد مسميات وظيفية بعد.",
+    "no_results": "لا توجد مسميات وظيفية مطابقة للبحث أو التصفية.",
+    "search_label": "البحث في المسميات الوظيفية",
+    "search_placeholder": "ابحث باسم المتعلم أو المسمى الوظيفي...",
+    "filter_qualification": "المؤهل",
+    "filter_qualification_placeholder": "اختر المؤهل",
+    "filter_learner": "المتعلم",
+    "filter_learner_placeholder": "اختر المتعلم",
+    "filters_on": "عدد عوامل التصفية المطبّقة: {{count}}",
     "detail": {
       "subtitle": "تفاصيل المسمى الوظيفي",
-      "search_label": "البحث عن المتعلمين",
-      "search_placeholder": "ابحث باسم المتعلم أو رقمه...",
-      "caption": "المتعلمون الحاملون لهذا المسمى الوظيفي وتقدمهم في المؤهلات",
+      "search_label": "البحث عن المتعلمين أو المؤهلات",
+      "search_placeholder": "ابحث باسم المتعلم أو المؤهل...",
+      "caption": "المتعلمون الحاملون لهذا المسمى الوظيفي وتقدمهم في كل مؤهل مطلوب ودوراته",
       "col_learner": "المتعلم",
       "col_assigned": "المؤهلات المعيّنة",
       "col_completion": "نسبة الإنجاز",
@@ -862,6 +865,23 @@
         "many": "{{done}} من {{count}} دورةً",
         "other": "{{done}} من {{count}} دورة"
       },
+      "course_count": {
+        "zero": "لا توجد دورات",
+        "one": "دورة واحدة",
+        "two": "دورتان",
+        "few": "{{count}} دورات",
+        "many": "{{count}} دورةً",
+        "other": "{{count}} دورة"
+      },
+      "status_completed": "مكتملة",
+      "status_in_progress": "قيد التقدم",
+      "status_unenrolled": "غير مسجل",
+      "state_completed": "مكتملة",
+      "state_in_progress": "قيد التقدم",
+      "state_unenrolled": "لم يبدأ بعد",
+      "toggle_learner": "مؤهلات {{name}}",
+      "toggle_qualification": "دورات {{name}}",
+      "no_courses": "لا توجد دورات مرتبطة بهذا المؤهل بعد.",
       "granted_directly": "مُنح مباشرة",
       "completion_of": "نسبة إنجاز {{name}}",
       "no_qualifications": "لا يتطلب هذا المسمى الوظيفي أي مؤهلات بعد.",
@@ -870,7 +890,7 @@
       "not_found_title": "المسمى الوظيفي غير موجود",
       "not_found": "هذا المسمى الوظيفي غير موجود أو تم حذفه.",
       "retry": "إعادة المحاولة",
-      "showing": "عرض {{from}}-{{to}} من {{total}}"
+      "showing": "عرض {{from}}-{{to}} من {{total}} متعلم"
     }
   },
   "qualifications": {
@@ -1774,9 +1794,6 @@
   },
   "messages_list_toasts": {
     "sent": "تم إرسال الرسالة"
-  },
-  "job_titles_toasts": {
-    "qualifications_updated": "تم تحديث المهارات."
   },
   "submission_score_updated": "تم تحديث الدرجة.",
   "controllers_toasts": {

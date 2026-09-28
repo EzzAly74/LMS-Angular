@@ -29,38 +29,126 @@
   margin: 0;
 }
 
-/* ── Toolbar (search) ─────────────────────────────────────────────── */
+/* ── Toolbar: search + Filter (Figma 2463:138067) ─────────────────── */
 .jt-page__toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--nas-space-4);
+
+  // On a phone the search takes its own row; beside a 124px button it
+  // shrank to a few letters.
+  @media (max-width: 479px) {
+    flex-wrap: wrap;
+    gap: var(--nas-space-3);
+    .jt-search { flex-basis: 100%; }
+  }
 }
 
 .jt-search {
-  flex: 0 0 320px;
-  max-width: 100%;
+  flex: 1 1 auto;
+  min-inline-size: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  border: 1px solid #e6e7e8;
-  border-radius: 8px;
-  background: #ffffff;
+  block-size: 36px;
+  padding-inline: 12px;
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
 
-  nas-icon { color: #aab0b7; flex-shrink: 0; }
+  nas-icon { color: var(--nas-neutral-750); flex-shrink: 0; }
+  &:focus-within { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
 }
 
 .jt-search__input {
   flex: 1 1 auto;
+  min-inline-size: 0;
   border: none;
   outline: none;
   background: transparent;
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 21px;
-  color: #171819;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  color: var(--nas-neutral-1000);
 
-  &::placeholder { color: #aab0b7; }
+  // neutral-750, not Figma's #8c8c8c (3.4:1), for AA.
+  &::placeholder { color: var(--nas-neutral-750); }
+}
+
+.jt-filter {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  block-size: 36px;
+  min-inline-size: 124px;
+  padding-inline: var(--nas-space-3);
+  border: 1px solid var(--nas-neutral-500);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  color: var(--nas-neutral-800);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-200); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+  &--on { border-color: var(--nas-teal-1000); color: var(--nas-teal-1000); }
+}
+
+.jt-filter__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 18px;
+  block-size: 18px;
+  padding-inline: 5px;
+  border-radius: 9px;
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+  font-size: var(--nas-size-3xs);
+  font-weight: var(--nas-weight-semibold);
+}
+
+.jt-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.jt-error {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nas-space-3);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--nas-neutral-800);
+  background: var(--nas-color-bg-surface);
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: 12px;
+  p { margin: 0; font-size: 14px; }
+}
+
+.jt-retry {
+  block-size: 36px;
+  padding-inline: var(--nas-space-4);
+  border: 1px solid var(--nas-teal-1000);
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  color: var(--nas-teal-1000);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
 }
 
 /* ── Card grid ────────────────────────────────────────────────────── */
@@ -132,35 +220,6 @@
     gap: 16px;
   }
 
-  &__cta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    height: 44px;
-    margin-top: auto;
-    background: #ffffff;
-    color: #0c2427;
-    border: 1px solid #0c2427;
-    border-radius: 8px;
-    font-family: 'Fira Sans', system-ui, sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 21px;
-    cursor: pointer;
-    transition: background-color 120ms ease, color 120ms ease;
-
-    nas-icon { color: #0c2427; transition: color 120ms ease; }
-
-    &:hover {
-      background: #0c2427;
-      color: #fffbf7;
-      nas-icon { color: #fffbf7; }
-    }
-
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-  }
 }
 
 /* Stat cell (learners / qualifications) */
@@ -311,219 +370,6 @@
 
   nas-icon { color: #aab0b7; }
   p { margin: 0; font-size: 14px; }
-}
-
-/* ── Assign-qualification dialog (Figma 364:8735 / 364:10066) ─────── */
-::ng-deep .jt-dialog {
-  &.p-dialog {
-    box-shadow: 0 12px 32px rgba(12, 36, 39, 0.18);
-    border-radius: 16px;
-    overflow: hidden;
-    background: transparent;
-  }
-
-  .p-dialog-content {
-    padding: 0;
-    background: transparent;
-    border-radius: 16px;
-    overflow: visible;
-  }
-}
-
-.jt-dialog__card {
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.jt-dialog__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #ebedef;
-}
-
-.jt-dialog__title {
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 24px;
-  color: #171819;
-  margin: 0;
-}
-
-.jt-dialog__close {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: #676e76;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
-
-  &:hover { background: #f4f5f6; color: #171819; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-}
-
-.jt-dialog__body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
-}
-
-.jt-dialog__for {
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 21px;
-  color: #171819;
-  margin: 0;
-}
-
-.jt-dialog__search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border: 1px solid #e6e7e8;
-  border-radius: 8px;
-  background: #ffffff;
-
-  nas-icon { color: #aab0b7; flex-shrink: 0; }
-}
-
-.jt-dialog__search-input {
-  flex: 1 1 auto;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 21px;
-  color: #171819;
-
-  &::placeholder { color: #aab0b7; }
-}
-
-/* Options list (scrollable, 6 visible rows ~) */
-.jt-dialog__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-height: 260px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-.jt-dialog__option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 120ms ease;
-
-  &:hover { background: #f4f5f6; }
-
-  &--empty {
-    justify-content: center;
-    color: #676e76;
-    cursor: default;
-    font-size: 14px;
-    padding: 24px 8px;
-    &:hover { background: transparent; }
-  }
-}
-
-.jt-dialog__option-label {
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 21px;
-  color: #171819;
-}
-
-/* Square checkbox (Figma uses rounded 4px square) */
-.jt-checkbox {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1.5px solid #c4c8cc;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: #ffffff;
-  transition: background 120ms ease, border-color 120ms ease;
-
-  nas-icon { color: #ffffff; }
-
-  &--checked {
-    background: #0c2427;
-    border-color: #0c2427;
-  }
-}
-
-/* Footer (Cancel + Save Assignments) */
-.jt-dialog__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid #ebedef;
-  background: #ffffff;
-}
-
-.jt-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 8px;
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 21px;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  &--ghost {
-    background: #ffffff;
-    color: #171819;
-    border: 1px solid #c4c8cc;
-
-    &:not(:disabled):hover { background: #f4f5f6; }
-  }
-
-  &--primary {
-    min-width: 200px;
-    background: #0c2427;
-    color: #fffbf7;
-    border: 1px solid #0c2427;
-
-    nas-icon { color: #fffbf7; }
-
-    &:not(:disabled):hover { background: #15363a; }
-    &:disabled { background: #c4c8cc; border-color: #c4c8cc; color: #fffbf7; }
-  }
 }
 
 /* RTL flips: stats end-align swaps */

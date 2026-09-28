@@ -13,6 +13,11 @@ export interface JobTitleLearner {
   qualifications_completed: number;
   qualifications_total: number;
   qualification_breakdown: QualificationProgress[];
+  /**
+   * The search matched a qualification rather than this learner: the
+   * breakdown holds only the matching qualifications (D1b).
+   */
+  qualification_match: boolean;
   /** Whole percent 0-100 across the learner's relevant courses. */
   completion_percent: number;
 }
@@ -28,6 +33,19 @@ export interface QualificationProgress {
   /** Granted by an admin rather than earned by completing courses. */
   granted_directly: boolean;
   earned: boolean;
+  /** Every course linked to the qualification, with this learner's status (Figma 2459:137558). */
+  courses: QualificationCourse[];
+}
+
+export type CourseProgressStatus = 'completed' | 'in_progress' | 'unenrolled';
+
+/** Third level: one course of a qualification, for one learner. */
+export interface QualificationCourse {
+  id: number;
+  title: string;
+  status: CourseProgressStatus;
+  /** 0-100: 100 completed, lecture progress in progress, 0 unenrolled. */
+  percent: number;
 }
 
 /** GET job-titles/{id}: only the fields this page reads. */

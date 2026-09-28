@@ -1,4 +1,4 @@
-// Job title detail - Figma 2325:117118. Values are the design's, mapped to
+// Job title detail - Figma 2459:137558 (D1b; first built from 2325:117118). Values are the design's, mapped to
 // the existing --nas-* tokens; layout uses logical properties so RTL needs
 // no duplicated rules beyond the two direction-bearing graphics (the bar
 // gradient and the pager arrows).
@@ -79,148 +79,208 @@
   overflow-x: auto;
 }
 
+// Columns 380 / 240 / rest of 1132 (Figma 2459:137573).
 .jtd__table {
   inline-size: 100%;
-  min-inline-size: 760px;
+  min-inline-size: 860px;
   border-collapse: collapse;
   table-layout: fixed;
 }
 
-.jtd__col-learner  { inline-size: 200px; }
-.jtd__col-assigned { inline-size: 240px; }
+.jtd__col-learner  { inline-size: 34%; }
+.jtd__col-assigned { inline-size: 21%; }
 
 .jtd__th {
   block-size: 45px;
-  padding: var(--nas-space-3) var(--nas-space-5);
-  background: var(--nas-neutral-50);
+  padding: var(--nas-space-3) var(--nas-space-4);
+  background: var(--nas-neutral-300);
   border-block-end: 1px solid var(--nas-color-border);
   font-size: var(--nas-size-xs);
   line-height: 21px;
   font-weight: var(--nas-weight-medium);
-  color: var(--nas-color-text-muted);
+  color: var(--nas-neutral-800);
   text-align: start;
   white-space: nowrap;
 }
 
-.jtd__th-completion {
-  font-size: var(--nas-size-2xs);
-  line-height: 16px;
-  font-weight: var(--nas-weight-semibold);
-}
-
 .jtd__td {
-  padding: var(--nas-space-3) var(--nas-space-5);
+  padding: var(--nas-space-3) var(--nas-space-4);
   vertical-align: middle;
   font-size: var(--nas-size-xs);
   line-height: 16.8px;
   color: var(--nas-color-text-strong);
 }
 
-.jtd__row--parent {
-  block-size: 65px;
-  border-block-start: 1px solid var(--nas-color-border);
+// One learner and everything under it reads as one block: rules separate
+// learners, not their child rows.
+.jtd__row--learner { border-block-start: 1px solid var(--nas-color-border); }
+.jtd__row--learner:first-child { border-block-start: 0; }
+.jtd__row--course { background: #f4fafa; } // Figma course-row tint
 
-  .jtd__td { padding-block: 14px; }
+.jtd__muted { color: var(--nas-neutral-800); }
 
-  &:first-child { border-block-start: 0; }
-}
+// ── Tree cell: connectors + chevron + label ──────────────────────────────
+// The cell holds a flex row as tall as the row (68 / 56 / 48 px in Figma),
+// so the 2px connector stems run edge to edge and join the next row's.
+.jtd__td--tree { padding-block: 0; padding-inline: var(--nas-space-2); }
 
-.jtd__row--open { background: var(--nas-teal-50); }
-
-.jtd__row--child { block-size: 56px; }
-
-// Parent rows are ruled; the children of one learner are not, so each
-// learner reads as one block.
-.jtd__assigned-count { text-align: center; }
-
-// Names carry dir="auto" so a Latin name inside the Arabic layout (or the
-// reverse) is shaped and truncated in its own direction: without it, "Ava
-// Chen" in RTL is cut at the wrong end ("...va Chen"). match-parent keeps it
-// aligned with the column instead of following its own direction.
-.jtd__qual-name {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: match-parent;
-}
-
-.jtd__muted { color: var(--nas-color-text-muted); }
-
-// ── Learner cell (the expand toggle) ─────────────────────────────────────
-.jtd__toggle {
+.jtd__tree {
   display: flex;
   align-items: center;
-  gap: var(--nas-space-3);
-  inline-size: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: start;
-  cursor: pointer;
-  border-radius: var(--nas-radius-sm);
+  min-inline-size: 0;
+}
+.jtd__row--learner .jtd__tree { min-block-size: 68px; }
+.jtd__row--qual    .jtd__tree { min-block-size: 56px; }
+.jtd__row--course  .jtd__tree { min-block-size: 48px; }
 
-  &:focus-visible {
-    outline: 2px solid var(--nas-teal-700);
-    outline-offset: 4px;
+.jtd__conn {
+  position: relative;
+  flex: 0 0 32px;
+  align-self: stretch;
+
+  // Stem, continuing to the next sibling.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 15px;
+    inline-size: 2px;
+    background: var(--nas-neutral-400);
   }
+
+  // Elbow into this row's chevron or label.
+  &--elbow::after {
+    content: '';
+    position: absolute;
+    inset-block-start: calc(50% - 1px);
+    inset-inline: 15px 0;
+    block-size: 2px;
+    background: var(--nas-neutral-400);
+  }
+
+  // Last sibling: the stem stops at the elbow.
+  &--last::before { inset-block-end: calc(50% - 1px); }
+  // Under the last qualification there is no sibling left to reach.
+  &--none::before { display: none; }
 }
 
-.jtd__user-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+.jtd__chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nas-radius-sm);
+  background: var(--nas-neutral-300);
+  cursor: pointer;
+
+  img { display: block; }
+
+  &--lg { inline-size: 32px; block-size: 32px; }
+  // Open reads as the chevron flipped up (Figma -scale-y-100).
+  &--open img { transform: scaleY(-1); }
+
+  &:hover { background: var(--nas-neutral-400); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
 
 .jtd__who {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-inline-size: 0;
+  padding-inline-start: var(--nas-space-2);
 }
 
+// Names carry dir="auto" so a Latin name inside the Arabic layout (or the
+// reverse) is shaped and truncated in its own direction; match-parent keeps
+// it aligned with the column instead of following its own direction.
 .jtd__name,
-.jtd__id {
+.jtd__id,
+.jtd__qual-name,
+.jtd__course-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: match-parent;
 }
 
 .jtd__name {
-  text-align: match-parent;
   font-size: var(--nas-size-xs);
-  line-height: 21px;
+  line-height: 20px;
   font-weight: var(--nas-weight-semibold);
 }
 
 .jtd__id {
   font-size: var(--nas-size-2xs);
+  line-height: 16px;
+  color: var(--nas-neutral-750);
+}
+
+.jtd__qual-name {
+  min-inline-size: 0;
+  padding-inline-start: var(--nas-space-2);
+  line-height: 20px;
+  font-weight: var(--nas-weight-medium);
+}
+
+.jtd__course-name {
+  min-inline-size: 0;
+  padding-inline-start: var(--nas-space-2);
+  font-size: 13px;
   line-height: 18px;
-  color: var(--nas-color-text-muted);
+}
+
+// ── Status pill (course rows) ────────────────────────────────────────────
+.jtd__pill {
+  display: inline-flex;
+  align-items: center;
+  block-size: 18px;
+  padding-inline: var(--nas-space-2);
+  border-radius: 9999px;
+  font-size: var(--nas-size-2xs);
+  line-height: 14.4px;
+  font-weight: var(--nas-weight-medium);
+  white-space: nowrap;
+
+  // Figma 2463:138444 / 138441 / 138438.
+  &--completed   { background: #e7f8f0; color: #0a7a47; }
+  &--unenrolled  { background: #feeceb; color: var(--nas-neutral-1000); }
+  &--in_progress { background: #fef4e6; color: #a85e05; }
 }
 
 // ── Completion ───────────────────────────────────────────────────────────
-// A 401px block pushed to the cell's inline end; the header label uses the
-// same slot so it starts exactly where the bars start.
-.jtd__progress-slot {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  inline-size: min(401px, 100%);
-  margin-inline-start: auto;
-}
-
-.jtd__progress-meta {
+.jtd__meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--nas-space-2);
-  font-size: var(--nas-size-2xs);
-  line-height: 16px;
   white-space: nowrap;
 }
 
-.jtd__percent { font-weight: var(--nas-weight-semibold); }
+.jtd__percent {
+  font-weight: var(--nas-weight-bold);
 
-.jtd__of { color: var(--nas-color-text-muted); }
+  &--full { color: #15803d; } // Figma: a learner at 100% reads green
+  &--sm { font-size: 13px; line-height: 18px; font-weight: var(--nas-weight-semibold); }
+}
+
+.jtd__of {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--nas-neutral-750);
+
+  &--sm { font-size: var(--nas-size-2xs); line-height: 16px; }
+}
+
+.jtd__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-1);
+}
 
 .jtd__bar {
   display: block;

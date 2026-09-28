@@ -198,6 +198,8 @@
     "admins": "Admins",
     "clear": "Clear",
     "no_options": "Nothing to choose from",
+    "n_selected": "{0} selected",
+    "type_to_search": "Type to search",
     "retry": "Try again"
   },
   "courses": {
@@ -801,23 +803,24 @@
   "job_titles": {
     "title": "Job Titles",
     "subtitle": "Assign qualification requirements to each job title",
-    "assign_qualifications": "Assign Qualifications",
-    "assign_qualification": "Assign Qualification",
-    "qualifications_assigned": "Qualifications Assigned",
     "employee": "Employee",
     "learners": "Learners",
     "qualifications": "Qualifications",
     "compliance": "Compliance",
-    "empty": "No job titles match your search.",
-    "modal_title": "Filter your results",
-    "modal_for": "For",
-    "modal_no_results": "No qualifications found",
-    "save_assignments": "Save Assignments",
+    "empty": "No job titles yet.",
+    "no_results": "No job titles match your search or filter.",
+    "search_label": "Search job titles",
+    "search_placeholder": "Search by learner or job title...",
+    "filter_qualification": "Qualification",
+    "filter_qualification_placeholder": "Select qualification",
+    "filter_learner": "Learner",
+    "filter_learner_placeholder": "Select learner",
+    "filters_on": "{{count}} filters applied",
     "detail": {
       "subtitle": "Job title details",
-      "search_label": "Search learners",
-      "search_placeholder": "Search by learner name or ID...",
-      "caption": "Learners holding this job title, with their qualification progress",
+      "search_label": "Search learners or qualifications",
+      "search_placeholder": "Search by learner or qualification...",
+      "caption": "Learners holding this job title, with their progress on each required qualification and its courses",
       "col_learner": "Learner",
       "col_assigned": "Assigned Qualification",
       "col_completion": "Completion",
@@ -834,6 +837,19 @@
         "one": "{{done}} of {{count}} Course",
         "other": "{{done}} of {{count}} Courses"
       },
+      "course_count": {
+        "one": "{{count}} course",
+        "other": "{{count}} courses"
+      },
+      "status_completed": "Completed",
+      "status_in_progress": "In Progress",
+      "status_unenrolled": "Unenrolled",
+      "state_completed": "Completed",
+      "state_in_progress": "In Progress",
+      "state_unenrolled": "Not Yet",
+      "toggle_learner": "Qualifications of {{name}}",
+      "toggle_qualification": "Courses of {{name}}",
+      "no_courses": "No courses are linked to this qualification yet.",
       "granted_directly": "Granted directly",
       "completion_of": "Completion for {{name}}",
       "no_qualifications": "This job title requires no qualifications yet.",
@@ -842,7 +858,7 @@
       "not_found_title": "Job title not found",
       "not_found": "This job title does not exist or was removed.",
       "retry": "Retry",
-      "showing": "Showing {{from}}-{{to}} of {{total}}"
+      "showing": "Showing {{from}}-{{to}} of {{total}} learners"
     }
   },
   "qualifications": {
@@ -1702,9 +1718,6 @@
   },
   "messages_list_toasts": {
     "sent": "Message sent"
-  },
-  "job_titles_toasts": {
-    "qualifications_updated": "Qualifications updated."
   },
   "submission_score_updated": "Score updated.",
   "controllers_toasts": {

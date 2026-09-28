@@ -3,19 +3,38 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
- * Job title detail (D1, Figma 2325:117118) with a POPULATED tree.
+ * Job title detail (D1b, Figma 2459:137558) with a POPULATED three-level tree.
  *
  * layout.spec.ts visits the real page against the dev database, where no user
  * holds a job title yet, so it only ever sees the empty state. This spec
- * answers the two API calls the page makes with a fixed response, so the tree
- * itself - rows, expansion, plural forms, bars - is checked at every width in
+ * answers the two API calls the page makes with a fixed response in the real
+ * shape, so the tree itself - learner, qualification and course rows,
+ * expansion, plural forms, pills, bars, search - is checked at every width in
  * both languages. The fixture exists only inside this test; nothing ships.
  */
 
 const LOCALE_KEY = '2b_locale';
 const ARTIFACTS = resolve(__dirname, '../e2e-artifacts/job-title-detail-fixture');
 
-const learner = (id: number, name: string, percent: number, qualifications: unknown[]) => ({
+type Status = 'completed' | 'in_progress' | 'unenrolled';
+const course = (id: number, title: string, status: Status, percent: number) => ({ id, title, status, percent });
+
+const qual = (id: number, name: string, courses: ReturnType<typeof course>[], direct = false) => {
+  const done = courses.filter((c) => c.status === 'completed').length;
+  const total = courses.length;
+  return {
+    id,
+    name,
+    courses_total: total,
+    courses_completed: done,
+    percent: direct ? 100 : total ? Math.round((done * 100) / total) : 0,
+    granted_directly: direct,
+    earned: direct || (total > 0 && done >= total),
+    courses,
+  };
+};
+
+const learner = (id: number, name: string, percent: number, qualifications: ReturnType<typeof qual>[], match = false) => ({
   id,
   name,
   employee_id: `E-${1000 + id}`,
@@ -23,129 +42,151 @@ const learner = (id: number, name: string, percent: number, qualifications: unkn
   department: null,
   courses: { completed: 1, total: 2, label: '1 of 2' },
   qualifications_total: qualifications.length,
-  qualifications_completed: (qualifications as { earned: boolean }[]).filter((q) => q.earned).length,
+  qualifications_completed: qualifications.filter((q) => q.earned).length,
   qualification_breakdown: qualifications,
+  qualification_match: match,
   completion_percent: percent,
 });
 
-const qual = (id: number, name: string, done: number, total: number, direct = false) => ({
-  id,
-  name,
-  courses_total: total,
-  courses_completed: done,
-  percent: direct ? 100 : total ? Math.round((done * 100) / total) : 0,
-  granted_directly: direct,
-  earned: direct || (total > 0 && done >= total),
-});
+const QA = () => qual(10, 'Fixture Qualification A', [
+  course(100, 'Fixture Course Done', 'completed', 100),
+  course(101, 'Fixture Course Never', 'unenrolled', 0),
+  course(102, 'Fixture Course Going', 'in_progress', 50),
+]);
+const QB = () => qual(11, 'Fixture Qualification B', [course(103, 'Fixture Course Other', 'in_progress', 20)]);
 
 const LEARNERS = [
-  learner(1, 'Fixture Learner One', 50, [qual(10, 'Fixture Qualification A', 1, 1), qual(11, 'Fixture Qualification B', 0, 2)]),
-  learner(2, 'Fixture Learner Two', 100, [qual(10, 'Fixture Qualification A', 0, 0, true), qual(11, 'Fixture Qualification B', 2, 2)]),
-  learner(3, 'Fixture Learner Three', 0, [qual(10, 'Fixture Qualification A', 0, 1), qual(11, 'Fixture Qualification B', 0, 2), qual(12, 'Fixture Qualification C', 0, 3)]),
+  learner(1, 'Fixture Learner One', 50, [QA(), QB()]),
+  learner(2, 'Fixture Learner Two', 100, [qual(10, 'Fixture Qualification A', [], true), QB()]),
+  learner(3, 'Fixture Learner Three', 0, [QA(), QB(), qual(12, 'Fixture Qualification C', [])]),
   // Seven more, so the list spans two pages of eight and the pager is exercised.
-  ...[4, 5, 6, 7, 8, 9, 10].map((n) => learner(n, `Fixture Learner ${n}`, 25, [qual(10, 'Fixture Qualification A', 0, 1)])),
+  ...[4, 5, 6, 7, 8, 9, 10].map((n) => learner(n, `Fixture Learner ${n}`, 25, [QB()])),
 ];
 const PER_PAGE = 8;
 
-async function answerWithFixture(page: Page): Promise<void> {
+async function answerWithFixture(page: Page): Promise<string[]> {
+  const searches: string[] = [];
   await page.route('**/api/v1/job-titles/4242', (route) =>
     route.fulfill({ json: { status: true, result: { id: 4242, name: 'Fixture Job Title' } } }),
   );
-  // The real response shape: `result` is the page's rows, `meta` sits beside it
-  // (ApiResponse::paginated). Honours `page`, like the endpoint.
+  // The real response shape: `result` is the page's rows, `meta` sits beside it.
   await page.route('**/api/v1/admin/job-titles/4242/learners**', (route) => {
-    const current = Number(new URL(route.request().url()).searchParams.get('page') ?? '1');
+    const params = new URL(route.request().url()).searchParams;
+    const current = Number(params.get('page') ?? '1');
+    const search = params.get('search');
+    if (search) searches.push(search);
+    // A qualification search: every learner, narrowed to the match.
+    const rows = search
+      ? LEARNERS.slice(0, 2).map((l) => ({ ...l, qualification_match: true, qualification_breakdown: [l.qualification_breakdown[1]] }))
+      : LEARNERS.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+    const total = search ? 2 : LEARNERS.length;
     return route.fulfill({
       json: {
         status: 'success',
         message: '',
-        result: LEARNERS.slice((current - 1) * PER_PAGE, current * PER_PAGE),
-        meta: { current_page: current, last_page: Math.ceil(LEARNERS.length / PER_PAGE), per_page: PER_PAGE, total: LEARNERS.length },
+        result: rows,
+        meta: { current_page: current, last_page: Math.ceil(total / PER_PAGE), per_page: PER_PAGE, total },
       },
     });
   });
+  return searches;
 }
 
 for (const locale of [{ code: 'en', dir: 'ltr' }, { code: 'ar', dir: 'rtl' }] as const) {
   test(`job title detail tree - ${locale.code}`, async ({ page }, testInfo) => {
     await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), [LOCALE_KEY, locale.code] as const);
-    await answerWithFixture(page);
+    const searches = await answerWithFixture(page);
+    const en = locale.code === 'en';
 
     await page.goto('/admin/job-titles/4242');
     await page.waitForLoadState('networkidle');
     await expect(page.locator('html')).toHaveAttribute('dir', locale.dir);
     await expect(page.locator('.jtd__title')).toHaveText('Fixture Job Title');
+    await expect(page.locator('#jtd-search')).toHaveAttribute('placeholder',
+      en ? 'Search by learner or qualification...' : 'ابحث باسم المتعلم أو المؤهل...');
 
-    const toggles = page.locator('.jtd__toggle');
-    await expect(toggles).toHaveCount(PER_PAGE);
+    const learnerToggles = page.locator('.jtd__row--learner .jtd__chevron');
+    await expect(learnerToggles).toHaveCount(PER_PAGE);
 
-    // The first learner opens by default, as in Figma; the others are closed.
-    await expect(toggles.nth(0)).toHaveAttribute('aria-expanded', 'true');
-    await expect(toggles.nth(1)).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.locator('.jtd__row--child')).toHaveCount(2);
+    // Figma: the first learner and its first qualification are open.
+    await expect(learnerToggles.nth(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(learnerToggles.nth(1)).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('.jtd__row--qual')).toHaveCount(2);
+    const qualToggles = page.locator('.jtd__row--qual .jtd__chevron');
+    await expect(qualToggles.nth(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(qualToggles.nth(1)).toHaveAttribute('aria-expanded', 'false');
 
-    // Mouse opens the second; keyboard closes the first.
-    await toggles.nth(1).click();
-    await expect(toggles.nth(1)).toHaveAttribute('aria-expanded', 'true');
-    await toggles.nth(0).focus();
-    await page.keyboard.press('Enter');
-    await expect(toggles.nth(0)).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.locator('.jtd__row--child')).toHaveCount(2);
-
-    // Plural forms and the direct-grant label, per locale (D-051).
-    const assigned = page.locator('.jtd__assigned-count');
-    const of = page.locator('.jtd__row--parent .jtd__of');
-    const child = page.locator('.jtd__row--child .jtd__of');
-    if (locale.code === 'en') {
-      await expect(assigned.nth(0)).toHaveText('2 qualifications');
-      await expect(assigned.nth(2)).toHaveText('3 qualifications');
-      await expect(of.nth(0)).toHaveText('1 of 2 qualifications');
-      await expect(child.nth(0)).toHaveText('Granted directly');
-      await expect(child.nth(1)).toHaveText('2 of 2 Courses');
+    // Level 3: the three courses of qualification A, with pill, text and bar.
+    const courses = page.locator('.jtd__row--course');
+    await expect(courses).toHaveCount(3);
+    await expect(courses.nth(0).locator('.jtd__course-name')).toHaveText('Fixture Course Done');
+    const pills = courses.locator('.jtd__pill');
+    const states = courses.locator('.jtd__of');
+    if (en) {
+      await expect(pills).toHaveText(['Completed', 'Unenrolled', 'In Progress']);
+      await expect(states).toHaveText(['Completed', 'Not Yet', 'In Progress']);
     } else {
-      await expect(assigned.nth(0)).toHaveText('مؤهلان');
-      await expect(assigned.nth(2)).toHaveText('3 مؤهلات');
-      await expect(of.nth(0)).toHaveText('1 من مؤهلين');
-      await expect(child.nth(0)).toHaveText('مُنح مباشرة');
-      await expect(child.nth(1)).toHaveText('2 من دورتين');
+      await expect(pills).toHaveText(['مكتملة', 'غير مسجل', 'قيد التقدم']);
+      await expect(states).toHaveText(['مكتملة', 'لم يبدأ بعد', 'قيد التقدم']);
     }
-
-    // A Latin name is truncated at its own end in both layouts, and aligned
-    // with the column's start: left in LTR, right in RTL.
-    const name = page.locator('.jtd__name').first();
-    const nameBox = await name.evaluate((el) => {
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      const text = range.getBoundingClientRect();
-      const box = el.getBoundingClientRect();
-      return { dir: getComputedStyle(el).direction, leftGap: text.left - box.left, rightGap: box.right - text.right };
-    });
-    expect(nameBox.dir).toBe('ltr');
-    if (locale.dir === 'rtl') expect(nameBox.rightGap).toBeLessThanOrEqual(1);
-    else expect(nameBox.leftGap).toBeLessThanOrEqual(1);
-
-    // Each bar is filled to its percentage of the track.
-    const ratios = await page.locator('.jtd__row--parent .jtd__bar').evaluateAll((bars) =>
+    const ratios = await courses.locator('.jtd__bar').evaluateAll((bars) =>
       bars.map((b) => {
         const fill = b.firstElementChild as HTMLElement;
         return Math.round((fill.getBoundingClientRect().width / b.getBoundingClientRect().width) * 100);
       }),
     );
-    expect(ratios.slice(0, 3)).toEqual([50, 100, 0]);
+    expect(ratios).toEqual([100, 0, 50]);
 
-    // The pager: page 1 of 2, previous disabled, next moves on.
+    // Plural forms, per locale (D-051).
+    const learnerRow = page.locator('.jtd__row--learner').first();
+    const qualRow = page.locator('.jtd__row--qual').first();
+    if (en) {
+      await expect(learnerRow.locator('td').nth(1)).toHaveText('2 qualifications');
+      await expect(learnerRow.locator('.jtd__of')).toHaveText('0 of 2 qualifications');
+      await expect(qualRow.locator('td').nth(1)).toHaveText('3 courses');
+      await expect(qualRow.locator('.jtd__of')).toHaveText('1 of 3 Courses');
+    } else {
+      await expect(learnerRow.locator('td').nth(1)).toHaveText('مؤهلان');
+      await expect(learnerRow.locator('.jtd__of')).toHaveText('0 من مؤهلين');
+      await expect(qualRow.locator('td').nth(1)).toHaveText('3 دورات');
+      await expect(qualRow.locator('.jtd__of')).toHaveText('1 من 3 دورات');
+    }
+
+    // The connector elbows sit on the start side: left in LTR, right in RTL.
+    const elbowSide = await page.locator('.jtd__row--qual .jtd__conn--elbow').first().evaluate((el) => {
+      const after = getComputedStyle(el, '::after');
+      return { start: after.insetInlineStart, left: after.left, right: after.right };
+    });
+    expect(elbowSide.start).toBe('15px');
+    if (locale.dir === 'ltr') expect(elbowSide.left).toBe('15px');
+    else expect(elbowSide.right).toBe('15px');
+
+    mkdirSync(ARTIFACTS, { recursive: true });
+    await page.screenshot({ path: resolve(ARTIFACTS, `${testInfo.project.name}-${locale.code}.png`), fullPage: true });
+
+    // Closing the qualification hides its courses; keyboard closes the learner.
+    await qualToggles.nth(0).click();
+    await expect(courses).toHaveCount(0);
+    await learnerToggles.nth(0).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.jtd__row--qual')).toHaveCount(0);
+
+    // A direct grant reads "Granted directly" on its qualification row.
+    await learnerToggles.nth(1).click();
+    await expect(page.locator('.jtd__row--qual .jtd__of').first()).toHaveText(en ? 'Granted directly' : 'مُنح مباشرة');
+
+    // Pager.
     const info = page.locator('.jtd__pager-info');
-    const prev = page.locator('.jtd__pager-btn--prev');
-    const next = page.locator('.jtd__pager-btn--next');
-    await expect(info).toHaveText(locale.code === 'en' ? 'Showing 1-8 of 10' : 'عرض 1-8 من 10');
-    await expect(prev).toBeDisabled();
-    await expect(next).toBeEnabled();
+    await expect(info).toHaveText(en ? 'Showing 1-8 of 10 learners' : 'عرض 1-8 من 10 متعلم');
+    await page.locator('.jtd__pager-btn--next').click();
+    await expect(info).toHaveText(en ? 'Showing 9-10 of 10 learners' : 'عرض 9-10 من 10 متعلم');
 
-    // The arrows point the reading direction: in RTL "previous" points right.
-    const pointsRight = (loc: typeof prev) =>
-      loc.locator('img').evaluate((img) => new DOMMatrix(getComputedStyle(img).transform).b < 0);
-    expect(await pointsRight(next)).toBe(locale.dir === 'ltr');
-    expect(await pointsRight(prev)).toBe(locale.dir === 'rtl');
+    // A qualification search opens the matched rows down to their courses.
+    await page.locator('#jtd-search').fill('qualification b');
+    await expect.poll(() => searches.at(-1)).toBe('qualification b');
+    await expect(page.locator('.jtd__row--learner')).toHaveCount(2);
+    await expect(page.locator('.jtd__row--qual')).toHaveCount(2);
+    await expect(page.locator('.jtd__row--course')).toHaveCount(2);
 
     // No page-level horizontal scroll; the table scrolls inside its card.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -153,15 +194,6 @@ for (const locale of [{ code: 'en', dir: 'ltr' }, { code: 'ar', dir: 'rtl' }] as
 
     // No raw translation keys.
     const text = await page.locator('main, body').first().innerText();
-    expect(text.match(/\bjob_titles\.detail\.[a-z_.]+/g) ?? []).toEqual([]);
-
-    mkdirSync(ARTIFACTS, { recursive: true });
-    await page.screenshot({ path: resolve(ARTIFACTS, `${testInfo.project.name}-${locale.code}.png`), fullPage: true });
-
-    await next.click();
-    await expect(info).toHaveText(locale.code === 'en' ? 'Showing 9-10 of 10' : 'عرض 9-10 من 10');
-    await expect(toggles).toHaveCount(2);
-    await expect(next).toBeDisabled();
-    await expect(prev).toBeEnabled();
+    expect(text.match(/\bjob_titles\.[a-z_.]+/g) ?? []).toEqual([]);
   });
 }

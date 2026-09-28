@@ -1,35 +1,37 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
+  DestroyRef,
   OnInit,
   computed,
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
-import { ApiService } from '../../../../core/services/api.service';
+import {
+  NasFilterDialogComponent,
+  NasFilterField,
+  NasFilterFieldOption,
+  NasFilterValues,
+} from '../../../../shared/nas/nas-filter-dialog/nas-filter-dialog.component';
+import { ApiParams, ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 interface JobTitle {
   id: number;
   name: string;
-  /** Optional because counts are only included when relation is loaded. */
   employees_count?: number;
   learners_count?: number;
   qualifications_count?: number;
-  /** 0-100 — backend-computed; renders as the inline compliance bar. */
+  /** 0-100, computed by the API; renders as the compliance bar. */
   compliance_percent?: number;
-  qualifications?: Qualification[];
 }
 
 interface Qualification {
@@ -37,229 +39,226 @@ interface Qualification {
   name: string;
 }
 
+/** GET admin/job-titles/learner-options. */
+interface LearnerOption {
+  id: number;
+  name: string;
+  employee_id: string | null;
+}
+
+interface Filters {
+  qualificationIds: readonly number[];
+  learner: NasFilterFieldOption | null;
+}
+
+type LoadState = 'loading' | 'ready' | 'error';
+
 /**
- * Job Titles screen — Figma node 359:14969.
+ * Job Titles index - Figma 2078:102691 (D1b).
  *
- * Renders a 3-column grid of role cards (name • employee pill • learners
- * stat • qualifications stat • compliance bar • assign-qualification CTA)
- * with a paired "Filter your results" modal (Figma 364:8735 / 364:10066)
- * for managing each role's required qualifications.
+ * A 3-column grid of role cards (name, employee pill, learners,
+ * qualifications, compliance bar) under "Search by learner or job title"
+ * and a Filter button that opens the shared Filter modal (2463:138054:
+ * Qualification multi-select, Learner). Everything comes from
+ * GET admin/job-titles.
  *
- * All data is API-driven. Compliance percent comes pre-computed from the
- * backend so the bar never lies about the underlying training state.
+ * The per-card "Assign Qualification" button and its modal are gone
+ * (D-059): qualifications are assigned to job titles from the
+ * Qualification modal, one write path.
  */
 @Component({
   selector: 'app-job-title-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DialogModule, SkeletonModule, TranslateModule, NasIconComponent],
+  imports: [FormsModule, RouterLink, SkeletonModule, TranslateModule, NasIconComponent, NasFilterDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-title-list.component.html',
   styleUrl: './job-title-list.component.scss',
 })
-export class JobTitleListComponent implements OnInit, OnDestroy {
-  private readonly api      = inject(ApiService);
-  private readonly messages = inject(MessageService);
-  private readonly t        = inject(TranslateService);
+export class JobTitleListComponent implements OnInit {
+  private readonly api        = inject(ApiService);
+  private readonly t          = inject(TranslateService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /* ── List state ───────────────────────────────────────────────────── */
-  items   = signal<JobTitle[]>([]);
-  total   = signal(0);
-  loading = signal(true);
+  readonly items  = signal<JobTitle[]>([]);
+  readonly total  = signal(0);
+  readonly state  = signal<LoadState>('loading');
+  readonly search = signal('');
+  readonly page   = signal(1);
 
-  /** Server-side search term — debounced + sent as the `search` query param. */
-  search = signal('');
-
-  /**
-   * Page size = 12 (4 rows × 3 columns) so the grid stays visually
-   * dense without ever overflowing the visible viewport on a 1366×768
-   * dashboard. Server pagination is mandatory now that the HR-synced
-   * catalogue can grow past 200 rows.
-   */
+  /** 12 = four rows of three cards. */
   readonly perPage = 12;
-  page = signal(1);
-
   readonly skeletons = [1, 2, 3, 4, 5, 6];
 
-  /* ── Dialog state ─────────────────────────────────────────────────── */
-  dialogVisible    = signal(false);
-  saving           = signal(false);
-  selectedJobTitle = signal<JobTitle | null>(null);
+  readonly filterOpen     = signal(false);
+  readonly filters        = signal<Filters>({ qualificationIds: [], learner: null });
+  readonly qualifications = signal<Qualification[]>([]);
+  readonly learnerOptions = signal<NasFilterFieldOption[]>([]);
 
-  allQualifications  = signal<Qualification[]>([]);
-  selectedQualIds    = signal<Set<number>>(new Set());
-  /** Initial set captured when the dialog opens — used to detect "no change". */
-  initialQualIds     = signal<Set<number>>(new Set());
-
-  modalSearch$ = new Subject<string>();
-  modalSearch  = signal('');
-
-  /** Debounced search input for the page header. */
-  private readonly search$ = new Subject<string>();
-
-  /* ── Derived ──────────────────────────────────────────────────────── */
-  rangeStart = computed(() => this.total() === 0 ? 0 : (this.page() - 1) * this.perPage + 1);
-  rangeEnd   = computed(() => Math.min(this.page() * this.perPage, this.total()));
-  totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
-
-  filteredQuals = computed(() => {
-    const q = this.modalSearch().trim().toLowerCase();
-    const all = this.allQualifications();
-    if (!q) return all;
-    return all.filter(x => x.name.toLowerCase().includes(q));
+  readonly activeFilters = computed(() => {
+    const f = this.filters();
+    return (f.qualificationIds.length ? 1 : 0) + (f.learner ? 1 : 0);
   });
 
-  /** Save-Assignments button only lights up when the selection actually changed. */
-  canSave = computed(() => {
-    if (this.saving()) return false;
-    const a = this.selectedQualIds();
-    const b = this.initialQualIds();
-    if (a.size !== b.size) return true;
-    for (const id of a) if (!b.has(id)) return true;
-    return false;
+  readonly filterFields = computed<readonly NasFilterField[]>(() => {
+    // Keep the chosen learner in the list so its label shows before any search.
+    const chosen = this.filters().learner;
+    const learners = this.learnerOptions();
+    return [
+      {
+        key: 'qualification_ids',
+        label: this.t.instant('job_titles.filter_qualification'),
+        placeholder: this.t.instant('job_titles.filter_qualification_placeholder'),
+        options: this.qualifications().map(q => ({ id: q.id, label: q.name })),
+        multiple: true,
+      },
+      {
+        key: 'learner_id',
+        label: this.t.instant('job_titles.filter_learner'),
+        placeholder: this.t.instant('job_titles.filter_learner_placeholder'),
+        options: chosen && !learners.some(o => o.id === chosen.id) ? [chosen, ...learners] : learners,
+        remote: true,
+      },
+    ];
   });
 
-  private readonly destroy$ = new Subject<void>();
+  readonly appliedFilters = computed<NasFilterValues>(() => ({
+    qualification_ids: this.filters().qualificationIds.length ? this.filters().qualificationIds : null,
+    learner_id: this.filters().learner?.id ?? null,
+  }));
+
+  readonly rangeStart = computed(() => (this.total() === 0 ? 0 : (this.page() - 1) * this.perPage + 1));
+  readonly rangeEnd   = computed(() => Math.min(this.page() * this.perPage, this.total()));
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
+  readonly filtered   = computed(() => this.search() !== '' || this.activeFilters() > 0);
+
+  private readonly search$        = new Subject<string>();
+  private readonly learnerSearch$ = new Subject<string>();
+  /** Every list fetch goes through here, so a newer one cancels an older one. */
+  private readonly fetch$ = new Subject<void>();
 
   constructor() {
+    // Names come back in the request language, so a language switch refetches.
     withLocaleReload(() => {
-      this.load();
+      this.fetch$.next();
       this.loadQualifications();
+      this.learnerSearch$.next('');
     });
   }
 
   ngOnInit(): void {
-    this.modalSearch$
-      .pipe(debounceTime(150), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(q => this.modalSearch.set(q));
-
-    this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(q => {
-        this.search.set(q);
-        this.page.set(1);
-        this.load();
+    this.fetch$
+      .pipe(
+        switchMap(() => {
+          this.state.set('loading');
+          return this.api.getPaginated<JobTitle>(API.ADMIN_JOB_TITLES, this.params()).pipe(
+            map(res => ({ ok: true as const, res })),
+            catchError(() => of({ ok: false as const })),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(result => {
+        if (!result.ok) {
+          this.state.set('error');
+          return;
+        }
+        this.items.set(result.res.result.data);
+        this.total.set(result.res.result.total);
+        this.state.set('ready');
       });
 
-    this.load();
+    this.search$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(term => {
+        this.search.set(term.trim());
+        this.page.set(1);
+        this.fetch$.next();
+      });
+
+    this.learnerSearch$
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap(term =>
+          this.api
+            .get<LearnerOption[]>(`${API.ADMIN_JOB_TITLES}/learner-options`, term ? { search: term } : {})
+            .pipe(catchError(() => of(null))),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(res => {
+        if (res === null) return;
+        this.learnerOptions.set((res.result ?? []).map(l => ({ id: l.id, label: this.learnerLabel(l) })));
+      });
+
+    this.fetch$.next();
     this.loadQualifications();
+    this.learnerSearch$.next('');
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  /* ── Data ─────────────────────────────────────────────────────────── */
-  load(): void {
-    this.loading.set(true);
-    const params: Record<string, string | number> = {
-      page:     this.page(),
-      per_page: this.perPage,
-    };
-    if (this.search()) {
-      params['search'] = this.search();
-    }
-
-    this.api.getPaginated<JobTitle>(API.JOB_TITLES, params).subscribe({
-      next: res => {
-        this.items.set(res.result.data);
-        this.total.set(res.result.total);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
-  }
-
-  loadQualifications(): void {
-    this.api.get<Qualification[]>(`${API.QUALIFICATIONS}/active`).subscribe({
-      next: res => this.allQualifications.set(res.result ?? []),
-    });
+  reload(): void {
+    this.fetch$.next();
   }
 
   onSearch(term: string): void {
     this.search$.next(term);
   }
 
+  onLearnerSearch(e: { key: string; term: string }): void {
+    if (e.key === 'learner_id') this.learnerSearch$.next(e.term);
+  }
+
+  onFilter(v: NasFilterValues): void {
+    const ids = v['qualification_ids'];
+    const learnerId = typeof v['learner_id'] === 'number' ? v['learner_id'] : null;
+    const learner = learnerId === null
+      ? null
+      : this.filterFields()[1].options.find(o => o.id === learnerId) ?? { id: learnerId, label: String(learnerId) };
+    this.filters.set({
+      qualificationIds: Array.isArray(ids) ? ids.filter((x): x is number => typeof x === 'number') : [],
+      learner,
+    });
+    this.page.set(1);
+    this.fetch$.next();
+  }
+
   onPage(p: number): void {
     if (p < 1 || p > this.totalPages() || p === this.page()) return;
     this.page.set(p);
-    this.load();
+    this.fetch$.next();
   }
 
-  /* ── UI handlers ──────────────────────────────────────────────────── */
-  /** Pick a Figma tone for the compliance bar based on the percent. */
+  /**
+   * Figma tone for the compliance bar (2078:102691): 91% green, 81% navy,
+   * 21% red. "High" starts at 90, not 80, so 81% reads navy as drawn.
+   */
   complianceTone(percent: number | undefined | null): 'low' | 'mid' | 'high' {
     const p = Number(percent ?? 0);
-    if (p >= 80) return 'high';
+    if (p >= 90) return 'high';
     if (p >= 40) return 'mid';
     return 'low';
   }
 
-  openDialog(jobTitle: JobTitle): void {
-    this.selectedJobTitle.set(jobTitle);
-    this.modalSearch.set('');
-    this.selectedQualIds.set(new Set());
-    this.initialQualIds.set(new Set());
-    this.dialogVisible.set(true);
-
-    /**
-     * Fetch the per-role qualification map so the checkbox state reflects
-     * the current backend truth — not whatever was cached from the list
-     * call (which doesn't include the qualifications relation).
-     */
-    this.api.get<JobTitle>(`${API.JOB_TITLES}/${jobTitle.id}`).subscribe({
-      next: res => {
-        const ids = new Set((res.result.qualifications ?? []).map(q => q.id));
-        this.selectedQualIds.set(ids);
-        this.initialQualIds.set(new Set(ids));
-      },
-    });
+  private params(): ApiParams {
+    const f = this.filters();
+    return {
+      page: this.page(),
+      per_page: this.perPage,
+      ...(this.search() ? { search: this.search() } : {}),
+      ...(f.qualificationIds.length ? { qualification_ids: [...f.qualificationIds] } : {}),
+      ...(f.learner ? { learner_id: f.learner.id } : {}),
+    };
   }
 
-  closeDialog(): void {
-    if (this.saving()) return;
-    this.dialogVisible.set(false);
-    this.selectedJobTitle.set(null);
-    this.selectedQualIds.set(new Set());
-    this.initialQualIds.set(new Set());
-    this.modalSearch.set('');
-  }
-
-  onModalSearch(term: string): void {
-    this.modalSearch$.next(term);
-  }
-
-  toggleQual(id: number): void {
-    const next = new Set(this.selectedQualIds());
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    this.selectedQualIds.set(next);
-  }
-
-  isSelected(id: number): boolean {
-    return this.selectedQualIds().has(id);
-  }
-
-  saveQualifications(): void {
-    const jt = this.selectedJobTitle();
-    if (!jt || !this.canSave()) return;
-    this.saving.set(true);
+  private loadQualifications(): void {
     this.api
-      .put(`${API.JOB_TITLES}/${jt.id}/qualifications`, {
-        qualification_skill_ids: Array.from(this.selectedQualIds()),
-      })
-      .subscribe({
-        next: () => {
-          this.saving.set(false);
-          this.messages.add({
-            severity: 'success',
-            summary:  this.t.instant('common.saved'),
-            detail:   this.t.instant('job_titles_toasts.qualifications_updated'),
-          });
-          this.closeDialog();
-          this.load();
-        },
-        error: () => this.saving.set(false),
-      });
+      .get<Qualification[]>(`${API.QUALIFICATIONS}/active`)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: res => this.qualifications.set(res.result ?? []) });
+  }
+
+  /** The employee ID is part of the label, so the dropdown's own filter matches it too. */
+  private learnerLabel(l: LearnerOption): string {
+    return l.employee_id ? `${l.name} (${l.employee_id})` : l.name;
   }
 }

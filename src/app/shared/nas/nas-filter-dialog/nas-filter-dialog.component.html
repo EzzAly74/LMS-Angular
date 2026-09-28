@@ -1,6 +1,6 @@
 <p-dialog #fdDlg
   [visible]="visible()"
-  (visibleChange)="visible.set($event)"
+  (visibleChange)="onVisibleChange($event)"
   (onHide)="restoreFocus()"
   [modal]="true"
   [closable]="true"
@@ -22,7 +22,33 @@
         @for (f of fields(); track f.key) {
           <div class="fd__field">
             <span class="fd__label" [id]="uid + '-' + f.key">{{ f.label }}</span>
+            @if (f.multiple) {
+            <p-multiSelect
+              (onPanelShow)="overlayOpen.set(true)"
+              (onPanelHide)="overlayOpen.set(false)"
+              [ariaLabelledBy]="uid + '-' + f.key"
+              [options]="f.options"
+              optionLabel="label"
+              optionValue="id"
+              [ngModel]="value(f.key)"
+              (ngModelChange)="set(f.key, $event)"
+              [ngModelOptions]="{ standalone: true }"
+              [filter]="true"
+              filterBy="label"
+              [showToggleAll]="false"
+              [maxSelectedLabels]="1"
+              [selectedItemsLabel]="'common.n_selected' | translate"
+              [placeholder]="f.placeholder"
+              [emptyMessage]="'common.no_options' | translate"
+              [emptyFilterMessage]="'common.no_results' | translate"
+              appendTo="body"
+              styleClass="fd__dropdown" />
+            } @else {
             <p-dropdown
+              (onShow)="overlayOpen.set(true)"
+              (onHide)="overlayOpen.set(false)"
+              (onFilter)="f.remote && onRemoteFilter(f.key, $event.filter)"
+              [resetFilterOnHide]="true"
               [ariaLabelledBy]="uid + '-' + f.key"
               [options]="f.options"
               optionLabel="label"
@@ -31,13 +57,14 @@
               (ngModelChange)="set(f.key, $event)"
               [ngModelOptions]="{ standalone: true }"
               [showClear]="true"
-              [filter]="f.options.length > 8"
+              [filter]="f.remote || f.options.length > 8"
               filterBy="label"
               [placeholder]="f.placeholder"
-              [emptyMessage]="'common.no_options' | translate"
+              [emptyMessage]="(f.remote ? 'common.type_to_search' : 'common.no_options') | translate"
               [emptyFilterMessage]="'common.no_results' | translate"
               appendTo="body"
               styleClass="fd__dropdown" />
+            }
           </div>
         }
       </div>

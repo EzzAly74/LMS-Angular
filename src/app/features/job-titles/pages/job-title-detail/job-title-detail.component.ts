@@ -20,21 +20,23 @@ import { LocaleService } from '../../../../core/services/locale.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pluralKey } from '../../../../core/utils/plural-key';
-import { JobTitleLearner, JobTitleSummary } from '../../models/job-title-learner.model';
+import { CourseProgressStatus, JobTitleLearner, JobTitleSummary } from '../../models/job-title-learner.model';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 
 /**
- * Job title detail - Figma 2325:117118 (D1).
+ * Job title detail - Figma 2459:137558 (D1b; first built from 2325:117118, D1).
  *
- * A tree table: one parent row per learner holding the job title
- * ("N of M qualifications", overall course completion), expanding into one
- * child row per qualification the job title requires ("N of M Courses").
- * Everything comes from GET admin/job-titles/{id}/learners (backend B1),
- * which computes the whole grid in grouped queries for the page.
+ * A three-level tree table: one row per learner holding the job title
+ * ("N of M qualifications"), expanding into one row per qualification the
+ * job title requires ("N of M Courses"), expanding into one row per course of
+ * that qualification with the learner's status (Completed / In Progress /
+ * Unenrolled) and progress. Everything comes from
+ * GET admin/job-titles/{id}/learners, computed in grouped queries per page.
  *
- * Figma shows the first row expanded and no expand control, so the learner
- * cell is the toggle: a real button with aria-expanded, reachable by keyboard.
+ * Figma opens the first learner and its first qualification. Each chevron is
+ * a real button with aria-expanded. A search that matched a qualification
+ * (not the learner) opens every row, so the match is visible at once.
  */
 @Component({
   selector: 'app-job-title-detail',
@@ -63,6 +65,8 @@ export class JobTitleDetailComponent implements OnInit {
   readonly search   = signal('');
   readonly state    = signal<LoadState>('loading');
   readonly expanded = signal<ReadonlySet<number>>(new Set());
+  /** Open qualification rows, keyed "learnerId:qualificationId". */
+  readonly expandedQuals = signal<ReadonlySet<string>>(new Set());
 
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
   readonly rangeStart = computed(() => (this.total() === 0 ? 0 : (this.page() - 1) * this.perPage + 1));
@@ -104,8 +108,7 @@ export class JobTitleDetailComponent implements OnInit {
         const rows = result.res.result.data;
         this.learners.set(rows);
         this.total.set(result.res.result.total);
-        // Figma opens the first learner, so the tree reads as a tree at once.
-        this.expanded.set(new Set(rows.length ? [rows[0].id] : []));
+        this.openInitial(rows);
         this.state.set('ready');
       });
 
@@ -144,6 +147,49 @@ export class JobTitleDetailComponent implements OnInit {
 
   isExpanded(learnerId: number): boolean {
     return this.expanded().has(learnerId);
+  }
+
+  toggleQual(learnerId: number, qualId: number): void {
+    const key = `${learnerId}:${qualId}`;
+    const next = new Set(this.expandedQuals());
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    this.expandedQuals.set(next);
+  }
+
+  isQualExpanded(learnerId: number, qualId: number): boolean {
+    return this.expandedQuals().has(`${learnerId}:${qualId}`);
+  }
+
+  /** Pill and trailing text for a course row (FG-41: unenrolled reads "Not Yet"). */
+  statusKey(status: CourseProgressStatus): string {
+    return `job_titles.detail.status_${status}`;
+  }
+
+  stateKey(status: CourseProgressStatus): string {
+    return `job_titles.detail.state_${status}`;
+  }
+
+  /**
+   * Figma opens the first learner and its first qualification, so the tree
+   * reads as a tree at once. Rows matched through a qualification open fully.
+   */
+  private openInitial(rows: JobTitleLearner[]): void {
+    const learners = new Set<number>();
+    const quals = new Set<string>();
+    const first = rows[0];
+    if (first) {
+      learners.add(first.id);
+      const q = first.qualification_breakdown[0];
+      if (q) quals.add(`${first.id}:${q.id}`);
+    }
+    for (const r of rows) {
+      if (!r.qualification_match) continue;
+      learners.add(r.id);
+      for (const q of r.qualification_breakdown) quals.add(`${r.id}:${q.id}`);
+    }
+    this.expanded.set(learners);
+    this.expandedQuals.set(quals);
   }
 
   /** Translation key for a counted phrase, with the locale's plural form. */

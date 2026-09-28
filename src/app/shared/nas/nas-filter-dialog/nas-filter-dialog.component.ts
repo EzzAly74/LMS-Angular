@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -15,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { PrimeTemplate } from 'primeng/api';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
 
@@ -33,9 +35,20 @@ export interface NasFilterField {
   /** Placeholder, already translated. */
   readonly placeholder: string;
   readonly options: NasFilterFieldOption[];
+  /** Several choices (Figma annotation on the Job Titles Qualification field: "multi select + search"). */
+  readonly multiple?: boolean;
+  /**
+   * Options come from a server search: the dialog emits `search` as the admin
+   * types and the host replaces `options` (it must keep the chosen option in
+   * the list so its label still shows).
+   */
+  readonly remote?: boolean;
 }
 
-export type NasFilterValues = Readonly<Record<string, NasFilterValue | null>>;
+/** One field's choice: a value, several (multiple fields), or nothing. */
+export type NasFilterSelection = NasFilterValue | readonly NasFilterValue[] | null;
+
+export type NasFilterValues = Readonly<Record<string, NasFilterSelection>>;
 
 let nextId = 0;
 
@@ -55,7 +68,7 @@ let nextId = 0;
 @Component({
   selector: 'nas-filter-dialog',
   standalone: true,
-  imports: [FormsModule, TranslateModule, DialogModule, DropdownModule, PrimeTemplate, NasIconComponent],
+  imports: [FormsModule, TranslateModule, DialogModule, DropdownModule, MultiSelectModule, PrimeTemplate, NasIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nas-filter-dialog.component.html',
   styleUrl: './nas-filter-dialog.component.scss',
@@ -66,17 +79,22 @@ export class NasFilterDialogComponent {
   /** The filter currently applied, keyed by field key. */
   readonly applied = input<NasFilterValues>({});
   readonly apply   = output<NasFilterValues>();
+  /** A remote field's search term, as typed. */
+  readonly search  = output<{ key: string; term: string }>();
 
   private readonly document = inject(DOCUMENT);
   private opener: HTMLElement | null = null;
+  private escapeForOverlay = false;
 
   protected readonly uid     = `nas-fd-${nextId++}`;
-  protected readonly working = signal<Record<string, NasFilterValue | null>>({});
+  protected readonly working = signal<Record<string, NasFilterSelection>>({});
+  /** A dropdown list is open over the dialog. */
+  protected readonly overlayOpen = signal(false);
 
   protected readonly changed = computed(() => {
     const w = this.working();
     const a = this.applied();
-    return this.fields().some(f => (w[f.key] ?? null) !== (a[f.key] ?? null));
+    return this.fields().some(f => !same(w[f.key] ?? null, a[f.key] ?? null));
   });
 
   constructor() {
@@ -88,14 +106,30 @@ export class NasFilterDialogComponent {
       this.opener ??= active instanceof HTMLElement ? active : null;
       this.working.set({ ...applied });
     }, { allowSignalWrites: true });
+
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key !== 'Escape' || !this.visible() || !this.overlayOpen()) return;
+      // Only for this keystroke: cleared once the event has finished, so a
+      // later close (X, Cancel, a second Escape) is never refused.
+      this.escapeForOverlay = true;
+      setTimeout(() => (this.escapeForOverlay = false));
+    };
+    this.document.addEventListener('keydown', onKey, true);
+    inject(DestroyRef).onDestroy(() => this.document.removeEventListener('keydown', onKey, true));
   }
 
-  protected value(key: string): NasFilterValue | null {
+  protected value(key: string): NasFilterSelection {
     return this.working()[key] ?? null;
   }
 
-  protected set(key: string, value: NasFilterValue | null): void {
-    this.working.update(w => ({ ...w, [key]: value ?? null }));
+  protected set(key: string, value: NasFilterSelection): void {
+    // An emptied multi-select is "no filter", the same as never choosing.
+    const v = Array.isArray(value) && value.length === 0 ? null : value;
+    this.working.update(w => ({ ...w, [key]: v ?? null }));
+  }
+
+  protected onRemoteFilter(key: string, term: string | null | undefined): void {
+    this.search.emit({ key, term: (term ?? '').trim() });
   }
 
   protected submit(): void {
@@ -109,15 +143,39 @@ export class NasFilterDialogComponent {
     this.visible.set(false);
   }
 
+  /**
+   * Escape closes an open dropdown list and nothing more. The list lives in
+   * <body>, so its Escape reached PrimeNG's document listener, which closed
+   * the whole modal and threw the unsaved choices away. The capture listener
+   * notes that a list was open when Escape went down; that close is refused.
+   */
+  protected onVisibleChange(open: boolean): void {
+    if (!open && this.escapeForOverlay) {
+      this.escapeForOverlay = false;
+      return;
+    }
+    this.visible.set(open);
+  }
+
   protected restoreFocus(): void {
     this.opener?.focus();
     this.opener = null;
   }
 
   /** Every field key present, unset ones as null, so callers read one shape. */
-  private normalized(values: Record<string, NasFilterValue | null>): NasFilterValues {
-    const out: Record<string, NasFilterValue | null> = {};
+  private normalized(values: Record<string, NasFilterSelection>): NasFilterValues {
+    const out: Record<string, NasFilterSelection> = {};
     for (const f of this.fields()) out[f.key] = values[f.key] ?? null;
     return out;
   }
+}
+
+/** Equal choices; the order of a multi-select does not matter. */
+function same(a: NasFilterSelection, b: NasFilterSelection): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    const x = Array.isArray(a) ? a : a === null ? [] : [a];
+    const y = Array.isArray(b) ? b : b === null ? [] : [b];
+    return x.length === y.length && x.every(v => y.includes(v));
+  }
+  return a === b;
 }
