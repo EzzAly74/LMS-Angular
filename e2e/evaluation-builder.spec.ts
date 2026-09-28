@@ -62,21 +62,27 @@ test('publishing sends the whole template and opens its results', async ({ page 
   await q1.getByLabel('Question (Arabic)').fill('واضح؟');
   await expect(publish).toBeEnabled();
 
-  // A scale question is invalid until its four end labels are filled.
+  // "Type of questions" is the template's type (D-061): questions have no Type of their own.
   await page.getByRole('button', { name: 'Add Question' }).click();
   const q2 = page.locator('.tb__q').nth(1);
+  await expect(page.locator('.tb__q p-dropdown')).toHaveCount(0);
   await q2.getByLabel('Question (English)').fill('Pace');
   await q2.getByLabel('Question (Arabic)').fill('السرعة');
-  await pick(page, q2.locator('p-dropdown'), 'Evaluation Scale');
+  await expect(publish).toBeEnabled();
+
+  // Switching to scale applies to both questions, which then need their end labels.
+  await pick(page, page.locator('p-dropdown').nth(2), 'Evaluation Scale');
   await expect(publish).toBeDisabled();
-  await q2.getByLabel('Evaluation “1” (English)').fill('Unsatisfied');
-  await q2.getByLabel('Evaluation “5” (English)').fill('Very satisfied');
-  await q2.getByLabel('Evaluation “1” (Arabic)').fill('غير راضٍ');
-  await q2.getByLabel('Evaluation “5” (Arabic)').fill('راضٍ جدًا');
+  for (const [q, lo, hi] of [[q1, 'Not clear', 'Very clear'], [q2, 'Unsatisfied', 'Very satisfied']] as const) {
+    await expect(q.locator('.tb__stars')).toHaveCount(0);
+    await q.getByLabel('Evaluation “1” (English)').fill(lo);
+    await q.getByLabel('Evaluation “5” (English)').fill(hi);
+    await q.getByLabel('Evaluation “1” (Arabic)').fill(lo + ' ع');
+    await q.getByLabel('Evaluation “5” (Arabic)').fill(hi + ' ع');
+  }
   await q2.getByRole('switch', { name: 'Required' }).uncheck();
   await expect(page.locator('.tb__summary-num')).toHaveText('2');
   await expect(publish).toBeEnabled();
-
   await publish.click();
   await expect(page).toHaveURL(/\/admin\/evaluations\/77$/);
   expect(posts).toHaveLength(1);
@@ -85,10 +91,13 @@ test('publishing sends the whole template and opens its results', async ({ page 
     course_id: 11,
     section_id: 102,
     questions: [
-      { title: { en: 'Clear?', ar: 'واضح؟' }, type: 'five', required: true, scale_label_min: null, scale_label_max: null },
+      {
+        title: { en: 'Clear?', ar: 'واضح؟' }, type: 'scale', required: true,
+        scale_label_min: { en: 'Not clear', ar: 'Not clear ع' }, scale_label_max: { en: 'Very clear', ar: 'Very clear ع' },
+      },
       {
         title: { en: 'Pace', ar: 'السرعة' }, type: 'scale', required: false,
-        scale_label_min: { en: 'Unsatisfied', ar: 'غير راضٍ' }, scale_label_max: { en: 'Very satisfied', ar: 'راضٍ جدًا' },
+        scale_label_min: { en: 'Unsatisfied', ar: 'Unsatisfied ع' }, scale_label_max: { en: 'Very satisfied', ar: 'Very satisfied ع' },
       },
     ],
   });

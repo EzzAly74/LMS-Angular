@@ -70,9 +70,12 @@ function scaleLabelsRequired(group: AbstractControl): ValidationErrors | null {
  * questions) and 2409:133222 (one course and cohort, scale questions with
  * worded ends) (D4, D-054).
  *
- * "Type of questions" sets the type of each question added after it; every
- * question keeps its own Type (frame 2409:133222 mixes them). Publish is
- * enabled only when the whole form is valid - the API validates again.
+ * "Type of questions" in the General section is the type of every question in
+ * the template (D-061, the human's call 2026-09-28; frame 2409:133222 still
+ * draws a per-question Type, which is superseded). Each question keeps a
+ * `type` control that follows it, so the scale-label rule and the payload stay
+ * per question. Publish is enabled only when the whole form is valid - the API
+ * validates again.
  *
  * A template any learner has answered cannot be edited (decided by the human
  * 2026-09-26): the edit route shows that instead of a form, and the API refuses
@@ -177,6 +180,11 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.form.controls.section_id.setValue(null));
 
+    // One type per template: every question follows "Type of questions".
+    this.form.controls.default_type.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(type => this.applyType(type));
+
     const id = this.id();
     forkJoin({ options: this.api.options(), template: id !== undefined ? this.api.get(id) : of(null) })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -200,8 +208,8 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
       });
   }
 
-  addQuestion(type: BuilderQuestionType = this.form.controls.default_type.value): void {
-    this.questions.push(this.questionGroup(type));
+  addQuestion(): void {
+    this.questions.push(this.questionGroup(this.form.controls.default_type.value));
   }
 
   removeQuestion(i: number): void {
@@ -246,6 +254,10 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
   }
 
   // ── Internals ──────────────────────────────────────────────────────────
+  private applyType(type: BuilderQuestionType): void {
+    for (const q of this.questions.controls) q.controls.type.setValue(type);
+  }
+
   private questionGroup(type: BuilderQuestionType, q?: EvaluationTemplateDetail['questions'][number]): FormGroup<QuestionForm> {
     return this.fb.group<QuestionForm>({
       title_en: this.fb.control(q?.title.en ?? '', [Validators.required, Validators.maxLength(500)]),
@@ -269,8 +281,13 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
       const type: BuilderQuestionType = builderTypes.includes(q.type) ? (q.type as BuilderQuestionType) : 'five';
       this.questions.push(this.questionGroup(type, q));
     }
+    // A template saved before D-061 may mix types; it takes its first
+    // question's type, which the admin sees before saving.
     const first = this.questions.at(0)?.controls.type.value;
-    if (first) this.form.controls.default_type.setValue(first);
+    if (first) {
+      this.form.controls.default_type.setValue(first, { emitEvent: false });
+      this.applyType(first);
+    }
   }
 
   private payload(): EvaluationTemplatePayload {

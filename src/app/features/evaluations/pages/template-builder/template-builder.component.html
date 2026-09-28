@@ -150,12 +150,6 @@
                     </div>
                   </div>
 
-                  <div class="tb__field">
-                    <label class="tb__label" [id]="'tb-q' + i + '-type'">{{ 'evaluations.builder.type' | translate }} <span class="tb__req" aria-hidden="true">*</span></label>
-                    <p-dropdown formControlName="type" [options]="typeOptions()" optionLabel="label" optionValue="value"
-                      appendTo="body" styleClass="tb-dropdown" [ariaLabelledBy]="'tb-q' + i + '-type'" [style]="{ width: '100%' }" />
-                  </div>
-
                   @if (q.controls.type.value === 'five') {
                     <span class="tb__stars" aria-hidden="true">
                       @for (s of stars; track s) {
