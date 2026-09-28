@@ -3,7 +3,6 @@ import {
   Component,
   OnDestroy,
   OnInit,
-  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -17,11 +16,15 @@ import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { QUIZ_TYPES } from '../../models/quiz.types';
+import type { QuizType } from '../../models/quiz.types';
 import {
   NasPageHeaderComponent,
   NasStatusBadgeComponent,
 } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { QuizzesApiService } from '../../services/quizzes-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
 import type {
@@ -33,13 +36,14 @@ import type {
   QuizSubmissionStatus,
 } from '../../models/quiz.types';
 
-type StatusToggle = 'all' | QuizSubmissionStatus;
+/** Figma 1983:42584 "All / Passed / Failed" (D-065). */
+type ResultToggle = 'all' | 'passed' | 'failed';
 
 interface CourseOpt { id: number; title: string; }
 
 interface FilterModalState {
   open: boolean;
-  kind: 'instructors' | 'learners' | 'courses' | null;
+  kind: 'instructors' | 'learners' | 'courses' | 'types' | null;
   query: string;
 }
 
@@ -47,6 +51,7 @@ interface FilterModalState {
   selector: 'app-quizzes-list',
   standalone: true,
   imports: [
+    NasDatePipe,
     CommonModule,
     FormsModule,
     RouterLink,
@@ -70,6 +75,8 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   private readonly toast      = inject(MessageService);
   private readonly router     = inject(Router);
   private readonly t          = inject(TranslateService);
+  /** Dates follow the UI language (D-051); Angular's date pipe was always English. */
+  protected readonly locale   = inject(LocaleService).locale;
 
   private readonly destroy$   = new Subject<void>();
   private readonly subSearch$ = new Subject<string>();
@@ -101,7 +108,9 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   subPage    = 1;
   subPerPage = 20;
   subSearch  = '';
-  subStatus: StatusToggle = 'all';
+  subResult: ResultToggle = 'all';
+  /** Pre / Mid / Post filter (Figma 1981:41345). */
+  subTypes: QuizType[] = [];
   subInstructorIds: number[] = [];
   subLearnerIds:    number[] = [];
   subCourseIds:     number[] = [];
@@ -123,12 +132,23 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   readonly selectedInstructorSet = signal<Set<number>>(new Set());
   readonly selectedLearnerSet    = signal<Set<number>>(new Set());
   readonly selectedCourseSet     = signal<Set<number>>(new Set());
+  /** Type choices are held by index + 1 so the shared list can key them by number. */
+  readonly selectedTypeSet       = signal<Set<number>>(new Set());
 
-  readonly filterPillCounts = computed(() => ({
-    instructors: this.subInstructorIds.length,
-    learners:    this.subLearnerIds.length,
-    courses:     this.subCourseIds.length,
-  }));
+  /**
+   * DB-27: this was a computed() over plain array fields, which are not
+   * signals, so it cached its first value and the chip counts never showed.
+   * A method re-reads them on every change detection (the component runs on
+   * events only).
+   */
+  filterPillCounts(): { instructors: number; learners: number; courses: number; types: number } {
+    return {
+      instructors: this.subInstructorIds.length,
+      learners:    this.subLearnerIds.length,
+      courses:     this.subCourseIds.length,
+      types:       this.subTypes.length,
+    };
+  }
 
   ngOnInit(): void {
     this.subSearch$
@@ -187,7 +207,8 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
       page: this.subPage,
       per_page: this.subPerPage,
       ...(this.subSearch ? { search: this.subSearch } : {}),
-      ...(this.subStatus !== 'all' ? { status: this.subStatus } : {}),
+      ...(this.subResult !== 'all' ? { result: this.subResult } : {}),
+      ...(this.subTypes.length ? { types: [...this.subTypes] } : {}),
       ...(this.subInstructorIds.length ? { instructor_ids: this.subInstructorIds } : {}),
       ...(this.subLearnerIds.length    ? { learner_ids:    this.subLearnerIds    } : {}),
       ...(this.subCourseIds.length     ? { course_ids:     this.subCourseIds     } : {}),
@@ -205,8 +226,8 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
 
   onSubmissionSearch(v: string): void { this.subSearch$.next(v); }
 
-  onStatus(s: StatusToggle): void {
-    this.subStatus = s;
+  onResult(s: ResultToggle): void {
+    this.subResult = s;
     this.subPage = 1;
     this.loadSubmissions();
   }
@@ -288,8 +309,13 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
 
   /* ── Filter modal ────────────────────────────────────────────── */
 
-  openFilter(kind: 'instructors' | 'learners' | 'courses'): void {
+  openFilter(kind: 'instructors' | 'learners' | 'courses' | 'types'): void {
     this.filter.set({ open: true, kind, query: '' });
+
+    if (kind === 'types') {
+      this.selectedTypeSet.set(new Set(this.subTypes.map(t => QUIZ_TYPES.indexOf(t) + 1)));
+      return;
+    }
 
     if (kind === 'instructors') {
       this.selectedInstructorSet.set(new Set(this.subInstructorIds));
@@ -327,6 +353,7 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     if (kind === 'instructors') this.toggleInSet(this.selectedInstructorSet, id);
     else if (kind === 'learners') this.toggleInSet(this.selectedLearnerSet, id);
     else if (kind === 'courses')  this.toggleInSet(this.selectedCourseSet, id);
+    else if (kind === 'types')    this.toggleInSet(this.selectedTypeSet, id);
   }
 
   private toggleInSet(s: ReturnType<typeof signal<Set<number>>>, id: number): void {
@@ -342,6 +369,7 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     if (kind === 'instructors') return this.selectedInstructorSet().has(id);
     if (kind === 'learners')    return this.selectedLearnerSet().has(id);
     if (kind === 'courses')     return this.selectedCourseSet().has(id);
+    if (kind === 'types')       return this.selectedTypeSet().has(id);
     return false;
   }
 
@@ -352,6 +380,7 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     if (kind === 'instructors') source = this.instructors();
     else if (kind === 'learners') source = this.learners();
     else if (kind === 'courses') source = this.courses().map(c => ({ id: c.id, name: c.title }));
+    else if (kind === 'types') source = QUIZ_TYPES.map((t, i) => ({ id: i + 1, name: this.t.instant(`quizzes.type_long_${t}`) }));
     if (!q) return source;
     return source.filter(x => x.name.toLowerCase().includes(q));
   }
@@ -365,6 +394,7 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     if (kind === 'instructors') this.selectedInstructorSet.set(new Set());
     else if (kind === 'learners') this.selectedLearnerSet.set(new Set());
     else if (kind === 'courses')  this.selectedCourseSet.set(new Set());
+    else if (kind === 'types')    this.selectedTypeSet.set(new Set());
   }
 
   applyFilter(): void {
@@ -372,6 +402,7 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     if (kind === 'instructors') this.subInstructorIds = [...this.selectedInstructorSet()];
     else if (kind === 'learners') this.subLearnerIds = [...this.selectedLearnerSet()];
     else if (kind === 'courses')  this.subCourseIds  = [...this.selectedCourseSet()];
+    else if (kind === 'types')    this.subTypes      = [...this.selectedTypeSet()].sort().map(i => QUIZ_TYPES[i - 1]);
     this.closeFilter();
     this.subPage = 1;
     this.loadSubmissions();
@@ -381,6 +412,8 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     this.subInstructorIds = [];
     this.subLearnerIds = [];
     this.subCourseIds = [];
+    this.subTypes = [];
+    this.selectedTypeSet.set(new Set());
     this.selectedInstructorSet.set(new Set());
     this.selectedLearnerSet.set(new Set());
     this.selectedCourseSet.set(new Set());
@@ -400,6 +433,10 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
 
   cohortPillTone(scope: QuizListItem['cohort_scope']): 'teal' | 'warning' {
     return scope === 'all' ? 'teal' : 'warning';
+  }
+
+  typeLabel(t: QuizType | null | undefined): string {
+    return t ? this.t.instant(`quizzes.type_${t}`) : '—';
   }
 
   statusTone(s: QuizSubmissionStatus): 'success' | 'warning' {

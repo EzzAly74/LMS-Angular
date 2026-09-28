@@ -205,7 +205,10 @@
 }
 
 /* ── Table ───────────────────────────────────────────────────── */
-.ql-table-wrap { overflow-x: auto; }
+// position: relative contains the absolutely positioned screen-reader text
+// in the score cells; without it that text sat at its static position far
+// to the right and widened the whole page on phones (as LAYOUT-06).
+.ql-table-wrap { position: relative; overflow-x: auto; }
 
 .ql-table {
   width: 100%;
@@ -438,4 +441,14 @@
   padding: var(--nas-space-6);
   color: var(--nas-color-text-muted);
   font-size: var(--nas-size-xs);
+}
+
+.ql-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }

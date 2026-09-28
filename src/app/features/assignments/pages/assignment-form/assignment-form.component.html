@@ -84,6 +84,22 @@
           }
         </div>
 
+        <!-- Type: Pre / Mid / Post (Figma 1983:44040; D-065 single choice, so radios; Post = final exam on quizzes) -->
+        <fieldset class="af-field af-types">
+          <legend class="af-label">{{ 'quizzes.form_type' | translate }}</legend>
+          <div class="af-types__row">
+            @for (t of ['pre', 'mid', 'post']; track t) {
+              <label class="af-types__option">
+                <input type="radio" formControlName="type" [value]="t" />
+                <span>{{ ('quizzes.type_long_' + t) | translate }}</span>
+              </label>
+            }
+            @if (form.controls.type.value) {
+              <button type="button" class="af-types__clear" (click)="form.controls.type.setValue(null)">{{ 'common.clear' | translate }}</button>
+            }
+          </div>
+        </fieldset>
+
         <div class="af-field">
           <label class="af-label">{{ 'assignments.form_cohort_scope' | translate }} <span class="af-req">*</span></label>
           <p-dropdown

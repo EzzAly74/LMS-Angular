@@ -128,6 +128,8 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     instructions_ar: [''],
     pass_score:      this.fb.control<number | null>(null),
     status:          this.fb.nonNullable.control<AssignmentStatus>('draft'),
+    /** Pre / Mid / Post, one or none (D-065; Figma draws a checkbox row). */
+    type:            this.fb.control<'pre' | 'mid' | 'post' | null>(null),
     questions:       this.fb.array<FormGroup<QuestionGroup>>([]),
   });
 
@@ -237,6 +239,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       instructions_ar: a.instructions_ar ?? '',
       pass_score:      a.pass_score,
       status:          a.status,
+      type:            a.type ?? null,
     });
 
     this.questions.clear();
@@ -375,6 +378,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       cohort_ids:      value.cohort_scope === 'specific' ? value.cohort_ids : [],
       pass_score:      value.pass_score,
       status,
+      type:            value.type,
       questions: value.questions.map(q => ({
         ...(q.id ? { id: q.id } : {}),
         type: q.type,

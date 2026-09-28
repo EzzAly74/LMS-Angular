@@ -45,6 +45,8 @@ interface CourseOpt { id: number; title: string; }
 
 
 interface QuestionGroup {
+  /** Sent back on save so the question is updated in place (B-133). */
+  id: FormControl<number | null>;
   type: FormControl<QuizQuestionType>;
   score: FormControl<number>;
   question_en: FormControl<string>;
@@ -120,6 +122,8 @@ export class QuizFormComponent implements OnInit, OnDestroy {
     instructions_ar: [''],
     pass_score:      this.fb.control<number | null>(null),
     status:          this.fb.nonNullable.control<QuizStatus>('draft'),
+    /** Pre / Mid / Post, one or none (D-065; Figma draws a checkbox row). */
+    type:            this.fb.control<'pre' | 'mid' | 'post' | null>(null),
     questions:       this.fb.array<FormGroup<QuestionGroup>>([]),
   });
 
@@ -227,6 +231,7 @@ export class QuizFormComponent implements OnInit, OnDestroy {
       instructions_ar: q.instructions_ar ?? '',
       pass_score:      q.pass_score,
       status:          q.status,
+      type:            q.type ?? null,
     });
 
     this.questions.clear();
@@ -361,7 +366,9 @@ export class QuizFormComponent implements OnInit, OnDestroy {
       cohort_ids:      value.cohort_scope === 'specific' ? value.cohort_ids : [],
       pass_score:      value.pass_score,
       status,
-      questions: value.questions.map((q: QuizQuestion) => ({
+      type:            value.type,
+      questions: value.questions.map(q => ({
+        ...(q.id ? { id: q.id } : {}),
         type: q.type,
         score: Number(q.score) || 0,
         question_en: q.question_en,
@@ -417,6 +424,7 @@ export class QuizFormComponent implements OnInit, OnDestroy {
     const optsAr = (q.options_ar ?? []).map(o => this.fb.nonNullable.control<string>(o ?? ''));
 
     return this.fb.nonNullable.group<QuestionGroup>({
+      id:                this.fb.control<number | null>(q.id ?? null),
       type:              this.fb.nonNullable.control<QuizQuestionType>(q.type ?? 'mcq'),
       score:             this.fb.nonNullable.control<number>(q.score ?? 0, { validators: [Validators.min(0)] }),
       question_en:       this.fb.nonNullable.control<string>(q.question_en ?? '', { validators: [Validators.required] }),

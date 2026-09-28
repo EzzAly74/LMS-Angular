@@ -5,6 +5,8 @@
  */
 
 export type AssignmentStatus = 'draft' | 'active';
+/** Pre / Mid / Post (D-065). */
+export type AssignmentType = 'pre' | 'mid' | 'post';
 export type AssignmentCohortScope = 'all' | 'specific';
 export type AssignmentQuestionType = 'mcq' | 'yes_no' | 'open' | 'reorder' | 'file';
 
@@ -83,6 +85,7 @@ export interface Assignment {
   pass_score: number | null;
   total_score: number;
   status: AssignmentStatus;
+  type: AssignmentType | null;
   created_by: number | null;
   created_by_user: { id: number; name: string } | null;
   cohorts: CohortLite[];
@@ -197,6 +200,7 @@ export interface AssignmentSavePayload {
   cohort_ids: number[];
   pass_score: number | null;
   status: AssignmentStatus;
+  type: AssignmentType | null;
   questions: AssignmentQuestion[];
 }
 

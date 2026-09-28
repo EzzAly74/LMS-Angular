@@ -84,6 +84,23 @@
           }
         </div>
 
+        <!-- Type: Pre / Mid / Post (Figma 1983:44040; D-065 single choice, so radios; Post = final exam on quizzes) -->
+        <fieldset class="qf-field qf-types">
+          <legend class="qf-label">{{ 'quizzes.form_type' | translate }}</legend>
+          <div class="qf-types__row">
+            @for (t of ['pre', 'mid', 'post']; track t) {
+              <label class="qf-types__option">
+                <input type="radio" formControlName="type" [value]="t" />
+                <span>{{ ('quizzes.type_long_' + t) | translate }}</span>
+              </label>
+            }
+            @if (form.controls.type.value) {
+              <button type="button" class="qf-types__clear" (click)="form.controls.type.setValue(null)">{{ 'common.clear' | translate }}</button>
+            }
+          </div>
+          <p class="qf-types__hint">{{ 'quizzes.type_post_hint' | translate }}</p>
+        </fieldset>
+
         <div class="qf-field">
           <label class="qf-label">{{ 'quizzes.form_cohort_scope' | translate }} <span class="qf-req">*</span></label>
           <p-dropdown

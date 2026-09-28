@@ -8,6 +8,9 @@ export type QuizStatus = 'draft' | 'active';
 export type QuizCohortScope = 'all' | 'specific';
 export type QuizQuestionType = 'mcq' | 'yes_no' | 'open' | 'reorder';
 export type QuizSubmissionStatus = 'graded' | 'pending';
+/** Pre / Mid / Post (D-065). Post is the final exam. */
+export type QuizType = 'pre' | 'mid' | 'post';
+export const QUIZ_TYPES: readonly QuizType[] = ['pre', 'mid', 'post'];
 
 export interface CourseLite {
   id: number;
@@ -48,6 +51,7 @@ export interface QuizListItem {
   total_score: number;
   pass_score: number | null;
   status: QuizStatus;
+  type?: QuizType | null;
   due_date: string | null;
   created_at: string | null;
 }
@@ -66,6 +70,7 @@ export interface Quiz {
   pass_score: number | null;
   total_score: number;
   status: QuizStatus;
+  type?: QuizType | null;
   created_by: number | null;
   created_by_user: { id: number; name: string } | null;
   cohorts: CohortLite[];
@@ -82,6 +87,7 @@ export interface QuizOption {
   course_id: number;
   course_title: string | null;
   status: QuizStatus;
+  type?: QuizType | null;
 }
 
 export interface QuizSummary {
@@ -92,8 +98,11 @@ export interface QuizSummary {
 /** Paginated submissions row — matches AdminQuizSubmissionResource. */
 export interface QuizSubmissionListItem {
   id: number;
-  quiz: { id: number; title: string; course_id: number } | null;
+  quiz: { id: number; title: string; course_id: number; type?: QuizType | null } | null;
   quiz_title: string | null;
+  quiz_type: QuizType | null;
+  /** Against the quiz's pass score; null while pending or with no pass score. */
+  passed: boolean | null;
   course_title: string | null;
   instructor_name: string | null;
   cohort_titles: string[];
@@ -169,6 +178,7 @@ export interface QuizSavePayload {
   cohort_ids: number[];
   pass_score: number | null;
   status: QuizStatus;
+  type?: QuizType | null;
   questions: QuizQuestion[];
 }
 

@@ -58,9 +58,13 @@ test('a file question keeps its id, replaces its attachment after saving, and re
   await page.locator('#af-file-input-0').setInputFiles({ name: 'New brief.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') });
   await expect(page.getByText('New brief.pdf')).toBeVisible();
 
+  // Type (D-065): one of Pre / Mid / Post.
+  await page.getByLabel('Mid-course').check();
+
   await page.locator('button').filter({ hasText: /Publish|Save Changes/ }).first().click();
   await expect.poll(() => saves.length).toBe(1);
-  const body = saves[0].postDataJSON() as { questions: { id?: number; type: string }[] };
+  const body = saves[0].postDataJSON() as { type: string | null; questions: { id?: number; type: string }[] };
+  expect(body.type).toBe('mid');
   expect(body.questions[0]).toMatchObject({ id: 81, type: 'file' });
 
   await expect.poll(() => uploads.length).toBe(1);

@@ -465,3 +465,29 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
+/* ── Type: Pre / Mid / Post (D-065) ─────────────────────────────── */
+.af-types { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+.af-types legend { padding: 0; margin-block-end: var(--nas-space-2); }
+.af-types__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nas-space-4); }
+.af-types__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+  cursor: pointer;
+  input { inline-size: 18px; block-size: 18px; margin: 0; accent-color: var(--nas-teal-1000); cursor: pointer; }
+}
+.af-types__clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-teal-1000);
+  text-decoration: underline;
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+}
+.af-types__hint { margin: var(--nas-space-1) 0 0; font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted); }

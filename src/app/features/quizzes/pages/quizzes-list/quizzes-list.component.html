@@ -63,7 +63,7 @@
      FILTER MODAL (Instructors / Learners / Courses)
 ════════════════════════════════════════════════════════════════ -->
 <p-dialog
-  [header]="'common.filter_results' | translate"
+  [header]="(filter().kind === 'types' ? 'quizzes.type_modal_title' : 'common.filter_results') | translate"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -80,6 +80,7 @@
     }
   </div>
 
+  @if (filter().kind !== 'types') {
   <div class="ql-modal-search">
     <i class="pi pi-search ql-modal-search__icon"></i>
     <input
@@ -89,6 +90,7 @@
       [ngModel]="filter().query"
       (ngModelChange)="onFilterQuery($event)" />
   </div>
+  }
 
   <div class="ql-modal-list">
     @for (item of filterItems(); track item.id) {
@@ -103,10 +105,17 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">{{ 'common.reset' | translate }}</button>
-    <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
-      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
-    </button>
+    @if (filter().kind === 'types') {
+      <button type="button" class="nas-btn nas-btn--ghost" (click)="closeFilter()">{{ 'common.cancel' | translate }}</button>
+      <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()" [disabled]="selectedTypeSet().size === 0">
+        <i class="pi pi-eye" aria-hidden="true"></i> {{ 'quizzes.view_results' | translate }}
+      </button>
+    } @else {
+      <button type="button" class="nas-btn nas-btn--ghost" (click)="clearFilterSelection()">{{ 'common.reset' | translate }}</button>
+      <button type="button" class="nas-btn nas-btn--primary" (click)="applyFilter()">
+        <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
+      </button>
+    }
   </ng-template>
 </p-dialog>
 
@@ -171,7 +180,7 @@
                   </td>
                   <td>{{ item.questions_count }}</td>
                   <td class="ql-table__primary">{{ item.total_score }}</td>
-                  <td class="ql-table__muted">{{ item.due_date ? (item.due_date | date:'dd MMM yyyy') : '—' }}</td>
+                  <td class="ql-table__muted">{{ item.due_date ? (item.due_date | nasDate: locale()) : '—' }}</td>
                   <td class="ql-table__actions">
                     <button
                       type="button"
@@ -214,7 +223,7 @@
         <button
           type="button"
           class="ql-pill-btn"
-          [class.ql-pill-btn--active]="subInstructorIds.length === 0 && subLearnerIds.length === 0 && subCourseIds.length === 0"
+          [class.ql-pill-btn--active]="subInstructorIds.length === 0 && subLearnerIds.length === 0 && subCourseIds.length === 0 && subTypes.length === 0"
           (click)="clearAllFilters()">
           {{ 'common.all' | translate }}
         </button>
@@ -243,18 +252,27 @@
           <i class="pi pi-chevron-down"></i>
         </button>
 
-        <div class="ql-status-checks">
+        <button type="button" class="ql-pill-btn" (click)="openFilter('types')" aria-haspopup="dialog">
+          {{ 'quizzes.filter_type' | translate }}
+          @if (filterPillCounts().types) {
+            <span class="ql-pill-btn__count">{{ filterPillCounts().types }}</span>
+          }
+          <i class="pi pi-chevron-down" aria-hidden="true"></i>
+        </button>
+
+        <!-- Figma 1983:42584: All / Passed / Failed (D-065) -->
+        <div class="ql-status-checks" role="group" [attr.aria-label]="'quizzes.result' | translate">
           <label class="ql-check">
-            <input type="checkbox" [checked]="subStatus === 'all'" (change)="onStatus('all')" />
+            <input type="checkbox" [checked]="subResult === 'all'" (change)="onResult('all')" />
             <span>{{ 'common.all' | translate }}</span>
           </label>
           <label class="ql-check">
-            <input type="checkbox" [checked]="subStatus === 'pending'" (change)="onStatus(subStatus === 'pending' ? 'all' : 'pending')" />
-            <span>{{ 'quizzes.pending' | translate }}</span>
+            <input type="checkbox" [checked]="subResult === 'passed'" (change)="onResult(subResult === 'passed' ? 'all' : 'passed')" />
+            <span>{{ 'quizzes.passed' | translate }}</span>
           </label>
           <label class="ql-check">
-            <input type="checkbox" [checked]="subStatus === 'graded'" (change)="onStatus(subStatus === 'graded' ? 'all' : 'graded')" />
-            <span>{{ 'quizzes.graded' | translate }}</span>
+            <input type="checkbox" [checked]="subResult === 'failed'" (change)="onResult(subResult === 'failed' ? 'all' : 'failed')" />
+            <span>{{ 'quizzes.failed' | translate }}</span>
           </label>
         </div>
       </div>
@@ -268,10 +286,9 @@
             <th>{{ 'quizzes.col_course' | translate }}</th>
             <th>{{ 'quizzes.sub_col_instructor' | translate }}</th>
             <th>{{ 'quizzes.col_quiz' | translate }}</th>
-            <th>{{ 'quizzes.sub_col_cohort' | translate }}</th>
             <th>{{ 'quizzes.sub_col_submitted' | translate }}</th>
             <th>{{ 'quizzes.sub_col_score' | translate }}</th>
-            <th>{{ 'quizzes.sub_col_status' | translate }}</th>
+            <th>{{ 'quizzes.sub_col_type' | translate }}</th>
             <th class="ql-table__actions-col"></th>
           </tr>
         </thead>
@@ -279,13 +296,13 @@
           @if (submissionsLoading()) {
             @for (s of skeletons; track s) {
               <tr>
-                @for (c of [1,2,3,4,5,6,7,8,9]; track c) {
+                @for (c of [1,2,3,4,5,6,7,8]; track c) {
                   <td><p-skeleton height="16px" /></td>
                 }
               </tr>
             }
           } @else if (!submissions().length) {
-            <tr><td colspan="9" class="ql-table__empty">{{ 'quizzes.no_submissions' | translate }}</td></tr>
+            <tr><td colspan="8" class="ql-table__empty">{{ 'quizzes.no_submissions' | translate }}</td></tr>
           } @else {
             @for (sub of submissions(); track sub.id) {
               <tr class="ql-table__row" (click)="openSubmission(sub)">
@@ -298,26 +315,21 @@
                 <td class="ql-table__muted">{{ sub.course_title ?? '—' }}</td>
                 <td class="ql-table__muted">{{ sub.instructor_name ?? '—' }}</td>
                 <td class="ql-table__muted">{{ sub.quiz_title ?? '—' }}</td>
-                <td class="ql-table__muted">{{ sub.cohort_titles.length ? sub.cohort_titles.join(', ') : '—' }}</td>
-                <td class="ql-table__muted">{{ sub.submitted_at ? (sub.submitted_at | date:'dd MMM yyyy') : (sub.created_at | date:'dd MMM yyyy') }}</td>
+                <td class="ql-table__muted">{{ (sub.submitted_at ?? sub.created_at) | nasDate: locale() }}</td>
                 <td>
-                  @if (sub.score_percent !== null) {
-                    <span
-                      class="ql-score"
-                      [class.ql-score--high]="sub.score_percent >= 75"
-                      [class.ql-score--mid]="sub.score_percent >= 50 && sub.score_percent < 75"
-                      [class.ql-score--low]="sub.score_percent < 50">
-                      {{ sub.score_percent }}%
+                  @if (sub.status === 'pending') {
+                    <nas-status-badge tone="warning" [dot]="true">{{ 'quizzes.pending' | translate }}</nas-status-badge>
+                  } @else if (sub.score_percent !== null) {
+                    <!-- Figma: green when passed, red when failed (against the quiz's pass score). -->
+                    <span class="ql-score" [class.ql-score--high]="sub.passed === true" [class.ql-score--low]="sub.passed === false">
+                      <bdi dir="ltr">{{ sub.score_percent }}%</bdi>
+                      @if (sub.passed !== null) { <span class="ql-sr-only">{{ (sub.passed ? 'quizzes.passed' : 'quizzes.failed') | translate }}</span> }
                     </span>
                   } @else {
                     <span class="ql-table__muted">—</span>
                   }
                 </td>
-                <td>
-                  <nas-status-badge [tone]="statusTone(sub.status)" [dot]="true">
-                    {{ (sub.status === 'graded' ? 'quizzes.graded' : 'quizzes.pending') | translate }}
-                  </nas-status-badge>
-                </td>
+                <td class="ql-table__muted">{{ typeLabel(sub.quiz_type) }}</td>
                 <td class="ql-table__actions">
                   <button
                     type="button"
