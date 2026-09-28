@@ -59,6 +59,39 @@
   background: #f4f5f6;
 }
 
+/* Inset: one 44px box, the 24px calendar icon inside at the trailing edge
+   (Figma 1983:44122 - border #e6e7e8, radius 8, padding 10/14). */
+.nasdp--inset {
+  position: relative;
+}
+.nasdp--inset .nasdp__input {
+  padding-block: 10px;
+  padding-inline: 14px 48px;
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-md, 8px);
+  color: var(--nas-neutral-1000);
+  line-height: 16.8px;
+}
+.nasdp--inset .nasdp__input::placeholder {
+  color: var(--nas-neutral-600);
+}
+.nasdp--inset .nasdp__input:focus {
+  border-color: var(--nas-teal-600);
+}
+.nasdp--inset .nasdp__btn {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 48px;
+  height: auto;
+  border: 0;
+  background: transparent;
+  color: var(--nas-neutral-800);
+}
+.nasdp--inset .nasdp__btn:hover:not(:disabled) {
+  background: transparent;
+}
+
 .nasdp--disabled .nasdp__input,
 .nasdp--disabled .nasdp__btn {
   opacity: 0.6;

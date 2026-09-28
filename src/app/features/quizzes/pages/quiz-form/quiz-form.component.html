@@ -1,381 +1,321 @@
 <p-toast position="bottom-right" />
 
+<!-- Add / Edit Quiz (Figma 1982:41913) -->
 <div class="nas-page-container">
 
-  <!-- ── Breadcrumb + title bar ──────────────────────────────── -->
-  <div class="qf-breadcrumb">
-    <a routerLink="/admin/quizzes" class="qf-breadcrumb__link">
-      <i class="pi pi-book"></i> {{ 'quizzes.title' | translate }}
-    </a>
-    <i class="pi pi-angle-right qf-breadcrumb__sep"></i>
-    <span class="qf-breadcrumb__current">
-      {{ (quizId() ? 'quizzes.form_title_edit' : 'quizzes.create') | translate }}
-    </span>
-  </div>
+  <div class="af-top">
+    <nav class="af-crumbs" [attr.aria-label]="'quizzes.breadcrumb' | translate">
+      <a routerLink="/admin/quizzes" class="af-crumbs__link">
+        <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+        {{ 'quizzes.title' | translate }}
+      </a>
+      <img class="af-crumbs__sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+      <span class="af-crumbs__current" aria-current="page">
+        {{ (quizId() ? 'quizzes.form_title_edit' : 'quizzes.create') | translate }}
+      </span>
+    </nav>
 
-  <div class="qf-titlebar">
-    <h1 class="qf-title">{{ (quizId() ? 'quizzes.form_title_edit' : 'quizzes.form_title_create') | translate }}</h1>
-    <div class="qf-titlebar__actions">
-      <button type="button" class="qf-btn qf-btn--ghost" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
-      <button
-        type="button"
-        class="qf-btn qf-btn--primary"
-        [disabled]="!canPublish() || saving()"
-        (click)="publish()">
-        @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
-        @else { <i class="pi pi-send"></i> }
-        {{ (quizId() ? 'common.save_changes' : 'quizzes.publish') | translate }}
-      </button>
+    <div class="af-head">
+      <h1 class="af-title">{{ (quizId() ? 'quizzes.form_title_edit' : 'quizzes.form_title_create') | translate }}</h1>
+      <div class="af-actions">
+        <button type="button" class="af-btn af-btn--outline af-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
+        <button type="button" class="af-btn af-btn--primary af-btn--save" [disabled]="!canPublish() || saving()" (click)="publish()">
+          <nas-icon [name]="saving() ? 'spinner-gap' : 'floppy-disk'" [size]="20" [class.af-spin]="saving()" />
+          {{ 'common.save_changes' | translate }}
+        </button>
+      </div>
     </div>
   </div>
 
   @if (loading()) {
-    <div class="nas-card qf-card qf-loading">
-      @for (s of [1,2,3,4,5]; track s) {
-        <p-skeleton height="20px" styleClass="qf-loading__row" />
+    <div class="af-card af-loading" aria-busy="true">
+      @for (s of [1, 2, 3, 4, 5]; track s) {
+        <p-skeleton height="20px" />
       }
     </div>
   } @else {
 
-  <div class="qf-layout">
+  <div class="af-layout">
 
-    <!-- ── Left column (form) ───────────────────────────────── -->
-    <form [formGroup]="form" class="qf-form" novalidate>
+    <form [formGroup]="form" class="af-main" novalidate>
 
-      <!-- ── General card ─────────────────────────────────── -->
-      <div class="nas-card qf-card">
-        <h2 class="qf-card__title">{{ 'quizzes.form_general' | translate }}</h2>
+      <!-- ── General ─────────────────────────────────────────── -->
+      <section class="af-card" aria-labelledby="af-general">
+        <h2 class="af-card__title" id="af-general">{{ 'quizzes.form_general' | translate }}</h2>
+        <hr class="af-card__rule" />
 
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_title_en' | translate }} <span class="qf-req">*</span></label>
-          <input
-            type="text"
-            formControlName="title"
-            class="qf-input"
-            [placeholder]="'quizzes.form_title_en_placeholder' | translate" />
-          @if (form.controls.title.touched && form.controls.title.invalid) {
-            <span class="qf-err">{{ 'quizzes.form_title_required' | translate }}</span>
-          }
-        </div>
-
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_title_ar' | translate }}</label>
-          <input
-            type="text"
-            formControlName="title_ar"
-            class="qf-input"
-            dir="rtl"
-            [placeholder]="'quizzes.form_title_ar_placeholder' | translate" />
-        </div>
-
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_course' | translate }} <span class="qf-req">*</span></label>
-          <p-dropdown
-            formControlName="course_id"
-            [options]="courses()"
-            optionLabel="title"
-            optionValue="id"
-            [placeholder]="'quizzes.form_select_course' | translate"
-            appendTo="body"
-            styleClass="qf-dropdown"
-            [style]="{'width':'100%'}" />
-          @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
-            <span class="qf-err">{{ 'quizzes.form_course_required' | translate }}</span>
-          }
-        </div>
-
-        <!-- Type: Pre / Mid / Post (Figma 1983:44040; D-065 single choice, so radios; Post = final exam on quizzes) -->
-        <fieldset class="qf-field qf-types">
-          <legend class="qf-label">{{ 'quizzes.form_type' | translate }}</legend>
-          <div class="qf-types__row">
-            @for (t of ['pre', 'mid', 'post']; track t) {
-              <label class="qf-types__option">
-                <input type="radio" formControlName="type" [value]="t" />
-                <span>{{ ('quizzes.type_long_' + t) | translate }}</span>
-              </label>
-            }
-            @if (form.controls.type.value) {
-              <button type="button" class="qf-types__clear" (click)="form.controls.type.setValue(null)">{{ 'common.clear' | translate }}</button>
+        <div class="af-group">
+          <div class="af-field">
+            <label class="af-label" for="af-title-en">{{ 'quizzes.form_title_en' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <input id="af-title-en" type="text" formControlName="title" class="af-input" aria-required="true"
+              [attr.aria-invalid]="showError(form.controls.title)"
+              [placeholder]="'quizzes.form_title_en_placeholder' | translate" />
+            @if (showError(form.controls.title)) {
+              <p class="af-err">{{ 'quizzes.form_title_required' | translate }}</p>
             }
           </div>
-          <p class="qf-types__hint">{{ 'quizzes.type_post_hint' | translate }}</p>
-        </fieldset>
 
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_cohort_scope' | translate }} <span class="qf-req">*</span></label>
-          <p-dropdown
-            formControlName="cohort_scope"
-            [options]="scopeOptions()"
-            optionLabel="value"
-            optionValue="code"
-            [placeholder]="'quizzes.form_select_scope' | translate"
-            appendTo="body"
-            styleClass="qf-dropdown"
-            [style]="{'width':'100%'}" />
+          <div class="af-field">
+            <label class="af-label" for="af-title-ar">{{ 'quizzes.form_title_ar' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <input id="af-title-ar" type="text" formControlName="title_ar" class="af-input" dir="rtl" aria-required="true"
+              [attr.aria-invalid]="showError(form.controls.title_ar)"
+              [placeholder]="'quizzes.form_title_ar_placeholder' | translate" />
+            @if (showError(form.controls.title_ar)) {
+              <p class="af-err">{{ 'quizzes.form_title_required' | translate }}</p>
+            }
+          </div>
+
+          <div class="af-field">
+            <label class="af-label" id="af-course-label">{{ 'quizzes.form_course' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <p-dropdown formControlName="course_id" [options]="courses()" optionLabel="title" optionValue="id"
+              ariaLabelledBy="af-course-label" [placeholder]="'quizzes.form_select_course' | translate"
+              appendTo="body" styleClass="af-dropdown">
+              <ng-template pTemplate="dropdownicon">
+                <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+              </ng-template>
+            </p-dropdown>
+            @if (showError(form.controls.course_id)) {
+              <p class="af-err">{{ 'quizzes.form_course_required' | translate }}</p>
+            }
+          </div>
+
+        <!-- Type: one of Pre / Mid / Post (D-065, aria-required="true" by D-066), drawn as checkboxes -->
+        <fieldset class="af-types">
+          <legend class="af-label">{{ 'quizzes.form_type' | translate }} <span class="af-req" aria-hidden="true">*</span></legend>
+          <div class="af-types__row">
+            @for (t of types; track t) {
+              <label class="af-choice">
+                <input class="af-choice__input" type="radio" formControlName="type" [value]="t" />
+                <span class="af-choice__box" aria-hidden="true">
+                  @if (form.controls.type.value === t) {
+                    <img src="assets/icons/figma/checkbox-check-15.svg" width="15" height="15" alt="" />
+                  }
+                </span>
+                {{ ('quizzes.type_long_' + t) | translate }}
+              </label>
+            }
+          </div>
+        </fieldset>
+        </div>
+
+        <div class="af-field af-field--loose">
+          <label class="af-label" id="af-scope-label">{{ 'quizzes.form_cohort_scope' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+          <p-dropdown formControlName="cohort_scope" [options]="scopeOptions()" optionLabel="value" optionValue="code"
+            ariaLabelledBy="af-scope-label" [placeholder]="'quizzes.form_select_scope' | translate"
+            appendTo="body" styleClass="af-dropdown">
+            <ng-template pTemplate="dropdownicon">
+              <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+            </ng-template>
+          </p-dropdown>
         </div>
 
         @if (form.controls.cohort_scope.value === 'specific') {
-          <div class="qf-field">
-            <label class="qf-label">{{ 'quizzes.form_cohorts' | translate }} <span class="qf-req">*</span></label>
+          <div class="af-field">
+            <span class="af-label" id="af-cohorts-label">{{ 'quizzes.form_cohorts' | translate }}</span>
             @if (cohortsLoading()) {
-              <p class="qf-hint">{{ 'quizzes.form_loading_cohorts' | translate }}</p>
+              <p class="af-hint">{{ 'quizzes.form_loading_cohorts' | translate }}</p>
             } @else if (!cohorts().length) {
-              <p class="qf-hint">{{ 'quizzes.form_no_cohorts' | translate }}</p>
+              <p class="af-hint">{{ 'quizzes.form_no_cohorts' | translate }}</p>
             } @else {
-              <div class="qf-cohort-list">
+              <ul class="af-cohorts" aria-labelledby="af-cohorts-label">
                 @for (cohort of cohorts(); track cohort.id) {
-                  <label class="qf-checkbox">
-                    <input
-                      type="checkbox"
-                      [checked]="isCohortSelected(cohort.id)"
-                      (change)="toggleCohort(cohort.id)" />
-                    <span>{{ cohort.title || ('Cohort #' + cohort.id) }}</span>
-                  </label>
+                  <li>
+                    <label class="af-choice">
+                      <input class="af-choice__input" type="checkbox" [checked]="isCohortSelected(cohort.id)" (change)="toggleCohort(cohort.id)" />
+                      <span class="af-choice__box af-choice__box--sm" aria-hidden="true">
+                        @if (isCohortSelected(cohort.id)) {
+                          <img src="assets/icons/figma/checkbox-check.svg" width="12" height="12" alt="" />
+                        }
+                      </span>
+                      {{ cohort.title || ('Cohort #' + cohort.id) }}
+                    </label>
+                  </li>
                 }
-              </div>
+              </ul>
             }
           </div>
         }
 
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_due_date' | translate }}</label>
-          <input
-            type="date"
-            formControlName="due_date"
-            class="qf-input"
-            placeholder="DD/MM/YYYY" />
+        <div class="af-field">
+          <label class="af-label" for="af-due">{{ 'quizzes.form_due_date' | translate }}</label>
+          <nas-datepicker formControlName="due_date" variant="inset" inputId="af-due" placeholder="DD/MM/YYYY" />
         </div>
 
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_instructions_en' | translate }}</label>
-          <textarea
-            formControlName="instructions_en"
-            rows="3"
-            class="qf-textarea"
+        <div class="af-field">
+          <label class="af-label" for="af-instr-en">{{ 'quizzes.form_instructions_en' | translate }}</label>
+          <textarea id="af-instr-en" formControlName="instructions_en" class="af-textarea"
             [placeholder]="'quizzes.form_instructions_placeholder' | translate"></textarea>
         </div>
 
-        <div class="qf-field">
-          <label class="qf-label">{{ 'quizzes.form_instructions_ar' | translate }}</label>
-          <textarea
-            formControlName="instructions_ar"
-            rows="3"
-            class="qf-textarea"
-            dir="rtl"
+        <div class="af-field">
+          <label class="af-label" for="af-instr-ar">{{ 'quizzes.form_instructions_ar' | translate }}</label>
+          <textarea id="af-instr-ar" formControlName="instructions_ar" class="af-textarea" dir="rtl"
             [placeholder]="'quizzes.form_instructions_placeholder' | translate"></textarea>
         </div>
-      </div>
+      </section>
 
-      <!-- ── Questions card ───────────────────────────────── -->
-      <div class="nas-card qf-card">
-        <div class="qf-card__header">
-          <h2 class="qf-card__title">{{ 'quizzes.form_questions' | translate }}</h2>
-          <button type="button" class="qf-btn qf-btn--primary qf-btn--sm" (click)="addQuestion()">
-            <i class="pi pi-plus-circle"></i> {{ 'quizzes.form_add_question' | translate }}
+      <!-- ── Questions ───────────────────────────────────────── -->
+      <section class="af-card af-card--questions" aria-labelledby="af-questions">
+        <div class="af-card__head">
+          <h2 class="af-card__title" id="af-questions">{{ 'quizzes.form_questions' | translate }}</h2>
+          <button type="button" class="af-btn af-btn--primary af-btn--sm" (click)="addQuestion()">
+            <nas-icon name="plus-circle" [size]="20" />
+            {{ 'quizzes.form_add_question' | translate }}
           </button>
         </div>
+        <hr class="af-card__rule" />
 
-        @for (q of questions.controls; track $index; let i = $index) {
-          <div class="qf-question" [formGroup]="q">
-            <div class="qf-question__head">
-              <div class="qf-question__num">{{ i + 1 }}</div>
-              @if (questions.length > 1) {
-                <button type="button" class="qf-question__remove" (click)="removeQuestion(i)">
-                  <i class="pi pi-minus-circle"></i> {{ 'quizzes.form_remove' | translate }}
+        <div class="af-questions">
+          @for (q of questions.controls; track q; let i = $index) {
+            @let type = questionType(i);
+            <div class="af-question" [formGroup]="q">
+              <div class="af-question__head">
+                <span class="af-question__num">{{ i + 1 }}</span>
+                <button type="button" class="af-btn af-btn--outline af-btn--sm" (click)="removeQuestion(i)">
+                  <nas-icon name="minus-circle" [size]="20" />
+                  {{ 'quizzes.form_remove' | translate }}
                 </button>
+              </div>
+
+              <div class="af-cols2">
+                <div class="af-field">
+                  <label class="af-label" [for]="'af-q-en-' + i">{{ 'quizzes.form_question_en' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <input [id]="'af-q-en-' + i" type="text" formControlName="question_en" class="af-input" aria-required="true"
+                    [placeholder]="'quizzes.form_question_placeholder' | translate" />
+                </div>
+                <div class="af-field">
+                  <label class="af-label" [for]="'af-q-ar-' + i">{{ 'quizzes.form_question_ar' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <input [id]="'af-q-ar-' + i" type="text" formControlName="question_ar" class="af-input" dir="rtl" aria-required="true"
+                    [placeholder]="'quizzes.form_question_placeholder' | translate" />
+                </div>
+              </div>
+
+              <div class="af-field">
+                <label class="af-label" [id]="'af-q-type-' + i">{{ 'quizzes.form_type' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                <p-dropdown [options]="questionTypeOptions()" optionLabel="value" optionValue="code"
+                  [ngModel]="type" [ngModelOptions]="{ standalone: true }" (onChange)="changeQuestionType(i, $event.value)"
+                  [ariaLabelledBy]="'af-q-type-' + i" appendTo="body" styleClass="af-dropdown af-dropdown--tall">
+                  <ng-template pTemplate="dropdownicon">
+                    <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+                  </ng-template>
+                </p-dropdown>
+              </div>
+
+              <div class="af-field">
+                <label class="af-label" [for]="'af-q-score-' + i">{{ 'quizzes.form_score' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                <div class="af-number">
+                  <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true" />
+                  <span class="af-number__steps">
+                    <button type="button" class="af-step af-step--up" (click)="stepScore(i, 1)" [attr.aria-label]="'quizzes.form_score_up' | translate">
+                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
+                    </button>
+                    <button type="button" class="af-step" (click)="stepScore(i, -1)" [attr.aria-label]="'quizzes.form_score_down' | translate">
+                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              <!-- ── MCQ options / reorder items (1982:42048, 1982:42222) ── -->
+              @if (type === 'mcq' || type === 'reorder') {
+                @for (lang of langs; track lang) {
+                  @let items = lang === 'en' ? optionsEn(i) : optionsAr(i);
+                  @let base = type === 'mcq' ? 'quizzes.form_mcq_options_' : 'quizzes.form_correct_order_';
+                  @let itemWord = (type === 'mcq' ? 'quizzes.form_option' : 'quizzes.form_order') | translate;
+                  <div class="af-field" [class.af-field--loose]="type === 'mcq'" [formArrayName]="'options_' + lang">
+                    <span class="af-label" [id]="'af-opts-' + lang + '-' + i">{{ (base + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></span>
+                    <div class="af-options" role="group" [attr.aria-labelledby]="'af-opts-' + lang + '-' + i">
+                      @for (opt of items.controls; track opt; let j = $index) {
+                        <div class="af-option">
+                          <input type="text" [formControlName]="j" class="af-input" [class.af-input--removable]="items.length > 2"
+                            [attr.dir]="lang === 'ar' ? 'rtl' : null"
+                            [attr.aria-label]="itemWord + ' ' + (j + 1)" [placeholder]="itemWord + ' ' + (j + 1)" />
+                          @if (items.length > 2) {
+                            <button type="button" class="af-option__remove" (click)="removeOption(i, lang, j)"
+                              [attr.aria-label]="'quizzes.form_remove_option' | translate: { label: itemWord + ' ' + (j + 1) }">
+                              <nas-icon name="x" [size]="16" />
+                            </button>
+                          }
+                        </div>
+                      }
+                      <button type="button" class="af-btn af-btn--outline" (click)="addOption(i, lang)">
+                        <nas-icon name="plus-circle" [size]="20" />
+                        {{ (type === 'mcq' ? 'quizzes.form_add_option' : 'quizzes.form_add') | translate }}
+                      </button>
+                    </div>
+                  </div>
+                }
               }
-            </div>
 
-            <div class="qf-row qf-row--cols2">
-              <div class="qf-field">
-                <label class="qf-label">{{ 'quizzes.form_question_en' | translate }} <span class="qf-req">*</span></label>
-                <input
-                  type="text"
-                  formControlName="question_en"
-                  class="qf-input"
-                  [placeholder]="'quizzes.form_question_placeholder' | translate" />
-              </div>
-              <div class="qf-field">
-                <label class="qf-label">{{ 'quizzes.form_question_ar' | translate }}</label>
-                <input
-                  type="text"
-                  formControlName="question_ar"
-                  class="qf-input"
-                  dir="rtl"
-                  [placeholder]="'quizzes.form_question_placeholder' | translate" />
-              </div>
-            </div>
+              <!-- ── Correct answer / grading key ── -->
+              @if (type === 'mcq') {
+                @for (lang of langs; track lang) {
+                  <div class="af-field">
+                    <label class="af-label" [for]="'af-key-' + lang + '-' + i">{{ ('quizzes.form_correct_answer_' + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                    <input [id]="'af-key-' + lang + '-' + i" type="text" class="af-input" aria-required="true"
+                      [formControlName]="'correct_answer_' + lang" [attr.dir]="lang === 'ar' ? 'rtl' : null"
+                      [placeholder]="'quizzes.form_answer_placeholder' | translate" />
+                  </div>
+                }
+              } @else if (type === 'yes_no') {
+                <div class="af-field">
+                  <label class="af-label" [id]="'af-key-' + i">{{ 'quizzes.form_correct_answer' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <p-dropdown [options]="yesNoChoices()" optionLabel="label" optionValue="value"
+                    [ngModel]="yesNo(i)" [ngModelOptions]="{ standalone: true }" (onChange)="setYesNo(i, $event.value)"
+                    [ariaLabelledBy]="'af-key-' + i" [placeholder]="'quizzes.form_select_answer' | translate"
+                    appendTo="body" styleClass="af-dropdown af-dropdown--tall">
+                    <ng-template pTemplate="dropdownicon">
+                      <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+                    </ng-template>
+                  </p-dropdown>
+                </div>
+              }
 
-            <div class="qf-row qf-row--cols2">
-              <div class="qf-field">
-                <label class="qf-label">{{ 'quizzes.form_type' | translate }} <span class="qf-req">*</span></label>
-                <p-dropdown
-                  [options]="questionTypeOptions()"
-                  optionLabel="value"
-                  optionValue="code"
-                  [ngModel]="questionType(i)"
-                  [ngModelOptions]="{ standalone: true }"
-                  (onChange)="changeQuestionType(i, $event.value)"
-                  appendTo="body"
-                  styleClass="qf-dropdown"
-                  [style]="{'width':'100%'}" />
+              <div class="af-field">
+                <label class="af-label" [for]="'af-expl-en-' + i">{{ 'quizzes.form_explanation_en' | translate }}</label>
+                <input [id]="'af-expl-en-' + i" type="text" formControlName="explanation_en" class="af-input"
+                  [placeholder]="'quizzes.form_explanation_placeholder' | translate" />
               </div>
-              <div class="qf-field">
-                <label class="qf-label">{{ 'quizzes.form_score' | translate }} <span class="qf-req">*</span></label>
-                <input
-                  type="number"
-                  formControlName="score"
-                  min="0"
-                  class="qf-input" />
+              <div class="af-field">
+                <label class="af-label" [for]="'af-expl-ar-' + i">{{ 'quizzes.form_explanation_ar' | translate }}</label>
+                <input [id]="'af-expl-ar-' + i" type="text" formControlName="explanation_ar" class="af-input" dir="rtl"
+                  [placeholder]="'quizzes.form_explanation_placeholder' | translate" />
               </div>
             </div>
-
-            <!-- ── MCQ / Reorder options ──────────────────── -->
-            @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
-              <div class="qf-field">
-                <label class="qf-label">
-                  {{ (questionType(i) === 'mcq' ? 'quizzes.form_mcq_options_en' : 'quizzes.form_reorder_items_en') | translate }}
-                  <span class="qf-req">*</span>
-                </label>
-                <div class="qf-options" formArrayName="options_en">
-                  @for (opt of optionsEn(i).controls; track $index; let j = $index) {
-                    <div class="qf-option-row">
-                      <input
-                        type="text"
-                        [formControlName]="j"
-                        class="qf-input"
-                        [placeholder]="((questionType(i) === 'mcq' ? 'quizzes.form_option' : 'quizzes.form_order') | translate) + ' ' + (j + 1)" />
-                      @if (optionsEn(i).length > 2) {
-                        <button type="button" class="qf-option-remove" (click)="removeOption(i, 'en', j)">
-                          <i class="pi pi-times"></i>
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-                <button type="button" class="qf-option-add" (click)="addOption(i, 'en')">
-                  <i class="pi pi-plus-circle"></i> {{ 'quizzes.form_add_option' | translate }}
-                </button>
-              </div>
-
-              <div class="qf-field">
-                <label class="qf-label">
-                  {{ (questionType(i) === 'mcq' ? 'quizzes.form_mcq_options_ar' : 'quizzes.form_reorder_items_ar') | translate }}
-                </label>
-                <div class="qf-options" formArrayName="options_ar">
-                  @for (opt of optionsAr(i).controls; track $index; let j = $index) {
-                    <div class="qf-option-row">
-                      <input
-                        type="text"
-                        [formControlName]="j"
-                        class="qf-input"
-                        dir="rtl"
-                        [placeholder]="((questionType(i) === 'mcq' ? 'quizzes.form_option' : 'quizzes.form_order') | translate) + ' ' + (j + 1)" />
-                      @if (optionsAr(i).length > 2) {
-                        <button type="button" class="qf-option-remove" (click)="removeOption(i, 'ar', j)">
-                          <i class="pi pi-times"></i>
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-                <button type="button" class="qf-option-add" (click)="addOption(i, 'ar')">
-                  <i class="pi pi-plus-circle"></i> {{ 'quizzes.form_add_option' | translate }}
-                </button>
-              </div>
-            }
-
-            <!-- ── Correct answer / grading key ────────────────── -->
-            @if (questionType(i) !== 'open') {
-              <div class="qf-row qf-row--cols2">
-                <div class="qf-field">
-                  <label class="qf-label">
-                    {{ (questionType(i) === 'reorder' ? 'quizzes.form_correct_order_en' : 'quizzes.form_correct_answer_en') | translate }}
-                    <span class="qf-req">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    formControlName="correct_answer_en"
-                    class="qf-input"
-                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : ('quizzes.form_answer_placeholder' | translate)" />
-                </div>
-                <div class="qf-field">
-                  <label class="qf-label">
-                    {{ (questionType(i) === 'reorder' ? 'quizzes.form_correct_order_ar' : 'quizzes.form_correct_answer_ar') | translate }}
-                  </label>
-                  <input
-                    type="text"
-                    formControlName="correct_answer_ar"
-                    class="qf-input"
-                    dir="rtl"
-                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : ('quizzes.form_answer_placeholder' | translate)" />
-                </div>
-              </div>
-            }
-
-            <div class="qf-row qf-row--cols2">
-              <div class="qf-field">
-                <label class="qf-label">{{ 'quizzes.form_explanation_en' | translate }}</label>
-                <textarea
-                  formControlName="explanation_en"
-                  rows="2"
-                  class="qf-textarea"
-                  [placeholder]="'quizzes.form_explanation_placeholder' | translate"></textarea>
-              </div>
-              <div class="qf-field">
-                <label class="qf-label">{{ 'quizzes.form_explanation_ar' | translate }}</label>
-                <textarea
-                  formControlName="explanation_ar"
-                  rows="2"
-                  class="qf-textarea"
-                  dir="rtl"
-                  [placeholder]="'quizzes.form_explanation_placeholder' | translate"></textarea>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      </section>
 
     </form>
 
-    <!-- ── Right sidebar (publish summary) ──────────────────── -->
-    <aside class="qf-sidebar">
-      <div class="nas-card qf-summary">
-        <h3 class="qf-summary__title">{{ 'quizzes.form_publish_summary' | translate }}</h3>
-
-        <div class="qf-summary__row">
-          <span class="qf-summary__label">{{ 'quizzes.form_scope' | translate }}</span>
-          <nas-status-badge [tone]="scopePillTone(form.controls.cohort_scope.value)">
-            {{ scopeLabel(form.controls.cohort_scope.value) }}
-          </nas-status-badge>
+    <!-- ── Publish summary + Business rule ───────────────────────── -->
+    <aside class="af-side">
+      <section class="af-summary" aria-labelledby="af-summary-title">
+        <h2 class="af-summary__title" id="af-summary-title">{{ 'quizzes.form_publish_summary' | translate }}</h2>
+        <dl class="af-summary__list">
+          <div class="af-summary__item af-summary__item--scope">
+            <dt class="af-summary__label">{{ 'quizzes.form_scope' | translate }}</dt>
+            <dd class="af-summary__value"><span class="af-pill">{{ scopeLabel(form.controls.cohort_scope.value) }}</span></dd>
+          </div>
+          <div class="af-summary__item">
+            <dt class="af-summary__label">{{ 'quizzes.form_questions' | translate }}</dt>
+            <dd class="af-summary__value">{{ questionCount() }}</dd>
+          </div>
+          <div class="af-summary__item">
+            <dt class="af-summary__label">{{ 'quizzes.form_total_score' | translate }}</dt>
+            <dd class="af-summary__total">{{ totalScore() }}</dd>
+          </div>
+        </dl>
+        <div class="af-field af-field--loose">
+          <label class="af-label" for="af-pass">{{ 'quizzes.form_pass_score' | translate }}</label>
+          <input id="af-pass" type="number" inputmode="numeric" class="af-input" min="0" [max]="totalScore()" [formControl]="form.controls.pass_score" />
         </div>
+      </section>
 
-        <div class="qf-summary__row">
-          <span class="qf-summary__label">{{ 'quizzes.form_questions' | translate }}</span>
-          <span class="qf-summary__value">{{ questionCount() }}</span>
-        </div>
-
-        <div class="qf-summary__row">
-          <span class="qf-summary__label">{{ 'quizzes.form_total_score' | translate }}</span>
-          <span class="qf-summary__value qf-summary__value--large">{{ totalScore() }}</span>
-        </div>
-
-        <div class="qf-summary__row qf-summary__row--col">
-          <label class="qf-label" for="passScore">{{ 'quizzes.form_pass_score' | translate }}</label>
-          <input
-            id="passScore"
-            type="number"
-            class="qf-input"
-            min="0"
-            [max]="totalScore()"
-            [formControl]="form.controls.pass_score" />
-        </div>
-      </div>
-
-      <div class="qf-rule">
-        <h4 class="qf-rule__title">{{ 'quizzes.form_business_rule' | translate }}</h4>
-        <p>{{ 'quizzes.form_business_rule_text' | translate }}</p>
-      </div>
+      <section class="af-rule" aria-labelledby="af-rule-title">
+        <h2 class="af-rule__title" id="af-rule-title">{{ 'quizzes.form_business_rule' | translate }}</h2>
+        <p class="af-rule__text">{{ 'quizzes.form_business_rule_text' | translate }}</p>
+      </section>
     </aside>
 
   </div>

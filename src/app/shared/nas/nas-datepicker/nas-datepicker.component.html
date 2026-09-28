@@ -1,9 +1,10 @@
-<div class="nasdp" [class.nasdp--disabled]="disabled">
+<div class="nasdp" [class.nasdp--disabled]="disabled" [class.nasdp--inset]="variant === 'inset'">
   <input
     #trigger
     type="text"
     class="nasdp__input"
     readonly
+    [attr.id]="inputId"
     [value]="display()"
     [placeholder]="placeholder"
     [disabled]="disabled"
@@ -19,7 +20,11 @@
     [disabled]="disabled"
     (click)="toggle()"
   >
-    <i class="pi pi-calendar"></i>
+    @if (variant === 'inset') {
+      <nas-icon name="calendar-blank" [size]="24" />
+    } @else {
+      <i class="pi pi-calendar"></i>
+    }
   </button>
 </div>
 

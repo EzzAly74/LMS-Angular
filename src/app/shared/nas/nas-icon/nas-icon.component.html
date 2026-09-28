@@ -1,6 +1,8 @@
+<!-- Decorative unless `alt` is given: a file name ("plus-circle") is not a label (A11Y-03). -->
 <span class="nas-icon__mask"
-      [attr.aria-label]="alt || name"
-      role="img"
+      [attr.role]="alt ? 'img' : null"
+      [attr.aria-label]="alt || null"
+      [attr.aria-hidden]="alt ? null : 'true'"
       [style.--nas-icon-url]="cssUrl"
       [style.width.px]="size"
       [style.height.px]="size"></span>

@@ -5,7 +5,7 @@
 @import "primeflex/primeflex.css";
 
 /* ── Fonts ──────────────────────────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Almarai:wght@400;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700;800&family=Almarai:wght@400;700;800&display=swap");
 
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
@@ -72,6 +72,16 @@
   --nas-neutral-750-16: rgba(103, 110, 118, 0.16);
   --nas-neutral-2000-12: rgba(0, 0, 0, 0.12);
   --nas-neutral-2000-64: rgba(0, 0, 0, 0.64);
+
+  /* Component colours the Figma library uses outside the ramps
+     (quiz / assignment forms, 1982:41913 and 1983:44040). */
+  --nas-button-outline: #bfbfbf;
+  --nas-button-disabled-bg: #f0f0f0;
+  --nas-button-disabled-text: #d9d9d9;
+  --nas-card-border: #e3e5eb;
+  --nas-card-title: #141a1f;
+  --nas-checkbox-border: #d0d5dd;
+  --nas-scrollbar-thumb: #7a7a7a;
 
   /* NAS Design System ─ Status colors */
   --nas-status-green-50: #e7f8f0;

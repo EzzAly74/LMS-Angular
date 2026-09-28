@@ -1,418 +1,358 @@
 <p-toast position="bottom-right" />
 
+<!-- Add / Edit Assignment (Figma 1983:44040, file state 1983:43199) -->
 <div class="nas-page-container">
 
-  <!-- ── Breadcrumb + title bar ──────────────────────────────── -->
-  <div class="af-breadcrumb">
-    <a routerLink="/admin/assignments" class="af-breadcrumb__link">
-      <i class="pi pi-book"></i> {{ 'assignments.title' | translate }}
-    </a>
-    <i class="pi pi-angle-right af-breadcrumb__sep"></i>
-    <span class="af-breadcrumb__current">
-      {{ (assignmentId() ? 'assignments.form_title_edit' : 'assignments.create') | translate }}
-    </span>
-  </div>
+  <div class="af-top">
+    <nav class="af-crumbs" [attr.aria-label]="'assignments.breadcrumb' | translate">
+      <a routerLink="/admin/assignments" class="af-crumbs__link">
+        <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+        {{ 'assignments.title' | translate }}
+      </a>
+      <img class="af-crumbs__sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+      <span class="af-crumbs__current" aria-current="page">
+        {{ (assignmentId() ? 'assignments.form_title_edit' : 'assignments.form_crumb_create') | translate }}
+      </span>
+    </nav>
 
-  <div class="af-titlebar">
-    <h1 class="af-title">{{ (assignmentId() ? 'assignments.form_title_edit' : 'assignments.form_title_create') | translate }}</h1>
-    <div class="af-titlebar__actions">
-      <button type="button" class="af-btn af-btn--ghost" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
-      <button
-        type="button"
-        class="af-btn af-btn--primary"
-        [disabled]="!canPublish() || saving()"
-        (click)="publish()">
-        @if (saving()) { <i class="pi pi-spin pi-spinner"></i> }
-        @else { <i class="pi pi-send"></i> }
-        {{ (assignmentId() ? 'common.save_changes' : 'assignments.publish') | translate }}
-      </button>
+    <div class="af-head">
+      <h1 class="af-title">{{ (assignmentId() ? 'assignments.form_title_edit' : 'assignments.form_title_create') | translate }}</h1>
+      <div class="af-actions">
+        <button type="button" class="af-btn af-btn--outline af-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
+        <button type="button" class="af-btn af-btn--primary af-btn--save" [disabled]="!canPublish() || saving()" (click)="publish()">
+          <nas-icon [name]="saving() ? 'spinner-gap' : 'floppy-disk'" [size]="20" [class.af-spin]="saving()" />
+          {{ 'common.save_changes' | translate }}
+        </button>
+      </div>
     </div>
   </div>
 
   @if (loading()) {
-    <div class="nas-card af-card af-loading">
-      @for (s of [1,2,3,4,5]; track s) {
-        <p-skeleton height="20px" styleClass="af-loading__row" />
+    <div class="af-card af-loading" aria-busy="true">
+      @for (s of [1, 2, 3, 4, 5]; track s) {
+        <p-skeleton height="20px" />
       }
     </div>
   } @else {
 
   <div class="af-layout">
 
-    <!-- ── Left column (form) ───────────────────────────────── -->
-    <form [formGroup]="form" class="af-form" novalidate>
+    <form [formGroup]="form" class="af-main" novalidate>
 
-      <!-- ── General card ─────────────────────────────────── -->
-      <div class="nas-card af-card">
-        <h2 class="af-card__title">{{ 'assignments.form_general' | translate }}</h2>
+      <!-- ── General ─────────────────────────────────────────── -->
+      <section class="af-card" aria-labelledby="af-general">
+        <h2 class="af-card__title" id="af-general">{{ 'assignments.form_general' | translate }}</h2>
+        <hr class="af-card__rule" />
 
-        <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_title_en' | translate }} <span class="af-req">*</span></label>
-          <input
-            type="text"
-            formControlName="title"
-            class="af-input"
-            [placeholder]="'assignments.form_title_en_placeholder' | translate" />
-          @if (form.controls.title.touched && form.controls.title.invalid) {
-            <span class="af-err">{{ 'assignments.form_title_required' | translate }}</span>
-          }
-        </div>
-
-        <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_title_ar' | translate }}</label>
-          <input
-            type="text"
-            formControlName="title_ar"
-            class="af-input"
-            dir="rtl"
-            [placeholder]="'assignments.form_title_ar_placeholder' | translate" />
-        </div>
-
-        <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_course' | translate }} <span class="af-req">*</span></label>
-          <p-dropdown
-            formControlName="course_id"
-            [options]="courses()"
-            optionLabel="title"
-            optionValue="id"
-            [placeholder]="'assignments.form_select_course' | translate"
-            appendTo="body"
-            styleClass="af-dropdown"
-            [style]="{'width':'100%'}" />
-          @if (form.controls.course_id.touched && form.controls.course_id.invalid) {
-            <span class="af-err">{{ 'assignments.form_course_required' | translate }}</span>
-          }
-        </div>
-
-        <!-- Type: Pre / Mid / Post (Figma 1983:44040; D-065 single choice, so radios; Post = final exam on quizzes) -->
-        <fieldset class="af-field af-types">
-          <legend class="af-label">{{ 'quizzes.form_type' | translate }}</legend>
-          <div class="af-types__row">
-            @for (t of ['pre', 'mid', 'post']; track t) {
-              <label class="af-types__option">
-                <input type="radio" formControlName="type" [value]="t" />
-                <span>{{ ('quizzes.type_long_' + t) | translate }}</span>
-              </label>
+        <div class="af-group">
+          <div class="af-field">
+            <label class="af-label" for="af-title-en">{{ 'assignments.form_title_en' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <input id="af-title-en" type="text" formControlName="title" class="af-input" aria-required="true"
+              [attr.aria-invalid]="showError(form.controls.title)"
+              [placeholder]="'assignments.form_title_en_placeholder' | translate" />
+            @if (showError(form.controls.title)) {
+              <p class="af-err">{{ 'assignments.form_title_required' | translate }}</p>
             }
-            @if (form.controls.type.value) {
-              <button type="button" class="af-types__clear" (click)="form.controls.type.setValue(null)">{{ 'common.clear' | translate }}</button>
+          </div>
+
+          <div class="af-field">
+            <label class="af-label" for="af-title-ar">{{ 'assignments.form_title_ar' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <input id="af-title-ar" type="text" formControlName="title_ar" class="af-input" dir="rtl" aria-required="true"
+              [attr.aria-invalid]="showError(form.controls.title_ar)"
+              [placeholder]="'assignments.form_title_ar_placeholder' | translate" />
+            @if (showError(form.controls.title_ar)) {
+              <p class="af-err">{{ 'assignments.form_title_required' | translate }}</p>
+            }
+          </div>
+
+          <div class="af-field">
+            <label class="af-label" id="af-course-label">{{ 'assignments.form_course' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <p-dropdown formControlName="course_id" [options]="courses()" optionLabel="title" optionValue="id"
+              ariaLabelledBy="af-course-label" [placeholder]="'assignments.form_select_course' | translate"
+              appendTo="body" styleClass="af-dropdown">
+              <ng-template pTemplate="dropdownicon">
+                <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+              </ng-template>
+            </p-dropdown>
+            @if (showError(form.controls.course_id)) {
+              <p class="af-err">{{ 'assignments.form_course_required' | translate }}</p>
+            }
+          </div>
+        </div>
+
+        <!-- Type: one of Pre / Mid / Post (D-065, aria-required="true" by D-066), drawn as checkboxes -->
+        <fieldset class="af-types">
+          <legend class="af-label">{{ 'quizzes.form_type' | translate }} <span class="af-req" aria-hidden="true">*</span></legend>
+          <div class="af-types__row">
+            @for (t of types; track t) {
+              <label class="af-choice">
+                <input class="af-choice__input" type="radio" formControlName="type" [value]="t" />
+                <span class="af-choice__box" aria-hidden="true">
+                  @if (form.controls.type.value === t) {
+                    <img src="assets/icons/figma/checkbox-check-15.svg" width="15" height="15" alt="" />
+                  }
+                </span>
+                {{ ('quizzes.type_long_' + t) | translate }}
+              </label>
             }
           </div>
         </fieldset>
 
-        <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_cohort_scope' | translate }} <span class="af-req">*</span></label>
-          <p-dropdown
-            formControlName="cohort_scope"
-            [options]="scopeOptions()"
-            optionLabel="value"
-            optionValue="code"
-            [placeholder]="'assignments.form_select_scope' | translate"
-            appendTo="body"
-            styleClass="af-dropdown"
-            [style]="{'width':'100%'}" />
+        <div class="af-field af-field--loose">
+          <label class="af-label" id="af-scope-label">{{ 'assignments.form_cohort_scope' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+          <p-dropdown formControlName="cohort_scope" [options]="scopeOptions()" optionLabel="value" optionValue="code"
+            ariaLabelledBy="af-scope-label" [placeholder]="'assignments.form_select_scope' | translate"
+            appendTo="body" styleClass="af-dropdown">
+            <ng-template pTemplate="dropdownicon">
+              <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+            </ng-template>
+          </p-dropdown>
         </div>
 
         @if (form.controls.cohort_scope.value === 'specific') {
           <div class="af-field">
-            <label class="af-label">{{ 'assignments.form_cohorts' | translate }} <span class="af-req">*</span></label>
+            <span class="af-label" id="af-cohorts-label">{{ 'assignments.form_cohorts' | translate }}</span>
             @if (cohortsLoading()) {
               <p class="af-hint">{{ 'assignments.form_loading_cohorts' | translate }}</p>
             } @else if (!cohorts().length) {
               <p class="af-hint">{{ 'assignments.form_no_cohorts' | translate }}</p>
             } @else {
-              <div class="af-cohort-list">
+              <ul class="af-cohorts" aria-labelledby="af-cohorts-label">
                 @for (cohort of cohorts(); track cohort.id) {
-                  <label class="af-checkbox">
-                    <input
-                      type="checkbox"
-                      [checked]="isCohortSelected(cohort.id)"
-                      (change)="toggleCohort(cohort.id)" />
-                    <span>{{ cohort.title || ('Cohort #' + cohort.id) }}</span>
-                  </label>
+                  <li>
+                    <label class="af-choice">
+                      <input class="af-choice__input" type="checkbox" [checked]="isCohortSelected(cohort.id)" (change)="toggleCohort(cohort.id)" />
+                      <span class="af-choice__box af-choice__box--sm" aria-hidden="true">
+                        @if (isCohortSelected(cohort.id)) {
+                          <img src="assets/icons/figma/checkbox-check.svg" width="12" height="12" alt="" />
+                        }
+                      </span>
+                      {{ cohort.title || ('Cohort #' + cohort.id) }}
+                    </label>
+                  </li>
                 }
-              </div>
+              </ul>
             }
           </div>
         }
 
         <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_due_date' | translate }}</label>
-          <input
-            type="date"
-            formControlName="due_date"
-            class="af-input"
-            placeholder="DD/MM/YYYY" />
+          <label class="af-label" for="af-due">{{ 'assignments.form_due_date' | translate }}</label>
+          <nas-datepicker formControlName="due_date" variant="inset" inputId="af-due" placeholder="DD/MM/YYYY" />
         </div>
 
         <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_instructions_en' | translate }}</label>
-          <textarea
-            formControlName="instructions_en"
-            rows="3"
-            class="af-textarea"
+          <label class="af-label" for="af-instr-en">{{ 'assignments.form_instructions_en' | translate }}</label>
+          <textarea id="af-instr-en" formControlName="instructions_en" class="af-textarea"
             [placeholder]="'assignments.form_instructions_placeholder' | translate"></textarea>
         </div>
 
         <div class="af-field">
-          <label class="af-label">{{ 'assignments.form_instructions_ar' | translate }}</label>
-          <textarea
-            formControlName="instructions_ar"
-            rows="3"
-            class="af-textarea"
-            dir="rtl"
+          <label class="af-label" for="af-instr-ar">{{ 'assignments.form_instructions_ar' | translate }}</label>
+          <textarea id="af-instr-ar" formControlName="instructions_ar" class="af-textarea" dir="rtl"
             [placeholder]="'assignments.form_instructions_placeholder' | translate"></textarea>
         </div>
-      </div>
+      </section>
 
-      <!-- ── Questions card ───────────────────────────────── -->
-      <div class="nas-card af-card">
-        <div class="af-card__header">
-          <h2 class="af-card__title">{{ 'assignments.form_questions' | translate }}</h2>
+      <!-- ── Questions ───────────────────────────────────────── -->
+      <section class="af-card af-card--questions" aria-labelledby="af-questions">
+        <div class="af-card__head">
+          <h2 class="af-card__title" id="af-questions">{{ 'assignments.form_questions' | translate }}</h2>
           <button type="button" class="af-btn af-btn--primary af-btn--sm" (click)="addQuestion()">
-            <i class="pi pi-plus-circle"></i> {{ 'assignments.form_add_question' | translate }}
+            <nas-icon name="plus-circle" [size]="20" />
+            {{ 'assignments.form_add_question' | translate }}
           </button>
         </div>
+        <hr class="af-card__rule" />
 
-        @for (q of questions.controls; track $index; let i = $index) {
-          <div class="af-question" [formGroup]="q">
-            <div class="af-question__head">
-              <div class="af-question__num">{{ i + 1 }}</div>
-              @if (questions.length > 1) {
-                <button type="button" class="af-question__remove" (click)="removeQuestion(i)">
-                  <i class="pi pi-minus-circle"></i> {{ 'assignments.form_remove' | translate }}
+        <div class="af-questions">
+          @for (q of questions.controls; track q; let i = $index) {
+            @let type = questionType(i);
+            <div class="af-question" [formGroup]="q">
+              <div class="af-question__head">
+                <span class="af-question__num">{{ i + 1 }}</span>
+                <button type="button" class="af-btn af-btn--outline af-btn--sm" (click)="removeQuestion(i)">
+                  <nas-icon name="minus-circle" [size]="20" />
+                  {{ 'assignments.form_remove' | translate }}
                 </button>
+              </div>
+
+              <div class="af-cols2">
+                <div class="af-field">
+                  <label class="af-label" [for]="'af-q-en-' + i">{{ 'assignments.form_question_en' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <input [id]="'af-q-en-' + i" type="text" formControlName="question_en" class="af-input" aria-required="true"
+                    [placeholder]="'assignments.form_question_placeholder' | translate" />
+                </div>
+                <div class="af-field">
+                  <label class="af-label" [for]="'af-q-ar-' + i">{{ 'assignments.form_question_ar' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <input [id]="'af-q-ar-' + i" type="text" formControlName="question_ar" class="af-input" dir="rtl" aria-required="true"
+                    [placeholder]="'assignments.form_question_placeholder' | translate" />
+                </div>
+              </div>
+
+              <div class="af-field">
+                <label class="af-label" [id]="'af-q-type-' + i">{{ 'assignments.form_type' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                <p-dropdown [options]="questionTypeOptions()" optionLabel="value" optionValue="code"
+                  [ngModel]="type" [ngModelOptions]="{ standalone: true }" (onChange)="changeQuestionType(i, $event.value)"
+                  [ariaLabelledBy]="'af-q-type-' + i" appendTo="body" styleClass="af-dropdown af-dropdown--tall">
+                  <ng-template pTemplate="dropdownicon">
+                    <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+                  </ng-template>
+                </p-dropdown>
+              </div>
+
+              <div class="af-field">
+                <label class="af-label" [for]="'af-q-score-' + i">{{ 'assignments.form_max_score' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                <div class="af-number">
+                  <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true" />
+                  <span class="af-number__steps">
+                    <button type="button" class="af-step af-step--up" (click)="stepScore(i, 1)" [attr.aria-label]="'assignments.form_score_up' | translate">
+                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
+                    </button>
+                    <button type="button" class="af-step" (click)="stepScore(i, -1)" [attr.aria-label]="'assignments.form_score_down' | translate">
+                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              <!-- ── File: the assignment file (1983:44040 / 1983:43199) ── -->
+              @if (type === 'file') {
+                @let g = q.controls;
+                <div class="af-field af-field--loose">
+                  <span class="af-label" [id]="'af-file-' + i">{{ 'assignments.form_file' | translate }} <span class="af-req" aria-hidden="true">*</span></span>
+                  @if (g.pending.value; as f) {
+                    <div class="af-file">
+                      <nas-file-card class="af-file__card" [name]="f.name" [size]="f.size" />
+                      <button type="button" class="af-file__remove" (click)="removeAttachment(i)"
+                        [attr.aria-label]="'assignments.remove_file' | translate: { name: f.name }">
+                        <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
+                      </button>
+                    </div>
+                  } @else if (g.attachment.value && !g.dropAttachment.value) {
+                    @let a = g.attachment.value!;
+                    <div class="af-file">
+                      <nas-file-card class="af-file__card" [name]="a.name ?? ''" [size]="a.size" [date]="a.uploaded_at" (open)="downloadAttachment(i)" />
+                      <button type="button" class="af-file__remove" (click)="removeAttachment(i)"
+                        [attr.aria-label]="'assignments.remove_file' | translate: { name: a.name ?? '' }">
+                        <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
+                      </button>
+                    </div>
+                  } @else {
+                    <input #afPicker class="af-sr-only" type="file" [id]="'af-file-input-' + i"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg"
+                      [attr.aria-labelledby]="'af-file-' + i" (change)="onAttachmentPick(i, $event)" />
+                    <button type="button" class="af-upload" (click)="afPicker.click()">
+                      <nas-icon name="upload-simple" [size]="14" />
+                      {{ 'assignments.upload_file' | translate }}
+                    </button>
+                  }
+                  @if (g.fileError.value; as err) {
+                    <p class="af-err" role="alert">{{ ('assignments.file_' + err) | translate }}</p>
+                  }
+                </div>
               }
-            </div>
 
-            <div class="af-row af-row--cols2">
-              <div class="af-field">
-                <label class="af-label">{{ 'assignments.form_question_en' | translate }} <span class="af-req">*</span></label>
-                <input
-                  type="text"
-                  formControlName="question_en"
-                  class="af-input"
-                  [placeholder]="'assignments.form_question_placeholder' | translate" />
-              </div>
-              <div class="af-field">
-                <label class="af-label">{{ 'assignments.form_question_ar' | translate }}</label>
-                <input
-                  type="text"
-                  formControlName="question_ar"
-                  class="af-input"
-                  dir="rtl"
-                  [placeholder]="'assignments.form_question_placeholder' | translate" />
-              </div>
-            </div>
-
-            <div class="af-row af-row--cols2">
-              <div class="af-field">
-                <label class="af-label">{{ 'assignments.form_type' | translate }} <span class="af-req">*</span></label>
-                <p-dropdown
-                  [options]="questionTypeOptions()"
-                  optionLabel="value"
-                  optionValue="code"
-                  [ngModel]="questionType(i)"
-                  [ngModelOptions]="{ standalone: true }"
-                  (onChange)="changeQuestionType(i, $event.value)"
-                  appendTo="body"
-                  styleClass="af-dropdown"
-                  [style]="{'width':'100%'}" />
-              </div>
-              <div class="af-field">
-                <label class="af-label">{{ 'assignments.form_score' | translate }} <span class="af-req">*</span></label>
-                <input
-                  type="number"
-                  formControlName="score"
-                  min="0"
-                  class="af-input" />
-              </div>
-            </div>
-
-            <!-- ── File question: the assignment file (Figma 1983:44040 / 1983:43199) ── -->
-            @if (questionType(i) === 'file') {
-              @let g = q.controls;
-              <div class="af-field">
-                <span class="af-label" [id]="'af-file-' + i">{{ 'assignments.form_file' | translate }} <span class="af-req">*</span></span>
-                @if (g.pending.value; as f) {
-                  <div class="af-file">
-                    <nas-file-card class="af-file__card" [name]="f.name" [size]="f.size" />
-                    <button type="button" class="af-file__remove" (click)="removeAttachment(i)"
-                      [attr.aria-label]="'assignments.remove_file' | translate: { name: f.name }">
-                      <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
-                    </button>
-                  </div>
-                } @else if (g.attachment.value && !g.dropAttachment.value) {
-                  @let a = g.attachment.value!;
-                  <div class="af-file">
-                    <nas-file-card class="af-file__card" [name]="a.name ?? ''" [size]="a.size" [date]="a.uploaded_at" (open)="downloadAttachment(i)" />
-                    <button type="button" class="af-file__remove" (click)="removeAttachment(i)"
-                      [attr.aria-label]="'assignments.remove_file' | translate: { name: a.name ?? '' }">
-                      <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
-                    </button>
-                  </div>
-                } @else {
-                  <input #afPicker class="af-sr-only" type="file" [id]="'af-file-input-' + i"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg"
-                    [attr.aria-labelledby]="'af-file-' + i" (change)="onAttachmentPick(i, $event)" />
-                  <button type="button" class="af-upload" (click)="afPicker.click()" [attr.aria-describedby]="'af-file-hint-' + i">
-                    <nas-icon name="upload-simple" [size]="16" />
-                    {{ 'assignments.upload_file' | translate }}
-                  </button>
-                }
-                <p class="af-hint" [id]="'af-file-hint-' + i">{{ 'assignments.file_hint' | translate }}</p>
-                @if (g.fileError.value; as err) {
-                  <p class="af-error" role="alert">{{ ('assignments.file_' + err) | translate }}</p>
-                }
-              </div>
-            }
-
-            <!-- ── MCQ / Reorder options ──────────────────── -->
-            @if (questionType(i) === 'mcq' || questionType(i) === 'reorder') {
-              <div class="af-field">
-                <label class="af-label">
-                  {{ (questionType(i) === 'mcq' ? 'assignments.form_mcq_options_en' : 'assignments.form_reorder_items_en') | translate }}
-                  <span class="af-req">*</span>
-                </label>
-                <div class="af-options" formArrayName="options_en">
-                  @for (opt of optionsEn(i).controls; track $index; let j = $index) {
-                    <div class="af-option-row">
-                      <input
-                        type="text"
-                        [formControlName]="j"
-                        class="af-input"
-                        [placeholder]="((questionType(i) === 'mcq' ? 'assignments.form_option' : 'assignments.form_order') | translate) + ' ' + (j + 1)" />
-                      @if (optionsEn(i).length > 2) {
-                        <button type="button" class="af-option-remove" (click)="removeOption(i, 'en', j)">
-                          <i class="pi pi-times"></i>
-                        </button>
+              <!-- ── MCQ options / reorder items (1982:42048, 1982:42222) ── -->
+              @if (type === 'mcq' || type === 'reorder') {
+                @for (lang of langs; track lang) {
+                  @let items = lang === 'en' ? optionsEn(i) : optionsAr(i);
+                  @let base = type === 'mcq' ? 'assignments.form_mcq_options_' : 'assignments.form_correct_order_';
+                  @let itemWord = (type === 'mcq' ? 'assignments.form_option' : 'assignments.form_order') | translate;
+                  <div class="af-field" [class.af-field--loose]="type === 'mcq'" [formArrayName]="'options_' + lang">
+                    <span class="af-label" [id]="'af-opts-' + lang + '-' + i">{{ (base + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></span>
+                    <div class="af-options" role="group" [attr.aria-labelledby]="'af-opts-' + lang + '-' + i">
+                      @for (opt of items.controls; track opt; let j = $index) {
+                        <div class="af-option">
+                          <input type="text" [formControlName]="j" class="af-input" [class.af-input--removable]="items.length > 2"
+                            [attr.dir]="lang === 'ar' ? 'rtl' : null"
+                            [attr.aria-label]="itemWord + ' ' + (j + 1)" [placeholder]="itemWord + ' ' + (j + 1)" />
+                          @if (items.length > 2) {
+                            <button type="button" class="af-option__remove" (click)="removeOption(i, lang, j)"
+                              [attr.aria-label]="'assignments.form_remove_option' | translate: { label: itemWord + ' ' + (j + 1) }">
+                              <nas-icon name="x" [size]="16" />
+                            </button>
+                          }
+                        </div>
                       }
+                      <button type="button" class="af-btn af-btn--outline" (click)="addOption(i, lang)">
+                        <nas-icon name="plus-circle" [size]="20" />
+                        {{ (type === 'mcq' ? 'assignments.form_add_option' : 'assignments.form_add') | translate }}
+                      </button>
                     </div>
-                  }
-                </div>
-                <button type="button" class="af-option-add" (click)="addOption(i, 'en')">
-                  <i class="pi pi-plus-circle"></i> {{ 'assignments.form_add_option' | translate }}
-                </button>
-              </div>
+                  </div>
+                }
+              }
 
-              <div class="af-field">
-                <label class="af-label">
-                  {{ (questionType(i) === 'mcq' ? 'assignments.form_mcq_options_ar' : 'assignments.form_reorder_items_ar') | translate }}
-                </label>
-                <div class="af-options" formArrayName="options_ar">
-                  @for (opt of optionsAr(i).controls; track $index; let j = $index) {
-                    <div class="af-option-row">
-                      <input
-                        type="text"
-                        [formControlName]="j"
-                        class="af-input"
-                        dir="rtl"
-                        [placeholder]="((questionType(i) === 'mcq' ? 'assignments.form_option' : 'assignments.form_order') | translate) + ' ' + (j + 1)" />
-                      @if (optionsAr(i).length > 2) {
-                        <button type="button" class="af-option-remove" (click)="removeOption(i, 'ar', j)">
-                          <i class="pi pi-times"></i>
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-                <button type="button" class="af-option-add" (click)="addOption(i, 'ar')">
-                  <i class="pi pi-plus-circle"></i> {{ 'assignments.form_add_option' | translate }}
-                </button>
-              </div>
-            }
-
-            <!-- ── Correct answer / grading key ────────────────── -->
-            @if (!isManual(i)) {
-              <div class="af-row af-row--cols2">
+              <!-- ── Correct answer / grading key ── -->
+              @if (type === 'mcq') {
+                @for (lang of langs; track lang) {
+                  <div class="af-field">
+                    <label class="af-label" [for]="'af-key-' + lang + '-' + i">{{ ('assignments.form_correct_answer_' + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                    <input [id]="'af-key-' + lang + '-' + i" type="text" class="af-input" aria-required="true"
+                      [formControlName]="'correct_answer_' + lang" [attr.dir]="lang === 'ar' ? 'rtl' : null"
+                      [placeholder]="'assignments.form_answer_placeholder' | translate" />
+                  </div>
+                }
+              } @else if (type === 'yes_no') {
                 <div class="af-field">
-                  <label class="af-label">
-                    {{ (questionType(i) === 'reorder' ? 'assignments.form_correct_order_en' : 'assignments.form_correct_answer_en') | translate }}
-                    <span class="af-req">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    formControlName="correct_answer_en"
-                    class="af-input"
-                    [placeholder]="questionType(i) === 'reorder' ? '1, 2, 3, 4' : ('assignments.form_answer_placeholder' | translate)" />
+                  <label class="af-label" [id]="'af-key-' + i">{{ 'assignments.form_correct_answer' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <p-dropdown [options]="yesNoChoices()" optionLabel="label" optionValue="value"
+                    [ngModel]="yesNo(i)" [ngModelOptions]="{ standalone: true }" (onChange)="setYesNo(i, $event.value)"
+                    [ariaLabelledBy]="'af-key-' + i" [placeholder]="'assignments.form_select_answer' | translate"
+                    appendTo="body" styleClass="af-dropdown af-dropdown--tall">
+                    <ng-template pTemplate="dropdownicon">
+                      <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+                    </ng-template>
+                  </p-dropdown>
                 </div>
-                <div class="af-field">
-                  <label class="af-label">
-                    {{ (questionType(i) === 'reorder' ? 'assignments.form_correct_order_ar' : 'assignments.form_correct_answer_ar') | translate }}
-                  </label>
-                  <input
-                    type="text"
-                    formControlName="correct_answer_ar"
-                    class="af-input"
-                    dir="rtl"
-                    [placeholder]="questionType(i) === 'reorder' ? '1، 2، 3، 4' : ('assignments.form_answer_placeholder' | translate)" />
-                </div>
-              </div>
-            }
+              }
 
-            <div class="af-row af-row--cols2">
               <div class="af-field">
-                <label class="af-label">{{ 'assignments.form_explanation_en' | translate }}</label>
-                <textarea
-                  formControlName="explanation_en"
-                  rows="2"
-                  class="af-textarea"
-                  [placeholder]="'assignments.form_explanation_placeholder' | translate"></textarea>
+                <label class="af-label" [for]="'af-expl-en-' + i">{{ 'assignments.form_explanation_en' | translate }}</label>
+                <input [id]="'af-expl-en-' + i" type="text" formControlName="explanation_en" class="af-input"
+                  [placeholder]="'assignments.form_explanation_placeholder' | translate" />
               </div>
               <div class="af-field">
-                <label class="af-label">{{ 'assignments.form_explanation_ar' | translate }}</label>
-                <textarea
-                  formControlName="explanation_ar"
-                  rows="2"
-                  class="af-textarea"
-                  dir="rtl"
-                  [placeholder]="'assignments.form_explanation_placeholder' | translate"></textarea>
+                <label class="af-label" [for]="'af-expl-ar-' + i">{{ 'assignments.form_explanation_ar' | translate }}</label>
+                <input [id]="'af-expl-ar-' + i" type="text" formControlName="explanation_ar" class="af-input" dir="rtl"
+                  [placeholder]="'assignments.form_explanation_placeholder' | translate" />
               </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      </section>
 
     </form>
 
-    <!-- ── Right sidebar (publish summary) ──────────────────── -->
-    <aside class="af-sidebar">
-      <div class="nas-card af-summary">
-        <h3 class="af-summary__title">{{ 'assignments.form_publish_summary' | translate }}</h3>
-
-        <div class="af-summary__row">
-          <span class="af-summary__label">{{ 'assignments.form_scope' | translate }}</span>
-          <nas-status-badge [tone]="scopePillTone(form.controls.cohort_scope.value)">
-            {{ scopeLabel(form.controls.cohort_scope.value) }}
-          </nas-status-badge>
+    <!-- ── Publish summary + Business rule ───────────────────────── -->
+    <aside class="af-side">
+      <section class="af-summary" aria-labelledby="af-summary-title">
+        <h2 class="af-summary__title" id="af-summary-title">{{ 'assignments.form_publish_summary' | translate }}</h2>
+        <dl class="af-summary__list">
+          <div class="af-summary__item af-summary__item--scope">
+            <dt class="af-summary__label">{{ 'assignments.form_scope' | translate }}</dt>
+            <dd class="af-summary__value"><span class="af-pill">{{ scopeLabel(form.controls.cohort_scope.value) }}</span></dd>
+          </div>
+          <div class="af-summary__item">
+            <dt class="af-summary__label">{{ 'assignments.form_questions' | translate }}</dt>
+            <dd class="af-summary__value">{{ questionCount() }}</dd>
+          </div>
+          <div class="af-summary__item">
+            <dt class="af-summary__label">{{ 'assignments.form_total_score' | translate }}</dt>
+            <dd class="af-summary__total">{{ totalScore() }}</dd>
+          </div>
+        </dl>
+        <div class="af-field af-field--loose">
+          <label class="af-label" for="af-pass">{{ 'assignments.form_pass_score' | translate }}</label>
+          <input id="af-pass" type="number" inputmode="numeric" class="af-input" min="0" [max]="totalScore()" [formControl]="form.controls.pass_score" />
         </div>
+      </section>
 
-        <div class="af-summary__row">
-          <span class="af-summary__label">{{ 'assignments.form_questions' | translate }}</span>
-          <span class="af-summary__value">{{ questionCount() }}</span>
-        </div>
-
-        <div class="af-summary__row">
-          <span class="af-summary__label">{{ 'assignments.form_total_score' | translate }}</span>
-          <span class="af-summary__value af-summary__value--large">{{ totalScore() }}</span>
-        </div>
-
-        <div class="af-summary__row af-summary__row--col">
-          <label class="af-label" for="passScore">{{ 'assignments.form_pass_score' | translate }}</label>
-          <input
-            id="passScore"
-            type="number"
-            class="af-input"
-            min="0"
-            [max]="totalScore()"
-            [formControl]="form.controls.pass_score" />
-        </div>
-      </div>
-
-      <div class="af-rule">
-        <h4 class="af-rule__title">{{ 'assignments.form_business_rule' | translate }}</h4>
-        <p>{{ 'assignments.form_business_rule_text' | translate }}</p>
-      </div>
+      <section class="af-rule" aria-labelledby="af-rule-title">
+        <h2 class="af-rule__title" id="af-rule-title">{{ 'assignments.form_business_rule' | translate }}</h2>
+        <p class="af-rule__text">{{ 'assignments.form_business_rule_text' | translate }}</p>
+      </section>
     </aside>
 
   </div>

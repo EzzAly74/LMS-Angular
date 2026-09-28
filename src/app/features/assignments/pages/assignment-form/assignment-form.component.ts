@@ -19,20 +19,28 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Observable, Subject, forkJoin, map, of, switchMap, takeUntil, startWith } from 'rxjs';
+import { Observable, Subject, combineLatest, forkJoin, map, of, switchMap, takeUntil, startWith } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasFileCardComponent } from '../../../../shared/nas/nas-file-card/nas-file-card.component';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import {
+  YesNo,
+  dateFromApi,
+  dateToApi,
+  reorderItems,
+  yesNoFromKey,
+  yesNoOptions,
+  yesNoText,
+} from '../../../../core/utils/assessment-question';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
-import { NasStatusBadgeComponent } from '../../../../shared/nas';
+import { MessageService, PrimeTemplate } from 'primeng/api';
 import { AssignmentsApiService } from '../../services/assignments-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
-import { MANUAL_QUESTION_TYPES } from '../../models/assignment.types';
 import type {
   StoredFile,
   Assignment,
@@ -70,6 +78,37 @@ interface QuestionGroup {
 const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
 const ATTACHMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg'];
 
+const filled = (items: string[] | null | undefined): string[] => (items ?? []).map(s => s.trim()).filter(Boolean);
+
+interface QuestionValue {
+  type: AssignmentQuestionType;
+  options_en: string[];
+  options_ar: string[];
+  correct_answer_en: string;
+  correct_answer_ar: string;
+}
+
+/** Options and answer key as the API stores them, per the Figma shape of each type (D-066). */
+function keyFields(q: QuestionValue): Pick<AssignmentSavePayload['questions'][number],
+  'options_en' | 'options_ar' | 'correct_answer_en' | 'correct_answer_ar'> {
+  switch (q.type) {
+    case 'mcq':
+      return { options_en: filled(q.options_en), options_ar: filled(q.options_ar),
+        correct_answer_en: q.correct_answer_en.trim() || null, correct_answer_ar: q.correct_answer_ar.trim() || null };
+    case 'yes_no':
+      return { options_en: yesNoOptions('en'), options_ar: yesNoOptions('ar'),
+        correct_answer_en: q.correct_answer_en || null, correct_answer_ar: q.correct_answer_ar || null };
+    case 'reorder': {
+      // The items are typed in their correct order, so the order is the key.
+      const en = filled(q.options_en);
+      const ar = filled(q.options_ar);
+      return { options_en: en, options_ar: ar, correct_answer_en: JSON.stringify(en), correct_answer_ar: JSON.stringify(ar) };
+    }
+    default:
+      return { options_en: [], options_ar: [], correct_answer_en: null, correct_answer_ar: null };
+  }
+}
+
 @Component({
   selector: 'app-assignment-form',
   standalone: true,
@@ -79,12 +118,13 @@ const ATTACHMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx
     ReactiveFormsModule,
     RouterLink,
     DropdownModule,
+    PrimeTemplate,
     SkeletonModule,
     ToastModule,
     TranslateModule,
-    NasStatusBadgeComponent,
     NasFileCardComponent,
     NasIconComponent,
+    NasDatepickerComponent,
   ],
   providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -115,21 +155,33 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   /** Question-type dropdown — backend `question_type` enum. */
   readonly questionTypeOptions = this.enums.options('assignment_question_type');
 
+  readonly types = ['pre', 'mid', 'post'] as const;
+  readonly langs = ['en', 'ar'] as const;
+
+  /** Yes/No key dropdown (Figma 1982:42127), relabelled on a language switch. */
+  readonly yesNoChoices = toSignal(
+    combineLatest([this.t.stream('common.yes'), this.t.stream('common.no')]).pipe(
+      map(([yes, no]: [string, string]) => [{ value: 'yes' as YesNo, label: yes }, { value: 'no' as YesNo, label: no }]),
+    ),
+    { initialValue: [] },
+  );
+
   /* ── Form ────────────────────────────────────────────────────── */
 
   readonly form = this.fb.nonNullable.group({
     title:           ['', [Validators.required, Validators.maxLength(255)]],
-    title_ar:        ['', [Validators.maxLength(255)]],
+    // Figma marks the Arabic title and Type required (D-066).
+    title_ar:        ['', [Validators.required, Validators.maxLength(255)]],
     course_id:       this.fb.control<number | null>(null, [Validators.required]),
     cohort_scope:    this.fb.nonNullable.control<AssignmentCohortScope>('all', [Validators.required]),
     cohort_ids:      this.fb.nonNullable.control<number[]>([]),
-    due_date:        [''],
+    due_date:        this.fb.control<Date | null>(null),
     instructions_en: [''],
     instructions_ar: [''],
     pass_score:      this.fb.control<number | null>(null),
     status:          this.fb.nonNullable.control<AssignmentStatus>('draft'),
-    /** Pre / Mid / Post, one or none (D-065; Figma draws a checkbox row). */
-    type:            this.fb.control<'pre' | 'mid' | 'post' | null>(null),
+    /** Pre / Mid / Post: exactly one (D-065, D-066); Figma draws it as checkboxes. */
+    type:            this.fb.control<'pre' | 'mid' | 'post' | null>(null, [Validators.required]),
     questions:       this.fb.array<FormGroup<QuestionGroup>>([]),
   });
 
@@ -187,10 +239,14 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.recomputeTotals());
 
-    // Reload cohorts when course changes (specific-scope mode).
+    // Cohorts belong to a course (B-137): no course, no cohort scope; a
+    // new course drops the cohorts picked for the old one.
+    this.syncScopeWithCourse(this.form.controls.course_id.value);
     this.form.controls.course_id.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(courseId => {
+        this.form.controls.cohort_ids.setValue([]);
+        this.syncScopeWithCourse(courseId);
         if (courseId) this.loadCohorts(courseId);
         else this.cohorts.set([]);
       });
@@ -234,7 +290,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       course_id:       a.course_id,
       cohort_scope:    a.cohort_scope,
       cohort_ids:      a.cohorts.map(c => c.id),
-      due_date:        a.due_date ?? '',
+      due_date:        dateFromApi(a.due_date),
       instructions_en: a.instructions_en ?? '',
       instructions_ar: a.instructions_ar ?? '',
       pass_score:      a.pass_score,
@@ -269,8 +325,37 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   }
 
   removeQuestion(index: number): void {
-    if (this.questions.length <= 1) return;
     this.questions.removeAt(index);
+  }
+
+  private syncScopeWithCourse(courseId: number | null): void {
+    const scope = this.form.controls.cohort_scope;
+    if (courseId) {
+      scope.enable({ emitEvent: false });
+    } else {
+      scope.setValue('all', { emitEvent: false });
+      scope.disable({ emitEvent: false });
+    }
+  }
+
+  stepScore(index: number, delta: 1 | -1): void {
+    const ctrl = this.questions.at(index).controls.score;
+    ctrl.setValue(Math.max(0, (Number(ctrl.value) || 0) + delta));
+    ctrl.markAsDirty();
+  }
+
+  yesNo(index: number): YesNo | null {
+    return yesNoFromKey(this.questions.at(index).controls.correct_answer_en.value);
+  }
+
+  setYesNo(index: number, value: YesNo): void {
+    const g = this.questions.at(index).controls;
+    g.correct_answer_en.setValue(yesNoText(value, 'en'));
+    g.correct_answer_ar.setValue(yesNoText(value, 'ar'));
+  }
+
+  showError(ctrl: { invalid: boolean; touched: boolean; dirty: boolean }): boolean {
+    return ctrl.invalid && (ctrl.touched || ctrl.dirty);
   }
 
   changeQuestionType(index: number, type: AssignmentQuestionType): void {
@@ -334,15 +419,18 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   readonly canPublish = computed(() => {
     this.formValue();                       // dependency tracker
     const v = this.form.getRawValue();      // always read the latest, raw value
-    if (!v.title || !v.course_id) return false;
+    // Every field Figma marks with an asterisk (D-066).
+    if (!v.title.trim() || !v.title_ar.trim() || !v.course_id || !v.type) return false;
     if (v.cohort_scope === 'specific' && (!v.cohort_ids || v.cohort_ids.length === 0)) return false;
     if (!v.questions.length) return false;
     for (const q of v.questions) {
-      if (!q.type || !q.question_en) return false;
-      if (!MANUAL_QUESTION_TYPES.includes(q.type) && !q.correct_answer_en) return false;
-      // Figma marks a file question's File as required.
+      if (!q.type || !q.question_en.trim() || !q.question_ar.trim()) return false;
+      if (q.type === 'mcq' || q.type === 'reorder') {
+        if (filled(q.options_en).length < 2 || filled(q.options_ar).length < 2) return false;
+      }
+      if (q.type === 'mcq' && (!q.correct_answer_en.trim() || !q.correct_answer_ar.trim())) return false;
+      if (q.type === 'yes_no' && !yesNoFromKey(q.correct_answer_en)) return false;
       if (q.type === 'file' && !q.pending && (!q.attachment || q.dropAttachment)) return false;
-      if ((q.type === 'mcq' || q.type === 'reorder') && (q.options_en?.filter(Boolean).length ?? 0) < 2) return false;
     }
     return true;
   });
@@ -373,7 +461,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       title_ar:        value.title_ar?.trim() || null,
       instructions_en: value.instructions_en?.trim() || null,
       instructions_ar: value.instructions_ar?.trim() || null,
-      due_date:        value.due_date || null,
+      due_date:        dateToApi(value.due_date),
       cohort_scope:    value.cohort_scope,
       cohort_ids:      value.cohort_scope === 'specific' ? value.cohort_ids : [],
       pass_score:      value.pass_score,
@@ -383,12 +471,9 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
         ...(q.id ? { id: q.id } : {}),
         type: q.type,
         score: Number(q.score) || 0,
-        question_en: q.question_en,
-        question_ar: q.question_ar || null,
-        options_en: (q.options_en ?? []).filter(Boolean),
-        options_ar: (q.options_ar ?? []).filter(Boolean),
-        correct_answer_en: q.correct_answer_en || null,
-        correct_answer_ar: q.correct_answer_ar || null,
+        question_en: q.question_en.trim(),
+        question_ar: q.question_ar.trim() || null,
+        ...keyFields(q),
         explanation_en: q.explanation_en || null,
         explanation_ar: q.explanation_ar || null,
       })),
@@ -457,10 +542,6 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  isManual(i: number): boolean {
-    return MANUAL_QUESTION_TYPES.includes(this.questionType(i));
-  }
-
   /** Upload chosen files and remove dropped ones, matched to the saved questions by position. */
   private syncAttachments(saved: Assignment): Observable<unknown> {
     const savedQs = [...(saved.questions ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
@@ -488,14 +569,18 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   }
 
   private buildQuestionGroup(q: Partial<AssignmentQuestion>): FormGroup<QuestionGroup> {
-    const optsEn = (q.options_en ?? []).map(o => this.fb.nonNullable.control<string>(o ?? ''));
-    const optsAr = (q.options_ar ?? []).map(o => this.fb.nonNullable.control<string>(o ?? ''));
+    // Reorder items are shown in their correct order: the stored key (D-066).
+    const reorder = q.type === 'reorder';
+    const itemsEn = reorder ? reorderItems(q.options_en, q.correct_answer_en) : (q.options_en ?? []);
+    const itemsAr = reorder ? reorderItems(q.options_ar, q.correct_answer_ar) : (q.options_ar ?? []);
+    const optsEn = (q.type === 'yes_no' ? [] : itemsEn).map(o => this.fb.nonNullable.control<string>(o ?? ''));
+    const optsAr = (q.type === 'yes_no' ? [] : itemsAr).map(o => this.fb.nonNullable.control<string>(o ?? ''));
 
     return this.fb.nonNullable.group<QuestionGroup>({
       type:              this.fb.nonNullable.control<AssignmentQuestionType>(q.type ?? 'mcq'),
       score:             this.fb.nonNullable.control<number>(q.score ?? 0, { validators: [Validators.min(0)] }),
       question_en:       this.fb.nonNullable.control<string>(q.question_en ?? '', { validators: [Validators.required] }),
-      question_ar:       this.fb.nonNullable.control<string>(q.question_ar ?? ''),
+      question_ar:       this.fb.nonNullable.control<string>(q.question_ar ?? '', { validators: [Validators.required] }),
       options_en:        this.fb.array<FormControl<string>>(optsEn),
       options_ar:        this.fb.array<FormControl<string>>(optsAr),
       correct_answer_en: this.fb.nonNullable.control<string>(q.correct_answer_en ?? ''),
@@ -513,10 +598,6 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   optionsEn(i: number): FormArray<FormControl<string>> { return this.questions.at(i).controls.options_en; }
   optionsAr(i: number): FormArray<FormControl<string>> { return this.questions.at(i).controls.options_ar; }
   questionType(i: number): AssignmentQuestionType { return this.questions.at(i).controls.type.value; }
-
-  scopePillTone(scope: AssignmentCohortScope): 'teal' | 'warning' {
-    return scope === 'all' ? 'teal' : 'warning';
-  }
 
   scopeLabel(scope: AssignmentCohortScope): string {
     const localized = this.enums.options('cohort_scope')().find(o => o.code === scope)?.value;

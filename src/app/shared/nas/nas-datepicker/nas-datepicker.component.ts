@@ -18,6 +18,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { LocaleService } from '../../../core/services/locale.service';
+import { NasIconComponent } from '../nas-icon/nas-icon.component';
 
 interface DayCell {
   date: Date;
@@ -51,6 +52,7 @@ interface DayCell {
 @Component({
   selector: 'nas-datepicker',
   standalone: true,
+  imports: [NasIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -67,6 +69,10 @@ export class NasDatepickerComponent implements ControlValueAccessor, OnDestroy {
   @Input({ transform: booleanAttribute }) disabled = false;
   @Input() min: Date | null = null;
   @Input() max: Date | null = null;
+  /** `inset`: one box with the calendar icon inside it (Figma 1983:44122). */
+  @Input() variant: 'split' | 'inset' = 'split';
+  /** Lets a page's <label for> point at the text field. */
+  @Input() inputId: string | null = null;
 
   @ViewChild('panelTpl', { static: true }) private panelTpl!: TemplateRef<void>;
 
