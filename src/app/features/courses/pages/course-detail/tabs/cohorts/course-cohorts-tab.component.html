@@ -82,6 +82,8 @@
 
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />
 
+<app-new-cohort-dialog [(visible)]="newCohortOpen" [courseId]="courseId()" (created)="changed.emit()" />
+
 <app-cohort-learners-dialog [(visible)]="learnersOpen" [courseId]="courseId()"
   [cohortId]="learnersCohort()?.id ?? null" [cohortName]="learnersCohort()?.name ?? ''" />
 

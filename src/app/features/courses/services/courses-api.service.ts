@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiService, ApiParams } from '../../../core/services/api.service';
 import { API, API_BASE, courseUrl } from '../../../core/constants/api.constants';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
@@ -8,6 +8,7 @@ import type {
   CourseModule, ModulePayload, ModuleUploadResult, CohortAttendance,
   Cohort, CohortPayload,
 } from '../../../core/models/course.types';
+import { saveBlob } from '../../../core/utils/save-blob';
 import type { CourseFormSource } from '../models/course-form.model';
 import type { CourseEvaluationSummary, CourseLearnerRow, CourseSubmissionRow } from '../models/course-detail.model';
 import type { TemplateResults } from '../../evaluations/models/evaluation.model';
@@ -95,6 +96,25 @@ export class CoursesApiService {
 
   deleteCohort(courseId: number, cohortId: number): Observable<ApiResponse<void>> {
     return this.api.delete(courseUrl.cohort(courseId, cohortId));
+  }
+
+  /** "Download Schedule Template": one numbered row per planned session. */
+  downloadScheduleTemplate(courseId: number): Observable<void> {
+    return this.api.getBlob(courseUrl.cohortScheduleTemplate(courseId))
+      .pipe(map(blob => saveBlob(blob, 'cohort-schedule-template.xlsx')));
+  }
+
+  /**
+   * New Cohort with its completed schedule. All-or-nothing on the server: a
+   * 422 carries every problem under `report.errors` (NasImportProblem rows).
+   */
+  createCohortWithSchedule(courseId: number, body: { name_en: string; name_ar: string; capacity: number | null; schedule: File }): Observable<ApiResponse<Cohort>> {
+    const form = new FormData();
+    form.append('name[en]', body.name_en);
+    form.append('name[ar]', body.name_ar);
+    if (body.capacity !== null) form.append('capacity', String(body.capacity));
+    form.append('schedule', body.schedule, body.schedule.name);
+    return this.api.post<Cohort>(courseUrl.cohortScheduled(courseId), form);
   }
 
   /* ── Modules (course_lectures, surfaced as "Modules" in the admin UI) ── */

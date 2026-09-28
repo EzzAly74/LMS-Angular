@@ -1,0 +1,127 @@
+<!-- New Cohort - Figma 2393:123167 / 2393:122292 -->
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onShow)="onShow()"
+  [modal]="true"
+  [closable]="!saving()"
+  [closeOnEscape]="!saving()"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="nas-dialog nc-dialog"
+  [style]="{ width: '512px', maxWidth: '95vw' }"
+  [header]="'course_detail.new_cohort' | translate">
+
+  <form id="nc-form" class="nc" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="nc__names">
+      <div class="nc__field">
+        <label class="nc__label" for="nc-name-en">{{ 'course_detail.cohort_name_en' | translate }} <span aria-hidden="true">*</span></label>
+        <input id="nc-name-en" class="nc__input" type="text" formControlName="name_en" maxlength="255" dir="ltr" lang="en" required
+          [placeholder]="'course_detail.schedule.name_en_placeholder' | translate"
+          [attr.aria-invalid]="showError('name_en')" [attr.aria-describedby]="showError('name_en') ? 'nc-name-en-err' : null" />
+        @if (showError('name_en')) { <p class="nc__error" id="nc-name-en-err">{{ 'common.field_required' | translate }}</p> }
+      </div>
+      <div class="nc__field">
+        <label class="nc__label" for="nc-name-ar">{{ 'course_detail.cohort_name_ar' | translate }} <span aria-hidden="true">*</span></label>
+        <input id="nc-name-ar" class="nc__input" type="text" formControlName="name_ar" maxlength="255" dir="rtl" lang="ar" required
+          [placeholder]="'course_detail.schedule.name_ar_placeholder' | translate"
+          [attr.aria-invalid]="showError('name_ar')" [attr.aria-describedby]="showError('name_ar') ? 'nc-name-ar-err' : null" />
+        @if (showError('name_ar')) { <p class="nc__error" id="nc-name-ar-err">{{ 'common.field_required' | translate }}</p> }
+      </div>
+    </div>
+
+    <div class="nc__field">
+      <label class="nc__label" for="nc-capacity">{{ 'course_detail.capacity' | translate }}</label>
+      <div class="nc__number">
+        <input id="nc-capacity" class="nc__number-input" type="number" inputmode="numeric" formControlName="capacity" min="1" max="10000" placeholder="30"
+          [attr.aria-invalid]="showError('capacity')" [attr.aria-describedby]="showError('capacity') ? 'nc-capacity-err' : null" />
+        <span class="nc__steppers">
+          <button type="button" class="nc__step" (click)="step(1)" [attr.aria-label]="'course_detail.schedule.capacity_up' | translate">
+            <img class="nc__step-up" src="assets/icons/figma/arrow-down-old-system.svg" width="16" height="16" alt="" />
+          </button>
+          <button type="button" class="nc__step" (click)="step(-1)" [attr.aria-label]="'course_detail.schedule.capacity_down' | translate">
+            <img src="assets/icons/figma/arrow-down-old-system.svg" width="16" height="16" alt="" />
+          </button>
+        </span>
+      </div>
+      @if (showError('capacity')) { <p class="nc__error" id="nc-capacity-err">{{ 'course_detail.schedule.capacity_range' | translate }}</p> }
+    </div>
+
+    <!-- Step 1 -->
+    <section class="nc__step-section" aria-labelledby="nc-step1">
+      <h3 class="nc__step-title" id="nc-step1"><nas-icon name="file-text" [size]="20" />{{ 'course_detail.schedule.step1' | translate }}</h3>
+      <div class="nc__card">
+        <div class="nc__card-head">
+          <span class="nc__badge" aria-hidden="true"><nas-icon name="download-simple" [size]="20" /></span>
+          <span class="nc__card-text">
+            <span class="nc__card-title">{{ 'course_detail.schedule.download_title' | translate }}</span>
+            <span class="nc__card-desc">{{ 'course_detail.schedule.download_desc' | translate }}</span>
+          </span>
+        </div>
+        <button type="button" class="nc__btn nc__btn--outline" (click)="downloadTemplate()" [disabled]="downloading()" [attr.aria-busy]="downloading()">
+          {{ 'course_detail.schedule.download_button' | translate }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 2 -->
+    <section class="nc__step-section" aria-labelledby="nc-step2">
+      <h3 class="nc__step-title" id="nc-step2"><nas-icon name="upload-simple" [size]="20" />{{ 'course_detail.schedule.step2' | translate }}</h3>
+
+      @if (file(); as f) {
+        <div class="nc__file">
+          <span class="nc__file-icon" aria-hidden="true">
+            <img src="assets/icons/figma/file-page-28.svg" width="23" height="28" alt="" />
+            <span class="nc__file-badge">{{ fileFormat() }}</span>
+          </span>
+          <span class="nc__file-text">
+            <span class="nc__file-name"><bdi>{{ f.name }}</bdi></span>
+            <span class="nc__file-meta"><bdi dir="ltr">{{ size(f.size) }}</bdi><span class="nc__file-sep" aria-hidden="true">•</span><bdi>{{ fileDate() | nasDate: locale() }}</bdi></span>
+          </span>
+          <button type="button" class="nc__remove" (click)="removeFile()" [disabled]="saving()"
+            [attr.aria-label]="'course_detail.schedule.remove_file' | translate: { name: f.name }">
+            <img src="assets/icons/figma/delete-red-24.svg" width="24" height="24" alt="" />
+          </button>
+        </div>
+      } @else {
+        <div class="nc__card">
+          <div class="nc__card-head">
+            <span class="nc__badge" aria-hidden="true"><nas-icon name="upload-simple" [size]="20" /></span>
+            <span class="nc__card-text">
+              <span class="nc__card-title">{{ 'course_detail.schedule.upload_title' | translate }}</span>
+              <span class="nc__card-desc">{{ 'course_detail.schedule.upload_desc' | translate }}</span>
+            </span>
+          </div>
+          <div class="nc__drop" [class.nc__drop--over]="dragging()" (dragover)="onDragOver($event)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+            <span class="nc__drop-info">
+              <nas-icon class="nc__drop-icon" name="upload-simple" [size]="24" />
+              <span>{{ 'course_detail.schedule.formats' | translate }}</span>
+              <span>{{ 'course_detail.schedule.max_size' | translate }}</span>
+            </span>
+            <input #picker id="nc-file" class="nc__sr-only" type="file" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              (change)="onPick($event)" [attr.aria-describedby]="fileProblem() || (submitted() && !file()) ? 'nc-file-err' : null" />
+            <button type="button" class="nc__select" (click)="picker.click()">{{ 'course_detail.schedule.select_file' | translate }}</button>
+          </div>
+        </div>
+      }
+      @if (fileProblem(); as p) {
+        <p class="nc__error" id="nc-file-err" role="alert">{{ 'course_detail.schedule.file_' + p | translate }}</p>
+      } @else if (submitted() && !file()) {
+        <p class="nc__error" id="nc-file-err" role="alert">{{ 'course_detail.schedule.file_required' | translate }}</p>
+      }
+    </section>
+
+    @if (serverError(); as msg) { <p class="nc__error nc__error--server" role="alert">{{ msg }}</p> }
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="nc__footer">
+      <button type="button" class="nc__btn nc__btn--outline nc__btn--cancel" (click)="close()" [disabled]="saving()">{{ 'common.cancel' | translate }}</button>
+      <button type="submit" form="nc-form" class="nc__btn nc__btn--primary" [disabled]="!canSubmit()" [attr.aria-busy]="saving()">
+        {{ 'course_detail.schedule.add_cohort' | translate }}
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<nas-import-report [visible]="reportOpen()" (visibleChange)="reportOpen.set($event)" [errors]="report()" />

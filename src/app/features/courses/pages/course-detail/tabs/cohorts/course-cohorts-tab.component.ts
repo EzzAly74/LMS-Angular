@@ -34,6 +34,7 @@ import { pluralKey } from '../../../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../../../core/utils/with-locale-reload';
 import type { Cohort, CohortPayload, CohortStatus, CourseDetail } from '../../../../../../core/models/course.types';
 import { CohortLearnersDialogComponent } from './cohort-learners-dialog.component';
+import { NewCohortDialogComponent } from './new-cohort-dialog.component';
 
 type SortKey = 'name' | 'status';
 
@@ -54,6 +55,7 @@ type SortKey = 'name' | 'status';
   selector: 'app-course-cohorts-tab',
   standalone: true,
   imports: [
+    NewCohortDialogComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -232,20 +234,11 @@ export class CourseCohortsTabComponent {
     return this.enums.codeForId(name, id);
   }
 
+  /** "Add Cohort" opens the New Cohort modal with the schedule upload (Figma 2393:123167, D-062). */
+  readonly newCohortOpen = signal(false);
+
   openAddCohort(): void {
-    this.cohortEditMode.set(false);
-    this.activeCohort.set(null);
-    this.cohortForm.reset({
-      name_en: '',
-      name_ar: '',
-      capacity: 30,
-      status: this.enums.idForCode('cohort_status', 'scheduled'),
-      number_of_sessions: this.course().number_of_sessions ?? null,
-      start_date: null,
-      end_date: null,
-      avg_session_time: null,
-    });
-    this.showCohort.set(true);
+    this.newCohortOpen.set(true);
   }
 
   openEditCohort(cohort: Cohort, overlay: OverlayPanel): void {
