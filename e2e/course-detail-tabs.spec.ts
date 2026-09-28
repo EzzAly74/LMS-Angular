@@ -216,9 +216,11 @@ test('cohorts: search, sort, and the enrolled link opens the cohort learners', a
 
 test('qualifications: read-only list with local search', async ({ page }) => {
   await open(page, 'qualifications');
-  await expect(page.getByRole('listitem')).toHaveCount(2);
+  // Scoped to the tab panel: the breadcrumb is a list too.
+  const items = page.getByRole('tabpanel').getByRole('listitem');
+  await expect(items).toHaveCount(2);
   await page.getByRole('searchbox').fill('iso');
-  await expect(page.getByRole('listitem')).toHaveText(['ISO 45001 Awareness']);
+  await expect(items).toHaveText(['ISO 45001 Awareness']);
 });
 
 test('evaluations: reviews line, course-scoped results, template picker', async ({ page }) => {

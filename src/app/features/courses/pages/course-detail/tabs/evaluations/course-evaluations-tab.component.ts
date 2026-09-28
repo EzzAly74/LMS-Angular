@@ -122,6 +122,9 @@ export class CourseEvaluationsTabComponent implements OnInit {
   }
 
   pickTemplate(id: number): void {
+    // The picker is re-created after every load and reports its initial value;
+    // reloading on that would loop (summary -> results -> picker -> load).
+    if (id === this.templateId()) return;
     this.templateId.set(id);
     this.load();
   }

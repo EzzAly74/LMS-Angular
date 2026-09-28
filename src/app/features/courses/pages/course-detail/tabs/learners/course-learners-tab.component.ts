@@ -90,7 +90,8 @@ export class CourseLearnersTabComponent implements OnInit {
   private readonly langTick = signal(0);
 
   readonly perPage = PER_PAGE;
-  readonly canOpenLearner = computed(() => this.auth.hasView('view-learners'));
+  // Same key the /admin/learners route is gated on (admin-layout.routes.ts).
+  readonly canOpenLearner = computed(() => this.auth.hasView('view-users'));
 
   readonly activeFilters = computed(() => {
     const q = this.query();
