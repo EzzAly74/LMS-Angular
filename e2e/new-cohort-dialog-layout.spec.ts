@@ -69,6 +69,8 @@ for (const locale of ['en', 'ar'] as const) {
     await page.goto('/admin/courses/10?tab=cohort');
     await page.locator('.ct-menu').first().click();
     await page.locator('.row-menu__item').first().click();
+    // The row menu is a dialog too while it animates out.
+    await expect(page.locator('.p-overlaypanel')).toHaveCount(0);
     const d = page.getByRole('dialog');
     await expect(d.locator('.nc__rules')).toBeVisible();
     await expect(d.locator('#nc-name-en')).toHaveValue('Cohort A');

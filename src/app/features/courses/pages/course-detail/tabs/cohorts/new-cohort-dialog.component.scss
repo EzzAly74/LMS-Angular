@@ -279,3 +279,60 @@
 
   nas-icon { flex-shrink: 0; margin-block-start: 1px; }
 }
+
+// Open for enrolment early: label and hint, the switch at the inline end.
+// A native checkbox with role=switch (same drawing as the template builder's).
+.nc__switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+}
+
+.nc__switch-text { display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; }
+
+.nc__switch-hint { font-size: var(--nas-size-2xs); line-height: 18px; color: var(--nas-neutral-750); }
+
+.nc__switch { position: relative; display: inline-flex; flex-shrink: 0; }
+
+// 44 px tall hit area over the 36 x 20 track.
+.nc__switch-input {
+  position: absolute;
+  inset: -12px -4px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+
+  &:disabled { cursor: not-allowed; }
+}
+
+.nc__switch-track {
+  position: relative;
+  pointer-events: none;
+  inline-size: 36px;
+  block-size: 20px;
+  border-radius: 10px;
+  background: var(--nas-neutral-400);
+  transition: background 0.15s ease;
+}
+
+.nc__switch-knob {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  background: var(--nas-neutral-0);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  transition: inset-inline-start 0.15s ease;
+}
+
+.nc__switch-input:checked + .nc__switch-track { background: var(--nas-teal-1000); }
+.nc__switch-input:checked + .nc__switch-track .nc__switch-knob { inset-inline-start: 18px; }
+.nc__switch-input:disabled + .nc__switch-track { opacity: 0.5; }
+.nc__switch-input:focus-visible + .nc__switch-track { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nc__switch-track, .nc__switch-knob { transition: none; }
+}

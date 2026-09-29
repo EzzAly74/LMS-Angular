@@ -38,6 +38,11 @@ test('fields, template download, file pick and remove, then Add Cohort posts the
   await d.getByRole('button', { name: 'Increase capacity' }).click();
   await expect(d.getByLabel('Capacity', { exact: true })).toHaveValue('31');
 
+  // Open for enrolment early: off by default, a real switch.
+  const early = d.getByRole('switch', { name: 'Open for enrolment early' });
+  await expect(early).not.toBeChecked();
+  await early.check();
+
   const download = page.waitForEvent('download');
   await d.getByRole('button', { name: 'Download Schedule Template' }).click();
   expect((await download).suggestedFilename()).toBe('cohort-schedule-template.xlsx');
@@ -67,6 +72,7 @@ test('fields, template download, file pick and remove, then Add Cohort posts the
   expect(body).toContain('name="name[en]"\r\n\r\nCohort D');
   expect(body).toContain('name="name[ar]"\r\n\r\nالدفعة د');
   expect(body).toContain('name="capacity"\r\n\r\n31');
+  expect(body).toContain('name="open_for_enrollment"\r\n\r\n1');
   expect(body).toContain('filename="schedule.xlsx"');
 });
 
@@ -120,6 +126,9 @@ test('edit fills the cohort in, downloads its schedule, and saves names and capa
   await expect(d.getByText('Step 2 · Upload new sessions (optional)')).toBeVisible();
   await expect(d.locator('.nc__rules')).toContainText('Sessions already held cannot be changed.');
   await expect(save).toBeDisabled(); // nothing changed yet
+  // Cohort A has started (June 2025): the enrolment window follows its schedule.
+  await expect(d.getByRole('switch', { name: 'Open for enrolment early' })).toBeDisabled();
+  await expect(d.getByText('The cohort has started, so enrolment now follows its schedule.')).toBeVisible();
 
   const download = page.waitForEvent('download');
   await d.getByRole('button', { name: 'Download Current Schedule' }).click();
@@ -143,6 +152,7 @@ test('edit fills the cohort in, downloads its schedule, and saves names and capa
   expect(body).toContain('name="name[en]"\r\n\r\nCohort A (evening)');
   expect(body).toContain('name="capacity"\r\n\r\n40');
   expect(body).not.toContain('name="schedule"');
+  expect(body).not.toContain('name="open_for_enrollment"');
   await expect(page.getByText('Cohort updated')).toBeVisible();
 });
 

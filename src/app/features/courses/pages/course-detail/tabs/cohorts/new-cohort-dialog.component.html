@@ -54,6 +54,21 @@
       }
     </div>
 
+    <!-- Open for enrolment early (Q-073), the same on New and Edit -->
+    <div class="nc__switch-row">
+      <span class="nc__switch-text">
+        <label class="nc__label" for="nc-open-early">{{ 'course_detail.schedule.open_early' | translate }}</label>
+        <span class="nc__switch-hint" id="nc-open-early-hint">
+          {{ (started() ? 'course_detail.schedule.open_early_started' : 'course_detail.schedule.open_early_hint') | translate }}
+        </span>
+      </span>
+      <span class="nc__switch">
+        <input id="nc-open-early" type="checkbox" role="switch" class="nc__switch-input" formControlName="open_early"
+          aria-describedby="nc-open-early-hint" />
+        <span class="nc__switch-track" aria-hidden="true"><span class="nc__switch-knob"></span></span>
+      </span>
+    </div>
+
     <!-- Step 1 -->
     <section class="nc__step-section" aria-labelledby="nc-step1">
       <h3 class="nc__step-title" id="nc-step1"><nas-icon name="file-text" [size]="20" />{{ (editing() ? 'course_detail.schedule.step1_edit' : 'course_detail.schedule.step1') | translate }}</h3>
