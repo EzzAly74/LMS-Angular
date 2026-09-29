@@ -16,6 +16,8 @@ import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   AbstractControl,
+  FormArray,
+  FormControl,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
@@ -50,25 +52,23 @@ import { CoursesApiService } from '../../services/courses-api.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
 type LoadState = 'loading' | 'ready' | 'error';
-type TextField = 'description_en' | 'description_ar' | 'learn_en' | 'learn_ar' | 'requirements_en' | 'requirements_ar';
+/** The bullet lists: one input per point, added and removed by the admin. */
+type ListField = 'learn_en' | 'learn_ar' | 'requirements_en' | 'requirements_ar';
+type TextField = 'description_en' | 'description_ar' | ListField;
 type FieldKey =
   | 'title_en' | 'title_ar' | 'course_type' | 'category_id' | 'instructor_id' | 'level'
   | 'min_attendance' | 'min_score' | 'image' | TextField | 'qualifications';
 
 let nextId = 0;
 
-/** Lines of a bullet textarea -> the list the API stores (blank lines dropped). */
-function points(text: string): string[] {
-  return text.split(/\r?\n/).map(l => l.replace(/^\s*[•\-*]\s*/, '').trim()).filter(l => l.length > 0);
+/** The points of a list as the API stores them: trimmed, blank inputs dropped. */
+function points(values: readonly string[]): string[] {
+  return values.map(v => v.trim()).filter(v => v.length > 0);
 }
 
-/** One point per line, each within the server's limits. */
-const pointsValidator: ValidatorFn = (c: AbstractControl<string>): ValidationErrors | null => {
-  const list = points(c.value ?? '');
-  if (list.length > POINTS_MAX) return { tooManyPoints: true };
-  if (list.some(p => p.length > POINT_MAX)) return { pointTooLong: true };
-  return null;
-};
+/** At most POINTS_MAX filled points (each input carries its own length limit). */
+const pointsValidator: ValidatorFn = (c: AbstractControl<string[]>): ValidationErrors | null =>
+  points(c.value ?? []).length > POINTS_MAX ? { tooManyPoints: true } : null;
 
 function text(v: Localized | string | null | undefined, locale: 'en' | 'ar'): string {
   if (v && typeof v === 'object') return v[locale] ?? '';
@@ -129,13 +129,16 @@ export class CourseDialogComponent {
     { ctrl: 'title_en', label: 'course_dialog.title_en', dir: 'ltr' },
     { ctrl: 'title_ar', label: 'course_dialog.title_ar', dir: 'rtl' },
   ] as const;
-  protected readonly textFields: readonly { ctrl: TextField; label: string; ph: string; dir: 'ltr' | 'rtl'; bullets: boolean }[] = [
-    { ctrl: 'description_en', label: 'course_dialog.description_en', ph: 'course_dialog.description_placeholder', dir: 'ltr', bullets: false },
-    { ctrl: 'description_ar', label: 'course_dialog.description_ar', ph: 'course_dialog.description_placeholder', dir: 'rtl', bullets: false },
-    { ctrl: 'learn_en', label: 'course_dialog.learn_en', ph: 'course_dialog.bullets_placeholder', dir: 'ltr', bullets: true },
-    { ctrl: 'learn_ar', label: 'course_dialog.learn_ar', ph: 'course_dialog.bullets_placeholder', dir: 'rtl', bullets: true },
-    { ctrl: 'requirements_en', label: 'course_dialog.requirements_en', ph: 'course_dialog.bullets_placeholder', dir: 'ltr', bullets: true },
-    { ctrl: 'requirements_ar', label: 'course_dialog.requirements_ar', ph: 'course_dialog.bullets_placeholder', dir: 'rtl', bullets: true },
+  protected readonly textFields: readonly { ctrl: 'description_en' | 'description_ar'; label: string; ph: string; dir: 'ltr' | 'rtl' }[] = [
+    { ctrl: 'description_en', label: 'course_dialog.description_en', ph: 'course_dialog.description_placeholder', dir: 'ltr' },
+    { ctrl: 'description_ar', label: 'course_dialog.description_ar', ph: 'course_dialog.description_placeholder', dir: 'rtl' },
+  ];
+
+  protected readonly listFields: readonly { ctrl: ListField; label: string; dir: 'ltr' | 'rtl' }[] = [
+    { ctrl: 'learn_en', label: 'course_dialog.learn_en', dir: 'ltr' },
+    { ctrl: 'learn_ar', label: 'course_dialog.learn_ar', dir: 'rtl' },
+    { ctrl: 'requirements_en', label: 'course_dialog.requirements_en', dir: 'ltr' },
+    { ctrl: 'requirements_ar', label: 'course_dialog.requirements_ar', dir: 'rtl' },
   ];
   protected readonly rules: readonly { value: CertificateBasis; label: string; help: string }[] = [
     { value: 'attendance', label: 'course_dialog.rule_attendance', help: 'course_dialog.rule_attendance_help' },
@@ -158,10 +161,10 @@ export class CourseDialogComponent {
     min_score:       this.fb.control<number | null>(DEFAULT_THRESHOLD, this.threshold),
     description_en:  ['', Validators.maxLength(TEXT_MAX)],
     description_ar:  ['', Validators.maxLength(TEXT_MAX)],
-    learn_en:        ['', pointsValidator],
-    learn_ar:        ['', pointsValidator],
-    requirements_en: ['', pointsValidator],
-    requirements_ar: ['', pointsValidator],
+    learn_en:        this.pointList(),
+    learn_ar:        this.pointList(),
+    requirements_en: this.pointList(),
+    requirements_ar: this.pointList(),
   });
 
   private readonly formValue = toSignal(
@@ -278,8 +281,59 @@ export class CourseDialogComponent {
     if (e['maxlength']) return { key: 'errors.max_length', params: { max: e['maxlength'].requiredLength } };
     if (e['min'] || e['max'] || e['pattern']) return { key: 'course_dialog.threshold_range' };
     if (e['tooManyPoints']) return { key: 'course_dialog.too_many_points', params: { max: POINTS_MAX } };
-    if (e['pointTooLong']) return { key: 'course_dialog.point_too_long', params: { max: POINT_MAX } };
     return { key: 'errors.required' };
+  }
+
+  // ── Bullet lists (a FormArray per language) ─────────────────────────────
+
+  protected readonly pointsMax = POINTS_MAX;
+  protected readonly pointMax = POINT_MAX;
+
+  private point(value = ''): FormControl<string> {
+    return this.fb.control(value, Validators.maxLength(POINT_MAX));
+  }
+
+  /** A list starts with one empty input, so there is always somewhere to type. */
+  private pointList(values: readonly string[] = []): FormArray<FormControl<string>> {
+    return this.fb.array((values.length ? values : ['']).map(v => this.point(v)), pointsValidator);
+  }
+
+  protected list(ctrl: ListField): FormArray<FormControl<string>> {
+    return this.form.controls[ctrl];
+  }
+
+  protected addPoint(ctrl: ListField): void {
+    const list = this.list(ctrl);
+    if (list.length >= POINTS_MAX) return;
+    list.push(this.point());
+    list.markAsDirty();
+    this.clearFieldError(ctrl);
+    const index = list.length - 1;
+    // Focus the new input once it is rendered.
+    setTimeout(() => this.document.getElementById(`${this.uid}-${ctrl}-${index}`)?.focus());
+  }
+
+  /** The only input left is emptied rather than removed; focus stays in the list. */
+  protected removePoint(ctrl: ListField, index: number): void {
+    const list = this.list(ctrl);
+    if (list.length <= 1) list.at(0).setValue('');
+    else list.removeAt(index);
+    list.markAsDirty();
+    this.clearFieldError(ctrl);
+    const next = Math.min(index, list.length - 1);
+    setTimeout(() => this.document.getElementById(`${this.uid}-${ctrl}-${next}`)?.focus());
+  }
+
+  protected pointInvalid(ctrl: ListField, index: number): boolean {
+    const c = this.list(ctrl).at(index);
+    return c.invalid && (c.touched || c.dirty);
+  }
+
+  private setList(ctrl: ListField, values: readonly string[]): void {
+    const list = this.list(ctrl);
+    list.clear({ emitEvent: false });
+    for (const v of values.length ? values : ['']) list.push(this.point(v), { emitEvent: false });
+    list.updateValueAndValidity();
   }
 
   protected submit(): void {
@@ -360,6 +414,7 @@ export class CourseDialogComponent {
     this.opener ??= active instanceof HTMLElement ? active : null;
     // Figma draws Type empty ("Select Type"); nothing is pre-chosen.
     this.form.reset();
+    for (const f of this.listFields) this.setList(f.ctrl, []);
     this.syncThresholds();
     this.serverError.set(null);
     this.fieldErrors.set({});
@@ -423,11 +478,12 @@ export class CourseDialogComponent {
       min_score: d.certificate_min_score ?? DEFAULT_THRESHOLD,
       description_en: text(d.description, 'en'),
       description_ar: text(d.description, 'ar'),
-      learn_en: (d.what_students_will_learn?.en ?? []).join('\n'),
-      learn_ar: (d.what_students_will_learn?.ar ?? []).join('\n'),
-      requirements_en: (d.requirements?.en ?? []).join('\n'),
-      requirements_ar: (d.requirements?.ar ?? []).join('\n'),
     });
+    // A FormArray resets only the entries it already has, so each list is rebuilt.
+    this.setList('learn_en', d.what_students_will_learn?.en ?? []);
+    this.setList('learn_ar', d.what_students_will_learn?.ar ?? []);
+    this.setList('requirements_en', d.requirements?.en ?? []);
+    this.setList('requirements_ar', d.requirements?.ar ?? []);
     this.syncThresholds();
     this.pickedQualifications.set(new Set((d.qualification_skills ?? []).map(q => q.id)));
     this.existingImage.set(d.image);

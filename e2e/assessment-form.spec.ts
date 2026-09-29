@@ -129,7 +129,8 @@ for (const kind of ['assignments', 'quizzes'] as const) {
     test(`${kind} form fits and reads ${locale}`, async ({ page }, info) => {
       const errors: string[] = [];
       page.on('pageerror', e => errors.push(e.message));
-      page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+      // The realtime client cannot reach the broadcast server when it is not running locally; that is not this page.
+      page.on('console', m => { if (m.type() === 'error' && !m.text().startsWith('WebSocket connection to')) errors.push(m.text()); });
       await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
       await page.goto(`/admin/${kind}/new`);
       await ready(page);

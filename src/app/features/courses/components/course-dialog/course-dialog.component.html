@@ -186,7 +186,7 @@
                 <textarea class="cd__textarea" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir" rows="3"
                   [attr.maxlength]="textMax" [placeholder]="f.ph | translate"
                   [class.cd__input--error]="invalid(ctrl)" [attr.aria-invalid]="invalid(ctrl)"
-                  [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : (f.bullets ? uid + '-bullets-hint' : null)"
+                  [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null"
                   (input)="clearFieldError(ctrl)"></textarea>
                 @if (invalid(ctrl)) {
                   @let err = errorKey(ctrl);
@@ -194,7 +194,43 @@
                 }
               </div>
             }
-            <p class="cd__hint cd__hint--flush" [id]="uid + '-bullets-hint'">{{ 'course_dialog.bullets_hint' | translate }}</p>
+            <!-- The bullet lists: one input per point, with Add and Remove. -->
+            @for (f of listFields; track f.ctrl) {
+              @let ctrl = f.ctrl;
+              @let items = list(ctrl);
+              <fieldset class="cd__points" [formArrayName]="ctrl"
+                [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null">
+                <legend class="cd__label">{{ f.label | translate }}</legend>
+                <ol class="cd__point-list">
+                  @for (c of items.controls; track c; let i = $index) {
+                    <li class="cd__point">
+                      <label class="cd__sr-only" [for]="uid + '-' + ctrl + '-' + i">{{ 'course_dialog.point_n' | translate: { n: i + 1, list: (f.label | translate) } }}</label>
+                      <input class="cd__input cd__point-input" type="text" [id]="uid + '-' + ctrl + '-' + i" [formControlName]="i" [dir]="f.dir"
+                        [attr.maxlength]="pointMax" [placeholder]="'course_dialog.point_placeholder' | translate"
+                        [class.cd__input--error]="pointInvalid(ctrl, i)" [attr.aria-invalid]="pointInvalid(ctrl, i)"
+                        [attr.aria-describedby]="pointInvalid(ctrl, i) ? uid + '-' + ctrl + '-' + i + '-error' : null"
+                        (input)="clearFieldError(ctrl)" (keydown.enter)="$event.preventDefault(); addPoint(ctrl)" />
+                      <button type="button" class="cd__point-remove" (click)="removePoint(ctrl, i)"
+                        [disabled]="items.length === 1 && !c.value"
+                        [attr.aria-label]="'course_dialog.remove_point' | translate: { n: i + 1 }">
+                        <nas-icon name="trash" [size]="20" />
+                      </button>
+                      @if (pointInvalid(ctrl, i)) {
+                        <p class="cd__error cd__point-error" [id]="uid + '-' + ctrl + '-' + i + '-error'" role="alert">{{ 'course_dialog.point_too_long' | translate: { max: pointMax } }}</p>
+                      }
+                    </li>
+                  }
+                </ol>
+                <button type="button" class="cd__point-add" (click)="addPoint(ctrl)" [disabled]="items.length >= pointsMax">
+                  <nas-icon name="plus-circle" [size]="20" />
+                  {{ 'course_dialog.add_point' | translate }}
+                </button>
+                @if (invalid(ctrl)) {
+                  @let err = errorKey(ctrl);
+                  <p class="cd__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
+                }
+              </fieldset>
+            }
 
             <fieldset class="cd__quals">
               <legend class="cd__label">

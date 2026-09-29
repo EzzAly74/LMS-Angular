@@ -104,7 +104,18 @@ test('Add New Course on the general rule sends the drawn fields', async ({ page 
 
   await fillRequired(d, page);
   await pick(d, page, 'Category', 'Compliance');
-  await d.getByLabel('What Students Will Learn (English)').fill('Spot hazards\n\n• Report incidents\n');
+  // A list is one input per point: Add point appends (and focuses) one, a blank one is dropped.
+  const learnEn = d.getByRole('group', { name: 'What Students Will Learn (English)' });
+  await expect(learnEn.getByRole('textbox')).toHaveCount(1);
+  await learnEn.getByRole('textbox').first().fill('Spot hazards');
+  await learnEn.getByRole('button', { name: 'Add point' }).click();
+  await expect(learnEn.getByRole('textbox').nth(1)).toBeFocused();
+  await learnEn.getByRole('button', { name: 'Add point' }).click();
+  await learnEn.getByRole('textbox').nth(2).fill('Report incidents');
+  await learnEn.getByRole('button', { name: 'Add point' }).click();
+  await learnEn.getByRole('textbox').nth(3).fill('Remove me');
+  await learnEn.getByRole('button', { name: 'Remove point 4' }).click();
+  await expect(learnEn.getByRole('textbox')).toHaveCount(3);
   await d.getByRole('checkbox', { name: 'First Aid Certificate' }).check();
   await d.getByRole('button', { name: 'Create Course' }).click();
 
@@ -205,8 +216,8 @@ test('Edit Course opens the same modal filled in and saves with PUT', async ({ p
     return r.fulfill({ json: ok({ id: 5 }) });
   });
 
-  await page.locator('tbody tr').first().locator('.row-action-btn').click();
-  await page.getByRole('button', { name: 'Edit Course' }).click();
+  await page.locator('tbody tr').first().locator('.cc-more').click();
+  await page.getByRole('menuitem', { name: 'Edit Course' }).click();
   const d = dialog(page);
   await expect(d.getByRole('heading', { name: 'Edit Course' })).toBeVisible();
   await expect(d.getByLabel('Course Title (English)')).toHaveValue('Fire Safety');
@@ -215,7 +226,15 @@ test('Edit Course opens the same modal filled in and saves with PUT', async ({ p
   await expect(d.getByRole('radio', { name: 'Attendance & Minimum score', exact: true })).toBeChecked();
   await expect(d.getByLabel('Min Passing Attendance (%)')).toHaveValue('80');
   await expect(d.getByLabel('Min Passing Score (%)')).toHaveValue('65');
-  await expect(d.getByLabel('What Students Will Learn (English)')).toHaveValue('Use an extinguisher\nEvacuate');
+  const learnEn = d.getByRole('group', { name: 'What Students Will Learn (English)' });
+  await expect(learnEn.getByRole('textbox')).toHaveCount(2);
+  await expect(learnEn.getByRole('textbox').nth(0)).toHaveValue('Use an extinguisher');
+  await expect(learnEn.getByRole('textbox').nth(1)).toHaveValue('Evacuate');
+  await expect(d.getByRole('group', { name: 'Course Requirements (English)' }).getByRole('textbox')).toHaveCount(1);
+  // The list can be edited: drop the second point, add another.
+  await learnEn.getByRole('button', { name: 'Remove point 2' }).click();
+  await learnEn.getByRole('button', { name: 'Add point' }).click();
+  await learnEn.getByRole('textbox').nth(1).fill('Call for help');
   await expect(d.getByRole('checkbox', { name: 'Fire Safety Level 2' })).toBeChecked();
 
   // Back to the general rule; no new image is required on edit.
@@ -231,6 +250,7 @@ test('Edit Course opens the same modal filled in and saves with PUT', async ({ p
   expect(field(body, 'certificate_rule')).toBe('general');
   expect(field(body, 'level')).toBe('intermediate');
   expect(field(body, 'qualification_skill_ids')).toBe('');
+  expect(JSON.parse(field(body, 'what_students_will_learn') ?? '{}')).toEqual({ en: ['Use an extinguisher', 'Call for help'], ar: ['استخدام الطفاية'] });
   expect(body).not.toContain('name="image"');
 });
 
