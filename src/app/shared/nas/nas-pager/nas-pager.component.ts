@@ -19,6 +19,9 @@ import { TranslateModule } from '@ngx-translate/core';
     <nav class="nas-pager" [attr.aria-label]="'common.pagination' | translate">
       <span class="nas-pager__info">
         {{ rangeKey() | translate: { from: from(), to: to(), total: total() } }}
+        @if (showAllVisible() && total() > perPage()) {
+          <button type="button" class="nas-pager__all" (click)="showAll.emit()">{{ 'common.show_all' | translate }}</button>
+        }
       </span>
       <span class="nas-pager__nav">
         <button type="button" class="nas-pager__btn nas-pager__btn--prev" [disabled]="page() <= 1"
@@ -40,7 +43,13 @@ import { TranslateModule } from '@ngx-translate/core';
       gap: var(--nas-space-4);
       padding: var(--nas-space-6) var(--nas-space-5);
     }
-    .nas-pager__info { font-size: var(--nas-size-xs); color: var(--nas-color-text-strong); }
+    .nas-pager__info { display: flex; align-items: center; gap: var(--nas-space-2); font-size: var(--nas-size-xs); color: var(--nas-color-text-strong); }
+    /* "Show All" (Figma 1983:42584): underlined teal-700 link. */
+    .nas-pager__all {
+      padding: 0; border: 0; background: none; font: inherit; font-weight: var(--nas-weight-medium);
+      line-height: 16.8px; color: var(--nas-teal-700); text-decoration: underline; cursor: pointer;
+    }
+    .nas-pager__all:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
     .nas-pager__nav { display: flex; gap: var(--nas-space-4); }
     .nas-pager__btn {
       display: inline-flex;
@@ -66,6 +75,9 @@ export class NasPagerComponent {
   readonly perPage  = input.required<number>();
   readonly rangeKey = input('common.range_of');
   readonly pageChange = output<number>();
+  /** Figma 1983:42584 adds "Show All" after the range; the host decides what it loads. */
+  readonly showAllVisible = input(false);
+  readonly showAll = output<void>();
 
   protected readonly lastPage = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage())));
   protected readonly from = computed(() => (this.total() === 0 ? 0 : (this.page() - 1) * this.perPage() + 1));

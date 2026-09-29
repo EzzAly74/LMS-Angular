@@ -18,10 +18,11 @@ import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { QUIZ_TYPES } from '../../models/quiz.types';
 import type { QuizType } from '../../models/quiz.types';
-import {
-  NasPageHeaderComponent,
-  NasStatusBadgeComponent,
-} from '../../../../shared/nas';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
+import { NasFilterPickerComponent } from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
+import type { NasFilterOption } from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
+import { pluralKey } from '../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
@@ -31,9 +32,7 @@ import type {
   QuizInstructorOption,
   QuizListItem,
   QuizOption,
-  QuizStatus,
   QuizSubmissionListItem,
-  QuizSubmissionStatus,
 } from '../../models/quiz.types';
 
 /** Figma 1983:42584 "All / Passed / Failed" (D-065). */
@@ -41,11 +40,8 @@ type ResultToggle = 'all' | 'passed' | 'failed';
 
 interface CourseOpt { id: number; title: string; }
 
-interface FilterModalState {
-  open: boolean;
-  kind: 'instructors' | 'learners' | 'courses' | 'types' | null;
-  query: string;
-}
+/** The chips that open "Filter your results" (Figma 1986:75113). */
+type PickerKind = 'instructors' | 'learners' | 'courses';
 
 @Component({
   selector: 'app-quizzes-list',
@@ -60,8 +56,9 @@ interface FilterModalState {
     ConfirmDialogModule,
     ToastModule,
     TranslateModule,
-    NasPageHeaderComponent,
-    NasStatusBadgeComponent,
+    NasIconComponent,
+    NasPagerComponent,
+    NasFilterPickerComponent,
   ],
   providers: [ConfirmationService, MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -106,7 +103,8 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   readonly submissionsLoading = signal(true);
 
   subPage    = 1;
-  subPerPage = 20;
+  /** Figma 1983:42584 draws ten rows a page. */
+  subPerPage = 10;
   subSearch  = '';
   subResult: ResultToggle = 'all';
   /** Pre / Mid / Post filter (Figma 1981:41345). */
@@ -127,27 +125,43 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
   readonly viewAllSelected = signal<number | null>(null);
   viewAllSearch = '';
 
-  /* ── Filter modal ───────────────────────────────────────────── */
-  readonly filter = signal<FilterModalState>({ open: false, kind: null, query: '' });
-  readonly selectedInstructorSet = signal<Set<number>>(new Set());
-  readonly selectedLearnerSet    = signal<Set<number>>(new Set());
-  readonly selectedCourseSet     = signal<Set<number>>(new Set());
-  /** Type choices are held by index + 1 so the shared list can key them by number. */
-  readonly selectedTypeSet       = signal<Set<number>>(new Set());
+  /* ── Filter chips ───────────────────────────────────────────── */
+  readonly chips: readonly { kind: PickerKind | 'types'; label: string }[] = [
+    { kind: 'instructors', label: 'quizzes.filter_instructors' },
+    { kind: 'learners',    label: 'quizzes.filter_learners' },
+    { kind: 'courses',     label: 'quizzes.filter_courses' },
+    { kind: 'types',       label: 'quizzes.filter_type' },
+  ];
+  readonly results: readonly { value: ResultToggle; label: string }[] = [
+    { value: 'all',    label: 'common.all' },
+    { value: 'passed', label: 'quizzes.passed' },
+    { value: 'failed', label: 'quizzes.failed' },
+  ];
+  /** Which "Filter your results" list is open. */
+  readonly picker   = signal<PickerKind | null>(null);
+  /** Quiz Type modal (Figma 1981:41345). */
+  readonly typeOpen = signal(false);
 
   /**
-   * DB-27: this was a computed() over plain array fields, which are not
-   * signals, so it cached its first value and the chip counts never showed.
-   * A method re-reads them on every change detection (the component runs on
-   * events only).
+   * DB-27: plain array fields are not signals, so these are methods, read
+   * again on every change detection (the component runs on events only).
    */
-  filterPillCounts(): { instructors: number; learners: number; courses: number; types: number } {
-    return {
-      instructors: this.subInstructorIds.length,
-      learners:    this.subLearnerIds.length,
-      courses:     this.subCourseIds.length,
-      types:       this.subTypes.length,
-    };
+  chipCount(kind: PickerKind | 'types'): number {
+    switch (kind) {
+      case 'instructors': return this.subInstructorIds.length;
+      case 'learners':    return this.subLearnerIds.length;
+      case 'courses':     return this.subCourseIds.length;
+      case 'types':       return this.subTypes.length;
+    }
+  }
+
+  noChipFilter(): boolean {
+    return !this.subInstructorIds.length && !this.subLearnerIds.length && !this.subCourseIds.length && !this.subTypes.length;
+  }
+
+  /** "12 created quizzes · for 5 courses", with the locale's plural forms. */
+  plural(base: string, count: number): string {
+    return pluralKey(base, count, this.locale());
   }
 
   ngOnInit(): void {
@@ -307,28 +321,63 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/quizzes', id, 'edit']);
   }
 
-  /* ── Filter modal ────────────────────────────────────────────── */
+  /* ── Filter chips ────────────────────────────────────────────── */
 
-  openFilter(kind: 'instructors' | 'learners' | 'courses' | 'types'): void {
-    this.filter.set({ open: true, kind, query: '' });
+  openChip(kind: PickerKind | 'types'): void {
+    if (kind === 'types') { this.typeOpen.set(true); return; }
+    if (kind === 'learners') this.loadLearners();
+    this.picker.set(kind);
+  }
 
-    if (kind === 'types') {
-      this.selectedTypeSet.set(new Set(this.subTypes.map(t => QUIZ_TYPES.indexOf(t) + 1)));
-      return;
-    }
+  pickerLabel(): string {
+    const kind = this.picker();
+    return kind ? this.t.instant(`quizzes.filter_${kind}`) : '';
+  }
 
-    if (kind === 'instructors') {
-      this.selectedInstructorSet.set(new Set(this.subInstructorIds));
-    } else if (kind === 'learners') {
-      this.selectedLearnerSet.set(new Set(this.subLearnerIds));
-      this.loadLearners();
-    } else {
-      this.selectedCourseSet.set(new Set(this.subCourseIds));
+  pickerOptions(): NasFilterOption[] {
+    switch (this.picker()) {
+      case 'instructors': return this.instructors().map(i => ({ id: i.id, label: i.name }));
+      case 'learners':    return this.learners().map(l => ({ id: l.id, label: l.name }));
+      case 'courses':     return this.courses().map(c => ({ id: c.id, label: c.title }));
+      default:            return [];
     }
   }
 
-  closeFilter(): void {
-    this.filter.update(s => ({ ...s, open: false }));
+  pickerSelected(): number[] {
+    switch (this.picker()) {
+      case 'instructors': return this.subInstructorIds;
+      case 'learners':    return this.subLearnerIds;
+      case 'courses':     return this.subCourseIds;
+      default:            return [];
+    }
+  }
+
+  onPick(ids: (number | string)[]): void {
+    const chosen = ids.map(Number);
+    switch (this.picker()) {
+      case 'instructors': this.subInstructorIds = chosen; break;
+      case 'learners':    this.subLearnerIds = chosen; break;
+      case 'courses':     this.subCourseIds = chosen; break;
+    }
+    this.subPage = 1;
+    this.loadSubmissions();
+  }
+
+  typeOptions(): NasFilterOption[] {
+    return QUIZ_TYPES.map(t => ({ id: t, label: this.t.instant(`quizzes.type_long_${t}`) }));
+  }
+
+  onTypes(ids: (number | string)[]): void {
+    this.subTypes = QUIZ_TYPES.filter(t => ids.includes(t));
+    this.subPage = 1;
+    this.loadSubmissions();
+  }
+
+  /** "Show All" (Figma 1983:42584): one page of up to the API's 200 rows. */
+  showAll(): void {
+    this.subPerPage = 200;
+    this.subPage = 1;
+    this.loadSubmissions();
   }
 
   private loadLearners(): void {
@@ -348,79 +397,14 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleFilterItem(id: number): void {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') this.toggleInSet(this.selectedInstructorSet, id);
-    else if (kind === 'learners') this.toggleInSet(this.selectedLearnerSet, id);
-    else if (kind === 'courses')  this.toggleInSet(this.selectedCourseSet, id);
-    else if (kind === 'types')    this.toggleInSet(this.selectedTypeSet, id);
-  }
-
-  private toggleInSet(s: ReturnType<typeof signal<Set<number>>>, id: number): void {
-    s.update(set => {
-      const next = new Set(set);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
-
-  isFilterSelected(id: number): boolean {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') return this.selectedInstructorSet().has(id);
-    if (kind === 'learners')    return this.selectedLearnerSet().has(id);
-    if (kind === 'courses')     return this.selectedCourseSet().has(id);
-    if (kind === 'types')       return this.selectedTypeSet().has(id);
-    return false;
-  }
-
-  filterItems(): { id: number; name: string }[] {
-    const q = this.filter().query.trim().toLowerCase();
-    const kind = this.filter().kind;
-    let source: { id: number; name: string }[] = [];
-    if (kind === 'instructors') source = this.instructors();
-    else if (kind === 'learners') source = this.learners();
-    else if (kind === 'courses') source = this.courses().map(c => ({ id: c.id, name: c.title }));
-    else if (kind === 'types') source = QUIZ_TYPES.map((t, i) => ({ id: i + 1, name: this.t.instant(`quizzes.type_long_${t}`) }));
-    if (!q) return source;
-    return source.filter(x => x.name.toLowerCase().includes(q));
-  }
-
-  onFilterQuery(v: string): void {
-    this.filter.update(s => ({ ...s, query: v }));
-  }
-
-  clearFilterSelection(): void {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') this.selectedInstructorSet.set(new Set());
-    else if (kind === 'learners') this.selectedLearnerSet.set(new Set());
-    else if (kind === 'courses')  this.selectedCourseSet.set(new Set());
-    else if (kind === 'types')    this.selectedTypeSet.set(new Set());
-  }
-
-  applyFilter(): void {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') this.subInstructorIds = [...this.selectedInstructorSet()];
-    else if (kind === 'learners') this.subLearnerIds = [...this.selectedLearnerSet()];
-    else if (kind === 'courses')  this.subCourseIds  = [...this.selectedCourseSet()];
-    else if (kind === 'types')    this.subTypes      = [...this.selectedTypeSet()].sort().map(i => QUIZ_TYPES[i - 1]);
-    this.closeFilter();
-    this.subPage = 1;
-    this.loadSubmissions();
-  }
-
   clearAllFilters(): void {
     this.subInstructorIds = [];
     this.subLearnerIds = [];
     this.subCourseIds = [];
     this.subTypes = [];
-    this.selectedTypeSet.set(new Set());
-    this.selectedInstructorSet.set(new Set());
-    this.selectedLearnerSet.set(new Set());
-    this.selectedCourseSet.set(new Set());
     this.subPage = 1;
     this.loadSubmissions();
   }
-
   /* ── Helpers ────────────────────────────────────────────────── */
 
   cohortPillLabel(item: QuizListItem): string {
@@ -431,19 +415,10 @@ export class QuizzesListComponent implements OnInit, OnDestroy {
     return titles.length ? titles.join(', ') : this.t.instant('assignments.cohort_scope_specific');
   }
 
-  cohortPillTone(scope: QuizListItem['cohort_scope']): 'teal' | 'warning' {
-    return scope === 'all' ? 'teal' : 'warning';
-  }
 
   typeLabel(t: QuizType | null | undefined): string {
     return t ? this.t.instant(`quizzes.type_${t}`) : '—';
   }
 
-  statusTone(s: QuizSubmissionStatus): 'success' | 'warning' {
-    return s === 'graded' ? 'success' : 'warning';
-  }
 
-  quizStatusTone(s: QuizStatus): 'success' | 'neutral' {
-    return s === 'active' ? 'success' : 'neutral';
-  }
 }

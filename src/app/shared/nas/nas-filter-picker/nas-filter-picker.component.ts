@@ -55,6 +55,15 @@ export class NasFilterPickerComponent {
   /** The filter currently applied. */
   readonly selected  = input<readonly (number | string)[]>([]);
   readonly loading   = input(false);
+  /** Dialog title, already translated; defaults to "Filter your results". */
+  readonly title     = input<string | null>(null);
+  /** A short fixed list (Quiz Type, Figma 1981:41345) has no search box or section label. */
+  readonly searchable = input(true);
+  /**
+   * `view`: Cancel + "View results", disabled until something is ticked
+   * (Figma 1981:41345). `filter`: Clear + Filter (1986:75113).
+   */
+  readonly mode      = input<'filter' | 'view'>('filter');
   readonly apply     = output<(number | string)[]>();
   /** The quick-search text, for a parent whose options come from a server search. */
   readonly searchChange = output<string>();

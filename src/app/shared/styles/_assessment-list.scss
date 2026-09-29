@@ -1,0 +1,322 @@
+// Quizzes landing (Figma 1983:42584) and the Assignments list, which follows
+// the same frame (there is no separate Assignments list design, Q-046).
+
+// ── Header ────────────────────────────────────────────────────────────────
+.ql-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+
+  &__text { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
+}
+
+.ql-title { margin: 0; font-size: var(--nas-size-xl); font-weight: var(--nas-weight-bold); line-height: 28.8px; color: var(--nas-neutral-1000); }
+.ql-subtitle { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-neutral-750); }
+
+// ── Buttons ───────────────────────────────────────────────────────────────
+.ql-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 16.8px;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+
+  // Create Quiz / Add Assignment (36px)
+  &--primary {
+    block-size: 36px;
+    background: var(--nas-teal-1000);
+    color: var(--nas-neutral-100);
+    box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
+    &:hover { background: var(--nas-teal-900); }
+  }
+
+  // View All (33px)
+  &--outline {
+    block-size: 33px;
+    border-color: var(--nas-button-outline);
+    color: var(--nas-teal-1000);
+    &:hover { background: var(--nas-teal-100); }
+  }
+
+  // Row actions: a bare 20px icon in a 44 x 36 target
+  &--icon {
+    inline-size: 44px;
+    block-size: 36px;
+    padding: 0;
+    color: var(--nas-neutral-1000);
+    &:hover { background: var(--nas-neutral-300); }
+  }
+
+  &--danger:hover { color: var(--nas-status-red-700); }
+}
+
+// ── Sections ──────────────────────────────────────────────────────────────
+.ql-section { display: flex; flex-direction: column; gap: var(--nas-space-2); }
+.ql-attempts { display: flex; flex-direction: column; gap: var(--nas-space-4); }
+
+.ql-count-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--nas-space-3); }
+.ql-count { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-neutral-750); }
+
+// ── Table card ────────────────────────────────────────────────────────────
+.ql-card {
+  position: relative; // anchors .ql-sr-only (LAYOUT-08)
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-xl);
+  background: var(--nas-neutral-0);
+  box-shadow: 0 1px 2px 0 var(--nas-teal-1000-08);
+}
+
+.ql-table-wrap { position: relative; overflow-x: auto; }
+
+.ql-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+
+  th {
+    block-size: 45.5px;
+    padding: 12px 20px;
+    border-block-end: 1px solid var(--nas-neutral-400);
+    background: var(--nas-neutral-50);
+    font-weight: var(--nas-weight-medium);
+    text-align: start;
+    white-space: nowrap;
+    color: var(--nas-neutral-750);
+  }
+
+  td {
+    block-size: 49px;
+    padding: 0 20px;
+    border-block-start: 1px solid var(--nas-neutral-400);
+    color: var(--nas-neutral-1000);
+    white-space: nowrap;
+  }
+
+  tbody tr:first-child td { border-block-start: 0; }
+
+  &--attempts td { block-size: 53px; }
+
+  &__row { cursor: pointer; transition: background-color var(--transition-speed); }
+  &__row:hover td { background: var(--nas-teal-50); }
+
+  &__title { font-weight: var(--nas-weight-semibold); }
+  &__name { font-weight: var(--nas-weight-medium); }
+  &__muted { color: var(--nas-neutral-750) !important; }
+  &__strong { font-weight: var(--nas-weight-bold); }
+  &__date { font-size: var(--nas-size-2xs); line-height: 18px; color: var(--nas-neutral-750) !important; }
+  &__center { text-align: center !important; }
+  &__actions { inline-size: 1%; padding-inline: 20px 24px !important; text-align: end; }
+  &__actions-inner { display: inline-flex; gap: var(--nas-space-1); }
+  &__empty { padding: var(--nas-space-8) 20px !important; text-align: center; color: var(--nas-neutral-750) !important; white-space: normal !important; }
+}
+
+.ql-score {
+  font-size: var(--nas-size-s);
+  line-height: 24px;
+  color: var(--nas-neutral-1000);
+
+  &--pass { color: var(--nas-status-green-700); }
+  &--fail { color: var(--nas-status-red-700); }
+}
+
+.ql-pill {
+  display: inline-flex;
+  align-items: center;
+  max-inline-size: 220px;
+  min-block-size: 18px;
+  padding: 2px var(--nas-space-2);
+  overflow: hidden;
+  border-radius: var(--nas-radius-full);
+  font-size: var(--nas-size-2xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 14.4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--all { background: var(--nas-teal-200); color: var(--nas-teal-800); }
+  &--specific { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
+  &--pending { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
+}
+
+// ── Search + chips + result checkboxes ────────────────────────────────────
+.ql-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  max-inline-size: 689px;
+  block-size: 36px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-0);
+  color: var(--nas-neutral-700);
+
+  &:focus-within { border-color: var(--nas-teal-600); }
+
+  &__input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: var(--nas-size-xs);
+    line-height: 16.8px;
+    color: var(--nas-neutral-1000);
+    &::placeholder { color: var(--nas-neutral-700); opacity: 1; }
+  }
+}
+
+.ql-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nas-space-3) var(--nas-space-6); }
+.ql-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nas-space-2); }
+
+.ql-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  block-size: 32px;
+  padding: var(--nas-space-1) var(--nas-space-4);
+  border: 1px solid var(--nas-neutral-500);
+  border-radius: var(--nas-radius-xl);
+  background: var(--nas-essential-background);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 19.6px;
+  // Figma draws #adadae (2.2:1); neutral-750 meets AA, as on the other chips.
+  color: var(--nas-neutral-750);
+  cursor: pointer;
+
+  &:hover { border-color: var(--nas-teal-1000); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+
+  &--all { padding-inline: 40px; }
+  &--active {
+    border: 0.7px solid var(--nas-teal-1000);
+    background: var(--nas-teal-100);
+    color: var(--nas-teal-1000);
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 18px;
+    block-size: 18px;
+    padding-inline: 5px;
+    border-radius: var(--nas-radius-full);
+    background: var(--nas-teal-1000);
+    font-size: 11px;
+    line-height: 1;
+    color: var(--nas-neutral-100);
+  }
+}
+
+.ql-results { display: flex; align-items: center; gap: var(--nas-space-2); }
+
+.ql-check {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-1);
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  color: var(--nas-neutral-750);
+  cursor: pointer;
+
+  &__input { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; margin: 0; opacity: 0; cursor: pointer; }
+
+  &__box {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    inline-size: 16px;
+    block-size: 16px;
+    border: 1px solid var(--nas-neutral-500);
+    border-radius: var(--nas-radius-xs);
+    background: var(--nas-neutral-0);
+  }
+
+  &__input:checked + &__box { border-color: var(--nas-teal-1000); background: var(--nas-teal-1000); }
+  &__input:focus-visible + &__box { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+}
+
+// ── Pager (nas-pager): a rule above it, as in Figma ──────────────────────
+.ql-pager { display: block; border-block-start: 1px solid var(--nas-neutral-400); }
+
+.ql-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+// ── "View All" dialog (unchanged behaviour, Figma modal language) ────────
+.ql-modal-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block-end: var(--nas-space-3);
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-md);
+  color: var(--nas-neutral-700);
+
+  &__input { flex: 1; min-inline-size: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: var(--nas-size-xs); }
+}
+
+.ql-modal-list {
+  display: flex;
+  flex-direction: column;
+  max-block-size: 260px;
+  overflow-y: auto;
+  padding: 1px;
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-lg);
+}
+
+.ql-modal-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-3);
+  min-block-size: 37px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  font-size: var(--nas-size-xs);
+  color: var(--nas-neutral-1000);
+  cursor: pointer;
+
+  &:hover, &--selected { background: var(--nas-teal-50); }
+  input { inline-size: 16px; block-size: 16px; margin: 0; accent-color: var(--nas-teal-1000); }
+  &__course { margin-inline-start: auto; font-size: var(--nas-size-2xs); color: var(--nas-neutral-750); }
+}
+
+.ql-modal-empty { margin: 0; padding: var(--nas-space-4) var(--nas-space-3); font-size: var(--nas-size-xs); color: var(--nas-neutral-750); }
+
+// ── Phones ────────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .ql-chip--all { padding-inline: var(--nas-space-6); }
+}

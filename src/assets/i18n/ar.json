@@ -77,6 +77,7 @@
     "brand_subtitle": "نظام إدارة التعلم NAS"
   },
   "common": {
+    "show_all": "عرض الكل",
     "download_file": "تنزيل {{name}}",
     "ratio": "النسبة: {{ratio}}",
     "save": "حفظ",
@@ -323,6 +324,14 @@
     "select_to_view": "اختر دورة لعرض اختباراتها."
   },
   "assignments": {
+    "col_assignments": "المهام",
+    "count_created": {"zero":"لا توجد مهام مُنشأة","one":"مهمة واحدة مُنشأة","two":"مهمتان مُنشأتان","few":"{{count}} مهام مُنشأة","many":"{{count}} مهمةً مُنشأةً","other":"{{count}} مهمة مُنشأة"},
+    "count_courses": {"zero":"بدون دورات","one":"في دورة واحدة","two":"في دورتين","few":"في {{count}} دورات","many":"في {{count}} دورةً","other":"في {{count}} دورة"},
+    "filter_type": "النوع",
+    "sub_col_type": "النوع",
+    "result": "النتيجة",
+    "type_modal_title": "نوع المهمة",
+    "subtitle_attempts": "جميع تسليمات المتدربين للمهام عبر كل الدورات",
     "form_file": "الملف",
     "upload_file": "رفع ملف",
     "remove_file": "إزالة {{name}}",
@@ -1206,6 +1215,9 @@
     "reorder": "إعادة الترتيب"
   },
   "quizzes": {
+    "col_quizzes": "الاختبارات",
+    "count_created": {"zero":"لا توجد اختبارات مُنشأة","one":"اختبار واحد مُنشأ","two":"اختباران مُنشآن","few":"{{count}} اختبارات مُنشأة","many":"{{count}} اختبارًا مُنشأً","other":"{{count}} اختبار مُنشأ"},
+    "count_courses": {"zero":"بدون دورات","one":"في دورة واحدة","two":"في دورتين","few":"في {{count}} دورات","many":"في {{count}} دورةً","other":"في {{count}} دورة"},
     "filter_type": "النوع",
     "result": "النتيجة",
     "sub_col_type": "النوع",
@@ -2058,6 +2070,7 @@
     }
   },
   "filter_picker": {
+    "view_results": "عرض النتائج",
     "title": "تصفية النتائج",
     "clear": "مسح",
     "filter": "تصفية",

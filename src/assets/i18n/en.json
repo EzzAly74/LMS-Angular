@@ -77,6 +77,7 @@
     "brand_subtitle": "NAS Learning Management System"
   },
   "common": {
+    "show_all": "Show All",
     "download_file": "Download {{name}}",
     "ratio": "Ratio: {{ratio}}",
     "save": "Save",
@@ -323,6 +324,14 @@
     "select_to_view": "Select a course to view its exams."
   },
   "assignments": {
+    "col_assignments": "Assignments",
+    "count_created": {"one":"{{count}} created assignment","other":"{{count}} created assignments"},
+    "count_courses": {"one":"for {{count}} course","other":"for {{count}} courses"},
+    "filter_type": "Type",
+    "sub_col_type": "Type",
+    "result": "Result",
+    "type_modal_title": "Assignment Type",
+    "subtitle_attempts": "All learner assignment submissions across all courses",
     "form_file": "File",
     "upload_file": "Upload File",
     "remove_file": "Remove {{name}}",
@@ -1162,6 +1171,9 @@
     "reorder": "Reorder"
   },
   "quizzes": {
+    "col_quizzes": "Quizzes",
+    "count_created": {"one":"{{count}} created quiz","other":"{{count}} created quizzes"},
+    "count_courses": {"one":"for {{count}} course","other":"for {{count}} courses"},
     "filter_type": "Type",
     "result": "Result",
     "sub_col_type": "Type",
@@ -1982,6 +1994,7 @@
     }
   },
   "filter_picker": {
+    "view_results": "View results",
     "title": "Filter your results",
     "clear": "Clear",
     "filter": "Filter",

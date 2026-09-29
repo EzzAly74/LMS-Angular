@@ -1,4 +1,4 @@
-<p-dialog
+<p-dialog #fpDlg
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
   (onHide)="restoreFocus()"
@@ -10,18 +10,19 @@
   [closeOnEscape]="true"
   [focusOnShow]="true"
   styleClass="nas-fp"
-  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }"
-  [attr.aria-labelledby]="uid + '-title'">
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }">
   <ng-template pTemplate="headless">
     <div class="nas-fp__card" role="document">
       <header class="nas-fp__head">
-        <h2 class="nas-fp__title" [id]="uid + '-title'">{{ 'filter_picker.title' | translate }}</h2>
+        <!-- PrimeNG labels its dialog element by this id; the host attribute named nothing. -->
+        <h2 class="nas-fp__title" [id]="fpDlg.ariaLabelledBy">{{ title() ?? ('filter_picker.title' | translate) }}</h2>
         <button type="button" class="nas-fp__close" (click)="close()" [attr.aria-label]="'common.close' | translate">
           <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
         </button>
       </header>
 
       <div class="nas-fp__body">
+        @if (searchable()) {
         <label class="nas-fp__label" [for]="uid + '-search'">{{ label() }}</label>
         <div class="nas-fp__search">
           <nas-icon name="magnifying-glass" [size]="20" />
@@ -34,8 +35,9 @@
             (input)="onSearch(searchInput.value)"
             #searchInput />
         </div>
+        }
 
-        <div class="nas-fp__list" role="group" [attr.aria-labelledby]="uid + '-title'" [attr.aria-busy]="loading()">
+        <div class="nas-fp__list" [class.nas-fp__list--fit]="!searchable()" role="group" [attr.aria-labelledby]="fpDlg.ariaLabelledBy" [attr.aria-busy]="loading()">
           @if (loading()) {
             <p class="nas-fp__note">{{ 'common.loading' | translate }}</p>
           } @else {
@@ -57,13 +59,23 @@
       </div>
 
       <footer class="nas-fp__foot">
-        <button type="button" class="nas-fp__btn nas-fp__btn--ghost" (click)="clear()">
-          {{ 'filter_picker.clear' | translate }}
-        </button>
-        <button type="button" class="nas-fp__btn nas-fp__btn--primary" (click)="submit()">
-          <nas-icon name="funnel" [size]="20" />
-          <span>{{ 'filter_picker.filter' | translate }}</span>
-        </button>
+        @if (mode() === 'view') {
+          <button type="button" class="nas-fp__btn nas-fp__btn--ghost" (click)="close()">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button type="button" class="nas-fp__btn nas-fp__btn--primary" (click)="submit()" [disabled]="working().size === 0">
+            <nas-icon name="eye" [size]="20" />
+            <span>{{ 'filter_picker.view_results' | translate }}</span>
+          </button>
+        } @else {
+          <button type="button" class="nas-fp__btn nas-fp__btn--ghost" (click)="clear()">
+            {{ 'filter_picker.clear' | translate }}
+          </button>
+          <button type="button" class="nas-fp__btn nas-fp__btn--primary" (click)="submit()">
+            <nas-icon name="funnel" [size]="20" />
+            <span>{{ 'filter_picker.filter' | translate }}</span>
+          </button>
+        }
       </footer>
     </div>
   </ng-template>

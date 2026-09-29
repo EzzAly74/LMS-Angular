@@ -7,6 +7,7 @@
 export type AssignmentStatus = 'draft' | 'active';
 /** Pre / Mid / Post (D-065). */
 export type AssignmentType = 'pre' | 'mid' | 'post';
+export const ASSIGNMENT_TYPES: readonly AssignmentType[] = ['pre', 'mid', 'post'];
 export type AssignmentCohortScope = 'all' | 'specific';
 export type AssignmentQuestionType = 'mcq' | 'yes_no' | 'open' | 'reorder' | 'file';
 
@@ -127,6 +128,10 @@ export interface SubmissionListItem {
   total_score: number | null;
   max_score: number;
   score_percent: number | null;
+  /** Against the assignment's pass score; null while ungraded or without one. */
+  passed: boolean | null;
+  /** Pre / Mid / Post (D-065), the list's Type column. */
+  assignment_type: AssignmentType | null;
   feedback: string | null;
   status: SubmissionStatus;
   submitted_at: string | null;

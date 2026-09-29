@@ -3,7 +3,6 @@ import {
   Component,
   OnDestroy,
   OnInit,
-  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -17,36 +16,38 @@ import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import {
-  NasPageHeaderComponent,
-  NasStatusBadgeComponent,
-} from '../../../../shared/nas';
+import { ASSIGNMENT_TYPES } from '../../models/assignment.types';
+import type { AssignmentType } from '../../models/assignment.types';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
+import { NasFilterPickerComponent } from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
+import type { NasFilterOption } from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
+import { pluralKey } from '../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { AssignmentsApiService } from '../../services/assignments-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
 import type {
   AssignmentListItem,
   AssignmentOption,
-  AssignmentStatus,
   InstructorOption,
   SubmissionListItem,
-  SubmissionStatus,
 } from '../../models/assignment.types';
 
-type StatusToggle = 'all' | SubmissionStatus;
+/** Figma 1983:42584 "All / Passed / Failed" (D-065). */
+type ResultToggle = 'all' | 'passed' | 'failed';
 
 interface CourseOpt { id: number; title: string; }
 
-interface FilterModalState {
-  open: boolean;
-  kind: 'instructors' | 'learners' | 'courses' | null;
-  query: string;
-}
+/** The chips that open "Filter your results" (Figma 1986:75113). */
+type PickerKind = 'instructors' | 'learners' | 'courses';
 
 @Component({
   selector: 'app-assignment-list',
   standalone: true,
   imports: [
+    NasDatePipe,
     CommonModule,
     FormsModule,
     RouterLink,
@@ -55,8 +56,9 @@ interface FilterModalState {
     ConfirmDialogModule,
     ToastModule,
     TranslateModule,
-    NasPageHeaderComponent,
-    NasStatusBadgeComponent,
+    NasIconComponent,
+    NasPagerComponent,
+    NasFilterPickerComponent,
   ],
   providers: [ConfirmationService, MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,14 +66,16 @@ interface FilterModalState {
   styleUrl: './assignment-list.component.scss',
 })
 export class AssignmentListComponent implements OnInit, OnDestroy {
-  private readonly api      = inject(AssignmentsApiService);
+  private readonly api        = inject(AssignmentsApiService);
   private readonly coursesApi = inject(CoursesApiService);
-  private readonly confirm  = inject(ConfirmationService);
-  private readonly toast    = inject(MessageService);
-  private readonly router   = inject(Router);
-  private readonly t        = inject(TranslateService);
+  private readonly confirm    = inject(ConfirmationService);
+  private readonly toast      = inject(MessageService);
+  private readonly router     = inject(Router);
+  private readonly t          = inject(TranslateService);
+  /** Dates follow the UI language (D-051); Angular's date pipe was always English. */
+  protected readonly locale   = inject(LocaleService).locale;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroy$   = new Subject<void>();
   private readonly subSearch$ = new Subject<string>();
 
   readonly skeletons = [1, 2, 3, 4, 5];
@@ -88,47 +92,77 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ── Mini-table (top 5 created assignments) ──────────────────── */
+  /* ── Mini-table (top 5 created assignments) ─────────────────────── */
   readonly miniRows    = signal<AssignmentListItem[]>([]);
   readonly miniLoading = signal(true);
   readonly summary     = signal<{ assignments: number; courses: number }>({ assignments: 0, courses: 0 });
 
-  /* ── Submissions table ───────────────────────────────────────── */
+  /* ── Submissions table ──────────────────────────────────────── */
   readonly submissions        = signal<SubmissionListItem[]>([]);
   readonly submissionsTotal   = signal(0);
   readonly submissionsLoading = signal(true);
 
   subPage    = 1;
-  subPerPage = 20;
+  /** Figma 1983:42584 draws ten rows a page. */
+  subPerPage = 10;
   subSearch  = '';
-  subStatus: StatusToggle = 'all';
+  subResult: ResultToggle = 'all';
+  /** Pre / Mid / Post filter (Figma 1981:41345). */
+  subTypes: AssignmentType[] = [];
   subInstructorIds: number[] = [];
   subLearnerIds:    number[] = [];
   subCourseIds:     number[] = [];
 
-  /* ── Lookup data ─────────────────────────────────────────────── */
-  readonly instructors  = signal<InstructorOption[]>([]);
-  readonly courses      = signal<CourseOpt[]>([]);
-  readonly learners     = signal<{ id: number; name: string }[]>([]);
+  /* ── Lookup data ────────────────────────────────────────────── */
+  readonly instructors = signal<InstructorOption[]>([]);
+  readonly courses     = signal<CourseOpt[]>([]);
+  readonly learners    = signal<{ id: number; name: string }[]>([]);
 
-  /* ── "View All" modal ────────────────────────────────────────── */
+  /* ── "View All" modal ───────────────────────────────────────── */
   readonly viewAllOpen     = signal(false);
   readonly viewAllLoading  = signal(false);
   readonly viewAllItems    = signal<AssignmentOption[]>([]);
   readonly viewAllSelected = signal<number | null>(null);
   viewAllSearch = '';
 
-  /* ── Filter modal ────────────────────────────────────────────── */
-  readonly filter = signal<FilterModalState>({ open: false, kind: null, query: '' });
-  readonly selectedInstructorSet = signal<Set<number>>(new Set());
-  readonly selectedLearnerSet    = signal<Set<number>>(new Set());
-  readonly selectedCourseSet     = signal<Set<number>>(new Set());
+  /* ── Filter chips ───────────────────────────────────────────── */
+  readonly chips: readonly { kind: PickerKind | 'types'; label: string }[] = [
+    { kind: 'instructors', label: 'assignments.filter_instructors' },
+    { kind: 'learners',    label: 'assignments.filter_learners' },
+    { kind: 'courses',     label: 'assignments.filter_courses' },
+    { kind: 'types',       label: 'assignments.filter_type' },
+  ];
+  readonly results: readonly { value: ResultToggle; label: string }[] = [
+    { value: 'all',    label: 'common.all' },
+    { value: 'passed', label: 'quizzes.passed' },
+    { value: 'failed', label: 'quizzes.failed' },
+  ];
+  /** Which "Filter your results" list is open. */
+  readonly picker   = signal<PickerKind | null>(null);
+  /** Assignment Type modal (Figma 1981:41345). */
+  readonly typeOpen = signal(false);
 
-  readonly filterPillCounts = computed(() => ({
-    instructors: this.subInstructorIds.length,
-    learners:    this.subLearnerIds.length,
-    courses:     this.subCourseIds.length,
-  }));
+  /**
+   * DB-27: plain array fields are not signals, so these are methods, read
+   * again on every change detection (the component runs on events only).
+   */
+  chipCount(kind: PickerKind | 'types'): number {
+    switch (kind) {
+      case 'instructors': return this.subInstructorIds.length;
+      case 'learners':    return this.subLearnerIds.length;
+      case 'courses':     return this.subCourseIds.length;
+      case 'types':       return this.subTypes.length;
+    }
+  }
+
+  noChipFilter(): boolean {
+    return !this.subInstructorIds.length && !this.subLearnerIds.length && !this.subCourseIds.length && !this.subTypes.length;
+  }
+
+  /** "12 created assignments · for 5 courses", with the locale's plural forms. */
+  plural(base: string, count: number): string {
+    return pluralKey(base, count, this.locale());
+  }
 
   ngOnInit(): void {
     this.subSearch$
@@ -148,7 +182,7 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /* ── Loaders ─────────────────────────────────────────────────── */
+  /* ── Loaders ────────────────────────────────────────────────── */
 
   refresh(): void {
     this.loadMini();
@@ -176,7 +210,7 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     this.api.summary().subscribe({
       next: res => this.summary.set({
         assignments: res.result.assignments_count,
-        courses:     res.result.courses_count,
+        courses: res.result.courses_count,
       }),
     });
   }
@@ -187,7 +221,8 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
       page: this.subPage,
       per_page: this.subPerPage,
       ...(this.subSearch ? { search: this.subSearch } : {}),
-      ...(this.subStatus !== 'all' ? { status: this.subStatus } : {}),
+      ...(this.subResult !== 'all' ? { result: this.subResult } : {}),
+      ...(this.subTypes.length ? { types: [...this.subTypes] } : {}),
       ...(this.subInstructorIds.length ? { instructor_ids: this.subInstructorIds } : {}),
       ...(this.subLearnerIds.length    ? { learner_ids:    this.subLearnerIds    } : {}),
       ...(this.subCourseIds.length     ? { course_ids:     this.subCourseIds     } : {}),
@@ -205,8 +240,8 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
 
   onSubmissionSearch(v: string): void { this.subSearch$.next(v); }
 
-  onStatus(s: StatusToggle): void {
-    this.subStatus = s;
+  onResult(s: ResultToggle): void {
+    this.subResult = s;
     this.subPage = 1;
     this.loadSubmissions();
   }
@@ -286,23 +321,63 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/assignments', id, 'edit']);
   }
 
-  /* ── Filter modal ────────────────────────────────────────────── */
+  /* ── Filter chips ────────────────────────────────────────────── */
 
-  openFilter(kind: 'instructors' | 'learners' | 'courses'): void {
-    this.filter.set({ open: true, kind, query: '' });
+  openChip(kind: PickerKind | 'types'): void {
+    if (kind === 'types') { this.typeOpen.set(true); return; }
+    if (kind === 'learners') this.loadLearners();
+    this.picker.set(kind);
+  }
 
-    if (kind === 'instructors') {
-      this.selectedInstructorSet.set(new Set(this.subInstructorIds));
-    } else if (kind === 'learners') {
-      this.selectedLearnerSet.set(new Set(this.subLearnerIds));
-      this.loadLearners();
-    } else {
-      this.selectedCourseSet.set(new Set(this.subCourseIds));
+  pickerLabel(): string {
+    const kind = this.picker();
+    return kind ? this.t.instant(`assignments.filter_${kind}`) : '';
+  }
+
+  pickerOptions(): NasFilterOption[] {
+    switch (this.picker()) {
+      case 'instructors': return this.instructors().map(i => ({ id: i.id, label: i.name }));
+      case 'learners':    return this.learners().map(l => ({ id: l.id, label: l.name }));
+      case 'courses':     return this.courses().map(c => ({ id: c.id, label: c.title }));
+      default:            return [];
     }
   }
 
-  closeFilter(): void {
-    this.filter.update(s => ({ ...s, open: false }));
+  pickerSelected(): number[] {
+    switch (this.picker()) {
+      case 'instructors': return this.subInstructorIds;
+      case 'learners':    return this.subLearnerIds;
+      case 'courses':     return this.subCourseIds;
+      default:            return [];
+    }
+  }
+
+  onPick(ids: (number | string)[]): void {
+    const chosen = ids.map(Number);
+    switch (this.picker()) {
+      case 'instructors': this.subInstructorIds = chosen; break;
+      case 'learners':    this.subLearnerIds = chosen; break;
+      case 'courses':     this.subCourseIds = chosen; break;
+    }
+    this.subPage = 1;
+    this.loadSubmissions();
+  }
+
+  typeOptions(): NasFilterOption[] {
+    return ASSIGNMENT_TYPES.map(t => ({ id: t, label: this.t.instant(`quizzes.type_long_${t}`) }));
+  }
+
+  onTypes(ids: (number | string)[]): void {
+    this.subTypes = ASSIGNMENT_TYPES.filter(t => ids.includes(t));
+    this.subPage = 1;
+    this.loadSubmissions();
+  }
+
+  /** "Show All" (Figma 1983:42584): one page of up to the API's 200 rows. */
+  showAll(): void {
+    this.subPerPage = 200;
+    this.subPage = 1;
+    this.loadSubmissions();
   }
 
   private loadLearners(): void {
@@ -322,73 +397,15 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleFilterItem(id: number): void {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') this.toggleInSet(this.selectedInstructorSet, id);
-    else if (kind === 'learners') this.toggleInSet(this.selectedLearnerSet, id);
-    else if (kind === 'courses')  this.toggleInSet(this.selectedCourseSet, id);
-  }
-
-  private toggleInSet(s: ReturnType<typeof signal<Set<number>>>, id: number): void {
-    s.update(set => {
-      const next = new Set(set);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
-
-  isFilterSelected(id: number): boolean {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') return this.selectedInstructorSet().has(id);
-    if (kind === 'learners')    return this.selectedLearnerSet().has(id);
-    if (kind === 'courses')     return this.selectedCourseSet().has(id);
-    return false;
-  }
-
-  filterItems(): { id: number; name: string }[] {
-    const q = this.filter().query.trim().toLowerCase();
-    const kind = this.filter().kind;
-    let source: { id: number; name: string }[] = [];
-    if (kind === 'instructors') source = this.instructors();
-    else if (kind === 'learners') source = this.learners();
-    else if (kind === 'courses') source = this.courses().map(c => ({ id: c.id, name: c.title }));
-    if (!q) return source;
-    return source.filter(x => x.name.toLowerCase().includes(q));
-  }
-
-  onFilterQuery(v: string): void {
-    this.filter.update(s => ({ ...s, query: v }));
-  }
-
-  clearFilterSelection(): void {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') this.selectedInstructorSet.set(new Set());
-    else if (kind === 'learners') this.selectedLearnerSet.set(new Set());
-    else if (kind === 'courses')  this.selectedCourseSet.set(new Set());
-  }
-
-  applyFilter(): void {
-    const kind = this.filter().kind;
-    if (kind === 'instructors') this.subInstructorIds = [...this.selectedInstructorSet()];
-    else if (kind === 'learners') this.subLearnerIds = [...this.selectedLearnerSet()];
-    else if (kind === 'courses')  this.subCourseIds  = [...this.selectedCourseSet()];
-    this.closeFilter();
-    this.subPage = 1;
-    this.loadSubmissions();
-  }
-
   clearAllFilters(): void {
     this.subInstructorIds = [];
     this.subLearnerIds = [];
     this.subCourseIds = [];
-    this.selectedInstructorSet.set(new Set());
-    this.selectedLearnerSet.set(new Set());
-    this.selectedCourseSet.set(new Set());
+    this.subTypes = [];
     this.subPage = 1;
     this.loadSubmissions();
   }
-
-  /* ── Helpers ─────────────────────────────────────────────────── */
+  /* ── Helpers ────────────────────────────────────────────────── */
 
   cohortPillLabel(item: AssignmentListItem): string {
     if (item.cohort_scope === 'all') return this.t.instant('assignments.cohort_scope_all');
@@ -398,15 +415,10 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     return titles.length ? titles.join(', ') : this.t.instant('assignments.cohort_scope_specific');
   }
 
-  cohortPillTone(scope: AssignmentListItem['cohort_scope']): 'teal' | 'warning' {
-    return scope === 'all' ? 'teal' : 'warning';
+
+  typeLabel(t: AssignmentType | null | undefined): string {
+    return t ? this.t.instant(`quizzes.type_${t}`) : '—';
   }
 
-  statusTone(s: SubmissionStatus): 'success' | 'warning' {
-    return s === 'graded' ? 'success' : 'warning';
-  }
 
-  assignmentStatusTone(s: AssignmentStatus): 'success' | 'neutral' {
-    return s === 'active' ? 'success' : 'neutral';
-  }
 }

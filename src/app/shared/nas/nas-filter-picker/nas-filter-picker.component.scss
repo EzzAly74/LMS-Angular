@@ -101,6 +101,9 @@
   border: 1px solid var(--nas-color-border);
   border-radius: var(--nas-radius-lg);
   scrollbar-width: thin;
+
+  // A short fixed list (Quiz Type) is as tall as its rows.
+  &--fit { block-size: auto; max-block-size: 224px; }
 }
 
 .nas-fp__option {
@@ -208,7 +211,13 @@
   color: var(--nas-neutral-100);
   box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
 
-  &:hover { background: var(--nas-teal-950); }
+  &:hover:not(:disabled) { background: var(--nas-teal-950); }
+  &:disabled {
+    background: var(--nas-button-disabled-bg);
+    color: var(--nas-button-disabled-text);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
 }
 
 // PrimeNG's dialog sets its own font-family, so without this the dialog
