@@ -124,3 +124,163 @@
   .fd__head, .fd__foot { padding-inline: var(--nas-space-4); }
   .fd__body { padding-inline: var(--nas-space-4); }
 }
+
+// Status spans both columns (Figma 2430:135164).
+.fd__field--wide { grid-column: 1 / -1; }
+
+:host ::ng-deep .fd__dropdown.p-multiselect,
+::ng-deep .fd .fd__dropdown.p-multiselect {
+  .p-multiselect-label { font-size: var(--nas-size-xs); padding-block: 12px; }
+  .p-multiselect-label.p-placeholder { color: var(--nas-neutral-750); }
+}
+
+// Multi-select list - Figma 2430:136038: a 40 px search row with a clear
+// button, "N selected · Clear all", then 41 px checkbox rows. The panel lives
+// in <body> (appendTo), so these rules are global and keyed on its class.
+::ng-deep .fd-ms-panel.p-multiselect-panel {
+  // As wide as its field (Figma 224 px): the overlay wrapper carries the
+  // field width as min-width, and a zero preferred width lets the panel
+  // take exactly that instead of growing with the search input.
+  inline-size: 0;
+  min-inline-size: 100%;
+  overflow: hidden;
+  margin-block-start: 4px;
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-lg, 12px);
+  background: var(--nas-neutral-200);
+  box-shadow: 0 5px 10px 0 rgba(148, 148, 148, 0.1), 0 18px 18px 0 rgba(148, 148, 148, 0.09),
+    0 41px 25px 0 rgba(148, 148, 148, 0.05);
+  font-family: var(--nas-font);
+
+  .p-multiselect-header {
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  // The search row: the header's own filter box, then the clear button.
+  .p-multiselect-filter-container {
+    order: 0;
+    // Its own full line: the summary below is flex-basis 100% too, and a
+    // shared line squeezed the search box to nothing.
+    flex: 1 0 100%;
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .p-multiselect-filter {
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: 40px;
+    padding-block: 0;
+    padding-inline: 26px 32px;
+    border: 1px solid var(--nas-neutral-500);
+    border-radius: var(--nas-radius-lg, 12px) var(--nas-radius-lg, 12px) 0 0;
+    background: var(--nas-neutral-0);
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-strong);
+
+    // neutral-750, not Figma's #8c8c8c (3.4:1), for AA (FG-47).
+    &::placeholder { color: var(--nas-neutral-750); }
+    &:focus { border-color: var(--nas-teal-700); box-shadow: none; }
+  }
+
+  .p-multiselect-filter-icon {
+    inset-inline-start: 10px;
+    inset-inline-end: auto;
+    inline-size: 12px;
+    block-size: 12px;
+    margin-block-start: -6px;
+    color: var(--nas-neutral-1000);
+  }
+
+  // Figma draws no close button; Escape and a click outside close the list.
+  .p-multiselect-close { display: none; }
+
+  .fd-ms-clear-search {
+    order: 1;
+    position: absolute;
+    inset-block-start: 11px;
+    inset-inline-end: 10px;
+    // Above the search input, which comes later in the DOM.
+    z-index: 1;
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+
+    &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 1px; }
+  }
+
+  .fd-ms-summary {
+    order: 2;
+    flex: 1 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nas-space-2);
+    padding: var(--nas-space-2) var(--nas-space-4);
+    color: var(--nas-teal-800);
+    font-size: var(--nas-size-2xs);
+    line-height: 14.4px;
+  }
+
+  .fd-ms-clear-all {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-medium);
+    line-height: 16.8px;
+    color: var(--nas-teal-800);
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:disabled { cursor: default; }
+    &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+  }
+
+  .p-multiselect-items-wrapper { max-block-size: 164px; }
+
+  .p-multiselect-items { padding: 0; }
+
+  .p-multiselect-item {
+    gap: var(--nas-space-1);
+    margin: 0;
+    padding: 12px var(--nas-space-4);
+    border: 0;
+    border-block-end: 1px solid var(--nas-neutral-400);
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--nas-size-xs);
+    font-weight: var(--nas-weight-medium);
+    line-height: 16.8px;
+    color: var(--nas-neutral-1000);
+
+    &:last-child { border-block-end: 0; }
+    &.p-highlight { background: transparent; color: var(--nas-neutral-1000); }
+    &:not(.p-highlight):not(.p-disabled):hover,
+    &.p-focus { background: var(--nas-neutral-300); }
+
+    .p-checkbox { inline-size: 16px; block-size: 16px; margin-inline-end: 0; }
+    .p-checkbox .p-checkbox-box {
+      inline-size: 16px;
+      block-size: 16px;
+      border: 1px solid var(--nas-neutral-500);
+      border-radius: 4px;
+      background: var(--nas-neutral-0);
+    }
+    .p-checkbox .p-checkbox-box.p-highlight { border-color: var(--nas-teal-1000); background: var(--nas-teal-1000); }
+    .p-checkbox .p-checkbox-icon { inline-size: 10px; block-size: 10px; color: var(--nas-neutral-0); }
+  }
+
+  .p-multiselect-empty-message { padding: 12px var(--nas-space-4); font-size: var(--nas-size-xs); color: var(--nas-neutral-750); }
+}
+
+// The clear button is positioned against the header.
+::ng-deep .fd-ms-panel .p-multiselect-header { position: relative; }

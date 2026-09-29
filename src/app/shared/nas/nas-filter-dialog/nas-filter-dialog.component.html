@@ -20,12 +20,13 @@
 
       <div class="fd__body">
         @for (f of fields(); track f.key) {
-          <div class="fd__field">
+          <div class="fd__field" [class.fd__field--wide]="f.wide">
             <span class="fd__label" [id]="uid + '-' + f.key">{{ f.label }}</span>
             @if (f.multiple) {
-            <p-multiSelect
+            <p-multiSelect #ms
               (onPanelShow)="overlayOpen.set(true)"
-              (onPanelHide)="overlayOpen.set(false)"
+              (onPanelHide)="overlayOpen.set(false); f.remote && onRemoteFilter(f.key, '')"
+              (onFilter)="f.remote && onRemoteFilter(f.key, $event.filter)"
               [ariaLabelledBy]="uid + '-' + f.key"
               [options]="f.options"
               optionLabel="label"
@@ -36,13 +37,32 @@
               [filter]="true"
               filterBy="label"
               [showToggleAll]="false"
+              [resetFilterOnHide]="true"
+              [filterPlaceHolder]="f.searchPlaceholder ?? ('common.search' | translate)"
+              [ariaFilterLabel]="f.searchPlaceholder ?? ('common.search' | translate)"
               [maxSelectedLabels]="1"
               [selectedItemsLabel]="'common.n_selected' | translate"
               [placeholder]="f.placeholder"
-              [emptyMessage]="'common.no_options' | translate"
+              [emptyMessage]="(f.remote ? 'common.type_to_search' : 'common.no_options') | translate"
               [emptyFilterMessage]="'common.no_results' | translate"
               appendTo="body"
-              styleClass="fd__dropdown" />
+              panelStyleClass="fd-ms-panel"
+              styleClass="fd__dropdown">
+              <!-- Figma 2430:134497: a clear-search button in the search row and
+                   "N selected · Clear all" under it (ordered by the panel CSS). -->
+              <ng-template pTemplate="header">
+                @if (ms._filterValue()) {
+                  <button type="button" class="fd-ms-clear-search" (click)="ms.resetFilter(); f.remote && onRemoteFilter(f.key, '')"
+                    [attr.aria-label]="'common.clear_search' | translate">
+                    <img src="assets/icons/figma/x-circle-fill-14.svg" width="18" height="18" alt="" />
+                  </button>
+                }
+                <div class="fd-ms-summary">
+                  <span aria-live="polite">{{ 'common.count_selected' | translate: { count: count(f.key) } }}</span>
+                  <button type="button" class="fd-ms-clear-all" [disabled]="!count(f.key)" (click)="set(f.key, null)">{{ 'common.clear_all' | translate }}</button>
+                </div>
+              </ng-template>
+            </p-multiSelect>
             } @else {
             <p-dropdown
               (onShow)="overlayOpen.set(true)"

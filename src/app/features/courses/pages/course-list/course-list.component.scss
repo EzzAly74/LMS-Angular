@@ -1,146 +1,208 @@
-/* ── CTA button ──────────────────────────────────────────────────── */
-.nas-cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nas-space-2);
-  background: var(--nas-essential-cta);
-  color: var(--nas-color-text-onDark);
-  border: none;
-  height: 36px;
-  padding: 0 var(--nas-space-4);
-  border-radius: var(--nas-radius-md);
-  font-size: var(--nas-size-2xs);
-  font-weight: var(--nas-weight-medium);
-  cursor: pointer;
-  transition: background var(--transition-speed);
-  box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.12),
-    0 2px 5px rgba(140, 140, 140, 0.08);
-  &:hover { background: var(--nas-teal-900); }
-  i { font-size: 14px; }
-}
+// All Courses - Figma 2393:123975. The toolbar, table card, pager and states
+// are the Course Details list styles; this file adds the page head and the
+// course-specific cells.
+@use '../course-detail/styles/list';
 
-/* ── Course cell ────────────────────────────────────────────────── */
-.course-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
+.cc-page { display: flex; flex-direction: column; gap: var(--nas-space-6); }
 
-.course-cell__top {
+// Toolbar sits 24 px under the head, the table 16 px under the toolbar.
+.cc-page > .cl-toolbar { margin-block-end: calc(var(--nas-space-4) - var(--nas-space-6)); }
+
+// ── Head (2556:151347) ────────────────────────────────────────────────────
+.cc-head {
   display: flex;
-  align-items: center;
-  gap: var(--nas-space-2);
   flex-wrap: wrap;
-}
-
-.course-cell__title {
-  font-weight: var(--nas-weight-semibold);
-  color: var(--nas-color-text-strong);
-  font-size: var(--nas-size-xs);
-  line-height: 21px;
-}
-
-.course-cell__date {
-  font-size: 12px;
-  color: var(--nas-color-text-muted);
-  line-height: 18px;
-}
-
-.course-cell__plain {
-  color: var(--nas-color-text-strong);
-  font-size: var(--nas-size-xs);
-}
-
-/* ── Evaluation ─────────────────────────────────────────────────── */
-.evaluation-cell {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  color: var(--nas-color-text-strong);
-  font-size: var(--nas-size-xs);
+  justify-content: space-between;
+  gap: var(--nas-space-4);
 
-  img { flex-shrink: 0; display: block; }
-
-  &--empty { color: var(--nas-color-text-muted); }
+  &__text { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
 }
 
-/* ── Row action ──────────────────────────────────────────────────── */
-.row-action-btn {
-  background: transparent;
-  border: none;
-  border-radius: var(--nas-radius-sm);
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  color: var(--nas-color-text-muted);
+.cc-title { margin: 0; font-size: var(--nas-size-xl); font-weight: var(--nas-weight-bold); line-height: 28.8px; color: var(--nas-neutral-1000); }
+.cc-subtitle { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-neutral-750); }
+
+// New Course: 180 x 44, teal-1000.
+.cc-new {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--transition-speed), color var(--transition-speed);
+  gap: var(--nas-space-2);
+  min-inline-size: 180px;
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 16.8px;
+  cursor: pointer;
+  box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
+  transition: background-color var(--transition-speed);
 
-  &:hover {
-    background: var(--nas-neutral-200);
-    color: var(--nas-color-text-strong);
-  }
-  i { font-size: 14px; }
+  &:hover { background: var(--nas-teal-900); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
 }
 
-/* ── Overlay row menu ─────────────────────────────────────────────── */
+// ── Table (2556:151361 / 2556:151385) ─────────────────────────────────────
+.cc-table {
+  min-inline-size: 1080px;
+  table-layout: fixed;
+
+  td {
+    block-size: auto;
+    padding-block: 12.5px;
+  }
+}
+
+// Figma column widths on the 1130 px table (2556:151361); they scale with it.
+.cc-w-course     { inline-size: 24.4%; }
+.cc-w-category   { inline-size: 10.8%; }
+.cc-w-instructor { inline-size: 13.4%; }
+.cc-w-cohorts    { inline-size: 7.9%; }
+.cc-w-enrolled   { inline-size: 8.5%; }
+.cc-w-completion { inline-size: 12.4%; }
+.cc-w-evaluation { inline-size: 8.8%; }
+.cc-w-status     { inline-size: 10.3%; }
+.cc-w-actions    { inline-size: 6.4%; }
+
+.cc-row { cursor: pointer; }
+
+.cc-strong { color: var(--nas-neutral-1000); }
+
+
+.cc-course {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+
+  &__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--nas-space-2);
+    row-gap: var(--nas-space-2);
+  }
+
+  &__title {
+    font-weight: var(--nas-weight-semibold);
+    line-height: 21px;
+    color: var(--nas-neutral-1000);
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
+  }
+
+  &__date {
+    font-size: var(--nas-size-2xs);
+    line-height: 18px;
+    color: var(--nas-neutral-750);
+  }
+}
+
+// The Figma pills are 18 px high with 8 px sides.
+.cc-badge ::ng-deep .nas-badge { padding: 2px var(--nas-space-2); }
+
+// Completion: a 71 px bar, 8 px gap, the value in 12 px grey.
+.cc-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  inline-size: 100px;
+
+  &__track {
+    flex: 1 1 71px;
+    block-size: 6px;
+    border-radius: 999px;
+    background: var(--nas-neutral-300);
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    block-size: 100%;
+    min-inline-size: 1px;
+    border-radius: inherit;
+
+    &--full { background: var(--nas-status-green-500); }
+    &--mid  { background: var(--nas-status-operational-2); }
+    &--low  { background: var(--nas-status-red-500); }
+  }
+
+  &__value {
+    flex-shrink: 0;
+    font-size: var(--nas-size-2xs);
+    line-height: 18px;
+    color: var(--nas-neutral-750);
+  }
+}
+
+.cc-score {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-1);
+  color: var(--nas-neutral-750);
+  white-space: nowrap;
+
+  img { display: block; flex-shrink: 0; }
+
+  // Below the pass mark (Figma "2.1" in red); red-700 keeps 14 px text at AA.
+  &--fail { color: var(--nas-status-red-700); }
+}
+
+// Row actions: a 16 px "…" in a 32 px button (Figma "Button - Course actions").
+.cc-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--nas-neutral-1000);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-300); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
+// The pager row is 92 px in Figma (24 px above and below the 44 px buttons).
+.cc-pager { padding: 0; }
+
+:host ::ng-deep .cc-skel-gap { margin-block-start: 6px; }
+
+// ── Row actions menu ──────────────────────────────────────────────────────
 .row-menu {
   display: flex;
   flex-direction: column;
-  min-width: 180px;
+  min-inline-size: 180px;
 
   &__item {
     display: flex;
     align-items: center;
     gap: var(--nas-space-3);
-    background: transparent;
-    border: none;
     padding: var(--nas-space-3) var(--nas-space-4);
-    cursor: pointer;
-    color: var(--nas-color-text-body);
-    font-size: var(--nas-size-2xs);
+    border: 0;
     border-radius: var(--nas-radius-sm);
+    background: transparent;
+    font: inherit;
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-body);
     text-align: start;
+    cursor: pointer;
+
     &:hover { background: var(--nas-neutral-200); }
-    i { font-size: 14px; color: var(--nas-color-text-muted); }
+    &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: -2px; }
   }
 }
 
-/* ── Edit Course dialog: skeleton + checkbox row ──────────────────── */
-.edit-dialog-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: var(--nas-space-3);
-
-  &__line {
-    height: 44px;
-    border-radius: var(--nas-radius-md);
-    background: linear-gradient(90deg,
-      var(--nas-neutral-200), var(--nas-neutral-300), var(--nas-neutral-200));
-    background-size: 200% 100%;
-    animation: edit-skel 1.4s linear infinite;
-
-    &:nth-child(1) { width: 100%; }
-    &:nth-child(2) { width: 100%; }
-    &:nth-child(3) { width: 70%; }
-    &:nth-child(4) { width: 90%; }
-  }
-}
-@keyframes edit-skel {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.nas-checkbox-row {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nas-space-2);
-  font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-strong);
-  cursor: pointer;
-  user-select: none;
+@media (max-width: 767px) {
+  .cc-new { min-inline-size: 0; }
 }

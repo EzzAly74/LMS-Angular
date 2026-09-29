@@ -43,6 +43,10 @@ export interface NasFilterField {
    * the list so its label still shows).
    */
   readonly remote?: boolean;
+  /** Spans both columns (Figma 2430:135164, Status). */
+  readonly wide?: boolean;
+  /** Placeholder of a multi-select's search box, already translated ("Search courses..."). */
+  readonly searchPlaceholder?: string;
 }
 
 /** One field's choice: a value, several (multiple fields), or nothing. */
@@ -120,6 +124,12 @@ export class NasFilterDialogComponent {
 
   protected value(key: string): NasFilterSelection {
     return this.working()[key] ?? null;
+  }
+
+  /** How many choices a multi-select holds. */
+  protected count(key: string): number {
+    const v = this.working()[key];
+    return Array.isArray(v) ? v.length : v === null || v === undefined ? 0 : 1;
   }
 
   protected set(key: string, value: NasFilterSelection): void {
