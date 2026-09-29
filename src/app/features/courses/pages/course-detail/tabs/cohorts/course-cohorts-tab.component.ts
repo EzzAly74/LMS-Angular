@@ -8,14 +8,10 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
 import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
-import { MessageService } from 'primeng/api';
 import {
-  NasDatepickerComponent,
   NasIconComponent,
   NasStatusBadgeComponent,
   CohortAttendanceDrawerComponent,
@@ -27,12 +23,11 @@ import {
   NasFilterValues,
 } from '../../../../../../shared/nas/nas-filter-dialog/nas-filter-dialog.component';
 import { NasDatePipe } from '../../../../../../shared/pipes/nas-date.pipes';
-import { CoursesApiService } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
 import { pluralKey } from '../../../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../../../core/utils/with-locale-reload';
-import type { Cohort, CohortPayload, CohortStatus, CourseDetail } from '../../../../../../core/models/course.types';
+import type { Cohort, CourseDetail } from '../../../../../../core/models/course.types';
 import { CohortLearnersDialogComponent } from './cohort-learners-dialog.component';
 import { NewCohortDialogComponent } from './new-cohort-dialog.component';
 
@@ -47,9 +42,9 @@ type SortKey = 'name' | 'status';
  * list endpoint returns them all. "Enrolled / Capacity" opens the cohort's
  * learners. The row menu is Edit Cohort and View Attendance, as drawn.
  *
- * The Add / Edit Cohort dialog is the existing one (Figma 332:9988 /
- * 332:10708), moved here unchanged; the redesigned New Cohort modal with the
- * schedule upload (2393:123167) is D2 step 2.
+ * Add and Edit Cohort share the New Cohort modal with the schedule upload
+ * (Figma 2393:123167): editing renames, changes the capacity and adds only
+ * the new sessions of an uploaded sheet.
  */
 @Component({
   selector: 'app-course-cohorts-tab',
@@ -58,12 +53,8 @@ type SortKey = 'name' | 'status';
     NewCohortDialogComponent,
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
     TranslateModule,
-    DialogModule,
-    DropdownModule,
     OverlayPanelModule,
-    NasDatepickerComponent,
     NasIconComponent,
     NasStatusBadgeComponent,
     CohortAttendanceDrawerComponent,
@@ -76,10 +67,7 @@ type SortKey = 'name' | 'status';
   styleUrl: './course-cohorts-tab.component.scss',
 })
 export class CourseCohortsTabComponent {
-  private readonly coursesApi = inject(CoursesApiService);
   private readonly enums = inject(EnumsService);
-  private readonly fb = inject(FormBuilder);
-  private readonly toast = inject(MessageService);
   private readonly t = inject(TranslateService);
   protected readonly locale = inject(LocaleService).locale;
 
@@ -192,124 +180,20 @@ export class CourseCohortsTabComponent {
     this.showAttendance.set(true);
   }
 
-  // ── Add / Edit Cohort dialog (moved unchanged from the course page) ───
-  readonly showCohort = signal(false);
-  readonly cohortEditMode = signal(false);
-  readonly saving = signal(false);
-
-  /**
-   * Bilingual name + capacity + status + dates per Figma 332:9988 (new) and
-   * 332:10708 (edit).
-   */
-  cohortForm = this.fb.group({
-    name_en: ['', [Validators.required, Validators.maxLength(255)]],
-    name_ar: ['', [Validators.required, Validators.maxLength(255)]],
-    capacity: [null as number | null, [Validators.min(1), Validators.max(10000)]],
-    status: [null as number | null],
-    // Planned session count (Figma 332:10708). Defaults from the course,
-    // editable per cohort; once this many sessions are held the cohort
-    // completes (and raising it re-opens an already-completed cohort).
-    number_of_sessions: [null as number | null, [Validators.required, Validators.min(1), Validators.max(1000)]],
-    start_date: [null as Date | null, Validators.required],
-    end_date: [null as Date | null, Validators.required],
-    // Average session length in hours (Figma 332:9988). Drives the live
-    // attendance-window length for this cohort's sessions.
-    avg_session_time: [null as number | null, [Validators.min(0.25), Validators.max(24)]],
-  });
-
-  /** Cohort-status dropdown - driven by the backend `cohort_status` enum. */
-  cohortStatusOpts = this.enums.options('cohort_status');
-
-  /**
-   * The only two statuses an admin may pick (Figma 332:10708): `scheduled`
-   * and `open_for_enrollment`. `active` / `completed` follow the dates and
-   * `inactive` is set elsewhere.
-   */
-  cohortStatusDropdownOpts = computed(() =>
-    this.cohortStatusOpts().filter(o => o.code === 'scheduled' || o.code === 'open_for_enrollment'),
-  );
-
-  enumCode(name: 'cohort_status', id: number | null | undefined): string | null {
-    if (id === null || id === undefined) return null;
-    return this.enums.codeForId(name, id);
-  }
-
-  /** "Add Cohort" opens the New Cohort modal with the schedule upload (Figma 2393:123167, D-062). */
+  // ── Add / Edit Cohort: one dialog (Figma 2393:123167; Edit must match New) ──
   readonly newCohortOpen = signal(false);
+  /** The cohort being edited; null while adding. */
+  readonly editCohort = signal<Cohort | null>(null);
 
   openAddCohort(): void {
+    this.editCohort.set(null);
     this.newCohortOpen.set(true);
   }
 
   openEditCohort(cohort: Cohort, overlay: OverlayPanel): void {
     overlay.hide();
-    this.cohortEditMode.set(true);
-    this.activeCohort.set(cohort);
-    this.cohortForm.reset({
-      name_en: cohort.name_en ?? cohort.name ?? '',
-      name_ar: cohort.name_ar ?? cohort.name ?? '',
-      capacity: cohort.capacity ?? null,
-      // The dropdown offers the two manual choices; anything else maps back
-      // to `scheduled`.
-      status: this.enums.idForCode('cohort_status', cohort.status === 'open_for_enrollment' ? 'open_for_enrollment' : 'scheduled'),
-      number_of_sessions: cohort.number_of_sessions ?? this.course().number_of_sessions ?? null,
-      start_date: cohort.start_date ? new Date(cohort.start_date) : null,
-      end_date: cohort.end_date ? new Date(cohort.end_date) : null,
-      avg_session_time: cohort.avg_session_time ?? null,
-    });
-    this.showCohort.set(true);
-  }
-
-  submitCohort(): void {
-    if (this.cohortForm.invalid) {
-      this.cohortForm.markAllAsTouched();
-      return;
-    }
-    const id = this.courseId();
-    this.saving.set(true);
-    const v = this.cohortForm.getRawValue();
-    const statusCode = this.enums.codeForId('cohort_status', v.status ?? null) as CohortStatus | null;
-    const body: CohortPayload = {
-      name: { en: (v.name_en ?? '').trim(), ar: (v.name_ar ?? '').trim() },
-      start_date: v.start_date ? this.toIso(v.start_date) : null,
-      end_date: v.end_date ? this.toIso(v.end_date) : null,
-      capacity: v.capacity ?? null,
-      status: statusCode ?? null,
-      number_of_sessions: v.number_of_sessions ?? null,
-      avg_session_time: v.avg_session_time ?? null,
-    };
-
-    const editing = this.cohortEditMode() && this.activeCohort();
-    const req = editing
-      ? this.coursesApi.updateCohort(id, this.activeCohort()!.id, body)
-      : this.coursesApi.createCohort(id, body);
-
-    req.subscribe({
-      next: () => {
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant(editing ? 'course_detail_toasts.cohort_updated' : 'course_detail_toasts.cohort_created'),
-        });
-        this.saving.set(false);
-        this.showCohort.set(false);
-        this.changed.emit();
-      },
-      error: () => this.saving.set(false),
-    });
-  }
-
-  adjustCohortCapacity(delta: number): void {
-    const current = Number(this.cohortForm.value.capacity ?? 0);
-    this.cohortForm.patchValue({ capacity: Math.max(1, Math.min(10000, current + delta)) });
-  }
-
-  adjustCohortSessions(delta: number): void {
-    const current = Number(this.cohortForm.value.number_of_sessions ?? 0);
-    this.cohortForm.patchValue({ number_of_sessions: Math.max(1, Math.min(1000, current + delta)) });
-  }
-
-  private toIso(d: Date): string {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
+    this.editCohort.set(cohort);
+    this.newCohortOpen.set(true);
   }
 
   // ── Status chip ────────────────────────────────────────────────────────

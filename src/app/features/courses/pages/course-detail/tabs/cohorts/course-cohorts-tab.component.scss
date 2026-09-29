@@ -4,30 +4,6 @@
 @use '../../styles/list';
 @use '../../styles/form';
 
-.cohort-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--nas-space-4);
-
-  .required {
-    color: var(--nas-status-red-500, #dc2626);
-  }
-}
-
-.cohort-form__hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px 0 0;
-  font-size: var(--nas-size-3xs);
-  color: var(--nas-color-accent-600, #0891b2);
-
-  i {
-    font-size: 14px;
-    color: currentColor;
-  }
-}
-
 // ── Cohort list - Figma 2266:129041 ────────────────────────────────────
 .ct-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--nas-space-4); flex-wrap: wrap; }
 

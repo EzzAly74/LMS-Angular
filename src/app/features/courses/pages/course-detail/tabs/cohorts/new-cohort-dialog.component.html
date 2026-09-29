@@ -1,8 +1,7 @@
-<!-- New Cohort - Figma 2393:123167 / 2393:122292 -->
+<!-- New Cohort - Figma 2393:123167 / 2393:122292; Edit Cohort is the same dialog -->
 <p-dialog
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
-  (onShow)="onShow()"
   [modal]="true"
   [closable]="!saving()"
   [closeOnEscape]="!saving()"
@@ -10,7 +9,7 @@
   [resizable]="false"
   styleClass="nas-dialog nc-dialog"
   [style]="{ width: '512px', maxWidth: '95vw' }"
-  [header]="'course_detail.new_cohort' | translate">
+  [header]="(editing() ? 'course_detail.edit_cohort' : 'course_detail.new_cohort') | translate">
 
   <form id="nc-form" class="nc" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="nc__names">
@@ -33,7 +32,7 @@
     <div class="nc__field">
       <label class="nc__label" for="nc-capacity">{{ 'course_detail.capacity' | translate }}</label>
       <div class="nc__number">
-        <input id="nc-capacity" class="nc__number-input" type="number" inputmode="numeric" formControlName="capacity" min="1" max="10000" placeholder="30"
+        <input id="nc-capacity" class="nc__number-input" type="number" inputmode="numeric" formControlName="capacity" [min]="minCapacity()" max="10000" placeholder="30"
           [attr.aria-invalid]="showError('capacity')" [attr.aria-describedby]="showError('capacity') ? 'nc-capacity-err' : null" />
         <span class="nc__steppers">
           <button type="button" class="nc__step" (click)="step(1)" [attr.aria-label]="'course_detail.schedule.capacity_up' | translate">
@@ -44,29 +43,41 @@
           </button>
         </span>
       </div>
-      @if (showError('capacity')) { <p class="nc__error" id="nc-capacity-err">{{ 'course_detail.schedule.capacity_range' | translate }}</p> }
+      @if (showError('capacity')) {
+        <p class="nc__error" id="nc-capacity-err">
+          @if (minCapacity() > 1 && (form.controls.capacity.value ?? 0) < minCapacity()) {
+            {{ 'course_detail.schedule.capacity_enrolled' | translate: { count: minCapacity() } }}
+          } @else {
+            {{ 'course_detail.schedule.capacity_range' | translate }}
+          }
+        </p>
+      }
     </div>
 
     <!-- Step 1 -->
     <section class="nc__step-section" aria-labelledby="nc-step1">
-      <h3 class="nc__step-title" id="nc-step1"><nas-icon name="file-text" [size]="20" />{{ 'course_detail.schedule.step1' | translate }}</h3>
+      <h3 class="nc__step-title" id="nc-step1"><nas-icon name="file-text" [size]="20" />{{ (editing() ? 'course_detail.schedule.step1_edit' : 'course_detail.schedule.step1') | translate }}</h3>
       <div class="nc__card">
         <div class="nc__card-head">
           <span class="nc__badge" aria-hidden="true"><nas-icon name="download-simple" [size]="20" /></span>
           <span class="nc__card-text">
-            <span class="nc__card-title">{{ 'course_detail.schedule.download_title' | translate }}</span>
-            <span class="nc__card-desc">{{ 'course_detail.schedule.download_desc' | translate }}</span>
+            <span class="nc__card-title">{{ (editing() ? 'course_detail.schedule.download_title_edit' : 'course_detail.schedule.download_title') | translate }}</span>
+            <span class="nc__card-desc">{{ (editing() ? 'course_detail.schedule.download_desc_edit' : 'course_detail.schedule.download_desc') | translate }}</span>
           </span>
         </div>
         <button type="button" class="nc__btn nc__btn--outline" (click)="downloadTemplate()" [disabled]="downloading()" [attr.aria-busy]="downloading()">
-          {{ 'course_detail.schedule.download_button' | translate }}
+          {{ (editing() ? 'course_detail.schedule.download_button_edit' : 'course_detail.schedule.download_button') | translate }}
         </button>
       </div>
     </section>
 
     <!-- Step 2 -->
     <section class="nc__step-section" aria-labelledby="nc-step2">
-      <h3 class="nc__step-title" id="nc-step2"><nas-icon name="upload-simple" [size]="20" />{{ 'course_detail.schedule.step2' | translate }}</h3>
+      <h3 class="nc__step-title" id="nc-step2"><nas-icon name="upload-simple" [size]="20" />{{ (editing() ? 'course_detail.schedule.step2_edit' : 'course_detail.schedule.step2') | translate }}</h3>
+      @if (editing()) {
+        <!-- The rules the server applies to an edited schedule, said before the upload. -->
+        <p class="nc__rules" id="nc-rules"><nas-icon name="info" [size]="16" />{{ 'course_detail.schedule.edit_rules' | translate }}</p>
+      }
 
       @if (file(); as f) {
         <div class="nc__file">
@@ -88,8 +99,8 @@
           <div class="nc__card-head">
             <span class="nc__badge" aria-hidden="true"><nas-icon name="upload-simple" [size]="20" /></span>
             <span class="nc__card-text">
-              <span class="nc__card-title">{{ 'course_detail.schedule.upload_title' | translate }}</span>
-              <span class="nc__card-desc">{{ 'course_detail.schedule.upload_desc' | translate }}</span>
+              <span class="nc__card-title">{{ (editing() ? 'course_detail.schedule.upload_title_edit' : 'course_detail.schedule.upload_title') | translate }}</span>
+              <span class="nc__card-desc">{{ (editing() ? 'course_detail.schedule.upload_desc_edit' : 'course_detail.schedule.upload_desc') | translate }}</span>
             </span>
           </div>
           <div class="nc__drop" [class.nc__drop--over]="dragging()" (dragover)="onDragOver($event)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
@@ -106,7 +117,7 @@
       }
       @if (fileProblem(); as p) {
         <p class="nc__error" id="nc-file-err" role="alert">{{ 'course_detail.schedule.file_' + p | translate }}</p>
-      } @else if (submitted() && !file()) {
+      } @else if (submitted() && !file() && !editing()) {
         <p class="nc__error" id="nc-file-err" role="alert">{{ 'course_detail.schedule.file_required' | translate }}</p>
       }
     </section>
@@ -118,7 +129,7 @@
     <div class="nc__footer">
       <button type="button" class="nc__btn nc__btn--outline nc__btn--cancel" (click)="close()" [disabled]="saving()">{{ 'common.cancel' | translate }}</button>
       <button type="submit" form="nc-form" class="nc__btn nc__btn--primary" [disabled]="!canSubmit()" [attr.aria-busy]="saving()">
-        {{ 'course_detail.schedule.add_cohort' | translate }}
+        {{ (editing() ? 'common.save_changes' : 'course_detail.schedule.add_cohort') | translate }}
       </button>
     </div>
   </ng-template>

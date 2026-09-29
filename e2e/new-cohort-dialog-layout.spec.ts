@@ -15,7 +15,8 @@ const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 async function open(page: Page, locale: 'en' | 'ar'): Promise<string[]> {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  // The realtime client cannot reach the broadcast server when it is not running locally; that is not this page.
+  page.on('console', m => { if (m.type() === 'error' && !m.text().startsWith('WebSocket connection to')) errors.push(m.text()); });
   await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
   await mockCourse(page);
   await page.goto('/admin/courses/10?tab=cohort');
@@ -53,6 +54,31 @@ for (const locale of ['en', 'ar'] as const) {
     await d.locator('.p-dialog-content').evaluate(el => el.scrollTo(0, el.scrollHeight));
     await page.screenshot({ path: `${ARTIFACTS}/new-cohort/${info.project.name}-${locale}-file.png` });
 
+    expect(errors).toEqual([]);
+  });
+}
+
+for (const locale of ['en', 'ar'] as const) {
+  test(`edit cohort modal fits and reads ${locale}`, async ({ page }, info) => {
+    const errors: string[] = [];
+    page.on('pageerror', e => errors.push(e.message));
+    // The realtime client cannot reach the broadcast server when it is not running locally; that is not this page.
+  page.on('console', m => { if (m.type() === 'error' && !m.text().startsWith('WebSocket connection to')) errors.push(m.text()); });
+    await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
+    await mockCourse(page);
+    await page.goto('/admin/courses/10?tab=cohort');
+    await page.locator('.ct-menu').first().click();
+    await page.locator('.row-menu__item').first().click();
+    const d = page.getByRole('dialog');
+    await expect(d.locator('.nc__rules')).toBeVisible();
+    await expect(d.locator('#nc-name-en')).toHaveValue('Cohort A');
+    await fits(page);
+    await page.screenshot({ path: `${ARTIFACTS}/new-cohort/${info.project.name}-${locale}-edit.png` });
+    await d.locator('.p-dialog-content').evaluate(el => el.scrollTo(0, el.scrollHeight));
+    await page.screenshot({ path: `${ARTIFACTS}/new-cohort/${info.project.name}-${locale}-edit-bottom.png` });
+
+    const text = await page.locator('body').innerText();
+    expect(text.match(/\bcourse_detail\.[a-z_.]+/g) ?? []).toEqual([]);
     expect(errors).toEqual([]);
   });
 }

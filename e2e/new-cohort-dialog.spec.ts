@@ -90,3 +90,83 @@ test('a rejected schedule lists every problem and keeps the dialog open', async 
   await expect(page.getByText('This session overlaps the one on row 2.')).toBeVisible();
   await expect(d).toBeVisible();
 });
+
+// ── Edit Cohort: the same dialog (Edit must match New Cohort) ──────────────
+
+async function openEdit(page: Page): Promise<void> {
+  await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
+  await mockCourse(page);
+  await page.goto('/admin/courses/10?tab=cohort');
+  await page.getByRole('button', { name: 'Actions for Cohort A' }).click();
+  await page.getByRole('button', { name: 'Edit Cohort' }).click();
+  await expect(page.getByRole('dialog', { name: 'Edit Cohort' })).toBeVisible();
+}
+
+test('edit fills the cohort in, downloads its schedule, and saves names and capacity without a file', async ({ page }) => {
+  await openEdit(page);
+  let template = 0;
+  await page.route('**/api/v1/courses/10/sections/21/schedule-template', r => { template++; return r.fulfill({ status: 200, contentType: XLSX, body: 'PK' }); });
+  const posts: Request[] = [];
+  await page.route('**/api/v1/courses/10/sections/21/scheduled', r => {
+    posts.push(r.request());
+    return r.fulfill({ json: { status: 'success', message: '', result: { section: { id: 21 }, sessions_added: 0, sessions_updated: 0 } } });
+  });
+
+  const d = page.getByRole('dialog', { name: 'Edit Cohort' });
+  const save = d.getByRole('button', { name: 'Save Changes' });
+  await expect(d.getByLabel('Cohort Name (English)')).toHaveValue('Cohort A');
+  await expect(d.getByLabel('Cohort Name (Arabic)')).toHaveValue('الدفعة أ');
+  await expect(d.getByLabel('Capacity', { exact: true })).toHaveValue('30');
+  await expect(d.getByText('Step 2 · Upload new sessions (optional)')).toBeVisible();
+  await expect(d.locator('.nc__rules')).toContainText('Sessions already held cannot be changed.');
+  await expect(save).toBeDisabled(); // nothing changed yet
+
+  const download = page.waitForEvent('download');
+  await d.getByRole('button', { name: 'Download Current Schedule' }).click();
+  expect((await download).suggestedFilename()).toBe('cohort-schedule.xlsx');
+  expect(template).toBe(1);
+
+  // Not below the 8 learners already enrolled.
+  await d.getByLabel('Capacity', { exact: true }).fill('5');
+  await d.getByLabel('Capacity', { exact: true }).blur();
+  await expect(d.locator('#nc-capacity-err')).toHaveText('Capacity cannot be less than the 8 learners already enrolled.');
+  await expect(save).toBeDisabled();
+
+  await d.getByLabel('Capacity', { exact: true }).fill('40');
+  await d.getByLabel('Cohort Name (English)').fill('Cohort A (evening)');
+  await expect(save).toBeEnabled();
+  await save.click();
+
+  await expect(d).toBeHidden();
+  expect(posts).toHaveLength(1);
+  const body = posts[0].postData() ?? '';
+  expect(body).toContain('name="name[en]"\r\n\r\nCohort A (evening)');
+  expect(body).toContain('name="capacity"\r\n\r\n40');
+  expect(body).not.toContain('name="schedule"');
+  await expect(page.getByText('Cohort updated')).toBeVisible();
+});
+
+test('edit with a sheet sends it and reports the sessions added; a refused sheet lists its problems', async ({ page }) => {
+  await openEdit(page);
+  let reject = true;
+  await page.route('**/api/v1/courses/10/sections/21/scheduled', r => reject
+    ? r.fulfill({ status: 422, json: {
+        status: 'error', message: 'Nothing was imported.', errors: { schedule: ['Nothing was imported.'] },
+        report: { errors: [{ row: 3, column: 'date', message: 'A new session must start in the future. Sessions already held cannot be added or changed.' }] } } })
+    : r.fulfill({ json: { status: 'success', message: '', result: { section: { id: 21 }, sessions_added: 2, sessions_updated: 0 } } }));
+
+  const d = page.getByRole('dialog', { name: 'Edit Cohort' });
+  await d.locator('#nc-file').setInputFiles({ name: 'schedule.xlsx', mimeType: XLSX, buffer: Buffer.from('PK\x03\x04') });
+  const save = d.getByRole('button', { name: 'Save Changes' });
+  await expect(save).toBeEnabled(); // a file alone is a change
+  await save.click();
+  await expect(page.getByText('A new session must start in the future.', { exact: false })).toBeVisible();
+  await expect(d).toBeVisible();
+
+  await page.locator('.p-dialog-header-close').last().click(); // closes the report
+  await expect(page.getByText('A new session must start in the future.', { exact: false })).toBeHidden();
+  reject = false;
+  await save.click();
+  await expect(d).toBeHidden();
+  await expect(page.getByText('Cohort updated · 2 sessions added, 0 updated')).toBeVisible();
+});

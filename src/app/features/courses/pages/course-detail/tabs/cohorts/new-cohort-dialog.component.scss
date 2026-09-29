@@ -263,3 +263,19 @@
 @media (prefers-reduced-motion: reduce) {
   .nc__drop, .nc__select, .nc__btn { transition: none; }
 }
+
+// Edit Cohort: what the upload may and may not change.
+.nc__rules {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nas-space-2);
+  margin: 0;
+  padding: var(--nas-space-3);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-teal-100);
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  color: var(--nas-teal-1000);
+
+  nas-icon { flex-shrink: 0; margin-block-start: 1px; }
+}

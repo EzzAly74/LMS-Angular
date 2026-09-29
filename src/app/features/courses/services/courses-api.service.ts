@@ -10,7 +10,7 @@ import type {
 } from '../../../core/models/course.types';
 import { saveBlob } from '../../../core/utils/save-blob';
 import type { CourseFormSource } from '../models/course-form.model';
-import type { CourseEvaluationSummary, CourseLearnerRow, CourseSubmissionRow } from '../models/course-detail.model';
+import type { CohortScheduleUpdate, CourseEvaluationSummary, CourseLearnerRow, CourseSubmissionRow } from '../models/course-detail.model';
 import type { TemplateResults } from '../../evaluations/models/evaluation.model';
 
 @Injectable({ providedIn: 'root' })
@@ -115,6 +115,26 @@ export class CoursesApiService {
     if (body.capacity !== null) form.append('capacity', String(body.capacity));
     form.append('schedule', body.schedule, body.schedule.name);
     return this.api.post<Cohort>(courseUrl.cohortScheduled(courseId), form);
+  }
+
+  /** Edit Cohort "Download Schedule Template": the cohort's sessions, then blank rows for new ones. */
+  downloadCohortSchedule(courseId: number, cohortId: number): Observable<void> {
+    return this.api.getBlob(courseUrl.cohortSectionScheduleTemplate(courseId, cohortId))
+      .pipe(map(blob => saveBlob(blob, 'cohort-schedule.xlsx')));
+  }
+
+  /**
+   * Edit Cohort: names, capacity and, optionally, the schedule again, of which
+   * the server adds only the new sessions (held ones never change). A 422
+   * carries every problem under `report.errors`, and nothing is saved.
+   */
+  updateCohortWithSchedule(courseId: number, cohortId: number, body: { name_en: string; name_ar: string; capacity: number | null; schedule: File | null }): Observable<ApiResponse<CohortScheduleUpdate>> {
+    const form = new FormData();
+    form.append('name[en]', body.name_en);
+    form.append('name[ar]', body.name_ar);
+    if (body.capacity !== null) form.append('capacity', String(body.capacity));
+    if (body.schedule) form.append('schedule', body.schedule, body.schedule.name);
+    return this.api.post<CohortScheduleUpdate>(courseUrl.cohortSectionScheduled(courseId, cohortId), form);
   }
 
   /* ── Modules (course_lectures, surfaced as "Modules" in the admin UI) ── */

@@ -1501,7 +1501,17 @@
       "add_cohort": "Add Cohort",
       "capacity_up": "Increase capacity",
       "capacity_down": "Decrease capacity",
-      "capacity_range": "Capacity must be between 1 and 10,000."
+      "capacity_range": "Capacity must be between 1 and 10,000.",
+      "step1_edit": "Step 1 · Download the current schedule",
+      "download_title_edit": "Download current schedule",
+      "download_desc_edit": "The sheet lists this cohort's sessions. Add the new sessions in the empty rows below them.",
+      "download_button_edit": "Download Current Schedule",
+      "step2_edit": "Step 2 · Upload new sessions (optional)",
+      "upload_title_edit": "Upload the updated schedule",
+      "upload_desc_edit": "Upload the full sheet or only the new rows. Leave this out to change only the name or capacity.",
+      "edit_rules": "Only new sessions are added; sessions the sheet leaves out are kept. A new session must start in the future and must not overlap another. Sessions already held cannot be changed.",
+      "capacity_enrolled": "Capacity cannot be less than the {{count}} learners already enrolled.",
+      "updated_with_sessions": "Cohort updated · {{added}} sessions added, {{updated}} updated"
     },
     "tab_overview": "Overview",
     "tab_cohort": "Cohort",

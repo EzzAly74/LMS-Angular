@@ -111,6 +111,9 @@ export const courseUrl = {
   /** New Cohort with its schedule (Figma 2393:123167): template download, then upload. */
   cohortScheduleTemplate: (id: number) => `${API.COURSES}/${id}/sections/schedule-template`,
   cohortScheduled:        (id: number) => `${API.COURSES}/${id}/sections/scheduled`,
+  /** Edit Cohort: the cohort's schedule as a sheet, and the upload that adds only its new sessions. */
+  cohortSectionScheduleTemplate: (id: number, sectionId: number) => `${API.COURSES}/${id}/sections/${sectionId}/schedule-template`,
+  cohortSectionScheduled:        (id: number, sectionId: number) => `${API.COURSES}/${id}/sections/${sectionId}/scheduled`,
   /** Full attendance rollup for one cohort — drives the right-edge drawer. */
   cohortAttendance: (courseId: number, cohortId: number) =>
     `${API.COURSES}/${courseId}/cohorts/${cohortId}/attendance`,

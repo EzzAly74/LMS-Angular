@@ -3,6 +3,8 @@
  * backend resource named beside it.
  */
 
+import type { Cohort } from '../../../core/models/course.types';
+
 export type LearnerProgressStatus = 'not_started' | 'in_progress' | 'completed';
 
 export interface IdName {
@@ -11,6 +13,15 @@ export interface IdName {
 }
 
 /** One enrolment - CourseLearnerResource (GET courses/{course}/enrollments). */
+/** POST courses/{course}/sections/{section}/scheduled (Edit Cohort). */
+export interface CohortScheduleUpdate {
+  readonly section: Cohort;
+  /** New sessions the sheet added. */
+  readonly sessions_added: number;
+  /** Upcoming sessions whose location the sheet changed. */
+  readonly sessions_updated: number;
+}
+
 export interface CourseLearnerRow {
   id: number;
   user: { id: number; name: string; employee_id: string | null; active: boolean } | null;
