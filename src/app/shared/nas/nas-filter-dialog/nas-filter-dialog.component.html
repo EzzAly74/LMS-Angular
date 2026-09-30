@@ -21,6 +21,17 @@
       <div class="fd__body">
         @for (f of fields(); track f.key) {
           <div class="fd__field" [class.fd__field--wide]="f.wide">
+            @if (f.type === 'date') {
+            <label class="fd__label" [id]="uid + '-' + f.key" [for]="uid + '-in-' + f.key">{{ f.label }}</label>
+            <nas-datepicker
+              [inputId]="uid + '-in-' + f.key"
+              [ngModel]="dateValue(f.key)"
+              (ngModelChange)="setDate(f.key, $event)"
+              [ngModelOptions]="{ standalone: true }"
+              [min]="dateValue(f.after)"
+              [max]="dateValue(f.before)"
+              [placeholder]="f.placeholder" />
+            } @else {
             <span class="fd__label" [id]="uid + '-' + f.key">{{ f.label }}</span>
             @if (f.multiple) {
             <p-multiSelect #ms
@@ -84,6 +95,7 @@
               [emptyFilterMessage]="'common.no_results' | translate"
               appendTo="body"
               styleClass="fd__dropdown" />
+            }
             }
           </div>
         }

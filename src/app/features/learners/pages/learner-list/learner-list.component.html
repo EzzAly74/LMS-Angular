@@ -1,108 +1,52 @@
-<div class="nas-page-container ll">
+<!-- Learners - Figma 1986:74701; filters in the shared Filter modal (D-070) -->
+<div class="nas-page-container cl-page">
 
-  <header class="ll__head">
-    <div class="ll__head-text">
-      <h1 class="ll__title">{{ 'learners.title' | translate }}</h1>
-      <p class="ll__subtitle">{{ 'learners.subtitle' | translate }}</p>
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ 'learners.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'learners.subtitle' | translate }}</p>
     </div>
     <!-- Figma 1983:44955. Shown only with view-qualifications, the permission
          the bulk-grant API enforces. -->
     @if (canAssign()) {
-      <button type="button" class="ll__assign" aria-haspopup="dialog" (click)="assignOpen.set(true)">
+      <button type="button" class="cl-primary" aria-haspopup="dialog" (click)="assignOpen.set(true)">
         <nas-icon name="plus-circle" [size]="20" />
         <span>{{ 'learners.assign.button' | translate }}</span>
       </button>
     }
   </header>
 
-  <div class="ll__filters">
-    <div class="ll__toolbar">
-      <div class="ll__search">
-        <nas-icon name="magnifying-glass" [size]="20" />
-        <label class="ll__sr-only" for="ll-search">{{ 'learners.search_label' | translate }}</label>
-        <input
-          id="ll-search"
-          type="search"
-          class="ll__search-input"
-          [placeholder]="'learners.search_placeholder' | translate"
-          [ngModel]="search()"
-          (ngModelChange)="onSearch($event)" />
-      </div>
+  <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
+    [label]="'learners.search_label' | translate" [placeholder]="'learners.search_placeholder' | translate"
+    (searchChange)="list.search($event)" (filter)="openFilter()" />
 
-      <div class="ll__date" [attr.aria-label]="'learners.active_from' | translate" role="group">
-        <nas-datepicker
-          [ngModel]="from()"
-          (ngModelChange)="onFrom($event)"
-          [max]="to()"
-          [placeholder]="'learners.from' | translate" />
-      </div>
-      <div class="ll__date" [attr.aria-label]="'learners.active_to' | translate" role="group">
-        <nas-datepicker
-          [ngModel]="to()"
-          (ngModelChange)="onTo($event)"
-          [min]="from()"
-          [placeholder]="'learners.to' | translate" />
-      </div>
-    </div>
-
-    <div class="ll__chips" role="toolbar" [attr.aria-label]="'learners.filters' | translate">
-      <button type="button" class="ll__chip ll__chip--all" [class.ll__chip--on]="!anyFilter()"
-        [attr.aria-pressed]="!anyFilter()" (click)="clearFilters()">
-        {{ 'common.all' | translate }}
-      </button>
-      @for (chip of chips; track chip.key) {
-        @let on = isActive(chip.key);
-        <button type="button" class="ll__chip" [class.ll__chip--on]="on"
-          aria-haspopup="dialog"
-          [attr.aria-label]="on
-            ? ('learners.chip_selected' | translate: { name: (chip.labelKey | translate), count: count(chip.key) })
-            : (chip.labelKey | translate)"
-          (click)="openPicker(chip.key)">
-          <span>{{ chip.labelKey | translate }}</span>
-          <img [src]="on ? 'assets/icons/figma/chip-arrow-active.svg' : 'assets/icons/figma/chip-arrow.svg'"
-            width="12" height="7" alt="" />
-        </button>
-      }
-    </div>
-  </div>
-
-  <section class="ll__card" [attr.aria-busy]="state() === 'loading'">
-    <div class="ll__scroll">
-      <table class="ll__table">
-        <caption class="ll__sr-only">{{ 'learners.title' | translate }}</caption>
-        <thead>
-          <tr>
-            <th scope="col" class="ll__th ll__c-name">{{ 'learners.col.name' | translate }}</th>
-            <th scope="col" class="ll__th ll__c-id">{{ 'learners.col.id' | translate }}</th>
-            <th scope="col" class="ll__th ll__c-earned">{{ 'learners.col.courses_earned' | translate }}</th>
-            <th scope="col" class="ll__th ll__c-qual">{{ 'learners.col.qualification' | translate }}</th>
-            <th scope="col" class="ll__th ll__c-cert">{{ 'learners.col.last_certification' | translate }}</th>
-            <th scope="col" class="ll__th ll__c-activity">{{ 'learners.col.last_activity' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (state() === 'loading') {
-            @for (s of skeletons; track s) {
+  <nas-table-card [label]="'learners.title' | translate" [busy]="list.state() === 'loading'">
+    <table class="cl-table cl-table--fixed ll__table">
+      <thead>
+        <tr>
+          <th scope="col" class="ll__c-name">{{ 'learners.col.name' | translate }}</th>
+          <th scope="col" class="ll__c-id">{{ 'learners.col.id' | translate }}</th>
+          <th scope="col" class="ll__c-earned cl-center">{{ 'learners.col.courses_earned' | translate }}</th>
+          <th scope="col" class="ll__c-qual">{{ 'learners.col.qualification' | translate }}</th>
+          <th scope="col" class="ll__c-cert">{{ 'learners.col.last_certification' | translate }}</th>
+          <th scope="col" class="ll__c-activity">{{ 'learners.col.last_activity' | translate }}</th>
+          <th scope="col" class="ll__c-actions cl-center">{{ 'common.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @switch (list.state()) {
+          @case ('loading') {
+            @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
+          }
+          @case ('error') {
+            <tr><td colspan="7">
+              <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+            </td></tr>
+          }
+          @default {
+            @for (row of list.items(); track row.composite_id) {
               <tr class="ll__row">
-                <td class="ll__td"><p-skeleton width="70%" height="18px" /></td>
-                <td class="ll__td"><p-skeleton width="60%" height="16px" /></td>
-                <td class="ll__td"><p-skeleton width="30%" height="16px" /></td>
-                <td class="ll__td"><p-skeleton width="80%" height="8px" /></td>
-                <td class="ll__td"><p-skeleton width="70%" height="16px" /></td>
-                <td class="ll__td"><p-skeleton width="50%" height="16px" /></td>
-              </tr>
-            }
-          } @else if (state() === 'error') {
-            <tr>
-              <td class="ll__td ll__message" colspan="6" role="alert">
-                <p>{{ 'common.could_not_load' | translate }}</p>
-                <button type="button" class="ll__retry" (click)="retry()">{{ 'learners.retry' | translate }}</button>
-              </td>
-            </tr>
-          } @else {
-            @for (row of rows(); track row.composite_id) {
-              <tr class="ll__row">
-                <td class="ll__td ll__c-name">
+                <td>
                   <span class="ll__who">
                     <nas-avatar [name]="row.name" [src]="row.image" size="sm" />
                     <span class="ll__who-text">
@@ -113,83 +57,62 @@
                     </span>
                   </span>
                 </td>
-                <td class="ll__td ll__c-id" dir="ltr">{{ row.machine_code || '-' }}</td>
-                <td class="ll__td ll__c-earned">{{ row.courses_earned }}</td>
-                <td class="ll__td ll__c-qual">
+                <td class="ll__c-id"><bdi dir="ltr">{{ row.machine_code || '-' }}</bdi></td>
+                <td class="cl-center cl-strong">{{ row.courses_earned }}</td>
+                <td>
                   @if (row.compliance_pct !== null) {
                     <span class="ll__qual">
                       <span class="ll__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
                         [attr.aria-valuenow]="row.compliance_pct"
                         [attr.aria-label]="'learners.qualification_of' | translate: { name: row.name }">
-                        <span class="ll__bar-fill ll__bar-fill--{{ tone(row.compliance_pct) }}"
-                          [style.inline-size.%]="row.compliance_pct"></span>
+                        <span class="ll__bar-fill ll__bar-fill--{{ row.tone }}" [style.inline-size.%]="row.compliance_pct"></span>
                       </span>
                       <span class="ll__pct">{{ row.compliance_pct }}%</span>
                     </span>
                   } @else {
-                    <span class="ll__muted">-</span>
+                    <span>-</span>
                   }
                 </td>
-                <td class="ll__td ll__c-cert">
-                  {{ row.last_certification_at ? (row.last_certification_at | nasDate: locale()) : '-' }}
-                </td>
-                <td class="ll__td ll__c-activity">
+                <td>{{ row.last_certification_at ? (row.last_certification_at | nasDate: locale()) : '-' }}</td>
+                <td>
                   @if (row.last_active_at) {
                     <span class="ll__activity">
                       <nas-icon name="clock" [size]="16" />
                       <time [attr.datetime]="row.last_active_at">{{ row.last_active_at | nasRelativeTime: locale() }}</time>
                     </span>
                   } @else {
-                    <span class="ll__muted">-</span>
+                    <span>-</span>
                   }
+                </td>
+                <td class="cl-center">
+                  <a class="cl-view" [routerLink]="[row.id]"
+                    [attr.aria-label]="'course_detail.view_learner' | translate: { name: row.name }">
+                    <img src="assets/icons/figma/eye.svg" width="18" height="18" alt="" />
+                  </a>
                 </td>
               </tr>
             } @empty {
-              <tr>
-                <td class="ll__td ll__message" colspan="6" role="status">
-                  <nas-icon name="tray" [size]="32" />
-                  <p>{{ (search() || anyFilter() || from() || to() ? 'learners.no_results' : 'learners.empty') | translate }}</p>
-                </td>
-              </tr>
+              <tr><td colspan="7">
+                <nas-list-state [message]="(hasQuery() ? 'learners.no_results' : 'learners.empty') | translate" />
+              </td></tr>
             }
           }
-        </tbody>
-      </table>
-    </div>
-
-    @if (state() === 'ready' && total() > 0) {
-      <nav class="ll__pager" [attr.aria-label]="'common.pagination' | translate">
-        <span class="ll__pager-info">
-          {{ 'learners.range' | translate: { from: rangeStart(), to: rangeEnd(), total: total() } }}
-        </span>
-        <span class="ll__pager-nav">
-          <button type="button" class="ll__pager-btn ll__pager-btn--prev" [disabled]="page() === 1"
-            (click)="goTo(page() - 1)" [attr.aria-label]="'common.previous' | translate">
-            <img src="assets/icons/figma/arrow-down-old-system.svg" width="24" height="24" alt="" />
-          </button>
-          <button type="button" class="ll__pager-btn ll__pager-btn--next" [disabled]="page() >= totalPages()"
-            (click)="goTo(page() + 1)" [attr.aria-label]="'common.next' | translate">
-            <img src="assets/icons/figma/arrow-down-old-system.svg" width="24" height="24" alt="" />
-          </button>
-        </span>
-      </nav>
+        }
+      </tbody>
+    </table>
+    @if (list.pageable()) {
+      <nas-pager nasTablePager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+        rangeKey="learners.range" [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
     }
-  </section>
+  </nas-table-card>
 </div>
+
+<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
+  (apply)="onFilter($event)" (search)="onFilterSearch($event)" />
 
 <app-assign-qualification-dialog
   [visible]="assignOpen()"
   (visibleChange)="assignOpen.set($event)"
   [filterParams]="filterParams()"
-  [matchingTotal]="total()"
-  (assigned)="retry()" />
-
-<nas-filter-picker
-  [visible]="pickerVisible()"
-  (visibleChange)="pickerVisible.set($event)"
-  [label]="pickerLabel(pickerKey())"
-  [options]="options()[pickerKey()]"
-  [selected]="selectedFor(pickerKey())"
-  [loading]="optionsLoading()"
-  (apply)="onPick(pickerKey(), $event)"
-  (searchChange)="onPickerSearch(pickerKey(), $event)" />
+  [matchingTotal]="list.total()"
+  (assigned)="list.reload()" />

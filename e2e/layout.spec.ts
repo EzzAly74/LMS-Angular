@@ -170,7 +170,8 @@ function watchForErrors(page: Page): string[] {
   });
 
   page.on('console', (msg) => {
-    if (msg.type() === 'error' && !msg.text().startsWith('Failed to load resource')) {
+    // The realtime client cannot reach the broadcast server when it is not running locally; that is not the page.
+    if (msg.type() === 'error' && !msg.text().startsWith('Failed to load resource') && !msg.text().startsWith('WebSocket connection to')) {
       errors.push(`console: ${msg.text()}`);
     }
   });

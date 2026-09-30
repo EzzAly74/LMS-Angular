@@ -83,6 +83,23 @@
   &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
 }
 
+// The row's "view" link: an 18 px eye in a 32 px outlined button (Evaluation
+// lists, Figma 2009:88432; Learners). Opens the record's page.
+.cl-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+
+  img { display: block; }
+  &:hover { background: var(--nas-neutral-50); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+}
+
 // A clickable row (opens the record).
 .cl-row { cursor: pointer; }
 

@@ -22,6 +22,7 @@ const row = (id: number, name: string, type: 'pre' | 'mid' | 'post' | null, pct:
 
 async function mock(page: Page): Promise<Request[]> {
   const lists: Request[] = [];
+  await page.route('**/api/v1/admin/quizzes/instructors', r => r.fulfill({ json: ok([{ id: 7, name: 'Nora Al-Fahad' }, { id: 8, name: 'Karim Mansour' }]) }));
   await page.route('**/api/v1/admin/quizzes/summary', r => r.fulfill({ json: ok({ quizzes_count: 1, courses_count: 1 }) }));
   await page.route('**/api/v1/admin/quizzes?**', r => r.fulfill({ json: page1([{
     id: 3, title: 'Knowledge Check Quiz', title_ar: null, course_id: 1, course_title: 'Workplace Safety Essentials', cohort_scope: 'all', cohorts: [],
@@ -38,6 +39,20 @@ async function mock(page: Page): Promise<Request[]> {
   }) }));
   await page.route(/\/api\/v1\/courses\?/, r => r.fulfill({ json: page1([{ id: 1, title: 'Workplace Safety Essentials' }]) }));
   return lists;
+}
+
+/**
+ * Close an open multi-select list and nothing else (the Filter modal stays).
+ * PrimeNG ignores a close that lands while the list is still animating open,
+ * which a test (unlike a person) can do; wait for it to settle first.
+ */
+async function closeList(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const el = document.querySelector('.fd-ms-panel');
+    return !!el && el.getAnimations({ subtree: true }).length === 0;
+  });
+  await page.locator('.fd-ms-panel .p-multiselect-filter').press('Escape');
+  await expect(page.locator('.fd-ms-panel')).toHaveCount(0);
 }
 
 test.describe('behaviour', () => {
@@ -64,23 +79,34 @@ test.describe('behaviour', () => {
     await expect(page.locator('.ql-chip')).toHaveCount(0);
     await expect(page.getByLabel('Passed')).toHaveCount(0);
 
+    // The lists load when the modal first opens; wait for them before opening one.
+    const lookups = Promise.all([
+      page.waitForResponse('**/api/v1/admin/quizzes/instructors'),
+      page.waitForResponse('**/api/v1/admin/quizzes/submissions/filter-options'),
+    ]);
     await page.getByRole('button', { name: 'Filter' }).click();
+    await lookups;
     const d = page.getByRole('dialog', { name: 'Filter' });
     await expect(d.locator('.fd__label')).toHaveText(['Courses', 'Instructors', 'Learners', 'Type', 'Result']);
     await expect(d.getByRole('button', { name: 'Filter' })).toBeDisabled();
+
+    // Instructors come from the kind's own instructors endpoint (not empty).
+    await d.locator('.p-multiselect').nth(1).click();
+    await expect(page.locator('.fd-ms-panel li.p-multiselect-item')).toHaveText(['Nora Al-Fahad', 'Karim Mansour']);
+    await closeList(page);
 
     // Type: several at once.
     await d.locator('.p-multiselect').nth(3).click();
     await page.getByRole('option', { name: 'Pre-course' }).click();
     await page.getByRole('option', { name: 'Post-course' }).click();
-    await page.keyboard.press('Escape');
+    await closeList(page);
     // Result: one of Passed / Failed.
     await d.locator('.p-dropdown').first().click();
     await page.getByRole('option', { name: 'Passed' }).click();
     // Learner: the list comes from the filter options, across all courses.
     await d.locator('.p-multiselect').nth(2).click();
     await page.getByRole('option', { name: 'Omar Al-Farsi' }).click();
-    await page.keyboard.press('Escape');
+    await closeList(page);
 
     await d.getByRole('button', { name: 'Filter' }).click();
     await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.getAll('types[]')).toEqual(['pre', 'post']);

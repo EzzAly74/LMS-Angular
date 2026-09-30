@@ -47,8 +47,9 @@ export class AssignmentListComponent {
         data: res.result.data.map(s => ({ ...s, item_title: s.assignment_title, item_type: s.assignment_type })),
       },
     }))),
-    filterOptions: () => this.api
-      .get<{ learners: IdName[]; instructors: IdName[] }>(`${API.ADMIN_ASSIGNMENTS}/submissions/filter-options`)
-      .pipe(map(r => ({ learners: r.result?.learners ?? [], instructors: r.result?.instructors ?? [] }))),
+    instructors: () => this.assignments.instructors().pipe(map(r => r.result ?? [])),
+    learners: () => this.api
+      .get<{ learners: IdName[] }>(`${API.ADMIN_ASSIGNMENTS}/submissions/filter-options`)
+      .pipe(map(r => r.result?.learners ?? [])),
   };
 }

@@ -19,6 +19,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { PrimeTemplate } from 'primeng/api';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
+import { NasDatepickerComponent } from '../nas-datepicker/nas-datepicker.component';
 
 export type NasFilterValue = number | string;
 
@@ -34,7 +35,17 @@ export interface NasFilterField {
   readonly label: string;
   /** Placeholder, already translated. */
   readonly placeholder: string;
+  /** Choices of a select field; empty for a date field. */
   readonly options: NasFilterFieldOption[];
+  /**
+   * `date`: a calendar date instead of a list (e.g. "Active from"); its value
+   * is a local `YYYY-MM-DD` string. Default: a dropdown / multi-select.
+   */
+  readonly type?: 'select' | 'date';
+  /** Date field: may not be before this other date field (From of a From / To pair). */
+  readonly after?: string;
+  /** Date field: may not be after this other date field (To of a From / To pair). */
+  readonly before?: string;
   /** Several choices (Figma annotation on the Job Titles Qualification field: "multi select + search"). */
   readonly multiple?: boolean;
   /**
@@ -72,7 +83,7 @@ let nextId = 0;
 @Component({
   selector: 'nas-filter-dialog',
   standalone: true,
-  imports: [FormsModule, TranslateModule, DialogModule, DropdownModule, MultiSelectModule, PrimeTemplate, NasIconComponent],
+  imports: [FormsModule, TranslateModule, DialogModule, DropdownModule, MultiSelectModule, PrimeTemplate, NasIconComponent, NasDatepickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nas-filter-dialog.component.html',
   styleUrl: './nas-filter-dialog.component.scss',
@@ -136,6 +147,22 @@ export class NasFilterDialogComponent {
     // An emptied multi-select is "no filter", the same as never choosing.
     const v = Array.isArray(value) && value.length === 0 ? null : value;
     this.working.update(w => ({ ...w, [key]: v ?? null }));
+  }
+
+  /** A date field's value as a Date (local midnight), or null. */
+  protected dateValue(key: string | undefined): Date | null {
+    if (!key) return null;
+    const v = this.working()[key];
+    if (typeof v !== 'string') return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+  }
+
+  /** Store a picked date as a local `YYYY-MM-DD` (not toISOString, which shifts by the UTC offset). */
+  protected setDate(key: string, d: Date | null): void {
+    if (!d) { this.set(key, null); return; }
+    const pad = (n: number) => String(n).padStart(2, '0');
+    this.set(key, `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
   }
 
   protected onRemoteFilter(key: string, term: string | null | undefined): void {

@@ -223,7 +223,7 @@
                     </td>
                     <td class="ld__wrap"><bdi>{{ row.course || '-' }}</bdi></td>
                     <td>{{ row.type && row.type !== 'assignment' ? (('learners.detail.type.' + row.type) | translate) : '-' }}</td>
-                    <td dir="ltr" [class.ld__failed]="row.status === 'failed'">{{ row.grade_label || '---' }}</td>
+                    <td [class.ld__failed]="row.status === 'failed'"><bdi dir="ltr">{{ row.grade_label || '---' }}</bdi></td>
                     <td class="ld__center">
                       <nas-status-badge [tone]="resultTone(row.status)">{{ ('learners.detail.result.' + row.status) | translate }}</nas-status-badge>
                     </td>

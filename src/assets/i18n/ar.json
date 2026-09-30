@@ -2003,6 +2003,8 @@
     "replace_photo": "استبدال الصورة"
   },
   "learners": {
+    "filter_learner_type": "نوع المتعلم",
+    "select_learner_type": "اختر نوع المتعلم",
     "title": "المتعلمون",
     "subtitle": "وجّه تقدم المتعلمين وتابعه بسهولة.",
     "search_label": "البحث عن المتعلمين",

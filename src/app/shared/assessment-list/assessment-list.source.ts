@@ -71,6 +71,8 @@ export interface AssessmentListSource {
   options(search?: string): Observable<readonly AssessmentOptionRow[]>;
   remove(id: number): Observable<unknown>;
   attempts(params: ApiParams): Observable<PaginatedResponse<AssessmentAttemptRow>>;
-  /** Learners and instructors that have attempts, across all courses (bounded server-side). */
-  filterOptions(): Observable<{ readonly learners: readonly IdName[]; readonly instructors: readonly IdName[] }>;
+  /** The instructors the Instructor filter offers (admin/{kind}/instructors: admins and instructors). */
+  instructors(): Observable<readonly IdName[]>;
+  /** Learners that have attempts, across all courses (submissions/filter-options, bounded server-side). */
+  learners(): Observable<readonly IdName[]>;
 }

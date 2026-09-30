@@ -1,74 +1,73 @@
 import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  OnInit,
-  computed,
-  inject,
-  signal,
+  ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { SkeletonModule } from 'primeng/skeleton';
-import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import { ApiService, ApiParams } from '../../../../core/services/api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { mapApiCourseListItem, type ApiCourseRaw } from '../../../../core/utils/course-mapper';
+import { AuthService } from '../../../../core/services/auth.service';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { NasAvatarComponent } from '../../../../shared/nas/nas-avatar/nas-avatar.component';
-import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import {
-  NasFilterOption,
-  NasFilterPickerComponent,
-} from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
+  NasFilterDialogComponent, type NasFilterField, type NasFilterFieldOption, type NasFilterValues,
+} from '../../../../shared/nas/nas-filter-dialog/nas-filter-dialog.component';
+import { NasListToolbarComponent } from '../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasTableCardComponent } from '../../../../shared/nas/nas-table-card/nas-table-card.component';
+import {
+  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS, type NasSkeletonCell,
+} from '../../../../shared/nas/nas-list-state/nas-list-state.component';
+import { createPagedList, pagedParams, toPaged, withList, type PagedQuery } from '../../../../shared/list/paged-list';
+import {
+  RemoteFilterOptions, activeFilterCount, appliedValues, filterNumbers, filterOne, filterStrings, toFilterOptions,
+} from '../../../../shared/list/filter-values';
 import { NasDatePipe, NasRelativeTimePipe } from '../../../../shared/pipes/nas-date.pipes';
-import { AuthService } from '../../../../core/services/auth.service';
 import { AssignQualificationDialogComponent } from '../../components/assign-qualification-dialog/assign-qualification-dialog.component';
-import {
-  LEARNER_TYPES,
-  LearnerFilterKey,
-  LearnerFilters,
-  LearnerRow,
-  LearnerType,
-} from '../../models/learner.model';
+import { LEARNER_TYPES, LearnerRow, LearnerType } from '../../models/learner.model';
 
-type LoadState = 'loading' | 'ready' | 'error';
-
-interface Chip {
-  key: LearnerFilterKey;
-  labelKey: string;
+interface Query extends PagedQuery {
+  readonly instructorIds: readonly number[];
+  readonly learnerTypes: readonly LearnerType[];
+  readonly courseIds: readonly number[];
+  readonly qualificationIds: readonly number[];
+  /** Last activity range, local `YYYY-MM-DD`. */
+  readonly activeFrom: string | null;
+  readonly activeTo: string | null;
 }
 
-const EMPTY_FILTERS: LearnerFilters = {
-  course_instructor_ids: [],
-  learner_types: [],
-  course_ids: [],
-  qualification_ids: [],
-};
+/** A learner with the qualification bar tone, worked out once per load. */
+interface LearnerView extends LearnerRow {
+  readonly tone: 'low' | 'mid' | 'full';
+}
 
 /**
  * Learners list - Figma 1986:74701 (D3).
  *
- * GET admin/users?role=learner, with the Learners filters added in B2/D3
- * (D-053): the chips pick the instructors who teach the learner's courses,
- * the learner type, courses and qualifications; From/To bound the last
- * activity. Each chip opens the shared "Filter your results" picker.
+ * GET admin/users?role=learner with the Learners filters (B2/D3, D-053):
+ * instructors who teach the learner's courses, learner type, courses,
+ * qualifications, and the last-activity range. They live in the Dashboard's
+ * one Filter modal (D-070: the frame's chips and From / To pickers moved into
+ * it, human 2026-09-30); the Course field searches the server.
  */
 @Component({
   selector: 'app-learner-list',
   standalone: true,
   imports: [
-    FormsModule,
     RouterLink,
     TranslateModule,
-    SkeletonModule,
     NasIconComponent,
     NasAvatarComponent,
-    NasDatepickerComponent,
-    NasFilterPickerComponent,
+    NasPagerComponent,
+    NasFilterDialogComponent,
+    NasListToolbarComponent,
+    NasTableCardComponent,
+    NasListStateComponent,
+    NasSkeletonRowComponent,
     NasDatePipe,
     NasRelativeTimePipe,
     AssignQualificationDialogComponent,
@@ -88,249 +87,163 @@ export class LearnerListComponent implements OnInit {
   readonly canAssign  = computed(() => this.auth.hasView('view-qualifications'));
   readonly assignOpen = signal(false);
 
-  /** Figma: "1-15 of 109". */
-  readonly perPage   = 15;
-  readonly skeletons = Array.from({ length: 6 }, (_, i) => i);
+  readonly skeletons = SKELETON_ROWS;
+  /** Name, id, courses earned, qualification, last certification, last activity, the eye. */
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['person', 'short', 'num', 'bar', 'short', 'text', 'action'];
 
-  readonly chips: Chip[] = [
-    { key: 'course_instructor_ids', labelKey: 'learners.chip.instructors' },
-    { key: 'learner_types',         labelKey: 'learners.chip.learners' },
-    { key: 'course_ids',            labelKey: 'learners.chip.courses' },
-    { key: 'qualification_ids',     labelKey: 'learners.chip.qualification' },
-  ];
-
-  readonly rows    = signal<LearnerRow[]>([]);
-  readonly total   = signal(0);
-  readonly page    = signal(1);
-  readonly state   = signal<LoadState>('loading');
-  readonly search  = signal('');
-  readonly from    = signal<Date | null>(null);
-  readonly to      = signal<Date | null>(null);
-  readonly filters = signal<LearnerFilters>({ ...EMPTY_FILTERS });
-
-  /**
-   * One picker serves every chip. `pickerKey` is the chip it currently
-   * belongs to and survives closing, so the dialog can animate out and
-   * restore focus instead of being torn down mid-close.
-   */
-  readonly pickerKey     = signal<LearnerFilterKey>('course_instructor_ids');
-  readonly pickerVisible = signal(false);
-  readonly options = signal<Record<LearnerFilterKey, NasFilterOption[]>>({
-    course_instructor_ids: [], learner_types: [], course_ids: [], qualification_ids: [],
+  readonly list = createPagedList<Query, LearnerView>({
+    // Figma: "1-15 of 109".
+    initial: {
+      search: '', page: 1, perPage: 15,
+      instructorIds: [], learnerTypes: [], courseIds: [], qualificationIds: [], activeFrom: null, activeTo: null,
+    },
+    load: q => this.api.getPaginated<LearnerRow>(API.ADMIN_USERS, this.params(q)).pipe(toPaged(r => ({ ...r, tone: tone(r.compliance_pct ?? 0) }))),
   });
-  readonly optionsLoading = signal(false);
 
-  readonly anyFilter  = computed(() => Object.values(this.filters()).some(v => v.length > 0));
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
-  readonly rangeStart = computed(() => (this.total() === 0 ? 0 : (this.page() - 1) * this.perPage + 1));
-  readonly rangeEnd   = computed(() => Math.min(this.page() * this.perPage, this.total()));
+  /* ── Filter modal ──────────────────────────────────────────────── */
+  readonly filterOpen = signal(false);
+  private readonly instructors    = signal<NasFilterFieldOption[]>([]);
+  private readonly qualifications = signal<NasFilterFieldOption[]>([]);
+  private readonly courseOptions = new RemoteFilterOptions(term =>
+    this.api.getPaginated<ApiCourseRaw>(API.COURSES, { per_page: 20, ...(term ? { search: term } : {}) }).pipe(
+      map(res => res.result.data.map(c => ({ id: c.id, label: mapApiCourseListItem(c).title }))),
+    ));
+  private lookupsLoaded = false;
+  private readonly langTick = signal(0);
 
-  private readonly fetch$  = new Subject<void>();
-  private readonly search$ = new Subject<string>();
-  private readonly courseSearch$ = new Subject<string>();
+  readonly appliedFilters = computed<NasFilterValues>(() => {
+    const q = this.list.query();
+    return appliedValues({
+      course_instructor_ids: q.instructorIds,
+      learner_types: q.learnerTypes,
+      course_ids: q.courseIds,
+      qualification_ids: q.qualificationIds,
+      active_from: q.activeFrom,
+      active_to: q.activeTo,
+    });
+  });
+  readonly activeFilters = computed(() => activeFilterCount(this.appliedFilters()));
+  readonly hasQuery = computed(() => this.activeFilters() > 0 || this.list.query().search !== '');
+
+  readonly filterFields = computed<NasFilterField[]>(() => {
+    this.langTick();
+    return [
+      {
+        key: 'course_instructor_ids', multiple: true,
+        label: this.t.instant('learners.chip.instructors'),
+        placeholder: this.t.instant('courses_list.select_instructor'),
+        searchPlaceholder: this.t.instant('courses_list.search_instructors'),
+        options: this.instructors(),
+      },
+      {
+        // users.learner_type (Online / Offline / Hybrid learner), not a list of learners.
+        key: 'learner_types', multiple: true,
+        label: this.t.instant('learners.filter_learner_type'),
+        placeholder: this.t.instant('learners.select_learner_type'),
+        options: LEARNER_TYPES.map(type => ({ id: type, label: this.t.instant(`learners.type.${type}`) })),
+      },
+      {
+        key: 'course_ids', multiple: true, remote: true,
+        label: this.t.instant('learners.chip.courses'),
+        placeholder: this.t.instant('courses_list.select_course'),
+        searchPlaceholder: this.t.instant('courses_list.search_courses'),
+        options: this.courseOptions.options(),
+      },
+      {
+        key: 'qualification_ids', multiple: true,
+        label: this.t.instant('learners.chip.qualification'),
+        placeholder: this.t.instant('common.select'),
+        options: this.qualifications(),
+      },
+      {
+        key: 'active_from', type: 'date', before: 'active_to', options: [],
+        label: this.t.instant('learners.active_from'),
+        placeholder: this.t.instant('learners.from'),
+      },
+      {
+        key: 'active_to', type: 'date', after: 'active_from', options: [],
+        label: this.t.instant('learners.active_to'),
+        placeholder: this.t.instant('learners.to'),
+      },
+    ];
+  });
+
+  /** The current filters without paging, for "everyone matching" in the Assign dialog. */
+  readonly filterParams = computed<ApiParams>(() => {
+    const { page: _page, per_page: _perPage, ...rest } = this.params(this.list.query());
+    return rest;
+  });
 
   constructor() {
     withLocaleReload(() => {
-      this.fetch$.next();
       // Option labels (course titles, qualification names) are localised.
-      this.options.set({ course_instructor_ids: [], learner_types: [], course_ids: [], qualification_ids: [] });
+      this.langTick.update(v => v + 1);
+      this.lookupsLoaded = false;
+      if (this.filterOpen()) this.loadLookups();
+      this.list.reload();
     });
   }
 
   ngOnInit(): void {
-    this.fetch$
-      .pipe(
-        switchMap(() => {
-          this.state.set('loading');
-          return this.api.getPaginated<LearnerRow>(API.ADMIN_USERS, this.params()).pipe(
-            map(res => ({ ok: true as const, res })),
-            catchError(() => of({ ok: false as const })),
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(result => {
-        if (!result.ok) {
-          this.state.set('error');
-          return;
-        }
-        this.rows.set(result.res.result.data);
-        this.total.set(result.res.result.total);
-        this.state.set('ready');
-      });
-
-    this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(term => {
-        this.search.set(term.trim());
-        this.reload();
-      });
-
-    // No distinctUntilChanged here: reopening the picker re-sends the same
-    // (empty) term when the first load found nothing, and swallowing it would
-    // leave the picker loading forever. switchMap already drops stale results.
-    this.courseSearch$
-      .pipe(
-        debounceTime(300),
-        switchMap(term => this.loadCourses(term)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(opts => this.setOptions('course_ids', opts));
-
-    this.fetch$.next();
+    this.list.reload();
   }
 
-  /** Back to page 1 and refetch: used by every filter change. */
-  reload(): void {
-    this.page.set(1);
-    this.fetch$.next();
+  openFilter(): void {
+    this.loadLookups();
+    this.filterOpen.set(true);
   }
 
-  retry(): void {
-    this.fetch$.next();
+  onFilterSearch(e: { key: string; term: string }): void {
+    if (e.key === 'course_ids') this.courseOptions.search(e.term);
   }
 
-  onSearch(term: string): void {
-    this.search$.next(term);
-  }
-
-  onFrom(d: Date | null): void {
-    this.from.set(d);
-    this.reload();
-  }
-
-  onTo(d: Date | null): void {
-    this.to.set(d);
-    this.reload();
-  }
-
-  goTo(p: number): void {
-    if (p < 1 || p > this.totalPages() || p === this.page()) return;
-    this.page.set(p);
-    this.fetch$.next();
-  }
-
-  // ── Chips ──────────────────────────────────────────────────────────────
-  clearFilters(): void {
-    if (!this.anyFilter()) return;
-    this.filters.set({ ...EMPTY_FILTERS });
-    this.reload();
-  }
-
-  isActive(key: LearnerFilterKey): boolean {
-    return this.filters()[key].length > 0;
-  }
-
-  count(key: LearnerFilterKey): number {
-    return this.filters()[key].length;
-  }
-
-  selectedFor(key: LearnerFilterKey): readonly (number | string)[] {
-    return this.filters()[key];
-  }
-
-  openPicker(key: LearnerFilterKey): void {
-    this.pickerKey.set(key);
-    this.pickerVisible.set(true);
-    if (this.options()[key].length === 0) this.loadOptions(key);
-  }
-
-  onPick(key: LearnerFilterKey, ids: (number | string)[]): void {
-    const nums = ids.filter((v): v is number => typeof v === 'number');
-    this.filters.update((f): LearnerFilters => {
-      switch (key) {
-        case 'learner_types':         return { ...f, learner_types: ids.filter(isLearnerType) };
-        case 'course_instructor_ids': return { ...f, course_instructor_ids: nums };
-        case 'course_ids':            return { ...f, course_ids: nums };
-        case 'qualification_ids':     return { ...f, qualification_ids: nums };
-      }
+  onFilter(v: NasFilterValues): void {
+    const courseIds = filterNumbers(v['course_ids']);
+    this.courseOptions.remember(courseIds);
+    const date = (x: string | number | null) => (typeof x === 'string' ? x : null);
+    this.list.patch({
+      instructorIds: filterNumbers(v['course_instructor_ids']),
+      learnerTypes: filterStrings(v['learner_types'], LEARNER_TYPES),
+      courseIds,
+      qualificationIds: filterNumbers(v['qualification_ids']),
+      activeFrom: date(filterOne(v['active_from'])),
+      activeTo: date(filterOne(v['active_to'])),
     });
-    this.reload();
   }
 
-  onPickerSearch(key: LearnerFilterKey, term: string): void {
-    // Courses can outgrow one page of options, so their search goes to the
-    // server; the other lists are small and filtered in the picker.
-    if (key === 'course_ids') this.courseSearch$.next(term);
+  private loadLookups(): void {
+    this.courseOptions.search('');
+    if (this.lookupsLoaded) return;
+    this.lookupsLoaded = true;
+    forkJoin({
+      instructors: this.api.get<{ instructors: { id: number; name: string }[] }>(`${API.ADMIN_USERS}/filter-options`).pipe(catchError(() => of(null))),
+      qualifications: this.api.get<{ id: number; name: string }[]>(API.QUALIFICATIONS_ACTIVE).pipe(catchError(() => of(null))),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ instructors, qualifications }) => {
+        // A failed list stays empty and is fetched again the next time.
+        if (!instructors || !qualifications) this.lookupsLoaded = false;
+        this.instructors.set(toFilterOptions(instructors?.result?.instructors));
+        this.qualifications.set(toFilterOptions(qualifications?.result));
+      });
   }
 
-  pickerLabel(key: LearnerFilterKey): string {
-    return this.t.instant(this.chips.find(c => c.key === key)?.labelKey ?? '');
-  }
-
-  // ── Cells ──────────────────────────────────────────────────────────────
-  /** Figma's bar colours: red below half, slate from half, green when complete. */
-  tone(pct: number): 'low' | 'mid' | 'full' {
-    if (pct >= 100) return 'full';
-    if (pct >= 50) return 'mid';
-    return 'low';
-  }
-
-  /** The current filters without paging, for "everyone matching" in the dialog. */
-  filterParams(): ApiParams {
-    const { page: _page, per_page: _perPage, ...rest } = this.params();
-    return rest;
-  }
-
-  // ── Internals ──────────────────────────────────────────────────────────
-  private params(): ApiParams {
-    const f = this.filters();
-    const p: ApiParams = { role: 'learner', page: this.page(), per_page: this.perPage };
-    if (this.search()) p['search'] = this.search();
-    for (const key of Object.keys(f) as LearnerFilterKey[]) {
-      if (f[key].length) p[key] = f[key];
-    }
-    const from = this.from();
-    const to = this.to();
-    if (from) p['active_from'] = ymd(from);
-    if (to) p['active_to'] = ymd(to);
+  private params(q: Query): ApiParams {
+    const p = pagedParams(q);
+    p['role'] = 'learner';
+    withList(p, 'course_instructor_ids', q.instructorIds);
+    withList(p, 'learner_types', q.learnerTypes);
+    withList(p, 'course_ids', q.courseIds);
+    withList(p, 'qualification_ids', q.qualificationIds);
+    if (q.activeFrom) p['active_from'] = q.activeFrom;
+    if (q.activeTo) p['active_to'] = q.activeTo;
     return p;
   }
-
-  private loadOptions(key: LearnerFilterKey): void {
-    if (key === 'learner_types') {
-      this.setOptions(key, LEARNER_TYPES.map(type => ({ id: type, label: this.t.instant(`learners.type.${type}`) })));
-      return;
-    }
-    if (key === 'course_ids') {
-      this.courseSearch$.next('');
-      this.optionsLoading.set(true);
-      return;
-    }
-    this.optionsLoading.set(true);
-    const source$ = key === 'course_instructor_ids'
-      ? this.api.get<{ instructors: { id: number; name: string }[] }>(`${API.ADMIN_USERS}/filter-options`)
-          .pipe(map(r => (r.result?.instructors ?? []).map(i => ({ id: i.id, label: i.name }))))
-      : this.api.get<{ id: number; name: string }[]>(API.QUALIFICATIONS_ACTIVE)
-          .pipe(map(r => (r.result ?? []).map(q => ({ id: q.id, label: q.name }))));
-    source$
-      .pipe(catchError(() => of([] as NasFilterOption[])), takeUntilDestroyed(this.destroyRef))
-      .subscribe(opts => this.setOptions(key, opts));
-  }
-
-  private loadCourses(term: string) {
-    this.optionsLoading.set(true);
-    return this.api
-      .getPaginated<{ id: number; title: string }>(API.COURSES, { per_page: 100, ...(term ? { search: term } : {}) })
-      .pipe(
-        map(r => r.result.data.map(c => ({ id: c.id, label: c.title }))),
-        catchError(() => of([] as NasFilterOption[])),
-      );
-  }
-
-  private setOptions(key: LearnerFilterKey, opts: NasFilterOption[]): void {
-    this.options.update(o => ({ ...o, [key]: opts }));
-    this.optionsLoading.set(false);
-  }
 }
 
-function isLearnerType(v: number | string): v is LearnerType {
-  return (LEARNER_TYPES as readonly (number | string)[]).includes(v);
-}
-
-/** A local calendar date as Y-m-d (not toISOString, which shifts by the UTC offset). */
-function ymd(d: Date): string {
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
+/** Figma's bar colours: red below half, slate from half, green when complete. */
+function tone(pct: number): 'low' | 'mid' | 'full' {
+  if (pct >= 100) return 'full';
+  if (pct >= 50) return 'mid';
+  return 'low';
 }

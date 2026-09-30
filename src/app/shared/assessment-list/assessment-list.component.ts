@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
+import { Subject, catchError, forkJoin, map, of, switchMap, timer } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
@@ -285,14 +285,17 @@ export class AssessmentListComponent implements OnInit {
     this.courseOptions.search('');
     if (this.peopleLoaded) return;
     this.peopleLoaded = true;
-    this.source().filterOptions()
-      .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-      .subscribe(res => {
+    forkJoin({
+      instructors: this.source().instructors().pipe(catchError(() => of(null))),
+      learners: this.source().learners().pipe(catchError(() => of(null))),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ instructors, learners }) => {
         // A failed list stays empty and is fetched again the next time.
-        if (!res) { this.peopleLoaded = false; return; }
-        const opt = (list: readonly { id: number; name: string | null }[]) => list.map(x => ({ id: x.id, label: x.name ?? `#${x.id}` }));
-        this.learners.set(opt(res.learners));
-        this.instructors.set(opt(res.instructors));
+        if (!instructors || !learners) this.peopleLoaded = false;
+        const opt = (list: readonly { id: number; name: string | null }[] | null) => (list ?? []).map(x => ({ id: x.id, label: x.name ?? `#${x.id}` }));
+        this.instructors.set(opt(instructors));
+        this.learners.set(opt(learners));
       });
   }
 

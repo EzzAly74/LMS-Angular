@@ -1927,6 +1927,8 @@
     "replace_photo": "Replace Photo"
   },
   "learners": {
+    "filter_learner_type": "Learner type",
+    "select_learner_type": "Select learner type",
     "title": "Learners",
     "subtitle": "Direct and track learner progress with ease.",
     "search_label": "Search learners",
