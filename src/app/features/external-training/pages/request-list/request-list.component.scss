@@ -43,17 +43,22 @@
   border-block-end: 1px solid var(--nas-color-border);
 }
 
+// Same look as the shared list search (nas-list-toolbar .nlt__search, D-070).
 .etl__search {
+  position: relative; // containing block for the visually hidden label
   display: flex;
   align-items: center;
   gap: 10px;
-  inline-size: min(100%, 320px);
+  flex: 1 1 260px; // fills the row beside the status chips
+  min-inline-size: 0;
+  block-size: 36px;
   padding: var(--nas-space-2) var(--nas-space-3);
   border: 1px solid var(--nas-color-border);
   border-radius: var(--nas-radius-md);
-  color: var(--nas-neutral-750);
+  background: var(--nas-neutral-100);
 
-  &:focus-within { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
+  nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+  &:focus-within { border-color: var(--nas-teal-700); box-shadow: 0 0 0 3px var(--nas-teal-1000-16); }
 }
 
 .etl__search-input {
@@ -61,11 +66,12 @@
   min-inline-size: 0;
   border: 0;
   outline: 0;
-  background: none;
+  background: transparent;
   font: inherit;
   font-size: var(--nas-size-xs);
   color: var(--nas-color-text-strong);
 
+  // neutral-750, not Figma's #8c8c8c (3.4:1), for AA.
   &::placeholder { color: var(--nas-neutral-750); }
 }
 
