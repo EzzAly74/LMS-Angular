@@ -1,8 +1,7 @@
-// Split out of course-detail.component.scss (D2, DB-15); rules unchanged.
-
-@use '../../styles/table';
-@use '../../styles/list';
-@use '../../styles/form';
+// Cohort tab - Figma 2266:129041. Toolbar, card, states and row menu are the
+// shared list components; this file adds the count bar, Add Cohort and the
+// enrolled link.
+@use '../../../../../../shared/styles/list';
 
 // ── Cohort list - Figma 2266:129041 ────────────────────────────────────
 .ct-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--nas-space-4); flex-wrap: wrap; }
@@ -40,20 +39,4 @@
 
   &:hover { color: var(--nas-teal-1000); }
   &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
-}
-
-.ct-menu {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 36px;
-  block-size: 36px;
-  border: 0;
-  border-radius: var(--nas-radius-md);
-  background: transparent;
-  color: var(--nas-neutral-800);
-  cursor: pointer;
-
-  &:hover { background: var(--nas-neutral-300); }
-  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
 }

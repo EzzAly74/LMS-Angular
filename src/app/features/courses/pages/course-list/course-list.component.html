@@ -34,7 +34,7 @@
       <tbody>
         @switch (list.state()) {
           @case ('loading') {
-            @for (s of skeletons; track s) { <tr nasSkeletonRow [columns]="9" [actions]="true"></tr> }
+            @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
           }
           @case ('error') {
             <tr><td colspan="9">

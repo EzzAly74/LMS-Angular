@@ -7,10 +7,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
 import {
   NasIconComponent,
   NasStatusBadgeComponent,
@@ -22,6 +19,13 @@ import {
   NasFilterField,
   NasFilterValues,
 } from '../../../../../../shared/nas/nas-filter-dialog/nas-filter-dialog.component';
+import { NasListToolbarComponent } from '../../../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasTableCardComponent } from '../../../../../../shared/nas/nas-table-card/nas-table-card.component';
+import { NasListStateComponent } from '../../../../../../shared/nas/nas-list-state/nas-list-state.component';
+import {
+  NasRowMenuComponent, type NasRowAction, type NasRowActionPick,
+} from '../../../../../../shared/nas/nas-row-menu/nas-row-menu.component';
+import { activeFilterCount, appliedValues, filterNumbers, filterStrings } from '../../../../../../shared/list/filter-values';
 import { NasDatePipe } from '../../../../../../shared/pipes/nas-date.pipes';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
@@ -32,6 +36,15 @@ import { CohortLearnersDialogComponent } from './cohort-learners-dialog.componen
 import { NewCohortDialogComponent } from './new-cohort-dialog.component';
 
 type SortKey = 'name' | 'status';
+type RowActionId = 'edit' | 'attendance';
+
+/** A cohort with its status and capacity cells, worked out when the cohorts or the language change. */
+interface CohortRow extends Cohort {
+  readonly statusKey: string;
+  readonly statusLabel: string;
+  readonly statusTone: NasStatusTone;
+  readonly seats: number;
+}
 
 /**
  * Course Details - Cohort tab (Figma 2266:129041, row menu 2266:129226,
@@ -51,11 +64,12 @@ type SortKey = 'name' | 'status';
   standalone: true,
   imports: [
     NewCohortDialogComponent,
-    CommonModule,
-    FormsModule,
     TranslateModule,
-    OverlayPanelModule,
     NasIconComponent,
+    NasListToolbarComponent,
+    NasTableCardComponent,
+    NasListStateComponent,
+    NasRowMenuComponent,
     NasStatusBadgeComponent,
     CohortAttendanceDrawerComponent,
     NasFilterDialogComponent,
@@ -85,30 +99,53 @@ export class CourseCohortsTabComponent {
   readonly sort = signal<{ key: SortKey; dir: 'asc' | 'desc' } | null>(null);
   readonly filterOpen = signal(false);
 
-  readonly activeFilters = computed(() => (this.filter().cohort !== null ? 1 : 0) + (this.filter().status !== null ? 1 : 0));
+  readonly appliedFilters = computed<NasFilterValues>(() => appliedValues({ cohort: this.filter().cohort, status: this.filter().status }));
+  readonly activeFilters = computed(() => activeFilterCount(this.appliedFilters()));
+
+  /** Every cohort with its cells; recomputed only when the cohorts, the course or the language change. */
+  private readonly allRows = computed<CohortRow[]>(() => {
+    this.langTick();
+    const cap = this.course().max_learners ?? 0;
+    return this.cohorts().map(c => ({
+      ...c,
+      statusKey: this.statusKey(c),
+      statusLabel: this.cohortStatusLabel(c),
+      statusTone: this.cohortStatusTone(c),
+      seats: c.capacity ?? cap,
+    }));
+  });
 
   readonly rows = computed(() => {
-    this.langTick();
     const q = this.search().trim().toLocaleLowerCase();
     const f = this.filter();
-    let list = this.cohorts().filter(c =>
+    let list = this.allRows().filter(c =>
       (!q || (c.name ?? '').toLocaleLowerCase().includes(q)) &&
       (f.cohort === null || c.id === f.cohort) &&
-      (f.status === null || this.statusKey(c) === f.status),
+      (f.status === null || c.statusKey === f.status),
     );
     const s = this.sort();
     if (s) {
       const dir = s.dir === 'asc' ? 1 : -1;
-      const value = (c: Cohort) => (s.key === 'name' ? c.name ?? '' : this.cohortStatusLabel(c));
+      const value = (c: CohortRow) => (s.key === 'name' ? c.name ?? '' : c.statusLabel);
       list = [...list].sort((a, b) => value(a).localeCompare(value(b), this.locale()) * dir);
     }
     return list;
   });
 
+  readonly rowCount = computed(() => this.rows().length);
+  readonly countLabel = computed(() => pluralKey('course_detail.cohorts_count', this.rowCount(), this.locale()));
+  readonly nameSort = computed(() => this.ariaSort('name'));
+  readonly statusSort = computed(() => this.ariaSort('status'));
+
+  /** Row menu: Edit Cohort and View Attendance, as drawn (2266:129226). */
+  readonly rowActions = (_row: CohortRow): readonly NasRowAction<RowActionId>[] => [
+    { id: 'edit', label: this.t.instant('course_detail.edit_cohort'), icon: 'assets/icons/figma/pencil-simple.svg' },
+    { id: 'attendance', label: this.t.instant('course_detail.view_attendance'), icon: 'calendar-blank' },
+  ];
+
   readonly filterFields = computed<NasFilterField[]>(() => {
-    this.langTick();
     const statuses = new Map<string, string>();
-    for (const c of this.cohorts()) statuses.set(this.statusKey(c), this.cohortStatusLabel(c));
+    for (const c of this.allRows()) statuses.set(c.statusKey, c.statusLabel);
     return [
       {
         key: 'cohort',
@@ -125,7 +162,6 @@ export class CourseCohortsTabComponent {
     ];
   });
 
-  readonly appliedFilters = computed<NasFilterValues>(() => ({ cohort: this.filter().cohort, status: this.filter().status }));
 
   constructor() {
     withLocaleReload(() => this.langTick.update(v => v + 1));
@@ -133,8 +169,8 @@ export class CourseCohortsTabComponent {
 
   onFilter(v: NasFilterValues): void {
     this.filter.set({
-      cohort: typeof v['cohort'] === 'number' ? v['cohort'] : null,
-      status: typeof v['status'] === 'string' ? v['status'] : null,
+      cohort: filterNumbers(v['cohort'])[0] ?? null,
+      status: filterStrings(v['status'])[0] ?? null,
     });
   }
 
@@ -143,13 +179,9 @@ export class CourseCohortsTabComponent {
     this.sort.set(!s || s.key !== key ? { key, dir: 'asc' } : s.dir === 'asc' ? { key, dir: 'desc' } : null);
   }
 
-  ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
+  private ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
     const s = this.sort();
     return s?.key === key ? (s.dir === 'asc' ? 'ascending' : 'descending') : 'none';
-  }
-
-  countKey(n: number): string {
-    return pluralKey('course_detail.cohorts_count', n, this.locale());
   }
 
   // ── Cohort learners modal ──────────────────────────────────────────────
@@ -162,19 +194,17 @@ export class CourseCohortsTabComponent {
   }
 
   // ── Row menu, attendance drawer ────────────────────────────────────────
-  readonly activeCohort = signal<Cohort | null>(null);
   readonly showAttendance = signal(false);
   readonly attendanceCohortId = signal<number | null>(null);
   readonly attendanceCohortName = signal('');
 
-  openCohortMenu(ev: Event, cohort: Cohort, overlay: OverlayPanel): void {
-    this.activeCohort.set(cohort);
-    overlay.toggle(ev);
+  onRowAction(e: NasRowActionPick<CohortRow, RowActionId>): void {
+    if (e.id === 'edit') this.openEditCohort(e.row);
+    else this.openCohortAttendance(e.row);
   }
 
   /** Cohort.id is the `course_sections.id` the attendance endpoint expects. */
-  openCohortAttendance(cohort: Cohort, overlay: OverlayPanel): void {
-    overlay.hide();
+  private openCohortAttendance(cohort: Cohort): void {
     this.attendanceCohortId.set(cohort.id);
     this.attendanceCohortName.set(cohort.name || '');
     this.showAttendance.set(true);
@@ -190,8 +220,7 @@ export class CourseCohortsTabComponent {
     this.newCohortOpen.set(true);
   }
 
-  openEditCohort(cohort: Cohort, overlay: OverlayPanel): void {
-    overlay.hide();
+  private openEditCohort(cohort: Cohort): void {
     this.editCohort.set(cohort);
     this.newCohortOpen.set(true);
   }
@@ -206,21 +235,17 @@ export class CourseCohortsTabComponent {
   }
 
   /** Filter key: the stored status, with an upcoming `scheduled` kept apart. */
-  statusKey(cohort: Cohort): string {
+  private statusKey(cohort: Cohort): string {
     return this.isUpcoming(cohort) ? 'upcoming' : cohort.status;
   }
 
-  cohortStatusLabel(cohort: Cohort): string {
+  private cohortStatusLabel(cohort: Cohort): string {
     if (this.isUpcoming(cohort)) return this.t.instant('course_detail.up_coming');
     return this.enums.options('cohort_status')().find(o => o.code === cohort.status)?.value ?? cohort.status;
   }
 
-  /** "N / M": the cohort's own capacity, else the course's per-cohort cap. */
-  cohortCapacity(cohort: Cohort): number {
-    return cohort.capacity ?? this.course().max_learners ?? 0;
-  }
-
-  cohortStatusTone(cohort: Cohort): NasStatusTone {
+  /** "N / M" (row.seats): the cohort's own capacity, else the course's per-cohort cap. */
+  private cohortStatusTone(cohort: Cohort): NasStatusTone {
     const s = cohort.status;
     if (s === 'completed') return 'sky';
     if (s === 'active') return 'success';

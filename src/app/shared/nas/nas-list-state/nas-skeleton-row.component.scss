@@ -1,0 +1,76 @@
+// Loading row - drawn to the shared table metrics (shared/styles/_list.scss:
+// 57 px rows, 20 px sides, a 1 px divider), since these cells are this
+// component's own and the page's table styles do not reach them.
+
+:host {
+  --nsr-base: var(--nas-neutral-400);
+  --nsr-shine: var(--nas-neutral-50);
+  --nsr-edge: var(--nas-neutral-400);
+}
+
+.nsr__cell {
+  block-size: 57px;
+  padding: var(--nas-space-2) var(--nas-space-5, 20px);
+  border-block-start: 1px solid var(--nas-color-border);
+  vertical-align: middle;
+  text-align: start;
+
+  &--center { text-align: center; }
+  &--end { text-align: end; }
+}
+
+// The first body row has no divider above it, like real rows.
+:host(:first-child) .nsr__cell { border-block-start: 0; }
+
+// ── Blocks: a soft base with a light sweep ────────────────────────────────
+.nsr__b {
+  display: inline-block;
+  vertical-align: middle;
+  max-inline-size: 100%;
+  block-size: 12px;
+  border-radius: 999px;
+  background-color: var(--nsr-base);
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--nsr-shine) 46%,
+    var(--nsr-shine) 54%,
+    transparent 80%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  background-position: 150% 0;
+  animation: nsr-sweep 1.6s ease-in-out infinite;
+  animation-delay: var(--nsr-delay, 0ms);
+
+  &--title   { block-size: 14px; }
+  &--caption { block-size: 10px; opacity: 0.7; }
+  &--line    { block-size: 12px; }
+  &--num     { inline-size: 24px; block-size: 12px; }
+  &--avatar  { flex-shrink: 0; inline-size: 32px; block-size: 32px; border-radius: 50%; }
+  &--pill    { block-size: 20px; border-radius: 6px; }
+  &--track   { flex: 1 1 auto; block-size: 6px; background-color: var(--nsr-edge); }
+  &--pct     { flex-shrink: 0; inline-size: 28px; block-size: 10px; }
+  &--action  { inline-size: 24px; block-size: 6px; border-radius: 3px; }
+}
+
+.nsr__stack { display: flex; flex-direction: column; gap: 8px; }
+.nsr__person { display: flex; align-items: center; gap: 10px; }
+.nsr__bar { display: flex; align-items: center; gap: var(--nas-space-2); max-inline-size: 110px; }
+
+// The sweep runs with the reading direction.
+:host-context([dir='rtl']) .nsr__b { animation-name: nsr-sweep-rtl; background-position: -50% 0; }
+
+@keyframes nsr-sweep {
+  from { background-position: 150% 0; }
+  to   { background-position: -50% 0; }
+}
+
+@keyframes nsr-sweep-rtl {
+  from { background-position: -50% 0; }
+  to   { background-position: 150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nsr__b { animation: none; background-image: none; }
+}

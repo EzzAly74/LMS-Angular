@@ -1,102 +1,80 @@
-<div class="cl-toolbar">
-  <div class="cl-search">
-    <nas-icon name="magnifying-glass" [size]="20" />
-    <label class="cl-sr-only" for="cd-learners-search">{{ 'course_detail.search_learners' | translate }}</label>
-    <input id="cd-learners-search" type="search" class="cl-search__input"
-      [placeholder]="'course_detail.search_placeholder' | translate"
-      [ngModel]="query().search" (ngModelChange)="onSearch($event)" />
-  </div>
-  <button type="button" class="cl-filter" [class.cl-filter--on]="activeFilters() > 0" aria-haspopup="dialog"
-    (click)="filterOpen.set(true)">
-    <nas-icon name="funnel" [size]="20" />
-    <span>{{ 'common.filter' | translate }}</span>
-    @if (activeFilters() > 0) {
-      <span class="cl-filter__badge" [attr.aria-label]="'course_detail.filters_on' | translate: { count: activeFilters() }">{{ activeFilters() }}</span>
-    }
-  </button>
-</div>
+<nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
+  [label]="'course_detail.search_learners' | translate" [placeholder]="'course_detail.search_placeholder' | translate"
+  (searchChange)="list.search($event)" (filter)="filterOpen.set(true)" />
 
-<section class="cl-card" [attr.aria-busy]="state() === 'loading'" [attr.aria-label]="'course_detail.tab_learners' | translate">
-  <div class="cl-scroll" tabindex="0" [attr.aria-label]="'course_detail.tab_learners' | translate">
-    <table class="cl-table">
-      <thead>
-        <tr>
-          <th scope="col">{{ 'course_detail.learner' | translate }}</th>
-          <th scope="col">{{ 'course_detail.cohort' | translate }}</th>
-          <th scope="col">{{ 'course_detail.progress' | translate }}</th>
-          <th scope="col">{{ 'course_detail.status' | translate }}</th>
-          <th scope="col">{{ 'course_detail.enrolled' | translate }}</th>
-          @if (canOpenLearner()) { <th scope="col" class="cl-center">{{ 'course_detail.action' | translate }}</th> }
-        </tr>
-      </thead>
-      <tbody>
-        @switch (state()) {
-          @case ('loading') {
-            <tr><td [attr.colspan]="canOpenLearner() ? 6 : 5"><p class="cl-state" role="status">{{ 'common.loading' | translate }}</p></td></tr>
-          }
-          @case ('error') {
-            <tr><td [attr.colspan]="canOpenLearner() ? 6 : 5">
-              <div class="cl-state" role="alert">
-                <p>{{ 'common.could_not_load' | translate }}</p>
-                <button type="button" class="cl-retry" (click)="reload()">{{ 'common.retry' | translate }}</button>
-              </div>
+<nas-table-card [label]="'course_detail.tab_learners' | translate" [busy]="list.state() === 'loading'">
+  <table class="cl-table">
+    <thead>
+      <tr>
+        <th scope="col">{{ 'course_detail.learner' | translate }}</th>
+        <th scope="col">{{ 'course_detail.cohort' | translate }}</th>
+        <th scope="col">{{ 'course_detail.progress' | translate }}</th>
+        <th scope="col">{{ 'course_detail.status' | translate }}</th>
+        <th scope="col">{{ 'course_detail.enrolled' | translate }}</th>
+        @if (canOpenLearner()) { <th scope="col" class="cl-center">{{ 'course_detail.action' | translate }}</th> }
+      </tr>
+    </thead>
+    <tbody>
+      @switch (list.state()) {
+        @case ('loading') {
+          @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells()" [row]="s"></tr> }
+        }
+        @case ('error') {
+          <tr><td [attr.colspan]="columns()">
+            <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+          </td></tr>
+        }
+        @default {
+          @for (row of list.items(); track row.id) {
+            <tr>
+              <td>
+                <span class="lt-learner">
+                  <span class="lt-avatar">
+                    <nas-avatar size="sm" [name]="row.user?.name ?? ''" />
+                    <span class="lt-dot" [class.lt-dot--on]="row.user?.active" aria-hidden="true"></span>
+                  </span>
+                  <span class="cl-strong"><bdi>{{ row.user?.name ?? '-' }}</bdi></span>
+                  @if (row.user && !row.user.active) {
+                    <span class="cl-sr-only">({{ 'course_detail.account_inactive' | translate }})</span>
+                  }
+                </span>
+              </td>
+              <td><bdi>{{ row.cohort?.name ?? '-' }}</bdi></td>
+              <td>
+                <span class="cl-progress">
+                  <span class="cl-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                    [attr.aria-valuenow]="row.progress" [attr.aria-label]="'course_detail.progress' | translate">
+                    <span class="cl-progress__fill cl-progress__fill--{{ row.band }}" [style.inline-size.%]="row.progress"></span>
+                  </span>
+                  <span class="cl-progress__value cl-progress__value--{{ row.band }}" dir="ltr">{{ row.progress }}%</span>
+                </span>
+              </td>
+              <td><nas-status-badge [tone]="row.statusTone">{{ 'course_detail.learner_status.' + row.status | translate }}</nas-status-badge></td>
+              <td class="cl-small">{{ row.enrolled_at ? (row.enrolled_at | nasDate: locale()) : '-' }}</td>
+              @if (canOpenLearner()) {
+                <td class="cl-center">
+                  @if (row.user) {
+                    <a class="cl-eye" [routerLink]="['/admin/learners', row.user.id]"
+                      [attr.aria-label]="'course_detail.view_learner' | translate: { name: row.user.name }">
+                      <img src="assets/icons/figma/eye.svg" width="20" height="20" alt="" />
+                    </a>
+                  }
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr><td [attr.colspan]="columns()">
+              <nas-list-state [message]="(hasQuery() ? 'course_detail.no_results' : 'course_detail.no_learners') | translate" />
             </td></tr>
           }
-          @default {
-            @for (row of rows(); track row.id) {
-              @let b = band(row.progress);
-              <tr>
-                <td>
-                  <span class="lt-learner">
-                    <span class="lt-avatar">
-                      <nas-avatar size="sm" [name]="row.user?.name ?? ''" />
-                      <span class="lt-dot" [class.lt-dot--on]="row.user?.active" aria-hidden="true"></span>
-                    </span>
-                    <span class="cl-strong"><bdi>{{ row.user?.name ?? '-' }}</bdi></span>
-                    @if (row.user && !row.user.active) {
-                      <span class="cl-sr-only">({{ 'course_detail.account_inactive' | translate }})</span>
-                    }
-                  </span>
-                </td>
-                <td><bdi>{{ row.cohort?.name ?? '-' }}</bdi></td>
-                <td>
-                  <span class="cl-progress">
-                    <span class="cl-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
-                      [attr.aria-valuenow]="row.progress" [attr.aria-label]="'course_detail.progress' | translate">
-                      <span class="cl-progress__fill cl-progress__fill--{{ b }}" [style.inline-size.%]="row.progress"></span>
-                    </span>
-                    <span class="cl-progress__value cl-progress__value--{{ b }}" dir="ltr">{{ row.progress }}%</span>
-                  </span>
-                </td>
-                <td><nas-status-badge [tone]="statusTone(row.status)">{{ 'course_detail.learner_status.' + row.status | translate }}</nas-status-badge></td>
-                <td class="cl-small">{{ row.enrolled_at ? (row.enrolled_at | nasDate: locale()) : '-' }}</td>
-                @if (canOpenLearner()) {
-                  <td class="cl-center">
-                    @if (row.user) {
-                      <a class="cl-eye" [routerLink]="['/admin/learners', row.user.id]"
-                        [attr.aria-label]="'course_detail.view_learner' | translate: { name: row.user.name }">
-                        <img src="assets/icons/figma/eye.svg" width="20" height="20" alt="" />
-                      </a>
-                    }
-                  </td>
-                }
-              </tr>
-            } @empty {
-              <tr><td [attr.colspan]="canOpenLearner() ? 6 : 5">
-                <p class="cl-state">{{ (hasQuery() ? 'course_detail.no_results' : 'course_detail.no_learners') | translate }}</p>
-              </td></tr>
-            }
-          }
         }
-      </tbody>
-    </table>
-  </div>
-  @if (state() === 'ready' && total() > perPage) {
-    <div class="cl-pager">
-      <nas-pager [page]="query().page" [total]="total()" [perPage]="perPage" rangeKey="course_detail.learners_range"
-        (pageChange)="goTo($event)" />
-    </div>
+      }
+    </tbody>
+  </table>
+  @if (list.pageable()) {
+    <nas-pager nasTablePager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+      rangeKey="course_detail.learners_range" (pageChange)="list.goTo($event)" />
   }
-</section>
+</nas-table-card>
 
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />

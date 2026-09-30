@@ -1,35 +1,19 @@
-<div class="cl-toolbar">
-  <div class="cl-search">
-    <nas-icon name="magnifying-glass" [size]="20" />
-    <label class="cl-sr-only" for="cd-cohorts-search">{{ 'course_detail.search_cohorts' | translate }}</label>
-    <input id="cd-cohorts-search" type="search" class="cl-search__input"
-      [placeholder]="'course_detail.search_placeholder' | translate"
-      [ngModel]="search()" (ngModelChange)="search.set($event)" />
-  </div>
-  <button type="button" class="cl-filter" [class.cl-filter--on]="activeFilters() > 0" aria-haspopup="dialog"
-    (click)="filterOpen.set(true)">
-    <nas-icon name="funnel" [size]="20" />
-    <span>{{ 'common.filter' | translate }}</span>
-    @if (activeFilters() > 0) {
-      <span class="cl-filter__badge" [attr.aria-label]="'course_detail.filters_on' | translate: { count: activeFilters() }">{{ activeFilters() }}</span>
-    }
-  </button>
-</div>
-
+<nas-list-toolbar [search]="search()" [filterCount]="activeFilters()"
+  [label]="'course_detail.search_cohorts' | translate" [placeholder]="'course_detail.search_placeholder' | translate"
+  (searchChange)="search.set($event)" (filter)="filterOpen.set(true)" />
 <div class="ct-bar">
-  <p class="cl-count" aria-live="polite">{{ countKey(rows().length) | translate: { count: rows().length } }}</p>
+  <p class="cl-count" aria-live="polite">{{ countLabel() | translate: { count: rowCount() } }}</p>
   <button type="button" class="ct-add" (click)="openAddCohort()">
     <nas-icon name="plus-circle" [size]="20" />
     <span>{{ 'course_detail.add_cohort' | translate }}</span>
   </button>
 </div>
 
-<section class="cl-card" [attr.aria-label]="'course_detail.tab_cohort' | translate">
-  <div class="cl-scroll" tabindex="0" [attr.aria-label]="'course_detail.tab_cohort' | translate">
+<nas-table-card [label]="'course_detail.tab_cohort' | translate">
     <table class="cl-table">
       <thead>
         <tr>
-          <th scope="col" [attr.aria-sort]="ariaSort('name')">
+          <th scope="col" [attr.aria-sort]="nameSort()">
             <button type="button" class="cl-sort" [class.cl-sort--desc]="sort()?.key === 'name' && sort()?.dir === 'desc'" (click)="toggleSort('name')">
               {{ 'course_detail.cohort' | translate }}
               <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
@@ -39,7 +23,7 @@
           <th scope="col">{{ 'course_detail.end' | translate }}</th>
           <th scope="col">{{ 'course_detail.enrolled_capacity' | translate }}</th>
           <th scope="col" class="cl-center">{{ 'course_detail.sessions' | translate }}</th>
-          <th scope="col" [attr.aria-sort]="ariaSort('status')">
+          <th scope="col" [attr.aria-sort]="statusSort()">
             <button type="button" class="cl-sort" [class.cl-sort--desc]="sort()?.key === 'status' && sort()?.dir === 'desc'" (click)="toggleSort('status')">
               {{ 'course_detail.status' | translate }}
               <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
@@ -56,29 +40,28 @@
             <td>{{ cohort.end_date ? (cohort.end_date | nasDate: locale()) : '-' }}</td>
             <td>
               <button type="button" class="ct-enrolled" (click)="openLearners(cohort)"
-                [attr.aria-label]="'course_detail.enrolled_of_capacity' | translate: { name: cohort.name, enrolled: cohort.enrolled, capacity: cohortCapacity(cohort) }">
-                <span dir="ltr">{{ cohort.enrolled }} / {{ cohortCapacity(cohort) }}</span>
+                [attr.aria-label]="'course_detail.enrolled_of_capacity' | translate: { name: cohort.name, enrolled: cohort.enrolled, capacity: cohort.seats }">
+                <span dir="ltr">{{ cohort.enrolled }} / {{ cohort.seats }}</span>
               </button>
             </td>
             <td class="cl-center" dir="ltr">{{ cohort.number_of_sessions ?? '-' }}</td>
-            <td><nas-status-badge [tone]="cohortStatusTone(cohort)">{{ cohortStatusLabel(cohort) }}</nas-status-badge></td>
+            <td><nas-status-badge [tone]="cohort.statusTone">{{ cohort.statusLabel }}</nas-status-badge></td>
             <td class="cl-end">
-              <button type="button" class="ct-menu" aria-haspopup="menu"
+              <button type="button" class="cl-more" aria-haspopup="menu"
                 [attr.aria-label]="'course_detail.cohort_actions' | translate: { name: cohort.name }"
-                (click)="openCohortMenu($event, cohort, cohortMenu)">
-                <nas-icon name="dots-three" [size]="20" />
+                (click)="rowMenu.open($event, cohort)">
+                <nas-icon name="dots-three" [size]="16" />
               </button>
             </td>
           </tr>
         } @empty {
           <tr><td colspan="7">
-            <p class="cl-state">{{ (cohorts().length ? 'course_detail.no_results' : 'course_detail.no_cohorts') | translate }}</p>
+            <nas-list-state [message]="(cohorts().length ? 'course_detail.no_results' : 'course_detail.no_cohorts') | translate" />
           </td></tr>
         }
       </tbody>
     </table>
-  </div>
-</section>
+</nas-table-card>
 
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />
 
@@ -87,19 +70,8 @@
 <app-cohort-learners-dialog [(visible)]="learnersOpen" [courseId]="courseId()"
   [cohortId]="learnersCohort()?.id ?? null" [cohortName]="learnersCohort()?.name ?? ''" />
 
-<!-- ── Cohort row menu ─────────────────────────────────────────────── -->
-<p-overlayPanel #cohortMenu>
-  @if (activeCohort(); as cohort) {
-    <div class="row-menu">
-      <button class="row-menu__item" (click)="openEditCohort(cohort, cohortMenu)">
-        <i class="pi pi-pencil"></i>{{ 'course_detail.edit_cohort' | translate }}
-      </button>
-      <button class="row-menu__item" (click)="openCohortAttendance(cohort, cohortMenu)">
-        <i class="pi pi-calendar"></i>{{ 'course_detail.view_attendance' | translate }}
-      </button>
-    </div>
-  }
-</p-overlayPanel>
+<!-- ── Cohort row menu (2266:129226) ───────────────────────────────── -->
+<nas-row-menu #rowMenu [actions]="rowActions" (picked)="onRowAction($event)" />
 
 <!-- ── Cohort Attendance drawer (Figma 454:42768, 332:11156) ───────── -->
 <nas-cohort-attendance-drawer

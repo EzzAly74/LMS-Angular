@@ -9,17 +9,23 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, of, map } from 'rxjs';
-import { NasIconComponent, NasStatusBadgeComponent } from '../../../../../../shared/nas';
+import { catchError, of } from 'rxjs';
+import { NasStatusBadgeComponent } from '../../../../../../shared/nas';
 import { NasPagerComponent } from '../../../../../../shared/nas/nas-pager/nas-pager.component';
 import {
   NasFilterDialogComponent,
   NasFilterField,
   NasFilterValues,
 } from '../../../../../../shared/nas/nas-filter-dialog/nas-filter-dialog.component';
+import { NasListToolbarComponent } from '../../../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasTableCardComponent } from '../../../../../../shared/nas/nas-table-card/nas-table-card.component';
+import {
+  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS, type NasSkeletonCell,
+} from '../../../../../../shared/nas/nas-list-state/nas-list-state.component';
+import { createPagedList, toPaged, type PagedQuery } from '../../../../../../shared/list/paged-list';
+import { activeFilterCount, appliedValues, filterNumbers, filterStrings } from '../../../../../../shared/list/filter-values';
 import { NasDatePipe } from '../../../../../../shared/pipes/nas-date.pipes';
 import { ApiService } from '../../../../../../core/services/api.service';
 import { API } from '../../../../../../core/constants/api.constants';
@@ -31,16 +37,15 @@ import type { CourseSubmissionRow, IdName } from '../../../../models/course-deta
 
 export type SubmissionKind = 'quiz' | 'assignment';
 
-type LoadState = 'loading' | 'ready' | 'error';
+const STATUSES = ['graded', 'pending'] as const;
+type SubmissionStatus = typeof STATUSES[number];
 
-interface Query {
-  page: number;
-  search: string;
-  section_id: number | null;
-  learner_id: number | null;
-  instructor_id: number | null;
-  item_id: number | null;
-  status: 'graded' | 'pending' | null;
+interface Query extends PagedQuery {
+  readonly sectionId: number | null;
+  readonly learnerId: number | null;
+  readonly instructorId: number | null;
+  readonly itemId: number | null;
+  readonly status: SubmissionStatus | null;
 }
 
 interface FilterOptions {
@@ -49,8 +54,13 @@ interface FilterOptions {
   items: IdName[];
 }
 
-const PER_PAGE = 10;
-const EMPTY: Query = { page: 1, search: '', section_id: null, learner_id: null, instructor_id: null, item_id: null, status: null };
+/** A submission with its title, score colour and link, worked out once per load. */
+interface SubmissionRow extends CourseSubmissionRow {
+  readonly title: string;
+  readonly scoreClass: 'cl-pass' | 'cl-fail' | 'cl-neutral-score';
+  readonly link: string[];
+  readonly submitted: string | null;
+}
 
 /**
  * Course Details - Quizzes (Figma 2295:53311, filter 2295:52815) and
@@ -68,13 +78,15 @@ const EMPTY: Query = { page: 1, search: '', section_id: null, learner_id: null, 
   selector: 'app-course-submissions-tab',
   standalone: true,
   imports: [
-    FormsModule,
     RouterLink,
     TranslateModule,
-    NasIconComponent,
     NasStatusBadgeComponent,
     NasPagerComponent,
     NasFilterDialogComponent,
+    NasListToolbarComponent,
+    NasTableCardComponent,
+    NasListStateComponent,
+    NasSkeletonRowComponent,
     NasDatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,21 +104,42 @@ export class CourseSubmissionsTabComponent implements OnInit {
   readonly courseId = input.required<number>();
   readonly cohorts = input<Cohort[]>([]);
 
-  readonly state = signal<LoadState>('loading');
-  readonly rows = signal<CourseSubmissionRow[]>([]);
-  readonly total = signal(0);
-  readonly query = signal<Query>({ ...EMPTY });
+  readonly skeletons = SKELETON_ROWS;
+  /** Learner, three text columns, submitted, score, attempts / status, the eye. */
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['text', 'text', 'text', 'text', 'short', 'short', 'num', 'action'];
   readonly options = signal<FilterOptions>({ learners: [], instructors: [], items: [] });
   readonly filterOpen = signal(false);
   private readonly langTick = signal(0);
 
-  readonly perPage = PER_PAGE;
   readonly isQuiz = computed(() => this.kind() === 'quiz');
 
-  readonly activeFilters = computed(() => {
-    const q = this.query();
-    return [q.section_id, q.learner_id, q.instructor_id, q.item_id, q.status].filter(v => v !== null).length;
+  readonly list = createPagedList<Query, SubmissionRow>({
+    initial: { search: '', page: 1, perPage: 10, sectionId: null, learnerId: null, instructorId: null, itemId: null, status: null },
+    load: q => {
+      const quiz = this.isQuiz();
+      const params = {
+        page: q.page,
+        per_page: q.perPage,
+        search: q.search || undefined,
+        section_id: q.sectionId ?? undefined,
+        learner_ids: q.learnerId !== null ? [q.learnerId] : undefined,
+        instructor_ids: q.instructorId !== null ? [q.instructorId] : undefined,
+        status: q.status ?? undefined,
+        ...(quiz ? { quiz_id: q.itemId ?? undefined } : { assignment_id: q.itemId ?? undefined }),
+      };
+      const req$ = quiz
+        ? this.courses.quizSubmissions(this.courseId(), params)
+        : this.courses.assignmentSubmissions(this.courseId(), params);
+      return req$.pipe(toPaged(r => toRow(r, quiz)));
+    },
   });
+
+  readonly appliedFilters = computed<NasFilterValues>(() => {
+    const q = this.list.query();
+    return appliedValues({ learner_id: q.learnerId, section_id: q.sectionId, instructor_id: q.instructorId, item_id: q.itemId, status: q.status });
+  });
+  readonly activeFilters = computed(() => activeFilterCount(this.appliedFilters()));
+  readonly hasQuery = computed(() => this.activeFilters() > 0 || this.list.query().search !== '');
 
   readonly filterFields = computed<NasFilterField[]>(() => {
     this.langTick();
@@ -128,109 +161,32 @@ export class CourseSubmissionsTabComponent implements OnInit {
       key: 'status',
       label: this.t.instant('course_detail.status'),
       placeholder: this.t.instant('course_detail.select_status'),
-      options: (['graded', 'pending'] as const).map(s => ({ id: s, label: this.t.instant(`course_detail.submission_status.${s}`) })),
+      options: STATUSES.map(s => ({ id: s, label: this.t.instant(`course_detail.submission_status.${s}`) })),
     };
     return [learner, instructor, item, cohort, status];
   });
 
-  readonly appliedFilters = computed<NasFilterValues>(() => {
-    const q = this.query();
-    return { learner_id: q.learner_id, section_id: q.section_id, instructor_id: q.instructor_id, item_id: q.item_id, status: q.status };
-  });
-
-  private readonly search$ = new Subject<string>();
-  private readonly load$ = new Subject<Query>();
-
   constructor() {
-    this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe(search => this.update({ search: search.trim(), page: 1 }));
-
-    this.load$
-      .pipe(
-        switchMap(q => {
-          const params = {
-            page: q.page,
-            per_page: PER_PAGE,
-            search: q.search || undefined,
-            section_id: q.section_id ?? undefined,
-            learner_ids: q.learner_id !== null ? [q.learner_id] : undefined,
-            instructor_ids: q.instructor_id !== null ? [q.instructor_id] : undefined,
-            status: q.status ?? undefined,
-            ...(this.isQuiz() ? { quiz_id: q.item_id ?? undefined } : { assignment_id: q.item_id ?? undefined }),
-          };
-          const req$ = this.isQuiz()
-            ? this.courses.quizSubmissions(this.courseId(), params)
-            : this.courses.assignmentSubmissions(this.courseId(), params);
-          return req$.pipe(
-            map(res => ({ ok: true as const, res })),
-            catchError(() => of({ ok: false as const })),
-          );
-        }),
-        takeUntilDestroyed(),
-      )
-      .subscribe(out => {
-        if (!out.ok) {
-          this.state.set('error');
-          return;
-        }
-        this.rows.set(out.res.result.data);
-        this.total.set(out.res.result.total);
-        this.state.set('ready');
-      });
-
     withLocaleReload(() => {
       this.langTick.update(v => v + 1);
-      this.reload();
+      this.list.reload();
       this.loadOptions();
     });
   }
 
   ngOnInit(): void {
-    this.reload();
+    this.list.reload();
     this.loadOptions();
   }
 
-  onSearch(value: string): void {
-    this.search$.next(value);
-  }
-
   onFilter(v: NasFilterValues): void {
-    const num = (x: unknown) => (typeof x === 'number' ? x : null);
-    this.update({
-      page: 1,
-      learner_id: num(v['learner_id']),
-      section_id: num(v['section_id']),
-      instructor_id: num(v['instructor_id']),
-      item_id: num(v['item_id']),
-      status: v['status'] === 'graded' || v['status'] === 'pending' ? v['status'] : null,
+    this.list.patch({
+      learnerId: filterNumbers(v['learner_id'])[0] ?? null,
+      sectionId: filterNumbers(v['section_id'])[0] ?? null,
+      instructorId: filterNumbers(v['instructor_id'])[0] ?? null,
+      itemId: filterNumbers(v['item_id'])[0] ?? null,
+      status: filterStrings(v['status'], STATUSES)[0] ?? null,
     });
-  }
-
-  goTo(page: number): void {
-    this.update({ page });
-  }
-
-  reload(): void {
-    this.state.set('loading');
-    this.load$.next(this.query());
-  }
-
-  hasQuery(): boolean {
-    const q = this.query();
-    return !!q.search || this.activeFilters() > 0;
-  }
-
-  detailLink(row: CourseSubmissionRow): string[] {
-    return [this.isQuiz() ? '/admin/quizzes/submissions' : '/admin/assignments/submissions', String(row.id)];
-  }
-
-  title(row: CourseSubmissionRow): string {
-    return (this.isQuiz() ? row.quiz_title : row.assignment_title) ?? '-';
-  }
-
-  scoreClass(row: CourseSubmissionRow): string {
-    return row.passed === true ? 'cl-pass' : row.passed === false ? 'cl-fail' : 'cl-neutral-score';
   }
 
   private loadOptions(): void {
@@ -242,9 +198,14 @@ export class CourseSubmissionsTabComponent implements OnInit {
         if (res?.result) this.options.set(res.result);
       });
   }
+}
 
-  private update(patch: Partial<Query>): void {
-    this.query.update(q => ({ ...q, ...patch }));
-    this.reload();
-  }
+function toRow(r: CourseSubmissionRow, quiz: boolean): SubmissionRow {
+  return {
+    ...r,
+    title: (quiz ? r.quiz_title : r.assignment_title) ?? '-',
+    scoreClass: r.passed === true ? 'cl-pass' : r.passed === false ? 'cl-fail' : 'cl-neutral-score',
+    link: [quiz ? '/admin/quizzes/submissions' : '/admin/assignments/submissions', String(r.id)],
+    submitted: r.submitted_at ?? r.created_at ?? null,
+  };
 }

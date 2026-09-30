@@ -182,6 +182,33 @@ test.describe('behaviour', () => {
 });
 
 for (const locale of ['en', 'ar'] as const) {
+  test(`loading placeholder is shaped like the table ${locale}`, async ({ page }, info) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' }); // show the shimmer
+    await setLocale(page, locale);
+    await mockList(page);
+    // Hold the list response so the placeholder stays up.
+    let release: () => void = () => undefined;
+    const held = new Promise<void>(r => (release = r));
+    await page.route(/\/api\/v1\/courses\?/, async (r) => { await held; await r.fallback(); });
+    await page.goto('/admin/courses');
+
+    const rows = page.locator('tr.nsr');
+    await expect(rows).toHaveCount(6);
+    await expect(page.locator('nas-table-card section')).toHaveAttribute('aria-busy', 'true');
+    // Same row height and cell padding as the real rows; one shape per column.
+    expect(Math.round((await rows.first().boundingBox())!.height)).toBe(57);
+    await expect(rows.first().locator('td')).toHaveCount(9);
+    await expect(rows.first().locator('.nsr__b--title')).toHaveCount(1);
+    await expect(rows.first().locator('.nsr__b--pill')).toHaveCount(1);
+    const pad = await rows.first().locator('td').nth(1).evaluate(el => getComputedStyle(el).paddingInlineStart);
+    expect(pad).toBe('20px');
+
+    mkdirSync(ARTIFACTS, { recursive: true });
+    await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-loading.png`) });
+    release();
+    await expect(page.locator('.cl-row')).toHaveCount(8);
+  });
+
   test(`list, filter modal and open list fit and read ${locale}`, async ({ page }, info) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));

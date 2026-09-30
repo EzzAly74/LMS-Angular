@@ -67,8 +67,8 @@ for (const locale of ['en', 'ar'] as const) {
     await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
     await mockCourse(page);
     await page.goto('/admin/courses/10?tab=cohort');
-    await page.locator('.ct-menu').first().click();
-    await page.locator('.row-menu__item').first().click();
+    await page.locator('.cl-more').first().click();
+    await page.locator('.nrm__item').first().click();
     // The row menu is a dialog too while it animates out.
     await expect(page.locator('.p-overlaypanel')).toHaveCount(0);
     const d = page.getByRole('dialog');

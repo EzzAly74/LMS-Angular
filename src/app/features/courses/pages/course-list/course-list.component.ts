@@ -22,7 +22,7 @@ import {
 import { NasListToolbarComponent } from '../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
 import { NasTableCardComponent } from '../../../../shared/nas/nas-table-card/nas-table-card.component';
 import {
-  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS,
+  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS, type NasSkeletonCell,
 } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import {
   NasRowMenuComponent, type NasRowAction, type NasRowActionPick,
@@ -101,6 +101,8 @@ export class CourseListComponent implements OnInit {
   readonly locale         = inject(LocaleService).locale;
 
   readonly skeletons = SKELETON_ROWS;
+  /** Course, category, instructor, cohorts, enrolled, completion, evaluation, status, actions. */
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['title', 'text', 'text', 'num', 'num', 'bar', 'short', 'pill', 'action'];
 
   readonly list = createPagedList<Query, CourseRow>({
     initial: { search: '', page: 1, perPage: 15, ids: [], categoryIds: [], instructorIds: [], statuses: [], evaluation: [] },

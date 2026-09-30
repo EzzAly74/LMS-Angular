@@ -104,7 +104,7 @@ async function openEdit(page: Page): Promise<void> {
   await mockCourse(page);
   await page.goto('/admin/courses/10?tab=cohort');
   await page.getByRole('button', { name: 'Actions for Cohort A' }).click();
-  await page.getByRole('button', { name: 'Edit Cohort' }).click();
+  await page.getByRole('menuitem', { name: 'Edit Cohort' }).click();
   await expect(page.getByRole('dialog', { name: 'Edit Cohort' })).toBeVisible();
 }
 
