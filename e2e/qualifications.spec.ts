@@ -252,5 +252,5 @@ test('an empty list and a failed load each say so', async ({ page }) => {
   await page.route(LIST, r => r.fulfill({ status: 500, json: { status: 'error', message: '' } }));
   await page.getByRole('searchbox').fill('x');
   await expect(page.getByRole('alert').filter({ hasText: 'Could not load' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
 });

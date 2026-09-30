@@ -1,146 +1,31 @@
-// Qualifications - Figma 2066:100159.
-
-.ql {
-  display: flex;
-  flex-direction: column;
-  gap: var(--nas-space-6);
-}
-
-.ql__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--nas-space-4);
-}
-
-.ql__head-text { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
-
-.ql__title {
-  margin: 0;
-  font-size: 24px;
-  line-height: 28.8px;
-  font-weight: var(--nas-weight-bold);
-  color: var(--nas-color-text-strong);
-}
-
-.ql__subtitle {
-  margin: 0;
-  font-size: var(--nas-size-xs);
-  line-height: 21px;
-  color: var(--nas-neutral-750);
-}
-
-.ql__actions {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--nas-space-3);
-}
-
-.ql__new {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nas-space-2);
-  min-inline-size: 180px;
-  block-size: 44px;
-  padding: var(--nas-space-2) var(--nas-space-3);
-  border: 0;
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-teal-1000);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(140, 140, 140, 0.08);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  line-height: 16.8px;
-  color: var(--nas-neutral-0);
-  white-space: nowrap;
-  cursor: pointer;
-
-  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
-}
-
-.ql__card {
-  display: flex;
-  flex-direction: column;
-  min-inline-size: 0;
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-xl);
-  background: var(--nas-color-bg-surface);
-  box-shadow: 0 1px 2px rgba(12, 36, 39, 0.08);
-  overflow: hidden;
-}
-
-.ql__toolbar {
-  display: flex;
-  padding: var(--nas-space-3) var(--nas-space-5);
-  border-block-end: 1px solid var(--nas-color-border);
-}
-
-.ql__search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  inline-size: min(100%, 320px);
-  padding: var(--nas-space-2) var(--nas-space-3);
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-md);
-  color: var(--nas-neutral-750);
-
-  &:focus-within { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
-}
-
-.ql__search-input {
-  flex: 1;
-  min-inline-size: 0;
-  border: 0;
-  outline: 0;
-  background: none;
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  color: var(--nas-color-text-strong);
-
-  &::placeholder { color: var(--nas-neutral-750); }
-}
-
-// position: relative keeps the absolutely placed sr-only text inside the scroll box (LAYOUT-04).
-.ql__scroll { position: relative; overflow-x: auto; }
+// Qualifications - Figma 2066:100159. The head, table, row button and helpers
+// are the shared list styles; the toolbar, card, states, pager and menu are
+// components (D-070). This file adds the qualification-specific cells.
+@use '../../../../shared/styles/list';
 
 .ql__table {
-  inline-size: 100%;
   min-inline-size: 1060px;
-  border-collapse: collapse;
 
-  th,
-  td {
-    padding: 0 var(--nas-space-5);
+  td { white-space: nowrap; }
+
+  // The row header is a body cell, not a column head.
+  tbody th.ql__name {
     block-size: 57px;
-    text-align: start;
-    font-size: var(--nas-size-xs);
-    line-height: 21px;
+    max-inline-size: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: none;
+    border-block-end: 0;
+    border-block-start: 1px solid var(--nas-color-border);
+    font-weight: var(--nas-weight-semibold);
     color: var(--nas-color-text-strong);
-    white-space: nowrap;
   }
 
-  thead th {
-    block-size: 45.5px;
-    background: #fafafa;
-    border-block-end: 1px solid var(--nas-color-border);
-    font-weight: var(--nas-weight-medium);
-    color: var(--nas-neutral-750);
-  }
-
-  tbody tr + tr { border-block-start: 1px solid var(--nas-color-border); }
+  tbody tr:first-child th.ql__name { border-block-start: 0; }
+  tbody tr:hover th.ql__name { background: var(--nas-neutral-50); }
 }
 
-.ql__name {
-  max-inline-size: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: var(--nas-weight-semibold);
-}
+.ql__action { inline-size: 72px; }
 
 .ql__chip {
   display: inline-flex;
@@ -170,6 +55,7 @@
 }
 
 .ql__fill {
+  display: block;
   block-size: 100%;
   border-radius: 9999px;
 
@@ -185,64 +71,3 @@
 }
 
 .ql__none { color: var(--nas-neutral-750); }
-
-.ql__action { inline-size: 72px; text-align: end; }
-
-.ql__kebab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 32px;
-  block-size: 32px;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  color: var(--nas-color-text-strong);
-  cursor: pointer;
-
-  &:hover { background: var(--nas-neutral-300); }
-  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
-}
-
-.ql__table td.ql__message {
-  block-size: auto;
-  padding: var(--nas-space-10) var(--nas-space-5);
-  text-align: center;
-  white-space: normal;
-
-  p { margin: 0 0 var(--nas-space-3); color: var(--nas-neutral-750); }
-  p:last-child { margin: 0; }
-}
-
-.ql__retry {
-  padding: var(--nas-space-2) var(--nas-space-4);
-  border: 1px solid var(--nas-teal-1000);
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-color-bg-surface);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  color: var(--nas-teal-1000);
-  cursor: pointer;
-}
-
-nas-pager { padding: var(--nas-space-3) var(--nas-space-5); border-block-start: 1px solid var(--nas-color-border); }
-
-.ql__sr-only {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-::ng-deep .ql__menu-danger .p-menuitem-text { color: var(--nas-status-red-700); }
-
-@media (max-width: 767px) {
-  .ql__actions { inline-size: 100%; }
-  .ql__new { flex: 1 1 100%; }
-  .ql__toolbar { padding-inline: var(--nas-space-4); }
-}

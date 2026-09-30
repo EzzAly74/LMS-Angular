@@ -1,14 +1,15 @@
-<div class="nas-page-container ql">
+<!-- Qualifications - Figma 2066:100159; the shared list pieces (D-070) -->
+<div class="nas-page-container cl-page">
 
-  <header class="ql__head">
-    <div class="ql__head-text">
-      <h1 class="ql__title">{{ 'qualifications.title' | translate }}</h1>
-      <p class="ql__subtitle">{{ 'qualifications.subtitle' | translate }}</p>
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ 'qualifications.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'qualifications.subtitle' | translate }}</p>
     </div>
-    <div class="ql__actions">
-      <button type="button" class="ql__new" (click)="openCreate()">
+    <div class="cl-head__actions">
+      <button type="button" class="cl-primary" (click)="openCreate()">
         <nas-icon name="plus-circle" [size]="20" />
-        {{ 'qualifications.new_qualification' | translate }}
+        <span>{{ 'qualifications.new_qualification' | translate }}</span>
       </button>
       <nas-action-menu
         [label]="(importing() ? 'qualifications.transfer.importing' : 'qualifications.transfer.import') | translate"
@@ -20,108 +21,87 @@
         [title]="'qualifications.transfer.export' | translate"
         icon="assets/icons/figma/export.svg"
         [items]="exportItems()" [disabled]="exporting()" (picked)="onExportPick($event)" />
-      <input #fileInput type="file" class="ql__sr-only" tabindex="-1" aria-hidden="true" [accept]="accept()"
+      <input #fileInput type="file" class="cl-sr-only" tabindex="-1" aria-hidden="true" [accept]="accept()"
         (change)="onFile($event)" />
     </div>
   </header>
 
-  <section class="ql__card" [attr.aria-busy]="state() === 'loading'">
-    <div class="ql__toolbar">
-      <label class="ql__search">
-        <nas-icon name="magnifying-glass" [size]="20" />
-        <span class="ql__sr-only">{{ 'qualifications.search_placeholder' | translate }}</span>
-        <input #term type="search" class="ql__search-input" [placeholder]="'qualifications.search_placeholder' | translate"
-          (input)="onSearch(term.value)" />
-      </label>
-    </div>
+  <!-- Search only: the frame has no filters, so no Filter button. -->
+  <nas-list-toolbar [search]="list.query().search"
+    [label]="'qualifications.search_placeholder' | translate" [placeholder]="'qualifications.search_placeholder' | translate"
+    (searchChange)="list.search($event)" />
 
-    <div class="ql__scroll">
-      <table class="ql__table">
-        <thead>
-          <tr>
-            <th scope="col">{{ 'qualifications.col.qualification' | translate }}</th>
-            <th scope="col">{{ 'qualifications.col.linked_courses' | translate }}</th>
-            <th scope="col">{{ 'qualifications.col.enrolled' | translate }}</th>
-            <th scope="col">{{ 'qualifications.col.certified' | translate }}</th>
-            <th scope="col">{{ 'qualifications.col.completion' | translate }}</th>
-            <th scope="col">{{ 'qualifications.col.job_titles' | translate }}</th>
-            <th scope="col">{{ 'qualifications.col.learners' | translate }}</th>
-            <th scope="col"><span class="ql__sr-only">{{ 'qualifications.col.actions' | translate }}</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @switch (state()) {
-            @case ('loading') {
-              @for (s of skeletons; track s) {
-                <tr>
-                  @for (c of [1, 2, 3, 4, 5, 6, 7, 8]; track c) {
-                    <td><p-skeleton height="18px" /></td>
+  <nas-table-card [label]="'qualifications.title' | translate" [busy]="list.state() === 'loading'">
+    <table class="cl-table ql__table">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'qualifications.col.qualification' | translate }}</th>
+          <th scope="col">{{ 'qualifications.col.linked_courses' | translate }}</th>
+          <th scope="col">{{ 'qualifications.col.enrolled' | translate }}</th>
+          <th scope="col">{{ 'qualifications.col.certified' | translate }}</th>
+          <th scope="col">{{ 'qualifications.col.completion' | translate }}</th>
+          <th scope="col">{{ 'qualifications.col.job_titles' | translate }}</th>
+          <th scope="col">{{ 'qualifications.col.learners' | translate }}</th>
+          <th scope="col" class="ql__action"><span class="cl-sr-only">{{ 'qualifications.col.actions' | translate }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @switch (list.state()) {
+          @case ('loading') {
+            @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
+          }
+          @case ('error') {
+            <tr><td colspan="8">
+              <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+            </td></tr>
+          }
+          @default {
+            @for (q of list.items(); track q.id) {
+              <tr class="ql__row">
+                <th scope="row" class="ql__name"><bdi>{{ q.name }}</bdi></th>
+                <td><span class="ql__chip">{{ q.coursesKey | translate: { count: q.courses_count } }}</span></td>
+                <td class="cl-strong">{{ q.enrolled_count }}</td>
+                <td class="cl-strong"><bdi dir="ltr">{{ q.certified_count }}/{{ q.learners_count }}</bdi></td>
+                <td>
+                  @if (q.completion_percent === null) {
+                    <span class="ql__none" [attr.aria-label]="'qualifications.no_group' | translate">-</span>
+                  } @else {
+                    <span class="ql__progress">
+                      <span class="ql__bar" role="progressbar" [attr.aria-valuenow]="q.completion_percent"
+                        aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'qualifications.col.completion' | translate">
+                        <span class="ql__fill ql__fill--{{ q.tone }}" [style.inline-size.%]="q.completion_percent"></span>
+                      </span>
+                      <span class="ql__pct"><bdi dir="ltr">{{ q.completion_percent }}%</bdi></span>
+                    </span>
                   }
-                </tr>
-              }
-            }
-            @case ('error') {
-              <tr>
-                <td colspan="8" class="ql__message" role="alert">
-                  <p>{{ 'common.could_not_load' | translate }}</p>
-                  <button type="button" class="ql__retry" (click)="load()">{{ 'qualifications.retry' | translate }}</button>
+                </td>
+                <td><span class="ql__chip">{{ q.titlesKey | translate: { count: q.job_titles_count } }}</span></td>
+                <td><span class="ql__chip">{{ q.learnersKey | translate: { count: q.learners_count } }}</span></td>
+                <td class="cl-end">
+                  <button type="button" class="cl-more" aria-haspopup="menu"
+                    [attr.aria-label]="'qualifications.actions_for' | translate: { name: q.name }"
+                    (click)="rowMenu.open($event, q)">
+                    <nas-icon name="dots-three" [size]="16" />
+                  </button>
                 </td>
               </tr>
-            }
-            @default {
-              @for (q of rows(); track q.id) {
-                <tr>
-                  <th scope="row" class="ql__name"><bdi>{{ q.name }}</bdi></th>
-                  <td><span class="ql__chip">{{ countKey('courses', q.courses_count) | translate: { count: q.courses_count } }}</span></td>
-                  <td><bdi>{{ q.enrolled_count }}</bdi></td>
-                  <td>
-                    <bdi dir="ltr">{{ q.certified_count }}/{{ q.learners_count }}</bdi>
-                  </td>
-                  <td>
-                    @if (q.completion_percent === null) {
-                      <span class="ql__none" [attr.aria-label]="'qualifications.no_group' | translate">-</span>
-                    } @else {
-                      <div class="ql__progress">
-                        <div class="ql__bar" role="progressbar" [attr.aria-valuenow]="q.completion_percent"
-                          aria-valuemin="0" aria-valuemax="100"
-                          [attr.aria-label]="'qualifications.col.completion' | translate">
-                          <div [class]="'ql__fill ql__fill--' + tone(q.completion_percent)"
-                            [style.inline-size.%]="q.completion_percent"></div>
-                        </div>
-                        <span class="ql__pct"><bdi dir="ltr">{{ q.completion_percent }}%</bdi></span>
-                      </div>
-                    }
-                  </td>
-                  <td><span class="ql__chip">{{ countKey('titles', q.job_titles_count) | translate: { count: q.job_titles_count } }}</span></td>
-                  <td><span class="ql__chip">{{ countKey('learners', q.learners_count) | translate: { count: q.learners_count } }}</span></td>
-                  <td class="ql__action">
-                    <button type="button" class="ql__kebab" aria-haspopup="menu"
-                      [attr.aria-label]="'qualifications.actions_for' | translate: { name: q.name }"
-                      (click)="openRowMenu(rowMenuEl, q, $event)">
-                      <nas-icon name="dots-three" [size]="16" />
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="8" class="ql__message">
-                    <p>{{ (search() ? 'qualifications.no_results' : 'qualifications.empty') | translate }}</p>
-                  </td>
-                </tr>
-              }
+            } @empty {
+              <tr><td colspan="8">
+                <nas-list-state [message]="(list.query().search ? 'qualifications.no_results' : 'qualifications.empty') | translate" />
+              </td></tr>
             }
           }
-        </tbody>
-      </table>
-    </div>
-
-    @if (state() === 'ready' && total() > perPage) {
-      <nas-pager [page]="page()" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
+        }
+      </tbody>
+    </table>
+    @if (list.pageable()) {
+      <nas-pager nasTablePager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+        [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
     }
-  </section>
+  </nas-table-card>
 </div>
 
-<p-menu #rowMenuEl [model]="rowMenu()" [popup]="true" appendTo="body" />
+<nas-row-menu #rowMenu [actions]="rowActions" (picked)="onRowAction($event)" />
 
 <app-qualification-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
   [qualificationId]="editingId()" (saved)="onSaved()" />

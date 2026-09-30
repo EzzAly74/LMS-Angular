@@ -12,10 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { SkeletonModule } from 'primeng/skeleton';
-import { MenuModule } from 'primeng/menu';
-import { MenuItem, MessageService } from 'primeng/api';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { MessageService } from 'primeng/api';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pluralKey } from '../../../../core/utils/plural-key';
@@ -27,12 +24,29 @@ import {
   NasActionMenuComponent,
   NasActionMenuItem,
 } from '../../../../shared/nas/nas-action-menu/nas-action-menu.component';
+import { NasListToolbarComponent } from '../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasTableCardComponent } from '../../../../shared/nas/nas-table-card/nas-table-card.component';
+import {
+  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS, type NasSkeletonCell,
+} from '../../../../shared/nas/nas-list-state/nas-list-state.component';
+import {
+  NasRowMenuComponent, type NasRowAction, type NasRowActionPick,
+} from '../../../../shared/nas/nas-row-menu/nas-row-menu.component';
+import { createPagedList, pagedParams, toPaged, type PagedQuery } from '../../../../shared/list/paged-list';
 import { QualificationDialogComponent } from '../../components/qualification-dialog/qualification-dialog.component';
 import { QualificationImportError, QualificationRow } from '../../models/qualification.model';
 import { QualificationsApiService, TransferFormat } from '../../services/qualifications-api.service';
 
-type LoadState = 'loading' | 'ready' | 'error';
 type Tone = 'high' | 'mid' | 'low';
+type RowActionId = 'edit' | 'delete';
+
+/** A table row: its plural keys and completion tone, worked out once per load. */
+interface QualificationListRow extends QualificationRow {
+  readonly coursesKey: string;
+  readonly titlesKey: string;
+  readonly learnersKey: string;
+  readonly tone: Tone | null;
+}
 
 /**
  * Qualifications - Figma 2066:100159 (D5).
@@ -44,16 +58,21 @@ type Tone = 'high' | 'mid' | 'low';
  * New Qualification / the row's Edit open the modal (2066:100876). Import
  * (1983:44634) takes a whole file or nothing and lists every problem by row
  * (D-034); Export (2066:99852) downloads the list as currently searched.
+ * The toolbar (search only: the frame has no filters), table card, states,
+ * row menu and pager are the Dashboard's shared list pieces (D-070).
  */
 @Component({
   selector: 'app-qualification-list',
   standalone: true,
   imports: [
     TranslateModule,
-    SkeletonModule,
-    MenuModule,
     NasIconComponent,
     NasPagerComponent,
+    NasListToolbarComponent,
+    NasTableCardComponent,
+    NasListStateComponent,
+    NasSkeletonRowComponent,
+    NasRowMenuComponent,
     NasConfirmModalComponent,
     NasImportReportComponent,
     NasActionMenuComponent,
@@ -70,19 +89,20 @@ export class QualificationListComponent implements OnInit {
   private readonly locale     = inject(LocaleService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly perPage = 15;
-  readonly skeletons = [1, 2, 3, 4, 5];
+  readonly skeletons = SKELETON_ROWS;
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['title', 'pill', 'num', 'short', 'bar', 'pill', 'pill', 'action'];
 
-  readonly rows    = signal<QualificationRow[]>([]);
-  readonly total   = signal(0);
-  readonly page    = signal(1);
-  readonly search  = signal('');
-  readonly state   = signal<LoadState>('loading');
+  readonly list = createPagedList<PagedQuery, QualificationListRow>({
+    initial: { search: '', page: 1, perPage: 15 },
+    load: q => this.api.list(pagedParams(q)).pipe(toPaged(r => this.toRow(r))),
+    // AdminQualificationListRequest caps per_page at 100.
+    showAllPerPage: 100,
+  });
 
   readonly dialogOpen = signal(false);
   readonly editingId  = signal<number | null>(null);
 
-  readonly deleting     = signal<QualificationRow | null>(null);
+  readonly deleting     = signal<QualificationListRow | null>(null);
   readonly deleteBusy   = signal(false);
 
   readonly importing    = signal(false);
@@ -91,8 +111,6 @@ export class QualificationListComponent implements OnInit {
   readonly reportOpen   = signal(false);
 
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
-  private readonly search$ = new Subject<string>();
-  private rowMenuTarget: QualificationRow | null = null;
 
   /** Rebuilt on language change so the labels follow it. */
   readonly importItems = computed<NasActionMenuItem[]>(() => {
@@ -112,69 +130,34 @@ export class QualificationListComponent implements OnInit {
     ];
   });
 
-  readonly rowMenu = computed<MenuItem[]>(() => {
-    this.locale.locale();
-    return [
-      { label: this.t.instant('common.edit'), command: () => this.rowMenuTarget && this.openEdit(this.rowMenuTarget) },
-      {
-        label: this.t.instant('common.delete'),
-        styleClass: 'ql__menu-danger',
-        command: () => this.rowMenuTarget && this.deleting.set(this.rowMenuTarget),
-      },
-    ];
-  });
+  /** Row menu entries: the same for every qualification. */
+  readonly rowActions = (_row: QualificationListRow): readonly NasRowAction<RowActionId>[] => [
+    { id: 'edit', label: this.t.instant('common.edit'), icon: 'assets/icons/figma/pencil-simple.svg' },
+    { id: 'delete', label: this.t.instant('common.delete'), icon: 'trash', danger: true },
+  ];
 
   /** Accept attribute for the picker, set just before it opens. */
   readonly accept = signal('.xlsx');
 
   constructor() {
-    withLocaleReload(() => this.load());
+    // Names and plural keys follow the language, so a switch refetches.
+    withLocaleReload(() => this.list.reload());
   }
 
   ngOnInit(): void {
-    this.search$
-      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(term => {
-        this.search.set(term);
-        this.page.set(1);
-        this.load();
-      });
-    this.load();
+    this.list.reload();
   }
 
-  load(): void {
-    this.state.set('loading');
-    const params: Record<string, string | number> = { page: this.page(), per_page: this.perPage };
-    if (this.search()) params['search'] = this.search();
-    this.api.list(params).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: res => {
-        this.rows.set(res.result.data);
-        this.total.set(res.result.total);
-        this.state.set('ready');
-      },
-      error: () => this.state.set('error'),
-    });
-  }
-
-  onSearch(term: string): void {
-    this.search$.next(term.trim());
-  }
-
-  onPage(p: number): void {
-    this.page.set(p);
-    this.load();
-  }
-
-  // ── Row figures ─────────────────────────────────────────────────────────
-  countKey(base: string, n: number): string {
-    return pluralKey(`qualifications.count.${base}`, n, this.locale.locale());
-  }
-
-  /** Figma: green 90%, slate 55%, red 41%. */
-  tone(percent: number): Tone {
-    if (percent >= 80) return 'high';
-    if (percent >= 50) return 'mid';
-    return 'low';
+  private toRow(q: QualificationRow): QualificationListRow {
+    const locale = this.locale.locale();
+    const key = (base: string, n: number) => pluralKey(`qualifications.count.${base}`, n, locale);
+    return {
+      ...q,
+      coursesKey: key('courses', q.courses_count),
+      titlesKey: key('titles', q.job_titles_count),
+      learnersKey: key('learners', q.learners_count),
+      tone: q.completion_percent === null ? null : completionTone(q.completion_percent),
+    };
   }
 
   // ── Create / edit / delete ───────────────────────────────────────────────
@@ -188,14 +171,15 @@ export class QualificationListComponent implements OnInit {
     this.dialogOpen.set(true);
   }
 
-  openRowMenu(menu: { toggle: (e: Event) => void }, row: QualificationRow, event: Event): void {
-    this.rowMenuTarget = row;
-    menu.toggle(event);
+  onRowAction(e: NasRowActionPick<QualificationListRow, RowActionId>): void {
+    if (e.id === 'edit') this.openEdit(e.row);
+    else this.deleting.set(e.row);
   }
 
+  /** A new one lands on page 1 (newest first); an edit stays where it is. */
   onSaved(): void {
-    if (this.editingId() === null) this.page.set(1);
-    this.load();
+    if (this.editingId() === null) this.list.goTo(1);
+    else this.list.reload();
   }
 
   confirmDelete(): void {
@@ -207,8 +191,10 @@ export class QualificationListComponent implements OnInit {
         this.deleteBusy.set(false);
         this.deleting.set(null);
         this.toast.add({ severity: 'success', summary: this.t.instant('common.success_title'), detail: this.t.instant('qualifications.deleted') });
-        if (this.rows().length === 1 && this.page() > 1) this.page.update(p => p - 1);
-        this.load();
+        // Deleting the last row of a page steps back to the one before.
+        const page = this.list.query().page;
+        if (this.list.items().length === 1 && page > 1) this.list.goTo(page - 1);
+        else this.list.reload();
       },
       // The error interceptor toasts the reason.
       error: () => this.deleteBusy.set(false),
@@ -244,8 +230,7 @@ export class QualificationListComponent implements OnInit {
             summary: this.t.instant('common.success_title'),
             detail: this.t.instant('qualifications.transfer.imported', { count: report.created }),
           });
-          this.page.set(1);
-          this.load();
+          this.list.goTo(1);
           return;
         }
         this.reportErrors.set(report.errors);
@@ -261,7 +246,7 @@ export class QualificationListComponent implements OnInit {
   onExportPick(id: string): void {
     const format: TransferFormat = id === 'csv' ? 'csv' : 'xlsx';
     this.exporting.set(true);
-    this.api.export(format, this.search()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.api.export(format, this.list.query().search).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => this.exporting.set(false),
       error: (e: unknown) => {
         this.exporting.set(false);
@@ -280,4 +265,11 @@ export class QualificationListComponent implements OnInit {
     }
     this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail });
   }
+}
+
+/** Figma: green 90%, slate 55%, red 41%. */
+function completionTone(percent: number): Tone {
+  if (percent >= 80) return 'high';
+  if (percent >= 50) return 'mid';
+  return 'low';
 }
