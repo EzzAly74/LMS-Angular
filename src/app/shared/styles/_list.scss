@@ -231,8 +231,19 @@
     vertical-align: middle;
   }
 
-  tbody tr:first-child td { border-block-start: 0; }
-  tbody tr:hover td { background: var(--nas-neutral-50); }
+  // A row header (th scope="row") is a body cell, not a column head.
+  tbody th {
+    block-size: 57px;
+    background: none;
+    border-block-end: 0;
+    border-block-start: 1px solid var(--nas-color-border);
+    font-weight: var(--nas-weight-semibold);
+    color: var(--nas-color-text-strong);
+    vertical-align: middle;
+  }
+
+  tbody tr:first-child :is(td, th) { border-block-start: 0; }
+  tbody tr:hover :is(td, th) { background: var(--nas-neutral-50); }
 }
 
 .cl-strong { color: var(--nas-color-text-strong); font-weight: var(--nas-weight-medium); }

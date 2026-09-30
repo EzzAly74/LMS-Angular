@@ -8,21 +8,7 @@
 
   td { white-space: nowrap; }
 
-  // The row header is a body cell, not a column head.
-  tbody th.ql__name {
-    block-size: 57px;
-    max-inline-size: 260px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background: none;
-    border-block-end: 0;
-    border-block-start: 1px solid var(--nas-color-border);
-    font-weight: var(--nas-weight-semibold);
-    color: var(--nas-color-text-strong);
-  }
-
-  tbody tr:first-child th.ql__name { border-block-start: 0; }
-  tbody tr:hover th.ql__name { background: var(--nas-neutral-50); }
+  tbody th.ql__name { max-inline-size: 260px; overflow: hidden; text-overflow: ellipsis; }
 }
 
 .ql__action { inline-size: 72px; }
