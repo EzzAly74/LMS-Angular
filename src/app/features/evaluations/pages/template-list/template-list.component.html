@@ -1,15 +1,15 @@
-<div class="nas-page-container ev">
+<div class="nas-page-container cl-page">
 
-  <header class="ev__head">
-    <div class="ev__head-text">
+  <header class="cl-head">
+    <div class="cl-head__text">
       <p class="ev__eyebrow">
         <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
         {{ 'evaluations.eyebrow' | translate }}
       </p>
-      <h1 class="ev__title">{{ 'evaluations.templates.title' | translate }}</h1>
-      <p class="ev__subtitle">{{ 'evaluations.templates.subtitle' | translate }}</p>
+      <h1 class="cl-title">{{ 'evaluations.templates.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'evaluations.templates.subtitle' | translate }}</p>
     </div>
-    <div class="tl__head-actions">
+    <div class="cl-head__actions">
       <a class="ev__btn ev__btn--primary tl__create" routerLink="new">
         <nas-icon name="plus-circle" [size]="24" />
         {{ 'evaluations.templates.create' | translate }}
@@ -127,172 +127,87 @@
   <section class="tl__all" aria-labelledby="tl-all-title">
     <h2 class="ev__section-title" id="tl-all-title">{{ 'evaluations.templates.all' | translate }}</h2>
 
-    <div class="ev__filters">
-      <div class="ev__toolbar">
-        <div class="ev__search">
-          <nas-icon name="magnifying-glass" [size]="20" />
-          <label class="ev__sr-only" for="tl-search">{{ 'evaluations.templates.search_label' | translate }}</label>
-          <input id="tl-search" type="search" class="ev__search-input"
-            [placeholder]="'common.quick_search' | translate"
-            [ngModel]="search()" (ngModelChange)="onSearch($event)" />
-        </div>
-        <div class="tl__date" role="group" [attr.aria-label]="'evaluations.scored_from' | translate">
-          <nas-datepicker [ngModel]="from()" (ngModelChange)="onFrom($event)" [max]="to()"
-            [placeholder]="'evaluations.from' | translate" />
-        </div>
-        <div class="tl__date" role="group" [attr.aria-label]="'evaluations.scored_to' | translate">
-          <nas-datepicker [ngModel]="to()" (ngModelChange)="onTo($event)" [min]="from()"
-            [placeholder]="'evaluations.to' | translate" />
-        </div>
-      </div>
+    <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
+      [label]="'evaluations.templates.search_label' | translate" [placeholder]="'common.quick_search' | translate"
+      (searchChange)="list.search($event)" (filter)="openFilter()">
+      <a class="ev__btn ev__btn--outline tl__scores-link" routerLink="scores">{{ 'evaluations.scores.title' | translate }}</a>
+    </nas-list-toolbar>
 
-      <div class="tl__filter-row">
-        <div class="ev__chips" role="toolbar" [attr.aria-label]="'evaluations.filters' | translate">
-          <button type="button" class="ev__chip ev__chip--all" [class.ev__chip--on]="!anyChip()"
-            [attr.aria-pressed]="!anyChip()" (click)="clearChips()">
-            {{ 'common.all' | translate }}
-          </button>
-          @for (chip of chips; track chip.key) {
-            @let on = count(chip.key) > 0;
-            <button type="button" class="ev__chip" [class.ev__chip--on]="on" aria-haspopup="dialog"
-              [attr.aria-label]="on
-                ? ('evaluations.chip_selected' | translate: { name: (chip.labelKey | translate), count: count(chip.key) })
-                : (chip.labelKey | translate)"
-              (click)="openPicker(chip.key)">
-              <span>{{ chip.labelKey | translate }}</span>
-              <img [src]="on ? 'assets/icons/figma/chip-arrow-active.svg' : 'assets/icons/figma/chip-arrow.svg'"
-                width="12" height="7" alt="" />
-            </button>
-          }
-
-          <fieldset class="tl__results">
-            <legend class="ev__sr-only">{{ 'evaluations.result.legend' | translate }}</legend>
-            <label class="tl__check">
-              <input type="checkbox" class="tl__native" [checked]="result().length === 0"
-                [disabled]="result().length === 0" (change)="clearResults()" />
-              <span class="tl__box" aria-hidden="true">
-                @if (result().length === 0) { <img src="assets/icons/figma/checkbox-check.svg" width="12" height="12" alt="" /> }
-              </span>
-              {{ 'common.all' | translate }}
-            </label>
-            @for (r of results; track r) {
-              <label class="tl__check">
-                <input type="checkbox" class="tl__native" [checked]="isResult(r)" (change)="toggleResult(r)" />
-                <span class="tl__box" aria-hidden="true">
-                  @if (isResult(r)) { <img src="assets/icons/figma/checkbox-check.svg" width="12" height="12" alt="" /> }
-                </span>
-                {{ 'evaluations.result.' + r | translate }}
-              </label>
+    <nas-table-card [label]="'evaluations.templates.all' | translate" [busy]="list.state() === 'loading'">
+      <table class="cl-table cl-table--fixed tl__table">
+        <thead>
+          <tr>
+            <th scope="col" class="tl__c-name" [attr.aria-sort]="nameSort()">
+              <button type="button" class="cl-sort" [class.cl-sort--desc]="nameSort() === 'descending'" (click)="toggleSortByName()">
+                {{ 'evaluations.col.template' | translate }}
+                <img src="assets/icons/figma/caret-up-down.svg" width="14" height="14" alt="" />
+              </button>
+            </th>
+            <th scope="col" class="tl__c-course">{{ 'evaluations.col.course' | translate }}</th>
+            <th scope="col" class="tl__c-num cl-center">{{ 'evaluations.col.questions' | translate }}</th>
+            <th scope="col" class="tl__c-score">{{ 'evaluations.col.avg_score' | translate }}</th>
+            <th scope="col" class="tl__c-date">{{ 'evaluations.col.last_scored' | translate }}</th>
+            <th scope="col" class="tl__c-learners">{{ 'evaluations.col.learners' | translate }}</th>
+            <th scope="col" class="tl__c-act cl-center">{{ 'common.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @switch (list.state()) {
+            @case ('loading') {
+              @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
             }
-          </fieldset>
-        </div>
-
-        <a class="ev__btn ev__btn--outline ev__btn--sm tl__scores-link" routerLink="scores">
-          {{ 'evaluations.scores.title' | translate }}
-        </a>
-      </div>
-    </div>
-
-    <div class="ev__card" [attr.aria-busy]="state() === 'loading'">
-      <div class="ev__scroll">
-        <table class="ev__table tl__table">
-          <caption class="ev__sr-only">{{ 'evaluations.templates.all' | translate }}</caption>
-          <thead>
-            <tr>
-              <th scope="col" class="ev__th tl__c-name" [attr.aria-sort]="ariaSort()">
-                <button type="button" class="ev__sort" (click)="toggleSortByName()">
-                  {{ 'evaluations.col.template' | translate }}
-                  <img src="assets/icons/figma/caret-up-down.svg" width="14" height="14" alt="" />
-                </button>
-              </th>
-              <th scope="col" class="ev__th tl__c-course">{{ 'evaluations.col.course' | translate }}</th>
-              <th scope="col" class="ev__th tl__c-num">{{ 'evaluations.col.questions' | translate }}</th>
-              <th scope="col" class="ev__th tl__c-score">{{ 'evaluations.col.avg_score' | translate }}</th>
-              <th scope="col" class="ev__th tl__c-date">{{ 'evaluations.col.last_scored' | translate }}</th>
-              <th scope="col" class="ev__th tl__c-learners">{{ 'evaluations.col.learners' | translate }}</th>
-              <th scope="col" class="ev__th tl__c-act"><span class="tl__act-label">{{ 'common.actions' | translate }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (state() === 'loading') {
-              @for (s of skeletons; track s) {
-                <tr class="ev__row tl__row">
-                  <td class="ev__td"><p-skeleton width="70%" height="18px" /></td>
-                  <td class="ev__td"><p-skeleton width="70%" height="16px" /></td>
-                  <td class="ev__td"><p-skeleton width="30%" height="16px" /></td>
-                  <td class="ev__td"><p-skeleton width="60%" height="16px" /></td>
-                  <td class="ev__td"><p-skeleton width="70%" height="16px" /></td>
-                  <td class="ev__td"><p-skeleton width="50%" height="16px" /></td>
-                  <td class="ev__td"><p-skeleton width="32px" height="32px" /></td>
-                </tr>
-              }
-            } @else if (state() === 'error') {
-              <tr>
-                <td class="ev__td ev__message" colspan="7" role="alert">
-                  <p>{{ 'common.could_not_load' | translate }}</p>
-                  <button type="button" class="ev__retry" (click)="retry()">{{ 'evaluations.retry' | translate }}</button>
-                </td>
-              </tr>
-            } @else {
-              @for (t of rows(); track t.id) {
-                <tr class="ev__row tl__row">
-                  <td class="ev__td tl__c-name">
+            @case ('error') {
+              <tr><td colspan="7">
+                <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+              </td></tr>
+            }
+            @default {
+              @for (t of list.items(); track t.id) {
+                <tr class="tl__row">
+                  <td>
                     <span class="ev__cell-stack">
                       <a class="ev__primary tl__link" [routerLink]="[t.id]"><bdi>{{ t.name }}</bdi></a>
                       <span class="ev__secondary">{{ 'evaluations.created_on' | translate: { date: (t.created_at | nasDate: locale()) } }}</span>
                     </span>
                   </td>
-                  <td class="ev__td tl__c-course">
+                  <td>
                     <span class="ev__cell-stack">
-                      <span class="ev__ellipsis"><bdi>{{ t.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></span>
+                      <span class="ev__ellipsis cl-strong"><bdi>{{ t.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></span>
                       @if (t.cohort) { <span class="ev__secondary"><bdi>{{ t.cohort.name }}</bdi></span> }
                     </span>
                   </td>
-                  <td class="ev__td tl__c-num">{{ t.questions }}</td>
-                  <td class="ev__td tl__c-score"><ev-score [score]="t.score" [passed]="t.passed" /></td>
-                  <td class="ev__td tl__c-date ev__muted">
-                    {{ t.last_scored_at ? (t.last_scored_at | nasDate: locale()) : '-' }}
-                  </td>
-                  <td class="ev__td tl__c-learners">
-                    <span class="ev__sr-only">{{ 'evaluations.learners_of' | translate: { scored: t.learners_scored, total: t.learners_eligible } }}</span>
+                  <td class="cl-center cl-strong">{{ t.questions }}</td>
+                  <td><ev-score [score]="t.score" [passed]="t.passed" /></td>
+                  <td class="cl-small">{{ t.last_scored_at ? (t.last_scored_at | nasDate: locale()) : '-' }}</td>
+                  <td>
+                    <span class="cl-sr-only">{{ 'evaluations.learners_of' | translate: { scored: t.learners_scored, total: t.learners_eligible } }}</span>
                     <bdi dir="ltr" aria-hidden="true">{{ t.learners_scored }} / {{ t.learners_eligible }}</bdi>
                   </td>
-                  <td class="ev__td tl__c-act">
-                    <a class="ev__view" [routerLink]="[t.id]"
+                  <td class="cl-center">
+                    <a class="cl-view" [routerLink]="[t.id]"
                       [attr.aria-label]="'evaluations.templates.view_results_of' | translate: { name: t.name }">
                       <img src="assets/icons/figma/eye.svg" width="18" height="18" alt="" />
                     </a>
                   </td>
                 </tr>
               } @empty {
-                <tr>
-                  <td class="ev__td ev__message" colspan="7" role="status">
-                    <nas-icon name="tray" [size]="32" />
-                    <p>{{ (narrowed() ? 'evaluations.no_results' : 'evaluations.templates.empty') | translate }}</p>
-                  </td>
-                </tr>
+                <tr><td colspan="7">
+                  <nas-list-state [message]="(hasQuery() ? 'evaluations.no_results' : 'evaluations.templates.empty') | translate" />
+                </td></tr>
               }
             }
-          </tbody>
-        </table>
-      </div>
-
-      @if (state() === 'ready' && total() > 0) {
-        <nas-pager rangeKey="evaluations.templates.range" [total]="total()" [page]="page()"
-          [perPage]="perPage" (pageChange)="goTo($event)" />
+          }
+        </tbody>
+      </table>
+      @if (list.pageable()) {
+        <nas-pager nasTablePager rangeKey="evaluations.templates.range" [total]="list.total()" [page]="list.query().page"
+          [perPage]="list.query().perPage" [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
       }
-    </div>
+    </nas-table-card>
   </section>
 </div>
 
-<nas-filter-picker
-  [visible]="pickerVisible()"
-  (visibleChange)="pickerVisible.set($event)"
-  [label]="pickerLabel(pickerKey())"
-  [options]="options()?.[pickerKey()] ?? []"
-  [selected]="picked()[pickerKey()]"
-  [loading]="optionsLoading()"
-  (apply)="onPick(pickerKey(), $event)" />
+<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />
 
 <!-- Import report: nothing was written; every problem by row and column (D-034). -->
 <nas-import-report [visible]="reportOpen()" (visibleChange)="reportOpen.set($event)" [errors]="importReport()?.errors ?? []" />

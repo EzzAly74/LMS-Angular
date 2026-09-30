@@ -1,8 +1,8 @@
-// View Learners scores - Figma 2017:52260.
+// View Learners scores - Figma 2017:52260. Head, toolbar, card, table, states
+// and pager are the shared list ones (filters in the Filter modal, D-070);
+// this file adds the template scope pill and the columns.
+@use '../../../../shared/styles/list';
 @use '../../styles/evaluation-list';
-
-// Figma draws the search 668px wide, not full width.
-.sl__search { flex: 0 1 668px; }
 
 .sl__scope {
   display: inline-flex;
@@ -46,11 +46,9 @@
 .sl__c-score    { inline-size: 116px; }
 .sl__c-course   { inline-size: 194px; }
 .sl__c-date     { inline-size: 160px; }
-.sl__c-act      { inline-size: 96px; text-align: center; }
+.sl__c-act      { inline-size: 96px; }
 
-.ev__th.sl__c-act { text-align: center; }
-
-.sl__row { block-size: 63px; }
+.sl__row td { block-size: 63px; }
 
 .sl__link {
   color: inherit;
@@ -60,6 +58,3 @@
   &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
 }
 
-@media (max-width: 767px) {
-  .sl__search { flex: 1 1 100%; }
-}

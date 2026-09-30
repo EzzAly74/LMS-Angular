@@ -10,26 +10,32 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem, MessageService } from 'primeng/api';
-import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { ApiParams, ApiService } from '../../../../core/services/api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
-import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
 import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import { NasImportReportComponent } from '../../../../shared/nas/nas-import-report/nas-import-report.component';
 import {
-  NasFilterOption,
-  NasFilterPickerComponent,
-} from '../../../../shared/nas/nas-filter-picker/nas-filter-picker.component';
+  NasFilterDialogComponent, type NasFilterField, type NasFilterFieldOption, type NasFilterValues,
+} from '../../../../shared/nas/nas-filter-dialog/nas-filter-dialog.component';
+import { NasListToolbarComponent } from '../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasTableCardComponent } from '../../../../shared/nas/nas-table-card/nas-table-card.component';
+import {
+  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS, type NasSkeletonCell,
+} from '../../../../shared/nas/nas-list-state/nas-list-state.component';
+import { createPagedList, pagedParams, toPaged, withList, type PagedQuery } from '../../../../shared/list/paged-list';
+import {
+  activeFilterCount, appliedValues, filterNumbers, filterOne, filterStrings, toFilterOptions,
+} from '../../../../shared/list/filter-values';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { pluralKey } from '../../../../core/utils/plural-key';
 import { EvScoreComponent } from '../../components/ev-score/ev-score.component';
@@ -40,19 +46,29 @@ import {
   EvaluationTemplateRow,
   ImportReport,
 } from '../../models/evaluation.model';
-import { ymd } from '../../evaluation-params';
 import { EvaluationTemplatesApiService, TransferFormat } from '../../services/evaluation-templates-api.service';
 
-type LoadState = 'loading' | 'ready' | 'error';
-type ChipKey = 'instructor_ids' | 'course_ids';
 type SortKey = 'created_at' | 'name';
+
+interface Query extends PagedQuery {
+  readonly sort: SortKey;
+  readonly dir: 'asc' | 'desc';
+  readonly instructorIds: readonly number[];
+  readonly courseIds: readonly number[];
+  readonly results: readonly EvaluationResult[];
+  /** Last response range, local `YYYY-MM-DD`. */
+  readonly scoredFrom: string | null;
+  readonly scoredTo: string | null;
+}
 
 /**
  * Evaluation Templates - Figma 2009:88432 (D4).
  *
- * GET admin/evaluations/templates. The Instructors and Courses chips narrow
- * the responses each row aggregates; the checkboxes filter on the template's
- * score against the pass threshold (D-054); From/To bound the last response.
+ * GET admin/evaluations/templates. Instructors and Courses narrow the
+ * responses each row aggregates; Result filters on the template's score
+ * against the pass threshold (D-054); the date range bounds the last
+ * response. They live in the Dashboard's one Filter modal (D-070: the frame's
+ * chips, checkboxes and From / To pickers moved into it, human 2026-09-30).
  *
  * Create Template opens the builder (2409:132793). Import takes a whole file
  * or nothing and shows every problem by row (D-034); Export downloads the
@@ -63,16 +79,18 @@ type SortKey = 'created_at' | 'name';
   selector: 'app-evaluation-template-list',
   standalone: true,
   imports: [
-    FormsModule,
     RouterLink,
     TranslateModule,
     SkeletonModule,
     MenuModule,
     NasIconComponent,
-    NasDatepickerComponent,
     NasPagerComponent,
     NasImportReportComponent,
-    NasFilterPickerComponent,
+    NasFilterDialogComponent,
+    NasListToolbarComponent,
+    NasTableCardComponent,
+    NasListStateComponent,
+    NasSkeletonRowComponent,
     NasDatePipe,
     EvScoreComponent,
   ],
@@ -88,38 +106,78 @@ export class EvaluationTemplateListComponent implements OnInit {
   private readonly transfer   = inject(EvaluationTemplatesApiService);
   private readonly toast      = inject(MessageService);
 
-  /** Figma: "Showing 1-8 of 8 templates". */
-  readonly perPage   = 8;
-  readonly skeletons = Array.from({ length: 5 }, (_, i) => i);
-  readonly results   = EVALUATION_RESULTS;
+  readonly skeletons = SKELETON_ROWS;
+  /** Template, course, questions, average score, last scored, learners, the eye. */
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['title', 'text', 'num', 'short', 'short', 'short', 'action'];
 
-  readonly chips: { key: ChipKey; labelKey: string }[] = [
-    { key: 'instructor_ids', labelKey: 'evaluations.chip.instructors' },
-    { key: 'course_ids',     labelKey: 'evaluations.chip.courses' },
-  ];
-
-  readonly rows     = signal<EvaluationTemplateRow[]>([]);
-  readonly total    = signal(0);
-  readonly page     = signal(1);
-  readonly state    = signal<LoadState>('loading');
-  readonly search   = signal('');
-  readonly from     = signal<Date | null>(null);
-  readonly to       = signal<Date | null>(null);
-  readonly picked   = signal<Record<ChipKey, number[]>>({ instructor_ids: [], course_ids: [] });
-  readonly result   = signal<EvaluationResult[]>([]);
-  readonly sort     = signal<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'created_at', dir: 'desc' });
+  readonly list = createPagedList<Query, EvaluationTemplateRow>({
+    // Figma: "Showing 1-8 of 8 templates".
+    initial: {
+      search: '', page: 1, perPage: 8, sort: 'created_at', dir: 'desc',
+      instructorIds: [], courseIds: [], results: [], scoredFrom: null, scoredTo: null,
+    },
+    load: q => this.api.getPaginated<EvaluationTemplateRow>(API.ADMIN_EVALUATION_TEMPLATES, this.params(q)).pipe(toPaged(r => r)),
+  });
 
   readonly recent      = signal<EvaluationTemplateRow[]>([]);
-  readonly recentState = signal<LoadState>('loading');
+  readonly recentState = signal<'loading' | 'ready' | 'error'>('loading');
 
-  readonly pickerKey      = signal<ChipKey>('instructor_ids');
-  readonly pickerVisible  = signal(false);
-  readonly options        = signal<Record<ChipKey, NasFilterOption[]> | null>(null);
-  readonly optionsLoading = signal(false);
+  /* ── Filter modal ──────────────────────────────────────────────── */
+  readonly filterOpen = signal(false);
+  private readonly instructors = signal<NasFilterFieldOption[]>([]);
+  private readonly courses     = signal<NasFilterFieldOption[]>([]);
+  private lookupsLoaded = false;
+  private readonly langTick = signal(0);
 
-  readonly anyChip    = computed(() => this.picked().instructor_ids.length + this.picked().course_ids.length > 0);
-  readonly narrowed   = computed(() => this.anyChip() || this.result().length > 0 || !!this.search() || !!this.from() || !!this.to());
-  readonly lastPage   = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
+  readonly appliedFilters = computed<NasFilterValues>(() => {
+    const q = this.list.query();
+    return appliedValues({
+      instructor_ids: q.instructorIds, course_ids: q.courseIds, results: q.results, scored_from: q.scoredFrom, scored_to: q.scoredTo,
+    });
+  });
+  readonly activeFilters = computed(() => activeFilterCount(this.appliedFilters()));
+  readonly hasQuery = computed(() => this.activeFilters() > 0 || this.list.query().search !== '');
+
+  readonly filterFields = computed<NasFilterField[]>(() => {
+    this.langTick();
+    return [
+      {
+        key: 'instructor_ids', multiple: true,
+        label: this.t.instant('evaluations.chip.instructors'),
+        placeholder: this.t.instant('courses_list.select_instructor'),
+        searchPlaceholder: this.t.instant('courses_list.search_instructors'),
+        options: this.instructors(),
+      },
+      {
+        key: 'course_ids', multiple: true,
+        label: this.t.instant('evaluations.chip.courses'),
+        placeholder: this.t.instant('courses_list.select_course'),
+        searchPlaceholder: this.t.instant('courses_list.search_courses'),
+        options: this.courses(),
+      },
+      {
+        key: 'results', multiple: true, wide: true,
+        label: this.t.instant('evaluations.result.legend'),
+        placeholder: this.t.instant('common.all'),
+        options: EVALUATION_RESULTS.map(r => ({ id: r, label: this.t.instant(`evaluations.result.${r}`) })),
+      },
+      {
+        key: 'scored_from', type: 'date', before: 'scored_to', options: [],
+        label: this.t.instant('evaluations.scored_from'),
+        placeholder: this.t.instant('evaluations.from'),
+      },
+      {
+        key: 'scored_to', type: 'date', after: 'scored_from', options: [],
+        label: this.t.instant('evaluations.scored_to'),
+        placeholder: this.t.instant('evaluations.to'),
+      },
+    ];
+  });
+
+  readonly nameSort = computed<'ascending' | 'descending' | 'none'>(() => {
+    const q = this.list.query();
+    return q.sort !== 'name' ? 'none' : q.dir === 'asc' ? 'ascending' : 'descending';
+  });
 
   /** Import / Export menus (Figma: outline buttons with a caret). */
   readonly importing    = signal(false);
@@ -145,137 +203,60 @@ export class EvaluationTemplateListComponent implements OnInit {
 
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
-  private readonly fetch$  = new Subject<void>();
-  private readonly search$ = new Subject<string>();
-
   constructor() {
     withLocaleReload(() => {
       // Template, course and instructor names are localised by the API.
-      this.fetch$.next();
+      this.langTick.update(v => v + 1);
+      this.lookupsLoaded = false;
+      if (this.filterOpen()) this.loadLookups();
+      this.list.reload();
       this.loadRecent();
-      this.options.set(null);
     });
   }
 
   ngOnInit(): void {
-    this.fetch$
-      .pipe(
-        switchMap(() => {
-          this.state.set('loading');
-          return this.api.getPaginated<EvaluationTemplateRow>(API.ADMIN_EVALUATION_TEMPLATES, this.params()).pipe(
-            map(res => ({ ok: true as const, res })),
-            catchError(() => of({ ok: false as const })),
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(r => {
-        if (!r.ok) {
-          this.state.set('error');
-          return;
-        }
-        this.rows.set(r.res.result.data);
-        this.total.set(r.res.result.total);
-        this.state.set('ready');
-      });
-
-    this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(term => {
-        this.search.set(term.trim());
-        this.reload();
-      });
-
-    this.fetch$.next();
+    this.list.reload();
     this.loadRecent();
   }
 
-  reload(): void {
-    this.page.set(1);
-    this.fetch$.next();
-  }
-
-  retry(): void {
-    this.fetch$.next();
-  }
-
-  onSearch(term: string): void {
-    this.search$.next(term);
-  }
-
-  onFrom(d: Date | null): void {
-    this.from.set(d);
-    this.reload();
-  }
-
-  onTo(d: Date | null): void {
-    this.to.set(d);
-    this.reload();
-  }
-
-  goTo(p: number): void {
-    if (p < 1 || p > this.lastPage() || p === this.page()) return;
-    this.page.set(p);
-    this.fetch$.next();
-  }
-
   toggleSortByName(): void {
-    const s = this.sort();
-    this.sort.set(s.key === 'name' ? { key: 'name', dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: 'name', dir: 'asc' });
-    this.reload();
-  }
-
-  ariaSort(): 'ascending' | 'descending' | 'none' {
-    const s = this.sort();
-    if (s.key !== 'name') return 'none';
-    return s.dir === 'asc' ? 'ascending' : 'descending';
-  }
-
-  // ── Result checkboxes ("All" means none ticked) ────────────────────────
-  isResult(r: EvaluationResult): boolean {
-    return this.result().includes(r);
-  }
-
-  toggleResult(r: EvaluationResult): void {
-    this.result.update(list => (list.includes(r) ? list.filter(x => x !== r) : [...list, r]));
-    this.reload();
-  }
-
-  clearResults(): void {
-    if (this.result().length === 0) return;
-    this.result.set([]);
-    this.reload();
-  }
-
-  // ── Chips ──────────────────────────────────────────────────────────────
-  clearChips(): void {
-    if (!this.anyChip()) return;
-    this.picked.set({ instructor_ids: [], course_ids: [] });
-    this.reload();
-  }
-
-  count(key: ChipKey): number {
-    return this.picked()[key].length;
-  }
-
-  openPicker(key: ChipKey): void {
-    this.pickerKey.set(key);
-    this.pickerVisible.set(true);
-    if (!this.options()) this.loadOptions();
-  }
-
-  onPick(key: ChipKey, ids: (number | string)[]): void {
-    const nums = ids.filter((v): v is number => typeof v === 'number');
-    this.picked.update(p => ({ ...p, [key]: nums }));
-    this.reload();
+    const q = this.list.query();
+    this.list.patch(q.sort === 'name' ? { dir: q.dir === 'asc' ? 'desc' : 'asc' } : { sort: 'name', dir: 'asc' });
   }
 
   responsesKey(n: number): string {
     return pluralKey('evaluations.templates.responses', n, this.locale());
   }
 
-  pickerLabel(key: ChipKey): string {
-    return this.t.instant(this.chips.find(c => c.key === key)?.labelKey ?? '');
+  /* ── Filter ────────────────────────────────────────────────────── */
+  openFilter(): void {
+    this.loadLookups();
+    this.filterOpen.set(true);
+  }
+
+  onFilter(v: NasFilterValues): void {
+    const date = (x: string | number | null) => (typeof x === 'string' ? x : null);
+    this.list.patch({
+      instructorIds: filterNumbers(v['instructor_ids']),
+      courseIds: filterNumbers(v['course_ids']),
+      results: filterStrings(v['results'], EVALUATION_RESULTS),
+      scoredFrom: date(filterOne(v['scored_from'])),
+      scoredTo: date(filterOne(v['scored_to'])),
+    });
+  }
+
+  private loadLookups(): void {
+    if (this.lookupsLoaded) return;
+    this.lookupsLoaded = true;
+    this.api
+      .get<EvaluationFilterOptions>(API.ADMIN_EVALUATION_FILTER_OPTIONS)
+      .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe(r => {
+        // A failed list stays empty and is fetched again the next time.
+        if (!r) { this.lookupsLoaded = false; return; }
+        this.instructors.set(toFilterOptions((r.result?.instructors ?? []).map(o => ({ id: o.id, name: o.name ?? '' }))));
+        this.courses.set(toFilterOptions((r.result?.courses ?? []).map(o => ({ id: o.id, name: o.name ?? '' }))));
+      });
   }
 
   // ── Import / Export ────────────────────────────────────────────────────
@@ -295,7 +276,7 @@ export class EvaluationTemplateListComponent implements OnInit {
             summary: this.t.instant('common.success_title'),
             detail: this.t.instant('evaluations.transfer.imported', { templates: report.created, questions: report.questions }),
           });
-          this.reload();
+          this.list.patch({});
           this.loadRecent();
           return;
         }
@@ -320,7 +301,7 @@ export class EvaluationTemplateListComponent implements OnInit {
   }
 
   private exportList(format: TransferFormat): void {
-    const { page: _page, per_page: _perPage, ...filters } = this.params();
+    const { page: _page, per_page: _perPage, ...filters } = this.params(this.list.query());
     this.exporting.set(true);
     this.transfer.export(format, filters).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => this.exporting.set(false),
@@ -342,22 +323,15 @@ export class EvaluationTemplateListComponent implements OnInit {
   }
 
   // ── Internals ──────────────────────────────────────────────────────────
-  private params(): ApiParams {
-    const p: ApiParams = {
-      page: this.page(),
-      per_page: this.perPage,
-      sort: this.sort().key,
-      dir: this.sort().dir,
-    };
-    if (this.search()) p['search'] = this.search();
-    const picked = this.picked();
-    if (picked.instructor_ids.length) p['instructor_ids'] = picked.instructor_ids;
-    if (picked.course_ids.length) p['course_ids'] = picked.course_ids;
-    if (this.result().length) p['results'] = this.result();
-    const from = this.from();
-    const to = this.to();
-    if (from) p['scored_from'] = ymd(from);
-    if (to) p['scored_to'] = ymd(to);
+  private params(q: Query): ApiParams {
+    const p = pagedParams(q);
+    p['sort'] = q.sort;
+    p['dir'] = q.dir;
+    withList(p, 'instructor_ids', q.instructorIds);
+    withList(p, 'course_ids', q.courseIds);
+    withList(p, 'results', q.results);
+    if (q.scoredFrom) p['scored_from'] = q.scoredFrom;
+    if (q.scoredTo) p['scored_to'] = q.scoredTo;
     return p;
   }
 
@@ -373,24 +347,6 @@ export class EvaluationTemplateListComponent implements OnInit {
           this.recentState.set('ready');
         },
         error: () => this.recentState.set('error'),
-      });
-  }
-
-  private loadOptions(): void {
-    this.optionsLoading.set(true);
-    this.api
-      .get<EvaluationFilterOptions>(API.ADMIN_EVALUATION_FILTER_OPTIONS)
-      .pipe(
-        map(r => ({
-          instructor_ids: (r.result?.instructors ?? []).map(o => ({ id: o.id, label: o.name ?? '' })),
-          course_ids:     (r.result?.courses ?? []).map(o => ({ id: o.id, label: o.name ?? '' })),
-        })),
-        catchError(() => of(null)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(opts => {
-        this.options.set(opts);
-        this.optionsLoading.set(false);
       });
   }
 }
