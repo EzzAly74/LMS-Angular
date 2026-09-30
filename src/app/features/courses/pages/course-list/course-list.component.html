@@ -1,153 +1,113 @@
 <!-- All Courses - Figma 2393:123975; Filter 2430:135164 / 2430:134497 -->
-<div class="nas-page-container cc-page">
+<div class="nas-page-container cl-page">
 
-  <header class="cc-head">
-    <div class="cc-head__text">
-      <h1 class="cc-title">{{ 'courses_list.title' | translate }}</h1>
-      <p class="cc-subtitle">{{ 'courses_list.subtitle' | translate }}</p>
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ 'courses_list.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'courses_list.subtitle' | translate }}</p>
     </div>
-    <button type="button" class="cc-new" (click)="openAddCourse()">
+    <button type="button" class="cl-primary" (click)="openAddCourse()">
       <nas-icon name="plus-circle" [size]="20" />
       <span>{{ 'courses_list.new_course' | translate }}</span>
     </button>
   </header>
 
-  <div class="cl-toolbar">
-    <div class="cl-search">
-      <nas-icon name="magnifying-glass" [size]="20" />
-      <label class="cl-sr-only" for="cc-search">{{ 'courses_list.search_label' | translate }}</label>
-      <input id="cc-search" type="search" class="cl-search__input"
-        [placeholder]="'courses_list.search_placeholder' | translate"
-        [ngModel]="query().search" (ngModelChange)="onSearch($event)" />
-    </div>
-    <button type="button" class="cl-filter" [class.cl-filter--on]="activeFilters() > 0" aria-haspopup="dialog"
-      (click)="openFilter()">
-      <nas-icon name="funnel" [size]="20" />
-      <span>{{ 'common.filter' | translate }}</span>
-      @if (activeFilters() > 0) {
-        <span class="cl-filter__badge" [attr.aria-label]="'courses_list.filters_on' | translate: { count: activeFilters() }">{{ activeFilters() }}</span>
-      }
-    </button>
-  </div>
+  <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
+    [label]="'courses_list.search_label' | translate" [placeholder]="'courses_list.search_placeholder' | translate"
+    (searchChange)="list.search($event)" (filter)="openFilter()" />
 
-  <section class="cl-card" [attr.aria-busy]="state() === 'loading'" [attr.aria-label]="'courses_list.title' | translate">
-    <div class="cl-scroll" tabindex="0" [attr.aria-label]="'courses_list.title' | translate">
-      <table class="cl-table cc-table">
-        <thead>
-          <tr>
-            <th scope="col" class="cc-w-course">{{ 'courses_list.col_course' | translate }}</th>
-            <th scope="col" class="cc-w-category">{{ 'courses_list.col_category' | translate }}</th>
-            <th scope="col" class="cc-w-instructor">{{ 'courses_list.col_instructor' | translate }}</th>
-            <th scope="col" class="cl-center cc-w-cohorts">{{ 'courses_list.col_cohorts' | translate }}</th>
-            <th scope="col" class="cl-center cc-w-enrolled">{{ 'courses_list.col_enrolled' | translate }}</th>
-            <th scope="col" class="cc-w-completion">{{ 'courses_list.col_completion' | translate }}</th>
-            <th scope="col" class="cc-w-evaluation">{{ 'courses_list.col_evaluation' | translate }}</th>
-            <th scope="col" class="cc-w-status">{{ 'courses_list.col_status' | translate }}</th>
-            <th scope="col" class="cc-w-actions"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @switch (state()) {
-            @case ('loading') {
-              @for (s of skeletons; track s) {
-                <tr aria-hidden="true">
-                  <td><p-skeleton height="16px" width="70%" /><p-skeleton height="12px" width="40%" styleClass="cc-skel-gap" /></td>
-                  @for (c of [1, 2, 3, 4, 5, 6, 7]; track c) { <td><p-skeleton height="14px" /></td> }
-                  <td></td>
-                </tr>
-              }
-            }
-            @case ('error') {
-              <tr><td colspan="9">
-                <div class="cl-state" role="alert">
-                  <p>{{ 'courses_list.could_not_load' | translate }}</p>
-                  <button type="button" class="cl-retry" (click)="reload()">{{ 'common.retry' | translate }}</button>
-                </div>
-              </td></tr>
-            }
-            @default {
-              @for (row of items(); track row.id) {
-                <tr class="cc-row" (click)="goToDetail(row)">
-                  <td>
-                    <span class="cc-course">
-                      <span class="cc-course__top">
-                        <a class="cc-course__title" [routerLink]="['/admin/courses', row.id]" (click)="$event.stopPropagation()">{{ row.title }}</a>
-                        @if (row.type) {
-                          <nas-status-badge class="cc-badge" [tone]="typeTone(row.type)">{{ typeLabel(row.type) }}</nas-status-badge>
-                        }
-                      </span>
-                      @if (row.updated_at) {
-                        <span class="cc-course__date">{{ 'courses_list.updated_at' | translate }} {{ row.updated_at | nasDate: locale() }}</span>
+  <nas-table-card [label]="'courses_list.title' | translate" [busy]="list.state() === 'loading'">
+    <table class="cl-table cl-table--fixed cc-table">
+      <thead>
+        <tr>
+          <th scope="col" class="cc-w-course">{{ 'courses_list.col_course' | translate }}</th>
+          <th scope="col" class="cc-w-category">{{ 'courses_list.col_category' | translate }}</th>
+          <th scope="col" class="cc-w-instructor">{{ 'courses_list.col_instructor' | translate }}</th>
+          <th scope="col" class="cl-center cc-w-cohorts">{{ 'courses_list.col_cohorts' | translate }}</th>
+          <th scope="col" class="cl-center cc-w-enrolled">{{ 'courses_list.col_enrolled' | translate }}</th>
+          <th scope="col" class="cc-w-completion">{{ 'courses_list.col_completion' | translate }}</th>
+          <th scope="col" class="cc-w-evaluation">{{ 'courses_list.col_evaluation' | translate }}</th>
+          <th scope="col" class="cc-w-status">{{ 'courses_list.col_status' | translate }}</th>
+          <th scope="col" class="cc-w-actions"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @switch (list.state()) {
+          @case ('loading') {
+            @for (s of skeletons; track s) { <tr nasSkeletonRow [columns]="9" [actions]="true"></tr> }
+          }
+          @case ('error') {
+            <tr><td colspan="9">
+              <nas-list-state kind="error" [message]="'courses_list.could_not_load' | translate" (retry)="list.reload()" />
+            </td></tr>
+          }
+          @default {
+            @for (row of list.items(); track row.id) {
+              <tr class="cl-row" (click)="goToDetail(row)">
+                <td>
+                  <span class="cc-course">
+                    <span class="cc-course__top">
+                      <a class="cc-course__title" [routerLink]="['/admin/courses', row.id]" (click)="$event.stopPropagation()">{{ row.title }}</a>
+                      @if (row.type) {
+                        <nas-status-badge class="cc-badge" [tone]="row.typeTone">{{ row.typeLabel }}</nas-status-badge>
                       }
                     </span>
-                  </td>
-                  <td class="cc-strong"><bdi>{{ row.category?.name ?? '—' }}</bdi></td>
-                  <td class="cc-strong"><bdi>{{ row.instructor?.name ?? '—' }}</bdi></td>
-                  <td class="cc-strong cl-center">{{ row.cohorts_count ?? 0 }}</td>
-                  <td class="cc-strong cl-center">{{ row.users_count ?? 0 }}</td>
-                  <td>
-                    @let pct = row.completion_percent ?? 0;
-                    <span class="cc-progress">
-                      <span class="cc-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
-                        [attr.aria-valuenow]="pct" [attr.aria-label]="'courses_list.completion_label' | translate: { value: pct }">
-                        <span class="cc-progress__fill cc-progress__fill--{{ completionBand(pct) }}" [style.inline-size.%]="pct"></span>
-                      </span>
-                      <span class="cc-progress__value" dir="ltr">{{ pct }}%</span>
-                    </span>
-                  </td>
-                  <td>
-                    @if (row.evaluation_score !== null && row.evaluation_score !== undefined) {
-                      <span class="cc-score" [class.cc-score--fail]="isFailingScore(row.evaluation_score)">
-                        <img src="assets/icons/figma/star-fill-amber.svg" width="16" height="16" alt="" />
-                        <span dir="ltr">{{ row.evaluation_score | number: '1.1-1' }}</span>
-                      </span>
-                    } @else {
-                      <span class="cc-score cc-score--none" [attr.aria-label]="'courses_list.not_evaluated' | translate">—</span>
+                    @if (row.updated_at) {
+                      <span class="cc-course__date">{{ 'courses_list.updated_at' | translate }} {{ row.updated_at | nasDate: locale() }}</span>
                     }
-                  </td>
-                  <td>
-                    <nas-status-badge class="cc-badge" [tone]="statusTone(row.status)">{{ statusLabel(row.status) }}</nas-status-badge>
-                  </td>
-                  <td class="cl-end">
-                    <button type="button" class="cc-more" aria-haspopup="menu"
-                      [attr.aria-label]="'courses_list.actions_for' | translate: { name: row.title }"
-                      (click)="openRowMenu($event, row)">
-                      <nas-icon name="dots-three" [size]="16" />
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr><td colspan="9">
-                  <p class="cl-state">{{ (hasQuery() ? 'courses_list.no_results' : 'courses_list.empty_table') | translate }}</p>
-                </td></tr>
-              }
+                  </span>
+                </td>
+                <td class="cc-strong"><bdi>{{ row.category?.name ?? '—' }}</bdi></td>
+                <td class="cc-strong"><bdi>{{ row.instructor?.name ?? '—' }}</bdi></td>
+                <td class="cc-strong cl-center">{{ row.cohorts_count ?? 0 }}</td>
+                <td class="cc-strong cl-center">{{ row.users_count ?? 0 }}</td>
+                <td>
+                  <span class="cc-progress">
+                    <span class="cc-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                      [attr.aria-valuenow]="row.completion" [attr.aria-label]="'courses_list.completion_label' | translate: { value: row.completion }">
+                      <span class="cc-progress__fill cc-progress__fill--{{ row.completionBand }}" [style.inline-size.%]="row.completion"></span>
+                    </span>
+                    <span class="cc-progress__value" dir="ltr">{{ row.completion }}%</span>
+                  </span>
+                </td>
+                <td>
+                  @if (row.evaluation_score !== null && row.evaluation_score !== undefined) {
+                    <span class="cc-score" [class.cc-score--fail]="row.failing">
+                      <img src="assets/icons/figma/star-fill-amber.svg" width="16" height="16" alt="" />
+                      <span dir="ltr">{{ row.evaluation_score | number: '1.1-1' }}</span>
+                    </span>
+                  } @else {
+                    <span class="cc-score cc-score--none" [attr.aria-label]="'courses_list.not_evaluated' | translate">—</span>
+                  }
+                </td>
+                <td>
+                  <nas-status-badge class="cc-badge" [tone]="row.statusTone">{{ row.statusLabel }}</nas-status-badge>
+                </td>
+                <td class="cl-end">
+                  <button type="button" class="cl-more" aria-haspopup="menu"
+                    [attr.aria-label]="'courses_list.actions_for' | translate: { name: row.title }"
+                    (click)="rowMenu.open($event, row)">
+                    <nas-icon name="dots-three" [size]="16" />
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="9">
+                <nas-list-state [message]="(hasQuery() ? 'courses_list.no_results' : 'courses_list.empty_table') | translate" />
+              </td></tr>
             }
           }
-        </tbody>
-      </table>
-    </div>
-    @if (state() === 'ready' && total() > 0) {
-      <div class="cl-pager cc-pager">
-        <nas-pager [page]="query().page" [total]="total()" [perPage]="query().perPage" rangeKey="courses_list.range"
-          [showAllVisible]="true" (showAll)="showAll()" (pageChange)="goTo($event)" />
-      </div>
+        }
+      </tbody>
+    </table>
+    @if (list.pageable()) {
+      <nas-pager nasTablePager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+        rangeKey="courses_list.range" [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
     }
-  </section>
+  </nas-table-card>
 </div>
 
-<!-- ── Row actions menu ──────────────────────────────────────────────── -->
-<p-overlayPanel #rowMenu>
-  @if (activeRow(); as row) {
-    <div class="row-menu" role="menu">
-      <button type="button" role="menuitem" class="row-menu__item" (click)="goToDetail(row)">
-        <nas-icon name="eye" [size]="16" />{{ 'dashboard.view_details' | translate }}
-      </button>
-      <button type="button" role="menuitem" class="row-menu__item" (click)="editCourse(row)">
-        <img src="assets/icons/figma/pencil-simple.svg" width="16" height="16" alt="" />{{ 'dashboard.edit_course' | translate }}
-      </button>
-    </div>
-  }
-</p-overlayPanel>
+<nas-row-menu #rowMenu [actions]="rowActions" (picked)="onRowAction($event)" />
 
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
   (apply)="onFilter($event)" (search)="onFilterSearch($event)" />

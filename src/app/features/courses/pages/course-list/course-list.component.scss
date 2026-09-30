@@ -1,56 +1,11 @@
-// All Courses - Figma 2393:123975. The toolbar, table card, pager and states
-// are the Course Details list styles; this file adds the page head and the
-// course-specific cells.
-@use '../course-detail/styles/list';
-
-.cc-page { display: flex; flex-direction: column; gap: var(--nas-space-6); }
-
-// Toolbar sits 24 px under the head, the table 16 px under the toolbar.
-.cc-page > .cl-toolbar { margin-block-end: calc(var(--nas-space-4) - var(--nas-space-6)); }
-
-// ── Head (2556:151347) ────────────────────────────────────────────────────
-.cc-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nas-space-4);
-
-  &__text { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
-}
-
-.cc-title { margin: 0; font-size: var(--nas-size-xl); font-weight: var(--nas-weight-bold); line-height: 28.8px; color: var(--nas-neutral-1000); }
-.cc-subtitle { margin: 0; font-size: var(--nas-size-xs); line-height: 21px; color: var(--nas-neutral-750); }
-
-// New Course: 180 x 44, teal-1000.
-.cc-new {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nas-space-2);
-  min-inline-size: 180px;
-  block-size: 44px;
-  padding: var(--nas-space-2) var(--nas-space-3);
-  border: 0;
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-teal-1000);
-  color: var(--nas-neutral-100);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  line-height: 16.8px;
-  cursor: pointer;
-  box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
-  transition: background-color var(--transition-speed);
-
-  &:hover { background: var(--nas-teal-900); }
-  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
-}
+// All Courses - Figma 2393:123975. The head, table, row button and helpers
+// are the shared list styles; the toolbar, card, states, pager and menu are
+// components. This file adds the course-specific columns and cells.
+@use '../../../../shared/styles/list';
 
 // ── Table (2556:151361 / 2556:151385) ─────────────────────────────────────
 .cc-table {
   min-inline-size: 1080px;
-  table-layout: fixed;
 
   td {
     block-size: auto;
@@ -69,10 +24,7 @@
 .cc-w-status     { inline-size: 10.3%; }
 .cc-w-actions    { inline-size: 6.4%; }
 
-.cc-row { cursor: pointer; }
-
 .cc-strong { color: var(--nas-neutral-1000); }
-
 
 .cc-course {
   display: flex;
@@ -153,56 +105,4 @@
 
   // Below the pass mark (Figma "2.1" in red); red-700 keeps 14 px text at AA.
   &--fail { color: var(--nas-status-red-700); }
-}
-
-// Row actions: a 16 px "…" in a 32 px button (Figma "Button - Course actions").
-.cc-more {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 32px;
-  block-size: 32px;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--nas-neutral-1000);
-  cursor: pointer;
-
-  &:hover { background: var(--nas-neutral-300); }
-  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
-}
-
-// The pager row is 92 px in Figma (24 px above and below the 44 px buttons).
-.cc-pager { padding: 0; }
-
-:host ::ng-deep .cc-skel-gap { margin-block-start: 6px; }
-
-// ── Row actions menu ──────────────────────────────────────────────────────
-.row-menu {
-  display: flex;
-  flex-direction: column;
-  min-inline-size: 180px;
-
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: var(--nas-space-3);
-    padding: var(--nas-space-3) var(--nas-space-4);
-    border: 0;
-    border-radius: var(--nas-radius-sm);
-    background: transparent;
-    font: inherit;
-    font-size: var(--nas-size-2xs);
-    color: var(--nas-color-text-body);
-    text-align: start;
-    cursor: pointer;
-
-    &:hover { background: var(--nas-neutral-200); }
-    &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: -2px; }
-  }
-}
-
-@media (max-width: 767px) {
-  .cc-new { min-inline-size: 0; }
 }

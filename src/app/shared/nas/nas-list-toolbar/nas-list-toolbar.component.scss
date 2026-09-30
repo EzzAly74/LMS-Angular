@@ -1,0 +1,92 @@
+// List toolbar - Figma 2393:123975 / 2266:129915: a 36 px search box and the
+// 124 px Filter button with its count badge (2295:52409).
+
+:host { display: block; min-inline-size: 0; }
+
+.nlt {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-4);
+  flex-wrap: wrap;
+}
+
+.nlt__search {
+  position: relative; // containing block for the visually hidden label
+  flex: 1 1 260px;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  block-size: 36px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-100);
+
+  nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
+  &:focus-within { border-color: var(--nas-teal-700); box-shadow: 0 0 0 3px var(--nas-teal-1000-16); }
+}
+
+.nlt__input {
+  flex: 1;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong);
+
+  // neutral-750, not Figma's #8c8c8c (3.4:1), for AA.
+  &::placeholder { color: var(--nas-neutral-750); }
+}
+
+.nlt__filter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  block-size: 36px;
+  min-inline-size: 124px;
+  padding: 0 var(--nas-space-4);
+  border: 1px solid var(--nas-neutral-500);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface);
+  color: var(--nas-neutral-800);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-200); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+
+  &--on { border-color: var(--nas-teal-1000); color: var(--nas-teal-1000); }
+}
+
+.nlt__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 18px;
+  block-size: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+  font-size: var(--nas-size-3xs);
+  font-weight: var(--nas-weight-semibold);
+}
+
+.nlt__sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

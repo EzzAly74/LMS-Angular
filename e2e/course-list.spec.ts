@@ -68,7 +68,7 @@ test.describe('behaviour', () => {
     await mockList(page);
     await page.goto('/admin/courses');
 
-    const rows = page.locator('.cc-row');
+    const rows = page.locator('.cl-row');
     await expect(rows).toHaveCount(8);
     await expect(page.locator('nas-pill-tabs')).toHaveCount(0);
     await expect(page.getByRole('columnheader', { name: 'Last Status' })).toBeVisible();
@@ -104,7 +104,7 @@ test.describe('behaviour', () => {
     await setLocale(page, 'en');
     const { lists } = await mockList(page);
     await page.goto('/admin/courses');
-    await expect(page.locator('.cc-row')).toHaveCount(8);
+    await expect(page.locator('.cl-row')).toHaveCount(8);
 
     await page.getByLabel('Search courses').fill('safety');
     await expect.poll(() => lists.at(-1)?.url() ?? '').toContain('search=safety');
@@ -152,16 +152,16 @@ test.describe('behaviour', () => {
     expect(p.getAll('evaluation[]')).toEqual(['none']);
     expect(p.getAll('statuses[]').sort()).toEqual(['inactive', 'upcoming']);
     expect(p.get('page')).toBe('1');
-    await expect(page.locator('.cl-filter__badge')).toHaveText('4');
-    await expect(page.locator('.cc-row')).toHaveCount(2);
+    await expect(page.locator('.nlt__badge')).toHaveText('4');
+    await expect(page.locator('.cl-row')).toHaveCount(2);
 
     // Reopened, the chosen courses keep their names.
-    await page.locator('.cl-filter').click();
+    await page.locator('.nlt__filter').click();
     await expect(d.locator('.p-multiselect').nth(0)).toContainText('2 selected');
     await d.getByRole('button', { name: 'Clear' }).click();
     const cleared = new URL(lists.at(-1)!.url()).searchParams;
     for (const k of ['ids[]', 'category_ids[]', 'evaluation[]', 'statuses[]']) expect(cleared.has(k)).toBe(false);
-    await expect(page.locator('.cl-filter__badge')).toHaveCount(0);
+    await expect(page.locator('.nlt__badge')).toHaveCount(0);
 
     // Show All: one page of up to 200.
     await page.getByRole('button', { name: 'Show All' }).click();
@@ -174,10 +174,10 @@ test.describe('behaviour', () => {
     let fail = true;
     await page.route(/\/api\/v1\/courses\?/, (r) => (fail ? r.fulfill({ status: 500, json: { status: 'error', message: 'x' } }) : r.fallback()));
     await page.goto('/admin/courses');
-    await expect(page.locator('.cl-state[role=alert]')).toContainText('The courses could not be loaded.');
+    await expect(page.locator('nas-list-state [role=alert]')).toContainText('The courses could not be loaded.');
     fail = false;
     await page.getByRole('button', { name: 'Try again' }).click();
-    await expect(page.locator('.cc-row')).toHaveCount(8);
+    await expect(page.locator('.cl-row')).toHaveCount(8);
   });
 });
 
@@ -188,7 +188,7 @@ for (const locale of ['en', 'ar'] as const) {
     await setLocale(page, locale);
     await mockList(page);
     await page.goto('/admin/courses');
-    await expect(page.locator('.cc-row')).toHaveCount(8);
+    await expect(page.locator('.cl-row')).toHaveCount(8);
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
 
     const width = page.viewportSize()?.width ?? 0;
@@ -197,16 +197,16 @@ for (const locale of ['en', 'ar'] as const) {
 
     if (width >= 1440) {
       // Figma: 36 px toolbar, header row 45 px, pager buttons 44 px.
-      expect((await page.locator('.cl-search').boundingBox())!.height).toBe(36);
-      expect((await page.locator('.cl-filter').boundingBox())!.width).toBeGreaterThanOrEqual(124);
+      expect((await page.locator('.nlt__search').boundingBox())!.height).toBe(36);
+      expect((await page.locator('.nlt__filter').boundingBox())!.width).toBeGreaterThanOrEqual(124);
       expect(Math.round((await page.locator('.cc-table thead tr').boundingBox())!.height)).toBe(45);
-      expect((await page.locator('.cc-new').boundingBox())!.height).toBe(44);
+      expect((await page.locator('.cl-primary').boundingBox())!.height).toBe(44);
     }
 
     mkdirSync(ARTIFACTS, { recursive: true });
     await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}.png`), fullPage: true });
 
-    await page.locator('.cl-filter').click();
+    await page.locator('.nlt__filter').click();
     const dialog = page.getByRole('dialog');
     const box = await dialog.boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0);
