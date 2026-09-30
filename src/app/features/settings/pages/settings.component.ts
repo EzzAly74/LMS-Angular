@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { MessageService } from 'primeng/api';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -24,6 +23,7 @@ import { API } from '../../../core/constants/api.constants';
 import { NasIconComponent }        from '../../../shared/nas/nas-icon/nas-icon.component';
 import { NasPhotoUploadComponent } from '../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
 import { NasRichTextComponent }    from '../../../shared/nas/nas-rich-text/nas-rich-text.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface Setting {
   id:    number;
@@ -81,7 +81,7 @@ export class SettingsComponent implements OnInit {
   private enums     = inject(EnumsService);
   private http      = inject(HttpClient);
   private fb        = inject(FormBuilder);
-  private message   = inject(MessageService);
+  private message   = inject(ToastService);
   private translate = inject(TranslateService);
 
   /* ── State ────────────────────────────────────────────────── */
@@ -235,7 +235,7 @@ export class SettingsComponent implements OnInit {
       const res = await this.api.put<Setting[]>(API.ADMIN_SETTINGS, { settings: payload }).toPromise();
       if (res?.result) this.ingestSettings(res.result);
 
-      this.message.add({ severity: 'success', detail: this.translate.instant('platform_settings.saved') });
+      this.message.success('platform_settings.saved');
     } catch {
       // The HTTP error interceptor surfaces its own toast — nothing else to do.
     } finally {

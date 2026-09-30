@@ -13,7 +13,6 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
-import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
@@ -21,6 +20,7 @@ import { NasConfirmModalComponent } from '../../../../shared/nas/nas-confirm-mod
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface Category {
   id: number;
@@ -66,7 +66,7 @@ interface CategoryFormState {
 })
 export class CategoryListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(ApiService);
-  private readonly messages = inject(MessageService);
+  private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
 
   @ViewChild('rowMenu') rowMenu?: OverlayPanel;
@@ -232,11 +232,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
           this.saving.set(false);
           this.dialogVisible.set(false);
           this.resetForm();
-          this.messages.add({
-            severity: 'success',
-            summary: this.t.instant('common.created'),
-            detail:  this.t.instant('categories_toasts.created'),
-          });
+          this.messages.success('categories_toasts.created', { title: 'common.created' });
           this.load();
         },
         error: () => this.saving.set(false),
@@ -253,11 +249,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
           this.saving.set(false);
           this.dialogVisible.set(false);
           this.resetForm();
-          this.messages.add({
-            severity: 'success',
-            summary: this.t.instant('common.updated'),
-            detail:  this.t.instant('categories_toasts.updated'),
-          });
+          this.messages.success('categories_toasts.updated', { title: 'common.updated' });
           this.load();
         },
         error: () => this.saving.set(false),
@@ -281,11 +273,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
         this.deleteBusy.set(false);
         this.confirmDeleteOpen.set(false);
         this.deleteTarget.set(null);
-        this.messages.add({
-          severity: 'success',
-          summary: this.t.instant('common.deleted'),
-          detail:  this.t.instant('categories_toasts.deleted'),
-        });
+        this.messages.success('categories_toasts.deleted', { title: 'common.deleted' });
         this.load();
       },
       error: () => this.deleteBusy.set(false),

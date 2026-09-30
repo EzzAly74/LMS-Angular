@@ -12,7 +12,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarModule } from 'primeng/sidebar';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
@@ -24,6 +23,7 @@ import {
   NotificationFeedService,
   type FeedNotification,
 } from '../../../core/services/notification-feed.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface RecipientUser {
   id: number;
@@ -71,7 +71,7 @@ type RecipientRole = 'learner' | 'instructor';
 })
 export class NotificationsDrawerComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
-  private readonly messages = inject(MessageService);
+  private readonly messages = inject(ToastService);
   private readonly t = inject(TranslateService);
   readonly drawer = inject(NotificationsDrawerService);
   /** Shared per-user feed — also drives the dashboard notif-card. */
@@ -295,11 +295,7 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
         this.description.set('');
         this.selectedCodes.set(new Set());
         this.allSelected.set(false);
-        this.messages.add({
-          severity: 'success',
-          summary: 'Sent',
-          detail: 'Notification dispatched.',
-        });
+        this.messages.success('Notification dispatched.', { title: 'Sent' });
         // A for-all / admin-targeted broadcast lands in the sender's own
         // feed too — refresh so it appears immediately.
         this.feed.load();

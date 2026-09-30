@@ -4,13 +4,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
-import { MessageService, SharedModule } from 'primeng/api';
+import { SharedModule } from 'primeng/api';
 import { CoursesApiService } from '../../../../services/courses-api.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
 import { NasIconComponent } from '../../../../../../shared/nas/nas-icon/nas-icon.component';
 import { NasImportProblem, NasImportReportComponent } from '../../../../../../shared/nas/nas-import-report/nas-import-report.component';
 import { NasDatePipe } from '../../../../../../shared/pipes/nas-date.pipes';
 import type { Cohort } from '../../../../../../core/models/course.types';
+import { ToastService } from '../../../../../../core/services/toast.service';
 
 /** Figma: "Xls, Xlsx · Max. file size: 8MB" - the server enforces the same. */
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -43,7 +44,7 @@ type FileProblem = 'type' | 'size' | null;
 export class NewCohortDialogComponent {
   private readonly api = inject(CoursesApiService);
   private readonly t = inject(TranslateService);
-  private readonly toast = inject(MessageService);
+  private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly locale = inject(LocaleService).locale;
 
@@ -157,7 +158,7 @@ export class NewCohortDialogComponent {
       next: () => this.downloading.set(false),
       error: () => {
         this.downloading.set(false);
-        this.toast.add({ severity: 'error', detail: this.t.instant('course_detail.schedule.download_failed') });
+        this.toast.error('course_detail.schedule.download_failed');
       },
     });
   }
@@ -236,7 +237,7 @@ export class NewCohortDialogComponent {
 
   private done(detail: string): void {
     this.saving.set(false);
-    this.toast.add({ severity: 'success', detail });
+    this.toast.success(detail);
     this.visible.set(false);
     this.saved.emit();
   }

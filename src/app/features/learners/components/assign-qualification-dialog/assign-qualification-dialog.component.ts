@@ -15,13 +15,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DOCUMENT } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
-import { MessageService } from 'primeng/api';
 import { EMPTY, Observable, Subject, catchError, debounceTime, expand, map, of, reduce, switchMap } from 'rxjs';
 import { ApiParams, ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { LearnerRow } from '../../models/learner.model';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 /** The bulk-grant API accepts at most this many learners per call. */
 export const MAX_BULK_GRANT = 500;
@@ -55,7 +55,7 @@ let nextId = 0;
 })
 export class AssignQualificationDialogComponent {
   private readonly api        = inject(ApiService);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document   = inject(DOCUMENT);
@@ -174,11 +174,7 @@ export class AssignQualificationDialogComponent {
         next: res => {
           this.saving.set(false);
           const r = res.result ?? { granted: 0, already_held: 0 };
-          this.toast.add({
-            severity: 'success',
-            summary: this.t.instant('learners.assign.done_title'),
-            detail: this.t.instant('learners.assign.done', { granted: r.granted, held: r.already_held }),
-          });
+          this.toast.success('learners.assign.done', { title: 'learners.assign.done_title', params: { granted: r.granted, held: r.already_held } });
           this.assigned.emit();
           this.visible.set(false);
         },

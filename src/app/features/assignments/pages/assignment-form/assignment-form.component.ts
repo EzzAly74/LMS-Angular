@@ -36,8 +36,7 @@ import {
 } from '../../../../core/utils/assessment-question';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ToastModule } from 'primeng/toast';
-import { MessageService, PrimeTemplate } from 'primeng/api';
+import { PrimeTemplate } from 'primeng/api';
 import { AssignmentsApiService } from '../../services/assignments-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
@@ -51,6 +50,7 @@ import type {
   AssignmentCohortScope,
   CohortLite,
 } from '../../models/assignment.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface CourseOpt { id: number; title: string; }
 
@@ -120,13 +120,11 @@ function keyFields(q: QuestionValue): Pick<AssignmentSavePayload['questions'][nu
     DropdownModule,
     PrimeTemplate,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasFileCardComponent,
     NasIconComponent,
     NasDatepickerComponent,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './assignment-form.component.html',
   styleUrl:    './assignment-form.component.scss',
@@ -139,7 +137,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly fb         = inject(FormBuilder);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly destroy$   = new Subject<void>();
 
   readonly loading      = signal(true);
@@ -491,10 +489,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: saved => {
         this.saving.set(false);
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant(editing ? 'assignments.toast_updated' : 'assignments.toast_created'),
-        });
+        this.toast.success(this.t.instant(editing ? 'assignments.toast_updated' : 'assignments.toast_created'));
         if (!editing) {
           this.router.navigate(['/admin/assignments', saved.id, 'edit']);
         } else {
@@ -538,7 +533,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     const id = this.assignmentId();
     if (!a || !id || !g.id.value) return;
     this.api.downloadAttachment(id, g.id.value, a.name ?? 'attachment').subscribe({
-      error: () => this.toast.add({ severity: 'error', detail: this.t.instant('assignments.download_failed') }),
+      error: () => this.toast.error('assignments.download_failed'),
     });
   }
 

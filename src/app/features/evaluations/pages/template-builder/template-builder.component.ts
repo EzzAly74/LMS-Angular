@@ -24,7 +24,6 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { forkJoin, of, startWith } from 'rxjs';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { EvaluationTemplatesApiService } from '../../services/evaluation-templates-api.service';
@@ -38,6 +37,7 @@ import {
   formatScore,
 } from '../../models/evaluation.model';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found' | 'locked';
 
@@ -94,7 +94,7 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
   private readonly api        = inject(EvaluationTemplatesApiService);
   private readonly router     = inject(Router);
   private readonly t          = inject(TranslateService);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Route param on /:id/edit; absent on /new. */
@@ -239,11 +239,7 @@ export class EvaluationTemplateBuilderComponent implements OnInit {
     save$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.saving.set(false);
-        this.toast.add({
-          severity: 'success',
-          summary: this.t.instant('common.success_title'),
-          detail: this.t.instant(existing ? 'evaluations.builder.updated' : 'evaluations.builder.published'),
-        });
+        this.toast.success(this.t.instant(existing ? 'evaluations.builder.updated' : 'evaluations.builder.published'));
         void this.router.navigate(['/admin/evaluations', saved.id]);
       },
       error: (e: unknown) => {

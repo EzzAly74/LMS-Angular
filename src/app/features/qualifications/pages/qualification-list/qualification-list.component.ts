@@ -12,7 +12,6 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { MessageService } from 'primeng/api';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pluralKey } from '../../../../core/utils/plural-key';
@@ -36,6 +35,7 @@ import { createPagedList, pagedParams, toPaged, type PagedQuery } from '../../..
 import { QualificationDialogComponent } from '../../components/qualification-dialog/qualification-dialog.component';
 import { QualificationImportError, QualificationRow } from '../../models/qualification.model';
 import { QualificationsApiService, TransferFormat } from '../../services/qualifications-api.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type Tone = 'high' | 'mid' | 'low';
 type RowActionId = 'edit' | 'delete';
@@ -84,7 +84,7 @@ interface QualificationListRow extends QualificationRow {
 })
 export class QualificationListComponent implements OnInit {
   private readonly api        = inject(QualificationsApiService);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly locale     = inject(LocaleService);
   private readonly destroyRef = inject(DestroyRef);
@@ -190,7 +190,7 @@ export class QualificationListComponent implements OnInit {
       next: () => {
         this.deleteBusy.set(false);
         this.deleting.set(null);
-        this.toast.add({ severity: 'success', summary: this.t.instant('common.success_title'), detail: this.t.instant('qualifications.deleted') });
+        this.toast.success('qualifications.deleted');
         // Deleting the last row of a page steps back to the one before.
         const page = this.list.query().page;
         if (this.list.items().length === 1 && page > 1) this.list.goTo(page - 1);
@@ -225,11 +225,7 @@ export class QualificationListComponent implements OnInit {
       next: report => {
         this.importing.set(false);
         if (report.errors.length === 0) {
-          this.toast.add({
-            severity: 'success',
-            summary: this.t.instant('common.success_title'),
-            detail: this.t.instant('qualifications.transfer.imported', { count: report.created }),
-          });
+          this.toast.success('qualifications.transfer.imported', { params: { count: report.created } });
           this.list.goTo(1);
           return;
         }
@@ -263,7 +259,7 @@ export class QualificationListComponent implements OnInit {
       if (typeof first === 'string') detail = first;
       else if (e.status === 429) detail = this.t.instant('qualifications.transfer.too_many');
     }
-    this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail });
+    this.toast.error(detail);
   }
 }
 

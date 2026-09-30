@@ -6,7 +6,6 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
@@ -17,6 +16,7 @@ import { ExternalTrainingApiService } from '../../services/external-training-api
 import { EtStatsComponent } from '../../components/et-stats/et-stats.component';
 import { RejectDialogComponent } from '../../components/reject-dialog/reject-dialog.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 type Confirm = 'approve' | 'reopen' | null;
@@ -44,7 +44,7 @@ type Confirm = 'approve' | 'reopen' | null;
 })
 export class ExternalTrainingReviewComponent {
   private readonly api        = inject(ExternalTrainingApiService);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly auth     = inject(AuthService);
@@ -147,7 +147,7 @@ export class ExternalTrainingReviewComponent {
         this.rejectOpen.set(false);
         this.show(r);
         this.loadStats();
-        this.toast.add({ severity: 'success', summary: this.t.instant('common.success_title'), detail: this.t.instant(doneKey) });
+        this.toast.success(this.t.instant(doneKey));
       },
       error: (e: unknown) => {
         this.busy.set(false);

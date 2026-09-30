@@ -1,0 +1,145 @@
+// The app's toasts (D-072), on the NAS tokens. PrimeNG owns the stack and its
+// enter / leave animation; its own card chrome is cleared so only .nt draws.
+
+:host ::ng-deep .nas-toaster.p-toast {
+  // Above every overlay (modals 1100-1200, the date picker 11000): a toast
+  // is always readable, even over the dialog that caused it.
+  z-index: 12000;
+  // Clear of the 64 px top bar, so the language switch and search stay usable.
+  inset-block-start: 76px;
+  inline-size: 380px;
+  max-inline-size: calc(100vw - 32px);
+
+  .p-toast-message {
+    margin: 0 0 var(--nas-space-3);
+    border: 0;
+    border-radius: var(--nas-radius-lg);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    overflow: visible;
+  }
+}
+
+// Physical on purpose: the corner itself flips with the language (top-right in
+// English, top-left in Arabic).
+:host ::ng-deep .nas-toaster.p-toast-top-right { right: 24px; }
+:host ::ng-deep .nas-toaster.p-toast-top-left { left: 24px; }
+
+@media (max-width: 560px) {
+  :host ::ng-deep .nas-toaster.p-toast { inset-block-start: 72px; }
+}
+
+// ── The card ─────────────────────────────────────────────────────────────
+.nt {
+  // Per severity: accent (stripe, line), icon badge background and glyph.
+  --nt-accent: var(--nas-status-blue-500);
+  --nt-soft: var(--nas-status-blue-50);
+  --nt-ink: var(--nas-status-blue-500);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--nas-space-3);
+  padding-block: 14px 16px;
+  padding-inline: 18px var(--nas-space-3);
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-lg);
+  background: var(--nas-color-bg-surface);
+  box-shadow:
+    0 18px 40px -12px rgba(12, 36, 39, 0.22),
+    0 4px 10px -4px rgba(12, 36, 39, 0.08);
+  overflow: hidden;
+
+  // Severity stripe on the reading start.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 4px;
+    background: var(--nt-accent);
+  }
+
+  &--success { --nt-accent: var(--nas-status-green-500); --nt-soft: var(--nas-status-green-50); --nt-ink: var(--nas-status-green-700); }
+  &--error   { --nt-accent: var(--nas-status-red-500);   --nt-soft: var(--nas-status-red-50);   --nt-ink: var(--nas-status-red-700); }
+  &--warn    { --nt-accent: var(--nas-status-amber-500); --nt-soft: var(--nas-status-amber-50); --nt-ink: var(--nas-status-amber-800); }
+}
+
+.nt__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 34px;
+  block-size: 34px;
+  border-radius: var(--nas-radius-full);
+  background: var(--nt-soft);
+  color: var(--nt-ink);
+  // A soft halo of the same tint.
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--nt-soft) 55%, transparent);
+}
+
+.nt__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  padding-block-start: 1px;
+}
+
+.nt__title,
+.nt__detail {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nt__title {
+  font-size: var(--nas-size-xs);
+  line-height: 20px;
+  font-weight: var(--nas-weight-semibold);
+  color: var(--nas-color-text-strong);
+}
+
+.nt__detail {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--nas-neutral-750);
+}
+
+.nt__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  margin-block-start: -2px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nas-radius-sm);
+  background: transparent;
+  color: var(--nas-neutral-750);
+  cursor: pointer;
+  transition: background var(--transition-speed), color var(--transition-speed);
+
+  &:hover { background: var(--nas-neutral-300); color: var(--nas-color-text-strong); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 1px; }
+}
+
+// Countdown line along the bottom; drains toward the reading start.
+.nt__progress {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 3px;
+  background: var(--nt-accent);
+  opacity: 0.55;
+  transform-origin: left center;
+
+  :host-context([dir='rtl']) & { transform-origin: right center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt__progress { display: none; }
+  .nt__close { transition: none; }
+}

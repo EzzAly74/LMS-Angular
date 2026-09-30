@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface Instructor {
   id: number;
@@ -32,7 +33,7 @@ interface Instructor {
 export class InstructorListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private t              = inject(TranslateService);
 
   constructor() { withLocaleReload(() => this.load()); }
@@ -77,7 +78,7 @@ export class InstructorListComponent implements OnInit {
       accept: () => {
         this.api.delete(`${API.INSTRUCTORS}/${item.id}`).subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', detail: this.t.instant('instructors.deleted') });
+            this.messageService.success('instructors.deleted');
             this.load();
           },
         });

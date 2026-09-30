@@ -13,8 +13,6 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -29,6 +27,7 @@ import type {
   AdminUserSummary,
 } from '../../models/user.types';
 import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface UserFormState {
   id: number | null;
@@ -59,19 +58,17 @@ interface UserFormState {
     DialogModule,
     DropdownModule,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasPageHeaderComponent,
     NasPhotoUploadComponent,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
 })
 export class UserListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(AdminUsersApiService);
-  private readonly messages = inject(MessageService);
+  private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
@@ -342,23 +339,15 @@ export class UserListComponent implements OnInit, OnDestroy {
       next: () => {
         this.formSaving.set(false);
         this.formOpen.set(false);
-        this.messages.add({
-          severity: 'success',
-          summary:  this.t.instant('common.success_title'),
-          detail:   this.t.instant(
+        this.messages.success(this.t.instant(
             this.formMode() === 'create' ? 'common.created' : 'common.updated',
-          ),
-        });
+          ));
         this.refresh();
       },
       error: (err) => {
         this.formSaving.set(false);
         const msg = err?.error?.message ?? this.t.instant('common.operation_failed');
-        this.messages.add({
-          severity: 'error',
-          summary:  this.t.instant('common.error_title'),
-          detail:   msg,
-        });
+        this.messages.error(msg);
       },
     });
   }
@@ -380,19 +369,11 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.closeMenu();
     this.api.reactivate(user.source, user.id).subscribe({
       next: () => {
-        this.messages.add({
-          severity: 'success',
-          summary:  this.t.instant('common.success_title'),
-          detail:   this.t.instant('users_toasts.reactivated', { name: user.name ?? this.t.instant('common.user_one') }),
-        });
+        this.messages.success('users_toasts.reactivated', { params: { name: user.name ?? this.t.instant('common.user_one') } });
         this.refresh();
       },
       error: () => {
-        this.messages.add({
-          severity: 'error',
-          summary:  this.t.instant('common.error_title'),
-          detail:   this.t.instant('users_toasts.reactivate_failed'),
-        });
+        this.messages.error('users_toasts.reactivate_failed');
       },
     });
   }
@@ -406,20 +387,12 @@ export class UserListComponent implements OnInit, OnDestroy {
       next: () => {
         this.deactivating.set(false);
         this.deactivateTarget.set(null);
-        this.messages.add({
-          severity: 'success',
-          summary:  this.t.instant('common.success_title'),
-          detail:   this.t.instant('users_toasts.deactivated', { name: target.name ?? this.t.instant('common.user_one') }),
-        });
+        this.messages.success('users_toasts.deactivated', { params: { name: target.name ?? this.t.instant('common.user_one') } });
         this.refresh();
       },
       error: () => {
         this.deactivating.set(false);
-        this.messages.add({
-          severity: 'error',
-          summary:  this.t.instant('common.error_title'),
-          detail:   this.t.instant('users_toasts.deactivate_failed'),
-        });
+        this.messages.error('users_toasts.deactivate_failed');
       },
     });
   }

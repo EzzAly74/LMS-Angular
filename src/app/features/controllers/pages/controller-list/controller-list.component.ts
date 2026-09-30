@@ -20,8 +20,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastModule } from 'primeng/toast';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
@@ -33,6 +32,7 @@ import type {
   AdminRoleListItem,
   AdminRoleColor,
 } from '../../../roles/models/role.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 /* ── Types ──────────────────────────────────────────────────────── */
 
@@ -77,10 +77,9 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     DialogModule,
     DropdownModule,
     ConfirmDialogModule,
-    ToastModule,
     NasPageHeaderComponent,
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [ConfirmationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './controller-list.component.html',
   styleUrl: './controller-list.component.scss',
@@ -89,7 +88,7 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(ApiService);
   private readonly rolesApi = inject(AdminRolesApiService);
   private readonly confirm  = inject(ConfirmationService);
-  private readonly messages = inject(MessageService);
+  private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
   private readonly fb       = inject(FormBuilder);
 
@@ -268,13 +267,9 @@ export class ControllerListComponent implements OnInit, OnDestroy {
       next: () => {
         this.saving.set(false);
         this.dialogOpen.set(false);
-        this.messages.add({
-          severity: 'success',
-          summary:  this.t.instant('common.saved'),
-          detail:   this.t.instant(
+        this.messages.success(this.t.instant(
             this.dialogMode() === 'create' ? 'common.created' : 'common.updated',
-          ),
-        });
+          ), { title: 'common.saved' });
         this.refresh();
       },
       error: (err) => {
@@ -284,11 +279,7 @@ export class ControllerListComponent implements OnInit, OnDestroy {
         const detail = fieldErrors.length
           ? fieldErrors.join(' ')
           : (err?.error?.message ?? this.t.instant('common.operation_failed'));
-        this.messages.add({
-          severity: 'error',
-          summary:  this.t.instant('common.error_title'),
-          detail,
-        });
+        this.messages.error(detail);
       },
     });
   }
@@ -306,19 +297,11 @@ export class ControllerListComponent implements OnInit, OnDestroy {
       accept: () => {
         this.api.delete(`${API.ADMIN_CONTROLLERS}/${item.id}`).pipe(takeUntil(this.destroy$)).subscribe({
           next: () => {
-            this.messages.add({
-              severity: 'success',
-              summary:  this.t.instant('common.deleted'),
-              detail:   this.t.instant('controllers_toasts.removed', { name: item.name }),
-            });
+            this.messages.success('controllers_toasts.removed', { title: 'common.deleted', params: { name: item.name } });
             this.refresh();
           },
           error: () => {
-            this.messages.add({
-              severity: 'error',
-              summary:  this.t.instant('common.error_title'),
-              detail:   this.t.instant('controllers_toasts.delete_failed'),
-            });
+            this.messages.error('controllers_toasts.delete_failed');
           },
         });
       },

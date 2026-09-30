@@ -13,8 +13,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   NasStatusBadgeComponent,
@@ -25,6 +23,7 @@ import type {
   QuizSubmissionAnswer,
   QuizSubmissionDetail,
 } from '../../models/quiz.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface QuestionRow {
   answer: QuizSubmissionAnswer;
@@ -39,11 +38,9 @@ interface QuestionRow {
     FormsModule,
     RouterLink,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasStatusBadgeComponent,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './submission-detail.component.html',
   styleUrl:    './submission-detail.component.scss',
@@ -52,7 +49,7 @@ export class SubmissionDetailComponent implements OnInit, OnDestroy {
   private readonly api      = inject(QuizzesApiService);
   private readonly route    = inject(ActivatedRoute);
   private readonly router   = inject(Router);
-  private readonly toast    = inject(MessageService);
+  private readonly toast    = inject(ToastService);
   private readonly t        = inject(TranslateService);
   private readonly destroy$ = new Subject<void>();
 
@@ -142,7 +139,7 @@ export class SubmissionDetailComponent implements OnInit, OnDestroy {
         this.detail.set(res.result.submission);
         this.editingAnswerId.set(null);
         this.savingAnswerId.set(null);
-        this.toast.add({ severity: 'success', detail: this.t.instant('submission_score_updated') });
+        this.toast.success('submission_score_updated');
       },
       error: () => this.savingAnswerId.set(null),
     });

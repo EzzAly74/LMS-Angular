@@ -16,7 +16,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { NasStatusBadgeComponent, NasRichTextComponent } from '../../../../../../shared/nas';
 import { CoursesApiService } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
@@ -32,6 +32,7 @@ import type {
 import { pickLocalized } from '../../../../../../core/utils/localized';
 import { pluralKey } from '../../../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../../../core/services/toast.service';
 
 /** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
 type ModuleFilter = 'all' | ModuleContentType;
@@ -68,7 +69,7 @@ export class CourseContentTabComponent implements OnInit {
   private readonly coursesApi = inject(CoursesApiService);
   private readonly enums = inject(EnumsService);
   private readonly fb = inject(FormBuilder);
-  private readonly toast = inject(MessageService);
+  private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
   private readonly confirm = inject(ConfirmationService);
   private readonly locale = inject(LocaleService).locale;
@@ -520,14 +521,11 @@ export class CourseContentTabComponent implements OnInit {
 
     req$.subscribe({
       next: () => {
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant(
+        this.toast.success(this.t.instant(
             editing
               ? 'course_detail_toasts.module_updated'
               : 'course_detail_toasts.module_added',
-          ),
-        });
+          ));
         this.moduleSaving.set(false);
         this.showModule.set(false);
         this.loadModules(id);
@@ -548,10 +546,7 @@ export class CourseContentTabComponent implements OnInit {
       accept: () => {
         this.coursesApi.deleteModule(id, m.id).subscribe({
           next: () => {
-            this.toast.add({
-              severity: 'success',
-              detail: this.t.instant('course_detail_toasts.module_deleted'),
-            });
+            this.toast.success('course_detail_toasts.module_deleted');
             this.loadModules(id);
           },
         });

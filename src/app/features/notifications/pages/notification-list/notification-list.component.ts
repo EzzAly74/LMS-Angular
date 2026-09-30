@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
@@ -13,6 +13,7 @@ import { API } from '../../../../core/constants/api.constants';
 import { pickLocalized, type MaybeLocalized } from '../../../../core/utils/localized';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface Notification {
   id: number;
@@ -36,7 +37,7 @@ interface Notification {
 export class NotificationListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private localeService  = inject(LocaleService);
   private t              = inject(TranslateService);
 
@@ -112,11 +113,7 @@ export class NotificationListComponent implements OnInit {
         this.saving.set(false);
         this.closeDialog();
         this.load();
-        this.messageService.add({
-          severity: 'success',
-          summary:  this.t.instant('common.saved'),
-          detail:   this.t.instant('notifications.sent'),
-        });
+        this.messageService.success('notifications.sent', { title: 'common.saved' });
       },
       error: () => this.saving.set(false),
     });
@@ -130,11 +127,7 @@ export class NotificationListComponent implements OnInit {
       accept: () => {
         this.api.delete(`${API.NOTIFICATIONS}/${item.id}`).subscribe({
           next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary:  this.t.instant('common.deleted'),
-              detail:   this.t.instant('notifications.deleted'),
-            });
+            this.messageService.success('notifications.deleted', { title: 'common.deleted' });
             this.load();
           },
         });

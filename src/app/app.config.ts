@@ -6,6 +6,7 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { BundledTranslateLoader } from './core/i18n/bundled-translate.loader';
 import { LocaleService } from './core/services/locale.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { NasMessageService } from './core/services/toast.service';
 import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
@@ -39,7 +40,8 @@ export const appConfig: ApplicationConfig = {
         defaultLanguage: 'ar',
       })
     ),
-    MessageService,
+    // One MessageService for the whole app; it normalises every toast (D-072).
+    { provide: MessageService, useClass: NasMessageService },
     ConfirmationService,
     {
       // Load the active locale's translations BEFORE anything renders.

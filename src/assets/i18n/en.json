@@ -76,6 +76,13 @@
     "brand_line2": "Track what matters.",
     "brand_subtitle": "NAS Learning Management System"
   },
+  "toast": {
+    "success": "Done",
+    "info": "For your information",
+    "warn": "Please check",
+    "error": "Something went wrong",
+    "close": "Dismiss notification"
+  },
   "common": {
     "search_learners": "Search learners...",
     "filters_on": "{{count}} filters applied",
@@ -1862,6 +1869,7 @@
     "upload_failed_detail": "Could not upload the template."
   },
   "errors": {
+    "network": "Could not reach the server. Check your connection and try again.",
     "title": "Error",
     "validation": "The given data was invalid.",
     "server": "An unexpected error occurred. Please try again.",

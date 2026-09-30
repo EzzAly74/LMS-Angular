@@ -4,10 +4,9 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { Subject, catchError, forkJoin, map, of, switchMap, timer } from 'rxjs';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
-import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService, type ApiParams } from '../../core/services/api.service';
 import { API } from '../../core/constants/api.constants';
@@ -33,6 +32,7 @@ import {
 import type {
   AssessmentAttemptRow, AssessmentItemRow, AssessmentListSource, AssessmentOptionRow, AssessmentType,
 } from './assessment-list.source';
+import { ToastService } from '../../core/services/toast.service';
 
 /** Passed / Failed (D-065); no choice is "all". */
 const RESULTS = ['passed', 'failed'] as const;
@@ -87,12 +87,12 @@ const SHARED_KEYS = {
   selector: 'app-assessment-list',
   standalone: true,
   imports: [
-    RouterLink, DialogModule, ConfirmDialogModule, ToastModule, TranslateModule,
+    RouterLink, DialogModule, ConfirmDialogModule, TranslateModule,
     NasIconComponent, NasPagerComponent, NasFilterDialogComponent,
     NasListToolbarComponent, NasTableCardComponent, NasListStateComponent, NasSkeletonRowComponent,
     NasDatePipe,
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [ConfirmationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './assessment-list.component.html',
   styleUrl: './assessment-list.component.scss',
@@ -100,7 +100,7 @@ const SHARED_KEYS = {
 export class AssessmentListComponent implements OnInit {
   private readonly api        = inject(ApiService);
   private readonly confirm    = inject(ConfirmationService);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly router     = inject(Router);
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
@@ -322,7 +322,7 @@ export class AssessmentListComponent implements OnInit {
       accept: () => {
         this.source().remove(row.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
-            this.toast.add({ severity: 'success', detail: this.t.instant(`${toastNs}.deleted`) });
+            this.toast.success(this.t.instant(`${toastNs}.deleted`));
             this.refresh();
           },
         });

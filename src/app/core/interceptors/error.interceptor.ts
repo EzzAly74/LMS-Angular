@@ -1,11 +1,9 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject, Injector } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { MessageService } from 'primeng/api';
-import { TranslateService } from '@ngx-translate/core';
+import { ToastService } from '../services/toast.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const toast    = inject(MessageService);
   const injector = inject(Injector);
 
   return next(req).pipe(
@@ -17,27 +15,24 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
-      // (A guard for `/assets/i18n/` requests used to sit here, to stop an
-      // HTTP translation fetch re-entering the DI cycle that constructs
-      // TranslateService. Translations are now bundled chunks loaded by
-      // BundledTranslateLoader and never pass through HttpClient, so the
-      // guard could no longer match anything and was removed.)
-      const translate = injector.get(TranslateService);
-      const t = (key: string) => translate.instant(key);
+      // Resolved lazily: ToastService needs TranslateService, which must not
+      // be constructed while an interceptor is being built (DI cycle).
+      const toast = injector.get(ToastService);
+      // A Blob / ArrayBuffer body (file downloads) has no message to show.
+      const message = typeof body?.message === 'string' ? body.message
+        : typeof body?.error === 'string' ? body.error
+        : null;
 
       if (status === 422) {
-        const message = body?.message ?? body?.error ?? t('errors.validation');
-        toast.add({ severity: 'warn', summary: t('errors.title'), detail: message, life: 5000 });
-        return throwError(() => err);
-      }
-
-      if (status >= 500) {
-        toast.add({ severity: 'error', summary: t('errors.title'), detail: t('errors.server'), life: 5000 });
+        toast.warn(message ?? 'errors.validation');
+      } else if (status >= 500) {
+        toast.error('errors.server');
       } else if (status === 404) {
-        toast.add({ severity: 'warn', summary: t('errors.title'), detail: t('errors.not_found'), life: 4000 });
+        toast.warn('errors.not_found');
+      } else if (status === 0) {
+        toast.error('errors.network');
       } else {
-        const message = body?.message ?? body?.error ?? t('errors.unexpected');
-        toast.add({ severity: 'error', summary: t('errors.title'), detail: message, life: 5000 });
+        toast.error(message ?? 'errors.unexpected');
       }
 
       return throwError(() => err);

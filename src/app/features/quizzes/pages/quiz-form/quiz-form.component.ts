@@ -22,8 +22,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject, combineLatest, forkJoin, map, takeUntil, startWith } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ToastModule } from 'primeng/toast';
-import { MessageService, PrimeTemplate } from 'primeng/api';
+import { PrimeTemplate } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -49,6 +48,7 @@ import type {
   QuizStatus,
   CohortLite,
 } from '../../models/quiz.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface CourseOpt { id: number; title: string; }
 
@@ -108,12 +108,10 @@ interface QuestionGroup {
     DropdownModule,
     PrimeTemplate,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasIconComponent,
     NasDatepickerComponent,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './quiz-form.component.html',
   styleUrl:    './quiz-form.component.scss',
@@ -125,7 +123,7 @@ export class QuizFormComponent implements OnInit, OnDestroy {
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly fb         = inject(FormBuilder);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly destroy$   = new Subject<void>();
 
@@ -478,10 +476,7 @@ export class QuizFormComponent implements OnInit, OnDestroy {
     obs$.subscribe({
       next: res => {
         this.saving.set(false);
-        this.toast.add({
-          severity: 'success',
-          detail: this.t.instant(this.quizId() ? 'quizzes.toast_updated' : 'quizzes.toast_created'),
-        });
+        this.toast.success(this.t.instant(this.quizId() ? 'quizzes.toast_updated' : 'quizzes.toast_created'));
         const id = res.result.id;
         if (!this.quizId()) {
           this.router.navigate(['/admin/quizzes', id, 'edit']);

@@ -12,7 +12,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasStatusBadgeComponent, NasStatusTone } from '../../../../shared/nas';
 import { NasFileCardComponent } from '../../../../shared/nas/nas-file-card/nas-file-card.component';
@@ -27,6 +26,7 @@ import {
   type SubmissionAnswer,
   type SubmissionDetail,
 } from '../../models/assignment.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface QuestionRow {
   answer: SubmissionAnswer;
@@ -62,7 +62,7 @@ export class SubmissionDetailComponent implements OnInit {
   private readonly api        = inject(AssignmentsApiService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly enums      = inject(EnumsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -205,7 +205,7 @@ export class SubmissionDetailComponent implements OnInit {
           this.detail.set(res.result.submission);
           this.cancel(a);
           this.saving.set(null);
-          this.toast.add({ severity: 'success', detail: this.t.instant('submission_score_updated') });
+          this.toast.success('submission_score_updated');
         },
         error: () => this.saving.set(null),
       });
@@ -232,7 +232,7 @@ export class SubmissionDetailComponent implements OnInit {
       next: () => this.downloading.set(null),
       error: () => {
         this.downloading.set(null);
-        this.toast.add({ severity: 'error', detail: this.t.instant('assignments.download_failed') });
+        this.toast.error('assignments.download_failed');
       },
     });
   }

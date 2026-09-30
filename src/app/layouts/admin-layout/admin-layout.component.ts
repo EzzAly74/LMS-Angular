@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
-import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { LocaleService } from '../../core/services/locale.service';
@@ -27,7 +26,6 @@ import { withLocaleReload } from '../../core/utils/with-locale-reload';
     RouterModule,
     TranslateModule,
     FormsModule,
-    ToastModule,
     ConfirmDialogModule,
     OverlayPanelModule,
     NasConfirmModalComponent,

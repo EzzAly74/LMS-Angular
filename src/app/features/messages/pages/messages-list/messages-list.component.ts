@@ -15,7 +15,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
-import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
@@ -28,6 +27,7 @@ import {
   NasPillTab,
   NasShimmerComponent,
 } from '../../../../shared/nas';
+import { ToastService } from '../../../../core/services/toast.service';
 
 /* ── Models (unified conversation store) ─────────────────────────────── */
 
@@ -75,7 +75,7 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private enums = inject(EnumsService);
   private fb = inject(FormBuilder);
-  private toast = inject(MessageService);
+  private toast = inject(ToastService);
   private t = inject(TranslateService);
   private realtime = inject(MessagesRealtimeService);
   private realtimeSub?: Subscription;
@@ -374,7 +374,7 @@ export class MessagesListComponent implements OnInit, OnDestroy {
       .post(API.CONVERSATIONS_BULK, { subject: v.title!, body: v.message!, recipients })
       .subscribe({
         next: () => {
-          this.toast.add({ severity: 'success', detail: this.t.instant('messages_list_toasts.sent') });
+          this.toast.success('messages_list_toasts.sent');
           this.showCompose.set(false);
           this.saving.set(false);
           this.activeTab.set('sent');

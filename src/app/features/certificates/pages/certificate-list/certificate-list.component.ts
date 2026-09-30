@@ -11,8 +11,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
@@ -32,6 +30,7 @@ import {
   CertificateTemplateOverview,
   IssuedCertificate,
 } from '../../models/certificate.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_BYTES     = 8 * 1024 * 1024;
@@ -57,7 +56,6 @@ interface IssuedRow extends IssuedCertificate {
     CommonModule,
     FormsModule,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasPageHeaderComponent,
     NasIconComponent,
@@ -68,14 +66,13 @@ interface IssuedRow extends IssuedCertificate {
     NasSkeletonRowComponent,
     NasDatePipe,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './certificate-list.component.html',
   styleUrl: './certificate-list.component.scss',
 })
 export class CertificateListComponent implements OnInit, OnDestroy {
   private readonly api       = inject(AdminCertificatesApiService);
-  private readonly toast     = inject(MessageService);
+  private readonly toast     = inject(ToastService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly t         = inject(TranslateService);
   protected readonly locale  = inject(LocaleService);
@@ -198,19 +195,11 @@ export class CertificateListComponent implements OnInit, OnDestroy {
 
   private uploadTemplateFile(file: File): void {
     if (!ALLOWED_MIMES.includes(file.type) && !/\.(jpe?g|png|webp|pdf)$/i.test(file.name)) {
-      this.toast.add({
-        severity: 'error',
-        summary:  this.t.instant('certificates_toasts.unsupported_type'),
-        detail:   this.t.instant('certificates_toasts.upload_invalid_type'),
-      });
+      this.toast.error('certificates_toasts.upload_invalid_type', { title: 'certificates_toasts.unsupported_type' });
       return;
     }
     if (file.size > MAX_BYTES) {
-      this.toast.add({
-        severity: 'error',
-        summary:  this.t.instant('certificates_toasts.file_too_large'),
-        detail:   this.t.instant('certificates_toasts.upload_max_size'),
-      });
+      this.toast.error('certificates_toasts.upload_max_size', { title: 'certificates_toasts.file_too_large' });
       return;
     }
 
@@ -223,19 +212,11 @@ export class CertificateListComponent implements OnInit, OnDestroy {
         this.overview.set(ov);
 
         this.uploading.set(false);
-        this.toast.add({
-          severity: 'success',
-          summary:  this.t.instant('certificates_toasts.template_updated'),
-          detail:   this.t.instant('certificates_toasts.template_active', { name: file.name }),
-        });
+        this.toast.success('certificates_toasts.template_active', { title: 'certificates_toasts.template_updated', params: { name: file.name } });
       },
       error: (err) => {
         this.uploading.set(false);
-        this.toast.add({
-          severity: 'error',
-          summary:  this.t.instant('certificates_toasts.upload_failed'),
-          detail:   err?.error?.message || this.t.instant('certificates_toasts.upload_failed_detail'),
-        });
+        this.toast.error(err?.error?.message || this.t.instant('certificates_toasts.upload_failed_detail'), { title: 'certificates_toasts.upload_failed' });
       },
     });
   }
@@ -268,11 +249,7 @@ export class CertificateListComponent implements OnInit, OnDestroy {
       next: () => this.downloadingKey.set(null),
       error: () => {
         this.downloadingKey.set(null);
-        this.toast.add({
-          severity: 'error',
-          summary:  this.t.instant('certificates_toasts.download_failed_title'),
-          detail:   this.t.instant('certificates_toasts.download_failed'),
-        });
+        this.toast.error('certificates_toasts.download_failed', { title: 'certificates_toasts.download_failed_title' });
       },
     });
   }

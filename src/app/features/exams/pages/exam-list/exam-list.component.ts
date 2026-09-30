@@ -5,12 +5,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { NasStatusBadgeComponent } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API, courseUrl } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface CourseOption { id: number; title: string; }
 interface Exam {
@@ -32,7 +33,7 @@ interface Exam {
 export class ExamListComponent implements OnInit {
   private api            = inject(ApiService);
   private confirmService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private t              = inject(TranslateService);
 
   constructor() {
@@ -100,7 +101,7 @@ export class ExamListComponent implements OnInit {
       accept: () => {
         this.api.delete(courseUrl.exam(this.selectedCourseId!, item.id)).subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', detail: this.t.instant('success.deleted') });
+            this.messageService.success('success.deleted');
             this.load();
           },
         });

@@ -28,7 +28,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { forkJoin, map, of, startWith } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
@@ -50,6 +49,7 @@ import {
 } from '../../models/course-form.model';
 import { CoursesApiService } from '../../services/courses-api.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 /** The bullet lists: one input per point, added and removed by the admin. */
@@ -108,7 +108,7 @@ export class CourseDialogComponent {
   private readonly courses    = inject(CoursesApiService);
   private readonly enums      = inject(EnumsService);
   private readonly fb         = inject(NonNullableFormBuilder);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document   = inject(DOCUMENT);
@@ -354,11 +354,7 @@ export class CourseDialogComponent {
       .subscribe({
         next: res => {
           this.saving.set(false);
-          this.toast.add({
-            severity: 'success',
-            summary: this.t.instant('common.success_title'),
-            detail: this.t.instant(id === null ? 'course_dialog.created' : 'course_dialog.saved'),
-          });
+          this.toast.success(this.t.instant(id === null ? 'course_dialog.created' : 'course_dialog.saved'));
           this.saved.emit(res.result?.id ?? id ?? 0);
           this.visible.set(false);
         },

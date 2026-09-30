@@ -12,8 +12,6 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
@@ -27,6 +25,7 @@ import type {
   AdminAuditLogItem,
   AdminAuditLogRoleOption,
 } from '../../models/audit-log.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type RoleTab = 'all' | 'admin' | 'instructor';
 
@@ -38,18 +37,16 @@ type RoleTab = 'all' | 'admin' | 'instructor';
     FormsModule,
     DialogModule,
     SkeletonModule,
-    ToastModule,
     TranslateModule,
     NasPageHeaderComponent,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-log-list.component.html',
   styleUrl: './audit-log-list.component.scss',
 })
 export class AuditLogListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(AdminAuditLogApiService);
-  private readonly messages = inject(MessageService);
+  private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
@@ -195,11 +192,7 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
       next: blob => this.triggerDownload(blob),
       error: () => {
         this.exporting.set(false);
-        this.messages.add({
-          severity: 'error',
-          summary:  this.t.instant('common.export_failed'),
-          detail:   this.t.instant('audit_toasts.generate_failed'),
-        });
+        this.messages.error('audit_toasts.generate_failed', { title: 'common.export_failed' });
       },
     });
   }
@@ -216,11 +209,7 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
     URL.revokeObjectURL(url);
 
     this.exporting.set(false);
-    this.messages.add({
-      severity: 'success',
-      summary:  this.t.instant('common.export_ready'),
-      detail:   this.t.instant('audit_toasts.export_downloaded', { filename }),
-    });
+    this.messages.success('audit_toasts.export_downloaded', { title: 'common.export_ready', params: { filename } });
   }
 
   private todayStamp(): string {

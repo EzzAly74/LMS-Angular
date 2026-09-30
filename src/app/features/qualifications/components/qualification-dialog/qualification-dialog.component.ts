@@ -18,7 +18,6 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
 import { Subject, catchError, debounceTime, map, of, startWith, switchMap } from 'rxjs';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import {
@@ -32,6 +31,7 @@ import {
 } from '../../models/qualification.model';
 import { QualificationsApiService } from '../../services/qualifications-api.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -71,7 +71,7 @@ let nextId = 0;
 export class QualificationDialogComponent {
   private readonly api        = inject(QualificationsApiService);
   private readonly fb         = inject(NonNullableFormBuilder);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document   = inject(DOCUMENT);
@@ -237,11 +237,7 @@ export class QualificationDialogComponent {
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.toast.add({
-            severity: 'success',
-            summary: this.t.instant('common.success_title'),
-            detail: this.t.instant(id === null ? 'qualifications.created' : 'qualifications.saved'),
-          });
+          this.toast.success(this.t.instant(id === null ? 'qualifications.created' : 'qualifications.saved'));
           this.saved.emit();
           this.visible.set(false);
         },

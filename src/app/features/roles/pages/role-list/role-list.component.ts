@@ -13,8 +13,6 @@ import { RouterLink, Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
@@ -25,6 +23,7 @@ import type {
   AdminRoleSectionCatalog,
   AdminRoleSectionGroup,
 } from '../../models/role.types';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-role-list',
@@ -35,11 +34,9 @@ import type {
     RouterLink,
     SkeletonModule,
     DialogModule,
-    ToastModule,
     TranslateModule,
     NasPageHeaderComponent,
   ],
-  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './role-list.component.html',
   styleUrl: './role-list.component.scss',
@@ -47,7 +44,7 @@ import type {
 export class RoleListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(AdminRolesApiService);
   private readonly router   = inject(Router);
-  private readonly messages = inject(MessageService);
+  private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
@@ -175,11 +172,7 @@ export class RoleListComponent implements OnInit, OnDestroy {
       next: () => {
         this.deleting.set(false);
         this.deleteTarget.set(null);
-        this.messages.add({
-          severity: 'success',
-          summary:  this.t.instant('common.deleted'),
-          detail:   this.t.instant('roles.deleted'),
-        });
+        this.messages.success('roles.deleted', { title: 'common.deleted' });
         this.refresh();
       },
       error: (err) => {
@@ -187,7 +180,7 @@ export class RoleListComponent implements OnInit, OnDestroy {
         const msg = err?.error?.message
                  ?? err?.error?.errors?.role?.[0]
                  ?? this.t.instant('errors.unexpected');
-        this.messages.add({ severity: 'error', summary: this.t.instant('errors.title'), detail: msg });
+        this.messages.error(msg);
       },
     });
   }

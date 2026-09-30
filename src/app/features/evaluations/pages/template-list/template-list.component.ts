@@ -15,7 +15,7 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MenuModule } from 'primeng/menu';
-import { MenuItem, MessageService } from 'primeng/api';
+import { MenuItem } from 'primeng/api';
 import { catchError, of } from 'rxjs';
 import { ApiParams, ApiService } from '../../../../core/services/api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
@@ -47,6 +47,7 @@ import {
   ImportReport,
 } from '../../models/evaluation.model';
 import { EvaluationTemplatesApiService, TransferFormat } from '../../services/evaluation-templates-api.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 type SortKey = 'created_at' | 'name';
 
@@ -104,7 +105,7 @@ export class EvaluationTemplateListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly locale   = inject(LocaleService).locale;
   private readonly transfer   = inject(EvaluationTemplatesApiService);
-  private readonly toast      = inject(MessageService);
+  private readonly toast      = inject(ToastService);
 
   readonly skeletons = SKELETON_ROWS;
   /** Template, course, questions, average score, last scored, learners, the eye. */
@@ -271,11 +272,7 @@ export class EvaluationTemplateListComponent implements OnInit {
       next: report => {
         this.importing.set(false);
         if (report.errors.length === 0) {
-          this.toast.add({
-            severity: 'success',
-            summary: this.t.instant('common.success_title'),
-            detail: this.t.instant('evaluations.transfer.imported', { templates: report.created, questions: report.questions }),
-          });
+          this.toast.success('evaluations.transfer.imported', { params: { templates: report.created, questions: report.questions } });
           this.list.patch({});
           this.loadRecent();
           return;
@@ -285,7 +282,7 @@ export class EvaluationTemplateListComponent implements OnInit {
       },
       error: (e: unknown) => {
         this.importing.set(false);
-        this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.serverMessage(e) });
+        this.toast.error(this.serverMessage(e));
       },
     });
   }
@@ -296,7 +293,7 @@ export class EvaluationTemplateListComponent implements OnInit {
 
   private downloadTemplate(format: TransferFormat): void {
     this.transfer.importTemplate(format).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      error: (e: unknown) => this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.serverMessage(e) }),
+      error: (e: unknown) => this.toast.error(this.serverMessage(e)),
     });
   }
 
@@ -307,7 +304,7 @@ export class EvaluationTemplateListComponent implements OnInit {
       next: () => this.exporting.set(false),
       error: (e: unknown) => {
         this.exporting.set(false);
-        this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.serverMessage(e) });
+        this.toast.error(this.serverMessage(e));
       },
     });
   }
