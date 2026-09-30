@@ -1,155 +1,28 @@
-/* ── Page layout ───────────────────────────────────────────────────── */
-.jt-page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+// Job Titles - Figma 2078:102691. The head, toolbar, states and pager are the
+// shared list ones (D-070); this file is the card grid.
+@use '../../../../shared/styles/list';
 
-.jt-page__head {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.jt-list { display: flex; flex-direction: column; gap: var(--nas-space-4); min-inline-size: 0; }
 
-.jt-page__title {
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 24px;
-  line-height: 28.8px;
-  color: #171819;
-  margin: 0;
-}
-
-.jt-page__subtitle {
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 21px;
-  color: #676e76;
-  margin: 0;
-}
-
-/* ── Toolbar: search + Filter (Figma 2463:138067) ─────────────────── */
-.jt-page__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--nas-space-4);
-
-  // On a phone the search takes its own row; beside a 124px button it
-  // shrank to a few letters.
-  @media (max-width: 479px) {
-    flex-wrap: wrap;
-    gap: var(--nas-space-3);
-    .jt-search { flex-basis: 100%; }
-  }
-}
-
-.jt-search {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  block-size: 36px;
-  padding-inline: 12px;
-  border: 1px solid var(--nas-neutral-400);
-  border-radius: var(--nas-radius-md);
+// Empty / error message in a card, where the grid would be.
+.jt-state {
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-xl);
   background: var(--nas-color-bg-surface);
-
-  nas-icon { color: var(--nas-neutral-750); flex-shrink: 0; }
-  &:focus-within { outline: 2px solid var(--nas-teal-1000); outline-offset: 1px; }
 }
 
-.jt-search__input {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  line-height: 16.8px;
-  color: var(--nas-neutral-1000);
-
-  // neutral-750, not Figma's #8c8c8c (3.4:1), for AA.
-  &::placeholder { color: var(--nas-neutral-750); }
-}
-
-.jt-filter {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nas-space-2);
-  block-size: 36px;
-  min-inline-size: 124px;
-  padding-inline: var(--nas-space-3);
-  border: 1px solid var(--nas-neutral-500);
-  border-radius: var(--nas-radius-md);
+// The pager under the grid, in the table pager's card.
+.jt-pager {
+  display: block;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-xl);
   background: var(--nas-color-bg-surface);
-  color: var(--nas-neutral-800);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  cursor: pointer;
-
-  &:hover { background: var(--nas-neutral-200); }
-  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
-  &--on { border-color: var(--nas-teal-1000); color: var(--nas-teal-1000); }
 }
 
-.jt-filter__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-inline-size: 18px;
-  block-size: 18px;
-  padding-inline: 5px;
-  border-radius: 9px;
-  background: var(--nas-teal-1000);
-  color: var(--nas-neutral-100);
-  font-size: var(--nas-size-3xs);
-  font-weight: var(--nas-weight-semibold);
-}
-
-.jt-sr-only {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-}
-
-.jt-error {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--nas-space-3);
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--nas-neutral-800);
-  background: var(--nas-color-bg-surface);
-  border: 1px solid var(--nas-neutral-400);
-  border-radius: 12px;
-  p { margin: 0; font-size: 14px; }
-}
-
-.jt-retry {
-  block-size: 36px;
-  padding-inline: var(--nas-space-4);
-  border: 1px solid var(--nas-teal-1000);
-  border-radius: var(--nas-radius-md);
-  background: transparent;
-  color: var(--nas-teal-1000);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  cursor: pointer;
-  &:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
-}
+// Placeholder stat: value over label, like .jt-stat.
+.jt-skel-stat { display: flex; flex-direction: column; gap: 6px; }
+.jt-skel-stat--end { align-items: flex-end; }
+:host-context([dir='rtl']) .jt-skel-stat--end { align-items: flex-start; }
 
 /* ── Card grid ────────────────────────────────────────────────────── */
 .jt-grid {
@@ -294,82 +167,6 @@
     &--mid  { background: #0c2427; }
     &--low  { background: #d44a3f; }
   }
-}
-
-/* ── Pagination (page footer) ─────────────────────────────────────── */
-.jt-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 16px;
-  background: #ffffff;
-  border: 1px solid #e6e7e8;
-  border-radius: 12px;
-}
-
-.jt-pagination__info {
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-size: 13px;
-  line-height: 18px;
-  color: #676e76;
-}
-
-.jt-pagination__nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.jt-pagination__page {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 56px;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 8px;
-  background: #f4f5f6;
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: 13px;
-  color: #171819;
-}
-
-.jt-pagination__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: #ffffff;
-  border: 1px solid #e6e7e8;
-  border-radius: 8px;
-  color: #171819;
-  cursor: pointer;
-  transition: background-color 120ms ease, opacity 120ms ease;
-
-  &:hover:not(:disabled) { background: #f7fafa; }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-}
-
-/* Empty state */
-.jt-empty {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 48px 24px;
-  text-align: center;
-  color: #676e76;
-  background: #ffffff;
-  border: 1px dashed #e6e7e8;
-  border-radius: 12px;
-
-  nas-icon { color: #aab0b7; }
-  p { margin: 0; font-size: 14px; }
 }
 
 /* RTL flips: stats end-align swaps */

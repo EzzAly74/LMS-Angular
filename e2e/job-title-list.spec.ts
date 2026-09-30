@@ -74,7 +74,7 @@ test.describe('behaviour', () => {
     const params = new URL(lists.at(-1)!.url()).searchParams;
     expect(params.getAll('qualification_ids[]').sort()).toEqual(['21', '22']);
     expect(params.get('learner_id')).toBe('7');
-    await expect(page.locator('.jt-filter__badge')).toHaveText('2');
+    await expect(page.locator('.nlt__badge')).toHaveText('2');
     await expect(page.locator('.jt-card')).toHaveCount(1);
 
     // Reopening shows what is applied; Clear removes every filter at once.
@@ -84,10 +84,10 @@ test.describe('behaviour', () => {
     const cleared = new URL(lists.at(-1)!.url()).searchParams;
     expect(cleared.has('learner_id')).toBe(false);
     expect(cleared.has('qualification_ids[]')).toBe(false);
-    await expect(page.locator('.jt-filter__badge')).toHaveCount(0);
+    await expect(page.locator('.nlt__badge')).toHaveCount(0);
 
     // With no list open, Escape closes the modal as usual.
-    await page.locator('.jt-filter').click();
+    await page.locator('.nlt__filter').click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toBeHidden();
@@ -100,7 +100,7 @@ test.describe('behaviour', () => {
     await page.route('**/api/v1/admin/job-titles?**', (r) =>
       fail ? r.fulfill({ status: 500, json: { status: 'error', message: 'x' } }) : r.fallback());
     await page.goto('/admin/job-titles');
-    await expect(page.locator('.jt-error')).toBeVisible();
+    await expect(page.locator('nas-list-state [role=alert]')).toBeVisible();
     fail = false;
     await page.getByRole('button', { name: 'Try again' }).click();
     await expect(page.locator('.jt-card')).toHaveCount(3);
@@ -122,7 +122,7 @@ for (const locale of ['en', 'ar'] as const) {
     expect(overflow).toBeLessThanOrEqual(1);
     // The Filter button sits at the search's inline end (Figma); on a phone
     // the search takes its own full row above it instead.
-    const [search, filter] = await Promise.all([page.locator('.jt-search').boundingBox(), page.locator('.jt-filter').boundingBox()]);
+    const [search, filter] = await Promise.all([page.locator('.nlt__search').boundingBox(), page.locator('.nlt__filter').boundingBox()]);
     if (width < 480) {
       expect(filter!.y).toBeGreaterThan(search!.y + search!.height - 1);
       expect(search!.width).toBeGreaterThan(200);
@@ -137,7 +137,7 @@ for (const locale of ['en', 'ar'] as const) {
     mkdirSync(ARTIFACTS, { recursive: true });
     await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}.png`), fullPage: true });
 
-    await page.locator('.jt-filter').click();
+    await page.locator('.nlt__filter').click();
     const box = await page.getByRole('dialog').boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(width);

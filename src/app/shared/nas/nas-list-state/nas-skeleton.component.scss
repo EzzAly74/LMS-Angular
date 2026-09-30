@@ -1,0 +1,21 @@
+// A placeholder block: the same soft base and light sweep as the table
+// placeholder rows (nas-skeleton-row.component.scss).
+:host {
+  display: block;
+  max-inline-size: 100%;
+  background-color: var(--nas-neutral-400);
+  background-image: linear-gradient(100deg, transparent 20%, var(--nas-neutral-50) 46%, var(--nas-neutral-50) 54%, transparent 80%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  background-position: 150% 0;
+  animation: nsk-sweep 1.6s ease-in-out infinite;
+}
+
+:host-context([dir='rtl']) { animation-name: nsk-sweep-rtl; background-position: -50% 0; }
+
+@keyframes nsk-sweep { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+@keyframes nsk-sweep-rtl { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  :host { animation: none; background-image: none; }
+}

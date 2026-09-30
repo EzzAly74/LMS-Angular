@@ -1,120 +1,95 @@
 <!-- Job Titles index - Figma 2078:102691; Filter modal 2463:138054 (D1b) -->
-<div class="nas-page-container jt-page">
+<div class="nas-page-container cl-page">
 
-  <header class="jt-page__head">
-    <h1 class="jt-page__title">{{ 'job_titles.title' | translate }}</h1>
-    <p class="jt-page__subtitle">{{ 'job_titles.subtitle' | translate }}</p>
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ 'job_titles.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'job_titles.subtitle' | translate }}</p>
+    </div>
   </header>
 
-  <div class="jt-page__toolbar">
-    <div class="jt-search">
-      <nas-icon name="magnifying-glass" [size]="20" />
-      <label class="jt-sr-only" for="jt-search">{{ 'job_titles.search_label' | translate }}</label>
-      <input
-        id="jt-search"
-        type="search"
-        class="jt-search__input"
-        [placeholder]="'job_titles.search_placeholder' | translate"
-        [ngModel]="search()"
-        (ngModelChange)="onSearch($event)"
-      />
-    </div>
-    <button type="button" class="jt-filter" [class.jt-filter--on]="activeFilters() > 0" aria-haspopup="dialog"
-      (click)="filterOpen.set(true)">
-      <nas-icon name="funnel" [size]="20" />
-      <span>{{ 'common.filter' | translate }}</span>
-      @if (activeFilters() > 0) {
-        <span class="jt-filter__badge" [attr.aria-label]="'job_titles.filters_on' | translate: { count: activeFilters() }">{{ activeFilters() }}</span>
-      }
-    </button>
-  </div>
+  <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
+    [label]="'job_titles.search_label' | translate" [placeholder]="'job_titles.search_placeholder' | translate"
+    (searchChange)="list.search($event)" (filter)="openFilter()" />
 
-  <div class="jt-grid" [attr.aria-busy]="state() === 'loading'">
-    @if (state() === 'loading') {
-      @for (s of skeletons; track s) {
-        <div class="jt-card jt-card--skeleton">
-          <p-skeleton height="20px" width="55%" borderRadius="6px" />
-          <p-skeleton height="44px" borderRadius="6px" />
-          <p-skeleton height="8px" borderRadius="999px" />
-        </div>
-      }
-    } @else if (state() === 'error') {
-      <div class="jt-error" role="alert">
-        <p>{{ 'common.could_not_load' | translate }}</p>
-        <button type="button" class="jt-retry" (click)="reload()">{{ 'common.retry' | translate }}</button>
-      </div>
-    } @else {
-      @for (item of items(); track item.id) {
-        <article class="jt-card">
-          <header class="jt-card__head">
-            <h2 class="jt-card__name">
-              <a class="jt-card__link" [routerLink]="[item.id]">{{ item.name }}</a>
-            </h2>
-            <span class="jt-card__pill">
-              {{ item.employees_count ?? 0 }} {{ 'job_titles.employee' | translate }}
-            </span>
-          </header>
-
-          <div class="jt-card__stats">
-            <div class="jt-stat">
-              <div class="jt-stat__value">{{ item.learners_count ?? 0 }}</div>
-              <div class="jt-stat__label">{{ 'job_titles.learners' | translate }}</div>
-            </div>
-            <div class="jt-stat jt-stat--end">
-              <div class="jt-stat__value">{{ item.qualifications_count ?? 0 }}</div>
-              <div class="jt-stat__label">{{ 'job_titles.qualifications' | translate }}</div>
-            </div>
-          </div>
-
-          <div class="jt-compliance">
-            <div class="jt-compliance__row">
-              <span class="jt-compliance__label">{{ 'job_titles.compliance' | translate }}</span>
-              <span class="jt-compliance__value jt-compliance__value--{{ complianceTone(item.compliance_percent) }}">
-                {{ item.compliance_percent ?? 0 }}%
-              </span>
-            </div>
-            <div class="jt-compliance__track">
-              <div class="jt-compliance__fill jt-compliance__fill--{{ complianceTone(item.compliance_percent) }}"
-                [style.width.%]="item.compliance_percent ?? 0">
+  <section class="jt-list" [attr.aria-busy]="list.state() === 'loading'" [attr.aria-label]="'job_titles.title' | translate">
+    @switch (list.state()) {
+      @case ('loading') {
+        <div class="jt-grid" aria-hidden="true">
+          @for (s of skeletons; track s) {
+            <div class="jt-card">
+              <div class="jt-card__head">
+                <nas-skeleton [width]="s % 2 ? '48%' : '62%'" height="16px" />
+                <nas-skeleton width="84px" height="22px" radius="6px" />
+              </div>
+              <div class="jt-card__stats">
+                <span class="jt-skel-stat"><nas-skeleton width="36px" height="20px" radius="6px" /><nas-skeleton width="64px" height="10px" /></span>
+                <span class="jt-skel-stat jt-skel-stat--end"><nas-skeleton width="36px" height="20px" radius="6px" /><nas-skeleton width="84px" height="10px" /></span>
+              </div>
+              <div class="jt-compliance">
+                <div class="jt-compliance__row"><nas-skeleton width="90px" height="10px" /><nas-skeleton width="32px" height="10px" /></div>
+                <nas-skeleton height="8px" />
               </div>
             </div>
-          </div>
-        </article>
-      } @empty {
-        <div class="jt-empty" role="status">
-          <nas-icon name="tray" [size]="32" />
-          <p>{{ (filtered() ? 'job_titles.no_results' : 'job_titles.empty') | translate }}</p>
+          }
         </div>
       }
+      @case ('error') {
+        <div class="jt-state">
+          <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+        </div>
+      }
+      @default {
+        @if (list.items().length) {
+          <div class="jt-grid">
+            @for (item of list.items(); track item.id) {
+              <article class="jt-card">
+                <header class="jt-card__head">
+                  <h2 class="jt-card__name">
+                    <a class="jt-card__link" [routerLink]="[item.id]">{{ item.name }}</a>
+                  </h2>
+                  <span class="jt-card__pill">
+                    {{ item.employees_count ?? 0 }} {{ 'job_titles.employee' | translate }}
+                  </span>
+                </header>
+
+                <div class="jt-card__stats">
+                  <div class="jt-stat">
+                    <div class="jt-stat__value">{{ item.learners_count ?? 0 }}</div>
+                    <div class="jt-stat__label">{{ 'job_titles.learners' | translate }}</div>
+                  </div>
+                  <div class="jt-stat jt-stat--end">
+                    <div class="jt-stat__value">{{ item.qualifications_count ?? 0 }}</div>
+                    <div class="jt-stat__label">{{ 'job_titles.qualifications' | translate }}</div>
+                  </div>
+                </div>
+
+                <div class="jt-compliance">
+                  <div class="jt-compliance__row">
+                    <span class="jt-compliance__label">{{ 'job_titles.compliance' | translate }}</span>
+                    <span class="jt-compliance__value jt-compliance__value--{{ item.tone }}">{{ item.compliance }}%</span>
+                  </div>
+                  <div class="jt-compliance__track">
+                    <div class="jt-compliance__fill jt-compliance__fill--{{ item.tone }}" [style.width.%]="item.compliance"></div>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="jt-state">
+            <nas-list-state [message]="(hasQuery() ? 'job_titles.no_results' : 'job_titles.empty') | translate" />
+          </div>
+        }
+      }
     }
-  </div>
 
-  @if (state() === 'ready' && total() > perPage) {
-    <nav class="jt-pagination" [attr.aria-label]="'common.pagination' | translate">
-      <span class="jt-pagination__info">
-        {{ rangeStart() }}–{{ rangeEnd() }} {{ 'common.of' | translate }} {{ total() }}
-      </span>
-      <div class="jt-pagination__nav">
-        <button type="button" class="jt-pagination__btn"
-          [disabled]="page() === 1"
-          (click)="onPage(page() - 1)"
-          [attr.aria-label]="'common.previous' | translate">
-          <nas-icon name="caret-left" [size]="16" />
-        </button>
-        <span class="jt-pagination__page">
-          {{ page() }} / {{ totalPages() }}
-        </span>
-        <button type="button" class="jt-pagination__btn"
-          [disabled]="page() >= totalPages()"
-          (click)="onPage(page() + 1)"
-          [attr.aria-label]="'common.next' | translate">
-          <nas-icon name="caret-right" [size]="16" />
-        </button>
-      </div>
-    </nav>
-  }
-
+    @if (list.pageable()) {
+      <nas-pager class="jt-pager" [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+        [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
+    }
+  </section>
 </div>
 
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
-  (apply)="onFilter($event)" (search)="onLearnerSearch($event)" />
+  (apply)="onFilter($event)" (search)="onFilterSearch($event)" />

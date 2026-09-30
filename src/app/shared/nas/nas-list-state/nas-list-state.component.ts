@@ -151,3 +151,28 @@ export class NasSkeletonRowComponent {
 
 /** Six placeholder rows, the reference's loading height. */
 export const SKELETON_ROWS: readonly number[] = [0, 1, 2, 3, 4, 5];
+
+/**
+ * One placeholder block for card grids and panels (Job Titles cards, Blogs,
+ * Roles): the table placeholder's soft block and shimmer, sized by the page.
+ * Decorative; the region that loads says aria-busy.
+ */
+@Component({
+  selector: 'nas-skeleton',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    'aria-hidden': 'true',
+    class: 'nsk',
+    '[style.inline-size]': 'width()',
+    '[style.block-size]': 'height()',
+    '[style.border-radius]': 'radius()',
+  },
+  template: '',
+  styleUrl: './nas-skeleton.component.scss',
+})
+export class NasSkeletonComponent {
+  readonly width = input('100%');
+  readonly height = input('12px');
+  readonly radius = input('999px');
+}
