@@ -115,7 +115,8 @@ export class ExternalTrainingReviewComponent {
   protected download(): void {
     const r = this.request();
     if (!r) return;
-    this.api.certificate(r).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ error: () => this.fail() });
+    // A failed link request is already toasted by the error interceptor; one toast, not two.
+    this.api.certificate(r).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ error: () => undefined });
   }
 
   protected approve(): void {
@@ -169,9 +170,5 @@ export class ExternalTrainingReviewComponent {
 
   private loadStats(): void {
     this.api.stats().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: s => this.stats.set(s), error: () => undefined });
-  }
-
-  private fail(): void {
-    this.toast.add({ severity: 'error', summary: this.t.instant('common.error_title'), detail: this.t.instant('common.operation_failed') });
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiParams, ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
-import { saveBlob } from '../../../core/utils/save-blob';
+import { openDownload } from '../../../core/utils/save-blob';
 import { ExternalTrainingRequest, RequestStats, RequestStatus, ReviewOptions } from '../models/external-training.model';
 
 export interface RequestPage {
@@ -62,7 +62,14 @@ export class ExternalTrainingApiService {
     return this.api.post<ExternalTrainingRequest>(`${this.base}/${id}/reopen`, {}).pipe(map(r => r.result));
   }
 
+  /**
+   * Download the certificate through a signed link the API makes for this
+   * reviewer (a few minutes long), not a token-bearing blob fetch: download
+   * managers take over PDFs and abort the page's request (D-071).
+   */
   certificate(row: ExternalTrainingRequest): Observable<void> {
-    return this.api.getBlob(`${this.base}/${row.id}/certificate`).pipe(map(blob => saveBlob(blob, row.certificate.name)));
+    return this.api.get<{ url: string; expires_at: string }>(`${this.base}/${row.id}/certificate-link`).pipe(
+      map(res => openDownload(res.result.url)),
+    );
   }
 }

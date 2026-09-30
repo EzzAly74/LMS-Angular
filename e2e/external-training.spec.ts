@@ -165,3 +165,27 @@ test('an unknown request says so', async ({ page }) => {
   await page.goto('/admin/external-training/999');
   await expect(page.getByRole('alert').filter({ hasText: 'does not exist' })).toBeVisible();
 });
+
+test('Download opens a signed link as a plain browser download, never a token-bearing fetch (D-071)', async ({ page }) => {
+  await setup(page);
+  await mockOne(page, req(1, 'pending', { certificate: { name: 'invoice.pdf', mime: 'application/pdf', size: 141638 } }));
+  const signed = 'http://127.0.0.1:8000/api/v1/external-training-files/1?expires=1&signature=abc';
+  await page.route('**/api/v1/admin/external-training/1/certificate-link', r =>
+    r.fulfill({ json: { status: 'success', message: '', result: { url: signed, expires_at: '2026-09-30T12:05:00+00:00' } } }));
+  const fileAuth: (string | undefined)[] = [];
+  await page.route('**/api/v1/external-training-files/1?**', r => {
+    fileAuth.push(r.request().headers()['authorization']);
+    return r.fulfill({ body: '%PDF-1.4', headers: { 'content-type': 'application/pdf', 'content-disposition': 'attachment; filename=invoice.pdf' } });
+  });
+  let tokenFetch = false;
+  await page.route('**/api/v1/admin/external-training/1/certificate', r => { tokenFetch = true; return r.abort(); });
+
+  await page.goto('/admin/external-training/1');
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download invoice.pdf/ }).click();
+  expect((await download).suggestedFilename()).toBe('invoice.pdf');
+  expect(fileAuth).toEqual([undefined]);
+  expect(tokenFetch).toBe(false);
+  await expect(page).toHaveURL(/\/admin\/external-training\/1$/);
+  await expect(page.locator('.p-toast-message')).toHaveCount(0);
+});
