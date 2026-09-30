@@ -191,7 +191,21 @@ test('Export downloads the list with the filters that are applied', async ({ pag
   });
   await page.goto('/admin/evaluations');
   await page.waitForLoadState('networkidle');
-  await page.getByRole('checkbox', { name: 'Failed' }).check();
+  // Result is a Filter-modal field now (D-070).
+  const lookups = page.waitForResponse('**/api/v1/admin/evaluations/filter-options');
+  await page.locator('.nlt__filter').click();
+  await lookups;
+  const filter = page.getByRole('dialog', { name: 'Filter' });
+  await filter.locator('.fd__field').filter({ has: page.locator('.fd__label', { hasText: 'Result' }) }).locator('.p-multiselect').click();
+  await page.getByRole('option', { name: 'Failed' }).click();
+  await page.waitForFunction(() => {
+    const el = document.querySelector('.fd-ms-panel');
+    return !!el && el.getAnimations({ subtree: true }).length === 0;
+  });
+  await page.locator('.fd-ms-panel .p-multiselect-filter').press('Escape');
+  await expect(page.locator('.fd-ms-panel')).toHaveCount(0);
+  await filter.getByRole('button', { name: 'Filter' }).click();
+  await expect(page.locator('.nlt__badge')).toHaveText('1');
 
   await page.getByRole('button', { name: 'Export' }).click();
   const download = page.waitForEvent('download');

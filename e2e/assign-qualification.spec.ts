@@ -54,7 +54,7 @@ test('assigns one qualification to the learners ticked', async ({ page }) => {
   expect(body.user_ids).toHaveLength(2);
   expect(body.user_ids.every((n) => Number.isInteger(n) && n > 0)).toBe(true);
 
-  await expect(page.locator('.p-toast-detail')).toHaveText('Granted to 2. Already held by 1.');
+  await expect(page.locator('.nt__detail')).toHaveText('Granted to 2. Already held by 1.');
 });
 
 test('"everyone matching" is refused above the 500 the API accepts', async ({ page }) => {
@@ -97,10 +97,20 @@ test('"everyone matching" pages through the whole filtered list and posts every 
   });
   await setup(page, posts);
 
-  await page.getByRole('button', { name: 'Learners', exact: true }).click();
-  await page.locator('.nas-fp__card').getByText('Offline', { exact: true }).click();
-  await page.locator('.nas-fp__card').getByRole('button', { name: 'Filter' }).click();
-  await expect(page.locator('.ll__pager-info')).toContainText('of 150');
+  // The shared Filter modal (D-070): Learner type -> Offline.
+  await page.locator('.nlt__filter').click();
+  const filter = page.getByRole('dialog', { name: 'Filter' });
+  const typeField = filter.locator('.fd__field').filter({ has: page.locator('.fd__label', { hasText: 'Learner type' }) });
+  await typeField.locator('.p-multiselect').click();
+  await page.getByRole('option', { name: 'Offline' }).click();
+  await page.waitForFunction(() => {
+    const el = document.querySelector('.fd-ms-panel');
+    return !!el && el.getAnimations({ subtree: true }).length === 0;
+  });
+  await page.locator('.fd-ms-panel .p-multiselect-filter').press('Escape');
+  await expect(page.locator('.fd-ms-panel')).toHaveCount(0);
+  await filter.getByRole('button', { name: 'Filter' }).click();
+  await expect(page.locator('.nas-pager__info')).toContainText('of 150');
 
   await page.getByRole('button', { name: 'Assign Qualification' }).click();
   const dialog = page.locator('.aq__card');

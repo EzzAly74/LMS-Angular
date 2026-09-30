@@ -53,12 +53,16 @@ test.describe('behaviour', () => {
 
     await page.getByLabel('Assignment title (English)').fill('Safety readiness assessment');
     await page.getByLabel('Assignment title (Arabic)').fill('تقييم الجاهزية');
+    // The course's cohorts come from the real API; the list shows exactly those.
+    const courseCohorts = page.waitForResponse(r => r.url().includes('/admin/assignments/cohorts?') && r.url().includes('course_id='));
     await pick(page, 'Course', 'Management Course');
+    const cohortCount = ((await (await courseCohorts).json()) as { result: unknown[] }).result.length;
+    expect(cohortCount).toBeGreaterThanOrEqual(2);
     await page.getByLabel('Pre-course').check();
     await pick(page, 'Cohort scope', 'Specific Cohort');
 
     const cohorts = page.getByRole('list', { name: 'Cohorts' });
-    await expect(cohorts.getByRole('checkbox')).toHaveCount(2);
+    await expect(cohorts.getByRole('checkbox')).toHaveCount(cohortCount);
     await expect(cohorts).toContainText('First Group');
     await expect(cohorts).toContainText('Second Group');
     await expect(cohorts).not.toContainText('session');

@@ -216,7 +216,7 @@ test('Edit Course opens the same modal filled in and saves with PUT', async ({ p
     return r.fulfill({ json: ok({ id: 5 }) });
   });
 
-  await page.locator('tbody tr').first().locator('.cc-more').click();
+  await page.locator('tbody tr').first().locator('.cl-more').click();
   await page.getByRole('menuitem', { name: 'Edit Course' }).click();
   const d = dialog(page);
   await expect(d.getByRole('heading', { name: 'Edit Course' })).toBeVisible();
