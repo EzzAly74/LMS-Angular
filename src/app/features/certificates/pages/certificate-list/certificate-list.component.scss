@@ -9,6 +9,7 @@
  * Icons use the shared <nas-icon> Phosphor mask component — no
  * PrimeIcons anywhere in this feature, per project icon strategy.
  * ──────────────────────────────────────────────────────────────── */
+@use '../../../../shared/styles/list';
 
 .cert-page {
   display: flex;
@@ -176,140 +177,12 @@
   }
 }
 
-/* Figma: 270px tall (px-12 py-8 gap-10), border + 8px radius. */
-.cert-search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  height: 38px;
-  padding: 0 var(--nas-space-3);
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-color-bg-surface);
-  transition: border-color var(--transition-speed);
-
-  &:focus-within { border-color: var(--nas-teal-600); }
-
-  &__icon {
-    color: var(--nas-color-text-muted);
-    flex-shrink: 0;
-  }
-
-  &__input {
-    flex: 1 1 auto;
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    outline: none;
-    font-size: var(--nas-size-xs);
-    color: var(--nas-color-text-body);
-    height: 100%;
-    padding: 0;
-
-    &::placeholder { color: var(--nas-color-text-muted); }
-  }
-}
-
-.cert-table-card {
-  padding: 0;
-  overflow: hidden;
-}
-
-.cert-table-wrap {
-  overflow-x: auto;
-}
-
+/* The Issued table is the shared list (D-070); only its cells live here. */
 .cert-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: var(--nas-size-xs);
-
-  thead th {
-    text-align: start;
-    font-size: 12px;
-    font-weight: var(--nas-weight-medium);
-    color: var(--nas-color-text-muted);
-    background: var(--nas-neutral-100);
-    border-bottom: 1px solid var(--nas-color-border);
-    padding: var(--nas-space-3) var(--nas-space-5);
-    white-space: nowrap;
-  }
-
-  tbody td {
-    padding: var(--nas-space-4) var(--nas-space-5);
-    border-bottom: 1px solid var(--nas-color-border);
-    color: var(--nas-color-text-body);
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-
-  &__row {
-    transition: background var(--transition-speed);
-    &:hover { background: var(--nas-neutral-100); }
-  }
+  td { white-space: nowrap; }
 
   &__primary { font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
-  &__muted   { color: var(--nas-color-text-muted); }
-
-  &__th--actions { width: 60px; }
-  &__actions     { width: 60px; text-align: end; }
-
-  &__empty {
-    text-align: center;
-    padding: var(--nas-space-12) var(--nas-space-6);
-    color: var(--nas-color-text-muted);
-
-    .cert-table__empty-icon {
-      display: flex;
-      justify-content: center;
-      margin-bottom: var(--nas-space-3);
-      color: var(--nas-color-text-muted);
-    }
-    strong {
-      display: block;
-      font-size: var(--nas-size-sm);
-      font-weight: var(--nas-weight-semibold);
-      color: var(--nas-color-text-strong);
-      margin-bottom: var(--nas-space-1);
-    }
-    span { display: block; font-size: var(--nas-size-2xs); }
-  }
-}
-
-.cert-icon-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-sm);
-  background: transparent;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--nas-color-text-muted);
-  transition: background var(--transition-speed), color var(--transition-speed);
-
-  &:hover:not([disabled]) {
-    background: var(--nas-neutral-100);
-    color: var(--nas-color-text-strong);
-  }
-  &[disabled] { opacity: 0.45; cursor: not-allowed; }
-}
-
-.cert-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--nas-space-3) var(--nas-space-5);
-  border-top: 1px solid var(--nas-color-border);
-  font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-muted);
-
-  &__nav { display: flex; gap: var(--nas-space-2); }
+  &__actions { inline-size: 72px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

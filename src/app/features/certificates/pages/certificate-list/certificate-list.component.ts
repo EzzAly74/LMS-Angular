@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   OnDestroy,
   OnInit,
   computed,
@@ -15,12 +14,19 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
+import { NasListToolbarComponent } from '../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasTableCardComponent } from '../../../../shared/nas/nas-table-card/nas-table-card.component';
+import {
+  NasListStateComponent, NasSkeletonRowComponent, SKELETON_ROWS, type NasSkeletonCell,
+} from '../../../../shared/nas/nas-list-state/nas-list-state.component';
+import { createPagedList, pagedParams, toPaged, type PagedQuery } from '../../../../shared/list/paged-list';
+import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { AdminCertificatesApiService } from '../../services/admin-certificates-api.service';
 import {
   CertificateTemplateOverview,
@@ -29,7 +35,21 @@ import {
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_BYTES     = 8 * 1024 * 1024;
+/** Characters a file name may not hold on Windows / macOS. */
+const UNSAFE_FILE_CHARS = /[\\/:*?"<>|]+/g;
 
+/** An issued-certificates row with its key and download name worked out once per load. */
+interface IssuedRow extends IssuedCertificate {
+  readonly key: string;
+  readonly fileName: string;
+}
+
+/**
+ * Certificates (Figma 377:10597 / 376:10149 template card, 377:11055 preview
+ * drawer). The template card and drawer are this page's own; the Issued
+ * Certificates table is the Dashboard's shared list (D-070): search-only
+ * toolbar, table card, skeleton rows, empty / error states and pager.
+ */
 @Component({
   selector: 'app-certificate-list',
   standalone: true,
@@ -41,6 +61,12 @@ const MAX_BYTES     = 8 * 1024 * 1024;
     TranslateModule,
     NasPageHeaderComponent,
     NasIconComponent,
+    NasPagerComponent,
+    NasListToolbarComponent,
+    NasTableCardComponent,
+    NasListStateComponent,
+    NasSkeletonRowComponent,
+    NasDatePipe,
   ],
   providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,9 +76,9 @@ const MAX_BYTES     = 8 * 1024 * 1024;
 export class CertificateListComponent implements OnInit, OnDestroy {
   private readonly api       = inject(AdminCertificatesApiService);
   private readonly toast     = inject(MessageService);
-  private readonly destroyR  = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly t         = inject(TranslateService);
+  protected readonly locale  = inject(LocaleService);
 
   /* ── Template card state ─────────────────────────────────── */
   readonly overviewLoading = signal(true);
@@ -83,42 +109,33 @@ export class CertificateListComponent implements OnInit, OnDestroy {
     return /\.pdf$/i.test(t.original_filename ?? '');
   });
 
-  /* ── Issued list state ───────────────────────────────────── */
-  readonly issuedLoading = signal(true);
-  readonly items         = signal<IssuedCertificate[]>([]);
-  readonly total         = signal(0);
+  /* ── Issued list: the shared list pieces (D-070) ─────────── */
+  readonly skeletons = SKELETON_ROWS;
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['short', 'person', 'text', 'short', 'action'];
 
-  readonly perPage   = 20;
-  readonly skeletons = [1, 2, 3, 4, 5];
-  readonly min       = Math.min;
-
-  page   = 1;
-  search = '';
+  readonly list = createPagedList<PagedQuery, IssuedRow>({
+    initial: { search: '', page: 1, perPage: 20 },
+    load: q => this.api.listIssued(pagedParams(q)).pipe(toPaged(it => ({
+      ...it,
+      key: `${it.user_id}-${it.course_id}-${it.type}`,
+      fileName: `${it.learner_name}_${it.course_title}.jpg`.replace(UNSAFE_FILE_CHARS, '-'),
+    }))),
+  });
 
   /* ── Preview drawer + download state ──────────────────────── */
   readonly previewOpen   = signal(false);
   readonly downloadingKey = signal<string | null>(null);
 
-  private readonly search$ = new Subject<string>();
-
   constructor() {
     withLocaleReload(() => {
       this.loadOverview();
-      this.loadIssued();
+      this.list.reload();
     });
   }
 
   ngOnInit(): void {
-    this.search$
-      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyR))
-      .subscribe(q => {
-        this.search = q;
-        this.page   = 1;
-        this.loadIssued();
-      });
-
     this.loadOverview();
-    this.loadIssued();
+    this.list.reload();
   }
 
   ngOnDestroy(): void {
@@ -134,22 +151,6 @@ export class CertificateListComponent implements OnInit, OnDestroy {
     this.api.getOverview().subscribe({
       next: ov => { this.overview.set(ov); this.overviewLoading.set(false); },
       error: () => this.overviewLoading.set(false),
-    });
-  }
-
-  private loadIssued(): void {
-    this.issuedLoading.set(true);
-    this.api.listIssued({
-      page: this.page,
-      per_page: this.perPage,
-      search: this.search || undefined,
-    }).subscribe({
-      next: res => {
-        this.items.set(res.result.data);
-        this.total.set(res.result.total);
-        this.issuedLoading.set(false);
-      },
-      error: () => this.issuedLoading.set(false),
     });
   }
 
@@ -178,14 +179,6 @@ export class CertificateListComponent implements OnInit, OnDestroy {
     this.templateBlobUrl.set(null);
     this.templateSafeUrl.set(null);
   }
-
-  /* ────────────────────────────────────────────────────────── *
-   |  Pagination + search                                      |
-   * ────────────────────────────────────────────────────────── */
-
-  onPage(p: number): void { this.page = p; this.loadIssued(); }
-
-  onSearch(term: string): void { this.search$.next(term); }
 
   /* ────────────────────────────────────────────────────────── *
    |  Template upload                                          |
@@ -267,17 +260,11 @@ export class CertificateListComponent implements OnInit, OnDestroy {
    |  Per-row download                                         |
    * ────────────────────────────────────────────────────────── */
 
-  rowKey(it: IssuedCertificate): string { return `${it.user_id}-${it.course_id}-${it.type}`; }
+  downloadRow(it: IssuedRow): void {
+    if (this.downloadingKey() === it.key) return;
+    this.downloadingKey.set(it.key);
 
-  downloadRow(it: IssuedCertificate): void {
-    const key = this.rowKey(it);
-    if (this.downloadingKey() === key) return;
-    this.downloadingKey.set(key);
-
-    const suggested = `${it.learner_name}_${it.course_title}.jpg`
-      .replace(/[\\/:*?"<>|]+/g, '-');
-
-    this.api.downloadIssued(it.user_id, it.course_id, suggested).subscribe({
+    this.api.downloadIssued(it.user_id, it.course_id, it.fileName).subscribe({
       next: () => this.downloadingKey.set(null),
       error: () => {
         this.downloadingKey.set(null);

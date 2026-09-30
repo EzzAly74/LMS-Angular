@@ -98,71 +98,50 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       ISSUED CERTIFICATES TABLE
+       ISSUED CERTIFICATES TABLE - the shared list pieces (D-070)
   ═══════════════════════════════════════════════════════════════ -->
-  <section class="cert-issued">
-    <h3 class="cert-issued__heading">{{ 'certificates.issued_certificates' | translate }}</h3>
+  <section class="cert-issued" aria-labelledby="cert-issued-heading">
+    <h3 id="cert-issued-heading" class="cert-issued__heading">{{ 'certificates.issued_certificates' | translate }}</h3>
 
-    <div class="cert-search">
-      <nas-icon name="magnifying-glass" [size]="20" class="cert-search__icon" />
-      <input
-        type="text"
-        class="cert-search__input"
-        [placeholder]="'common.quick_search' | translate"
-        (input)="onSearch($any($event.target).value)" />
-    </div>
+    <nas-list-toolbar [search]="list.query().search"
+      [label]="'certificates.search_placeholder' | translate" [placeholder]="'certificates.search_placeholder' | translate"
+      (searchChange)="list.search($event)" />
 
-    <div class="cert-card cert-table-card">
-      <div class="cert-table-wrap">
-        <table class="cert-table">
-          <thead>
-            <tr>
-              <th>{{ 'certificates.employee_id' | translate }}</th>
-              <th>{{ 'quizzes.learner' | translate }}</th>
-              <th>{{ 'common.course' | translate }}</th>
-              <th>{{ 'certificates.issued' | translate }}</th>
-              <th class="cert-table__th--actions"></th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @if (issuedLoading()) {
-              @for (s of skeletons; track s) {
-                <tr>
-                  <td><p-skeleton height="14px" width="60px" /></td>
-                  <td><p-skeleton height="14px" width="140px" /></td>
-                  <td><p-skeleton height="14px" width="180px" /></td>
-                  <td><p-skeleton height="14px" width="100px" /></td>
-                  <td><p-skeleton height="20px" width="24px" /></td>
-                </tr>
-              }
-            } @else if (!items().length) {
-              <tr>
-                <td colspan="5" class="cert-table__empty">
-                  <span class="cert-table__empty-icon">
-                    <nas-icon name="tray" [size]="28" />
-                  </span>
-                  <strong>{{ 'certificates.no_issued' | translate }}</strong>
-                  <span>{{ 'certificates.no_issued_hint' | translate }}</span>
-                </td>
-              </tr>
-            } @else {
-              @for (item of items(); track rowKey(item)) {
+    <nas-table-card [label]="'certificates.issued_certificates' | translate" [busy]="list.state() === 'loading'">
+      <table class="cl-table cert-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'certificates.employee_id' | translate }}</th>
+            <th scope="col">{{ 'quizzes.learner' | translate }}</th>
+            <th scope="col">{{ 'common.course' | translate }}</th>
+            <th scope="col">{{ 'certificates.issued' | translate }}</th>
+            <th scope="col" class="cert-table__actions"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @switch (list.state()) {
+            @case ('loading') {
+              @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
+            }
+            @case ('error') {
+              <tr><td colspan="5">
+                <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+              </td></tr>
+            }
+            @default {
+              @for (item of list.items(); track item.key) {
                 <tr class="cert-table__row">
-                  <td class="cert-table__muted">{{ item.employee_id || '—' }}</td>
-                  <td class="cert-table__primary">{{ item.learner_name }}</td>
-                  <td>{{ item.course_title }}</td>
-                  <td class="cert-table__muted">
-                    {{ item.issued_at ? (item.issued_at | date:'d MMM yyyy') : '—' }}
-                  </td>
-                  <td class="cert-table__actions">
-                    <button
-                      type="button"
-                      class="cert-icon-btn"
-                      [title]="'certificates.download' | translate"
-                      [disabled]="downloadingKey() === rowKey(item)"
+                  <td><bdi dir="ltr">{{ item.employee_id || '—' }}</bdi></td>
+                  <td class="cert-table__primary"><bdi>{{ item.learner_name }}</bdi></td>
+                  <td class="cl-strong"><bdi>{{ item.course_title }}</bdi></td>
+                  <td class="cl-small">{{ item.issued_at ? (item.issued_at | nasDate: locale.locale()) : '—' }}</td>
+                  <td class="cl-end">
+                    <button type="button" class="cl-view"
+                      [attr.aria-label]="('certificates.download' | translate) + ': ' + item.learner_name"
+                      [attr.aria-busy]="downloadingKey() === item.key"
+                      [disabled]="downloadingKey() === item.key"
                       (click)="downloadRow(item)">
-                      @if (downloadingKey() === rowKey(item)) {
+                      @if (downloadingKey() === item.key) {
                         <nas-icon name="spinner-gap" [size]="16" class="cert-spin" />
                       } @else {
                         <nas-icon name="download-simple" [size]="16" />
@@ -170,30 +149,20 @@
                     </button>
                   </td>
                 </tr>
+              } @empty {
+                <tr><td colspan="5">
+                  <nas-list-state [message]="(list.query().search ? 'certificates.no_results' : 'certificates.no_issued') | translate" />
+                </td></tr>
               }
             }
-          </tbody>
-        </table>
-      </div>
-
-      @if (total() > perPage) {
-        <div class="cert-pagination">
-          <span class="cert-pagination__info">
-            {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
-          </span>
-          <div class="cert-pagination__nav">
-            <button type="button" class="cert-icon-btn"
-                    [disabled]="page === 1" (click)="onPage(page - 1)">
-              <nas-icon name="caret-left" [size]="14" />
-            </button>
-            <button type="button" class="cert-icon-btn"
-                    [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-              <nas-icon name="caret-right" [size]="14" />
-            </button>
-          </div>
-        </div>
+          }
+        </tbody>
+      </table>
+      @if (list.pageable()) {
+        <nas-pager nasTablePager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+          [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
       }
-    </div>
+    </nas-table-card>
   </section>
 </div>
 
