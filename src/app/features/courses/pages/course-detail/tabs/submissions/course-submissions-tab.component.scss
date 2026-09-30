@@ -1,2 +1,5 @@
 // Quizzes / Assignments tabs - Figma 2295:53311, 2294:51575.
 @use '../../../../../../shared/styles/list';
+
+// The tab stacks its toolbar, bar and table 16 px apart.
+:host { display: flex; flex-direction: column; gap: var(--nas-space-4); min-inline-size: 0; }

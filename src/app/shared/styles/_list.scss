@@ -49,6 +49,9 @@
   &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
   &[disabled] { opacity: 0.5; cursor: not-allowed; }
 
+  // 36 px, where the frame draws the smaller button (Create Quiz, Figma 1983:42584).
+  &--sm { min-inline-size: 0; block-size: 36px; }
+
   @media (max-width: 767px) { min-inline-size: 0; }
 }
 
@@ -86,7 +89,9 @@
 // A fixed-layout table whose columns take the Figma widths (`cl-w-*` per page).
 .cl-table--fixed { table-layout: fixed; }
 
-:host { display: flex; flex-direction: column; gap: var(--nas-space-4); min-inline-size: 0; }
+// No :host rule here: a page host holds its dialogs and toasts too, and a flex
+// gap on it put 16 px of empty space above the page for each of them. The
+// Course Details tabs stack their toolbar and table themselves.
 
 .cl-toolbar {
   display: flex;

@@ -1,0 +1,207 @@
+@let src = source();
+@let ns = src.ns;
+<p-confirmDialog />
+<p-toast position="bottom-right" />
+
+<!-- "View All" created items -->
+<p-dialog
+  [header]="src.keys.allCreated | translate"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }"
+  [visible]="viewAllOpen()"
+  (visibleChange)="viewAllOpen.set($event)"
+  styleClass="nas-dialog ql-all-dialog">
+
+  <div class="ql-modal-search">
+    <nas-icon name="magnifying-glass" [size]="20" />
+    <input #va type="search" class="ql-modal-search__input"
+      [attr.aria-label]="'common.quick_search' | translate"
+      [placeholder]="'common.quick_search' | translate"
+      (input)="onViewAllSearch(va.value)" />
+  </div>
+
+  <div class="ql-modal-list" [attr.aria-busy]="viewAllLoading()">
+    @if (viewAllLoading()) {
+      @for (s of skeletons; track s) { <span class="ql-modal-skel" aria-hidden="true"></span> }
+    } @else if (!viewAllItems().length) {
+      <p class="ql-modal-empty">{{ ns + '.no_results' | translate }}</p>
+    } @else {
+      @for (item of viewAllItems(); track item.id) {
+        <label class="ql-modal-row" [class.ql-modal-row--selected]="viewAllSelected() === item.id">
+          <input type="checkbox" [checked]="viewAllSelected() === item.id" (change)="selectViewAllItem(item)" />
+          <span>{{ item.title }}</span>
+          @if (item.course_title) { <span class="ql-modal-row__course">{{ item.course_title }}</span> }
+        </label>
+      }
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">{{ 'common.cancel' | translate }}</button>
+    <button type="button" class="nas-btn nas-btn--primary" [disabled]="!viewAllSelected()" (click)="confirmViewAll()">
+      <nas-icon name="eye" [size]="20" /> {{ src.keys.viewItem | translate }}
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- Landing (Figma 1983:42584) -->
+<div class="nas-page-container cl-page">
+
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ ns + '.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ src.keys.subtitle | translate }}</p>
+    </div>
+    <a [routerLink]="[src.route, 'new']" class="cl-primary cl-primary--sm">
+      <nas-icon name="plus-circle" [size]="20" />
+      {{ ns + '.create' | translate }}
+    </a>
+  </header>
+
+  <!-- Created: the five newest -->
+  <section class="ql-section" aria-labelledby="ql-created">
+    <div class="ql-count-row">
+      @let cc = createdCount();
+      <p class="ql-count" id="ql-created">
+        {{ cc.itemsKey | translate: { count: cc.items } }} · {{ cc.coursesKey | translate: { count: cc.courses } }}
+      </p>
+      <button type="button" class="ql-outline" (click)="openViewAll()">{{ ns + '.view_all' | translate }}</button>
+    </div>
+
+    <nas-table-card [label]="src.keys.colItems | translate" [busy]="items.state() === 'loading'">
+      <table class="cl-table ql-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ src.keys.colItems | translate }}</th>
+            <th scope="col">{{ ns + '.col_course' | translate }}</th>
+            <th scope="col">{{ ns + '.col_cohort_scope' | translate }}</th>
+            <th scope="col">{{ ns + '.col_questions' | translate }}</th>
+            <th scope="col">{{ ns + '.col_total_score' | translate }}</th>
+            <th scope="col">{{ ns + '.col_due' | translate }}</th>
+            <th scope="col"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @switch (items.state()) {
+            @case ('loading') {
+              @for (s of miniSkeletons; track s) { <tr nasSkeletonRow [cells]="itemCells" [row]="s"></tr> }
+            }
+            @case ('error') {
+              <tr><td colspan="7">
+                <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="items.reload()" />
+              </td></tr>
+            }
+            @default {
+              @for (item of items.items(); track item.id) {
+                <tr class="cl-row" (click)="editItem(item)">
+                  <td class="cl-strong">{{ item.title }}</td>
+                  <td>{{ item.course_title ?? '—' }}</td>
+                  <td>
+                    <span class="ql-pill" [class.ql-pill--all]="item.cohort_scope === 'all'" [class.ql-pill--specific]="item.cohort_scope !== 'all'">
+                      {{ item.cohortLabel }}
+                    </span>
+                  </td>
+                  <td>{{ item.questions_count }}</td>
+                  <td class="ql-strong">{{ item.total_score }}</td>
+                  <td class="cl-small">{{ item.due_date ? (item.due_date | nasDate: locale()) : '—' }}</td>
+                  <td class="ql-actions">
+                    <span class="ql-actions__inner">
+                      <button type="button" class="ql-icon" (click)="editItem(item, $event)"
+                        [attr.aria-label]="('common.edit' | translate) + ' ' + item.title">
+                        <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
+                      </button>
+                      <button type="button" class="ql-icon ql-icon--danger" (click)="confirmDelete(item, $event)"
+                        [attr.aria-label]="('common.delete' | translate) + ' ' + item.title">
+                        <nas-icon name="trash" [size]="20" />
+                      </button>
+                    </span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7"><nas-list-state [message]="ns + '.empty_mini' | translate" /></td></tr>
+              }
+            }
+          }
+        </tbody>
+      </table>
+    </nas-table-card>
+  </section>
+
+  <!-- All attempts -->
+  <section class="ql-attempts" [attr.aria-label]="src.keys.subtitle | translate">
+    <nas-list-toolbar [search]="attempts.query().search" [filterCount]="activeFilters()"
+      [label]="'common.quick_search' | translate" [placeholder]="'common.quick_search' | translate"
+      (searchChange)="attempts.search($event)" (filter)="openFilter()" />
+
+    <nas-table-card [label]="src.keys.subtitle | translate" [busy]="attempts.state() === 'loading'">
+      <table class="cl-table ql-table ql-table--attempts">
+        <thead>
+          <tr>
+            <th scope="col">{{ ns + '.learner' | translate }}</th>
+            <th scope="col">{{ ns + '.col_course' | translate }}</th>
+            <th scope="col">{{ ns + '.sub_col_instructor' | translate }}</th>
+            <th scope="col">{{ src.keys.colItem | translate }}</th>
+            <th scope="col">{{ ns + '.sub_col_submitted' | translate }}</th>
+            <th scope="col">{{ ns + '.sub_col_score' | translate }}</th>
+            <th scope="col" class="cl-center">{{ ns + '.sub_col_type' | translate }}</th>
+            <th scope="col"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @switch (attempts.state()) {
+            @case ('loading') {
+              @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="attemptCells" [row]="s"></tr> }
+            }
+            @case ('error') {
+              <tr><td colspan="8">
+                <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="attempts.reload()" />
+              </td></tr>
+            }
+            @default {
+              @for (sub of attempts.items(); track sub.id) {
+                <tr class="cl-row" (click)="openAttempt(sub)">
+                  <td class="cl-strong">{{ sub.user?.name ?? '—' }}</td>
+                  <td>{{ sub.course_title ?? '—' }}</td>
+                  <td>{{ sub.instructor_name ?? '—' }}</td>
+                  <td>{{ sub.item_title ?? '—' }}</td>
+                  <td class="cl-small">{{ sub.submitted | nasDate: locale() }}</td>
+                  <td>
+                    @if (sub.status === 'pending') {
+                      <span class="ql-pill ql-pill--pending">{{ ns + '.pending' | translate }}</span>
+                    } @else if (sub.score_percent !== null) {
+                      <span class="ql-score" [class.cl-pass]="sub.passed === true" [class.cl-fail]="sub.passed === false">
+                        <bdi dir="ltr">{{ sub.score_percent }}%</bdi>
+                        @if (sub.passed !== null) { <span class="cl-sr-only">{{ (sub.passed ? shared.passed : shared.failed) | translate }}</span> }
+                      </span>
+                    } @else {
+                      <span>—</span>
+                    }
+                  </td>
+                  <td class="cl-center">{{ sub.typeLabel }}</td>
+                  <td class="ql-actions">
+                    <button type="button" class="ql-icon" (click)="openAttempt(sub); $event.stopPropagation()"
+                      [attr.aria-label]="('common.review' | translate) + ' ' + (sub.user?.name ?? '')">
+                      <nas-icon name="eye" [size]="20" />
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="8"><nas-list-state [message]="(hasQuery() ? ns + '.no_results' : ns + '.no_submissions') | translate" /></td></tr>
+              }
+            }
+          }
+        </tbody>
+      </table>
+      @if (attempts.pageable()) {
+        <nas-pager nasTablePager [page]="attempts.query().page" [total]="attempts.total()" [perPage]="attempts.query().perPage"
+          [showAllVisible]="attempts.canShowAll()" (showAll)="attempts.showAll()" (pageChange)="attempts.goTo($event)" />
+      }
+    </nas-table-card>
+  </section>
+</div>
+
+<!-- Filter: the Dashboard's one filter pattern (All Courses, Figma 2430:135164; D-070) -->
+<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
+  (apply)="onFilter($event)" (search)="onFilterSearch($event)" />

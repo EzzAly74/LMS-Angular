@@ -3,9 +3,10 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
- * Quizzes landing (Figma 1983:42584) and its Quiz Type modal (1981:41345),
- * D-065: Pre / Mid / Post type column + filter, All / Passed / Failed, score
- * coloured by pass. Mocked API in the real resource shapes.
+ * Quizzes landing (Figma 1983:42584), D-065: the Pre / Mid / Post type column,
+ * score coloured by pass, and the Dashboard's one filter pattern (D-070): the
+ * All Courses Filter button and modal with Course, Instructor, Learner, Type
+ * and Result. Mocked API in the real resource shapes.
  */
 const ARTIFACTS = resolve(__dirname, '../e2e-artifacts/quizzes-list');
 const ok = (result: unknown) => ({ status: 'success', message: '', result });
@@ -30,6 +31,12 @@ async function mock(page: Page): Promise<Request[]> {
     lists.push(r.request());
     return r.fulfill({ json: page1([row(1, 'Layla Hassan', 'pre', 92, true), row(2, 'Omar Al-Farsi', 'post', 40, false), row(3, 'Fatima Al-Rashidi', 'mid', null, null, 'pending')]) });
   });
+  await page.route('**/api/v1/admin/quizzes/submissions/filter-options', r => r.fulfill({ json: ok({
+    learners: [{ id: 101, name: 'Layla Hassan' }, { id: 102, name: 'Omar Al-Farsi' }],
+    instructors: [{ id: 7, name: 'Nora Al-Fahad' }],
+    items: [],
+  }) }));
+  await page.route(/\/api\/v1\/courses\?/, r => r.fulfill({ json: page1([{ id: 1, title: 'Workplace Safety Essentials' }]) }));
   return lists;
 }
 
@@ -46,32 +53,48 @@ test.describe('behaviour', () => {
     await expect(table.getByRole('columnheader', { name: 'Type' })).toBeVisible();
     await expect(table.getByRole('columnheader', { name: 'Status' })).toHaveCount(0);
     await expect(table.getByRole('row').nth(1)).toContainText('Pre');
-    await expect(table.locator('.ql-score--pass')).toHaveText(/92%/);
-    await expect(table.locator('.ql-score--fail')).toHaveText(/40%/);
+    await expect(table.locator('.ql-score.cl-pass')).toHaveText(/92%/);
+    await expect(table.locator('.ql-score.cl-fail')).toHaveText(/40%/);
     await expect(table.getByText('Pending')).toBeVisible();
 
-    // Passed / Failed.
-    await page.getByLabel('Passed').check();
-    await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.get('result')).toBe('passed');
-    await page.getByLabel('Failed').check();
-    await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.get('result')).toBe('failed');
-    await page.getByLabel('Failed').uncheck();
-    await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.has('result')).toBe(false);
+    // No empty band above the page head (the page host is not a flex column).
+    const head = await page.locator('.cl-head').boundingBox();
+    expect(head!.y).toBeLessThan(140);
+    // The frame's chips and Passed / Failed checks are gone: one Filter button, as on All Courses.
+    await expect(page.locator('.ql-chip')).toHaveCount(0);
+    await expect(page.getByLabel('Passed')).toHaveCount(0);
 
-    // Quiz Type modal (1981:41345): View results disabled until a choice.
-    await page.getByRole('button', { name: /^Type/ }).click();
-    const d = page.getByRole('dialog', { name: 'Quiz Type' });
-    await expect(d).toBeVisible();
-    await expect(d.getByRole('button', { name: 'View results' })).toBeDisabled();
-    await d.getByLabel('Pre-course').check();
-    await d.getByLabel('Post-course').check();
-    await d.getByRole('button', { name: 'View results' }).click();
+    await page.getByRole('button', { name: 'Filter' }).click();
+    const d = page.getByRole('dialog', { name: 'Filter' });
+    await expect(d.locator('.fd__label')).toHaveText(['Courses', 'Instructors', 'Learners', 'Type', 'Result']);
+    await expect(d.getByRole('button', { name: 'Filter' })).toBeDisabled();
+
+    // Type: several at once.
+    await d.locator('.p-multiselect').nth(3).click();
+    await page.getByRole('option', { name: 'Pre-course' }).click();
+    await page.getByRole('option', { name: 'Post-course' }).click();
+    await page.keyboard.press('Escape');
+    // Result: one of Passed / Failed.
+    await d.locator('.p-dropdown').first().click();
+    await page.getByRole('option', { name: 'Passed' }).click();
+    // Learner: the list comes from the filter options, across all courses.
+    await d.locator('.p-multiselect').nth(2).click();
+    await page.getByRole('option', { name: 'Omar Al-Farsi' }).click();
+    await page.keyboard.press('Escape');
+
+    await d.getByRole('button', { name: 'Filter' }).click();
     await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.getAll('types[]')).toEqual(['pre', 'post']);
-    await expect(page.getByRole('button', { name: /^Type/ }).locator('.ql-chip__count')).toHaveText('2');
+    const url = new URL(lists.at(-1)!.url());
+    expect(url.searchParams.get('result')).toBe('passed');
+    expect(url.searchParams.getAll('learner_ids[]')).toEqual(['102']);
+    await expect(page.locator('.nlt__badge')).toHaveText('3');
 
-    // All clears it.
-    await page.getByRole('button', { name: 'All', exact: true }).first().click();
-    await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.getAll('types[]')).toEqual([]);
+    // Clear empties every field at once.
+    await page.locator('.nlt__filter').click();
+    await page.getByRole('dialog', { name: 'Filter' }).getByRole('button', { name: 'Clear' }).click();
+    await expect.poll(() => new URL(lists.at(-1)!.url()).searchParams.has('result')).toBe(false);
+    expect(new URL(lists.at(-1)!.url()).searchParams.getAll('types[]')).toEqual([]);
+    await expect(page.locator('.nlt__badge')).toHaveCount(0);
   });
 });
 
@@ -92,8 +115,9 @@ for (const locale of ['en', 'ar'] as const) {
 
     mkdirSync(ARTIFACTS, { recursive: true });
     await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}.png`), fullPage: true });
-    await page.getByRole('button', { name: locale === 'en' ? /^Type/ : /^النوع/ }).click();
-    await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-type.png`) });
+    await page.locator('.nlt__filter').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-filter.png`) });
     expect(errors).toEqual([]);
   });
 }

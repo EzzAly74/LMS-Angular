@@ -26,3 +26,6 @@
   border-radius: 50%;
   background: var(--nas-teal-100);
 }
+
+// The tab stacks its toolbar, bar and table 16 px apart.
+:host { display: flex; flex-direction: column; gap: var(--nas-space-4); min-inline-size: 0; }
