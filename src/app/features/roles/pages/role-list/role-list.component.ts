@@ -30,10 +30,10 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-role-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [
+    NasCanDirective,
     CommonModule,
     FormsModule,
-    RouterLink,
     SkeletonModule,
     DialogModule,
     TranslateModule,
@@ -45,13 +45,13 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class RoleListComponent implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
-  private readonly api      = inject(AdminRolesApiService);
-  private readonly router   = inject(Router);
+  private readonly api = inject(AdminRolesApiService);
+  private readonly router = inject(Router);
   private readonly messages = inject(ToastService);
-  private readonly t        = inject(TranslateService);
+  private readonly t = inject(TranslateService);
 
   private readonly destroy$ = new Subject<void>();
-  private readonly search$  = new Subject<string>();
+  private readonly search$ = new Subject<string>();
 
   readonly skeletonCards = [1, 2, 3, 4];
 
@@ -60,10 +60,10 @@ export class RoleListComponent implements OnInit, OnDestroy {
   }
 
   /* ── Data ────────────────────────────────────────────────────── */
-  readonly roles      = signal<AdminRoleListItem[]>([]);
+  readonly roles = signal<AdminRoleListItem[]>([]);
   readonly totalViews = signal(0);
-  readonly catalog    = signal<AdminRoleSectionCatalog | null>(null);
-  readonly loading    = signal(true);
+  readonly catalog = signal<AdminRoleSectionCatalog | null>(null);
+  readonly loading = signal(true);
 
   /* ── List state ──────────────────────────────────────────────── */
   search = '';
@@ -76,19 +76,20 @@ export class RoleListComponent implements OnInit, OnDestroy {
 
   /* ── Delete confirmation ─────────────────────────────────────── */
   readonly deleteTarget = signal<AdminRoleListItem | null>(null);
-  readonly deleting     = signal(false);
+  readonly deleting = signal(false);
 
   /* ── Computed ────────────────────────────────────────────────── */
   readonly visibleRoles = computed(() => {
     const term = this.search.trim().toLowerCase();
-    const all  = this.roles();
+    const all = this.roles();
     if (!term) return all;
-    return all.filter(r =>
-      (r.name             ?? '').toLowerCase().includes(term) ||
-      (r.name_en          ?? '').toLowerCase().includes(term) ||
-      (r.name_ar          ?? '').toLowerCase().includes(term) ||
-      (r.description      ?? '').toLowerCase().includes(term) ||
-      (r.machine_name     ?? '').toLowerCase().includes(term),
+    return all.filter(
+      (r) =>
+        (r.name ?? '').toLowerCase().includes(term) ||
+        (r.name_en ?? '').toLowerCase().includes(term) ||
+        (r.name_ar ?? '').toLowerCase().includes(term) ||
+        (r.description ?? '').toLowerCase().includes(term) ||
+        (r.machine_name ?? '').toLowerCase().includes(term),
     );
   });
 
@@ -96,7 +97,7 @@ export class RoleListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.search$
       .pipe(debounceTime(250), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(v => this.search = v);
+      .subscribe((v) => (this.search = v));
 
     this.refresh();
   }
@@ -110,7 +111,7 @@ export class RoleListComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.loading.set(true);
     this.api.list().subscribe({
-      next: res => {
+      next: (res) => {
         this.roles.set(res.result.roles ?? []);
         this.totalViews.set(res.result.total_views ?? 0);
         this.loading.set(false);
@@ -119,12 +120,14 @@ export class RoleListComponent implements OnInit, OnDestroy {
     });
 
     this.api.sections().subscribe({
-      next: res => this.catalog.set(res.result),
+      next: (res) => this.catalog.set(res.result),
     });
   }
 
   /* ── Interactions ────────────────────────────────────────────── */
-  onSearch(v: string): void { this.search$.next(v); }
+  onSearch(v: string): void {
+    this.search$.next(v);
+  }
 
   goToCreate(): void {
     this.router.navigate(['/admin/roles/new']);
@@ -142,7 +145,7 @@ export class RoleListComponent implements OnInit, OnDestroy {
 
   toggleExpand(id: number, ev?: MouseEvent): void {
     ev?.stopPropagation();
-    this.expandedSet.update(set => {
+    this.expandedSet.update((set) => {
       const next = new Set(set);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -156,7 +159,9 @@ export class RoleListComponent implements OnInit, OnDestroy {
     this.menuOpenId.set(this.menuOpenId() === id ? null : id);
   }
 
-  closeMenu(): void { this.menuOpenId.set(null); }
+  closeMenu(): void {
+    this.menuOpenId.set(null);
+  }
 
   /* ── Delete flow ────────────────────────────────────────────── */
   askDelete(role: AdminRoleListItem): void {
@@ -164,7 +169,9 @@ export class RoleListComponent implements OnInit, OnDestroy {
     this.deleteTarget.set(role);
   }
 
-  cancelDelete(): void { this.deleteTarget.set(null); }
+  cancelDelete(): void {
+    this.deleteTarget.set(null);
+  }
 
   confirmDelete(): void {
     const target = this.deleteTarget();
@@ -180,9 +187,10 @@ export class RoleListComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.deleting.set(false);
-        const msg = err?.error?.message
-                 ?? err?.error?.errors?.role?.[0]
-                 ?? this.t.instant('errors.unexpected');
+        const msg =
+          err?.error?.message ??
+          err?.error?.errors?.role?.[0] ??
+          this.t.instant('errors.unexpected');
         this.messages.error(msg);
       },
     });
@@ -200,42 +208,61 @@ export class RoleListComponent implements OnInit, OnDestroy {
   }> {
     const groups = this.catalog()?.groups ?? [];
     const held = new Set(role.permissions ?? role.view_keys);
-    const actionLabel = new Map((this.catalog()?.actions ?? []).map(a => [a.key, a.label] as const));
+    const actionLabel = new Map(
+      (this.catalog()?.actions ?? []).map((a) => [a.key, a.label] as const),
+    );
 
-    return groups.map(group => {
-      const selected = group.items
-        .filter(item => held.has(`view-${item.key}`))
-        .map(item => {
-          const actions = item.actions.filter(a => held.has(`${a}-${item.key}`)).map(a => actionLabel.get(a) ?? a);
-          return { key: item.key, label: `${item.label} · ${actions.join(this.t.instant('common.list_separator'))}` };
-        });
-      const VISIBLE_MAX = 6;
-      return {
-        group,
-        visible: selected.slice(0, VISIBLE_MAX),
-        hidden:  Math.max(0, selected.length - VISIBLE_MAX),
-      };
-    }).filter(g => g.visible.length > 0 || g.hidden > 0);
+    return groups
+      .map((group) => {
+        const selected = group.items
+          .filter((item) => held.has(`view-${item.key}`))
+          .map((item) => {
+            const actions = item.actions
+              .filter((a) => held.has(`${a}-${item.key}`))
+              .map((a) => actionLabel.get(a) ?? a);
+            return {
+              key: item.key,
+              label: `${item.label} · ${actions.join(this.t.instant('common.list_separator'))}`,
+            };
+          });
+        const VISIBLE_MAX = 6;
+        return {
+          group,
+          visible: selected.slice(0, VISIBLE_MAX),
+          hidden: Math.max(0, selected.length - VISIBLE_MAX),
+        };
+      })
+      .filter((g) => g.visible.length > 0 || g.hidden > 0);
   }
 
   /* ── Visual helpers ─────────────────────────────────────────── */
   cardColorClass(color: string): string {
     switch (color) {
-      case 'green':  return 'rl-card--green';
-      case 'orange': return 'rl-card--orange';
-      case 'red':    return 'rl-card--red';
-      case 'blue':   return 'rl-card--blue';
-      default:       return 'rl-card--teal';
+      case 'green':
+        return 'rl-card--green';
+      case 'orange':
+        return 'rl-card--orange';
+      case 'red':
+        return 'rl-card--red';
+      case 'blue':
+        return 'rl-card--blue';
+      default:
+        return 'rl-card--teal';
     }
   }
 
   badgeColorClass(color: string): string {
     switch (color) {
-      case 'green':  return 'rl-badge--green';
-      case 'orange': return 'rl-badge--orange';
-      case 'red':    return 'rl-badge--red';
-      case 'blue':   return 'rl-badge--blue';
-      default:       return 'rl-badge--teal';
+      case 'green':
+        return 'rl-badge--green';
+      case 'orange':
+        return 'rl-badge--orange';
+      case 'red':
+        return 'rl-badge--red';
+      case 'blue':
+        return 'rl-badge--blue';
+      default:
+        return 'rl-badge--teal';
     }
   }
 }
