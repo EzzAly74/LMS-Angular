@@ -169,7 +169,7 @@
                 </div>
               </div>
             } @else {
-              <button type="button" class="asd-open__edit-btn" (click)="startEdit(row.answer)">
+              <button *nasCan="'edit-quizzes'" type="button" class="asd-open__edit-btn" (click)="startEdit(row.answer)">
                 <i class="pi pi-pen-to-square"></i> {{ 'common.edit' | translate }}
               </button>
               @if (row.answer.feedback) {

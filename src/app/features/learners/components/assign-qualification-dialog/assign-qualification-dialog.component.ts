@@ -118,7 +118,7 @@ export class AssignQualificationDialogComponent {
         switchMap(term => {
           this.learnersLoading.set(true);
           return this.api
-            .getPaginated<LearnerRow>(API.ADMIN_USERS, { role: 'learner', per_page: 50, ...(term ? { search: term } : {}) })
+            .getPaginated<LearnerRow>(API.ADMIN_LEARNERS, { per_page: 50, ...(term ? { search: term } : {}) })
             .pipe(
               map(r => r.result.data.map(u => ({ id: u.id, label: u.name }))),
               catchError(() => of([] as Option[])),
@@ -194,9 +194,9 @@ export class AssignQualificationDialogComponent {
 
   /** Every learner id the list's filters match, 100 per request (at most 5). */
   private allMatchingIds(): Observable<number[]> {
-    const params = (page: number): ApiParams => ({ ...this.filterParams(), role: 'learner', page, per_page: 100 });
+    const params = (page: number): ApiParams => ({ ...this.filterParams(), page, per_page: 100 });
     const fetch = (page: number) =>
-      this.api.getPaginated<LearnerRow>(API.ADMIN_USERS, params(page)).pipe(
+      this.api.getPaginated<LearnerRow>(API.ADMIN_LEARNERS, params(page)).pipe(
         map(r => ({ page, last: r.result.last_page, ids: r.result.data.map(u => u.id) })),
       );
     return fetch(1).pipe(

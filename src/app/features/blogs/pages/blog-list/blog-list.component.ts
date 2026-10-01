@@ -13,11 +13,12 @@ import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/n
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { BlogsApiService } from '../../services/blogs-api.service';
 import { BlogListItem } from '../../models/blog.types';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     RouterLink,
     SkeletonModule,

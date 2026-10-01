@@ -10,7 +10,7 @@
         {{ 'platform_settings.subtitle' | translate }}
       </p>
     </div>
-    <button type="button"
+    <button *nasCan="'edit-platform-config'" type="button"
             class="platform-settings__save"
             [disabled]="saving() || loading()"
             (click)="save()">

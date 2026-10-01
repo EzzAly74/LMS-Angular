@@ -26,7 +26,7 @@ test.skip(({ viewport }) => (viewport?.width ?? 0) < 1440, 'behaviour test: desk
 const LOCALE_KEY = '2b_locale';
 
 function listRequest(page: Page): Promise<Request> {
-  return page.waitForRequest((r) => /\/api\/v1\/admin\/users\?/.test(r.url()) && r.method() === 'GET');
+  return page.waitForRequest((r) => /\/api\/v1\/admin\/learners\?/.test(r.url()) && r.method() === 'GET');
 }
 
 function query(r: Request): URLSearchParams {
@@ -44,7 +44,8 @@ test('lists real learners with the Figma columns, a view link and the pager', as
   await open(page);
   const q = query(await first);
 
-  expect(q.get('role')).toBe('learner');
+  // Its own endpoint since D-075: no role filter needed.
+  expect(q.get('role')).toBeNull();
   expect(q.get('per_page')).toBe('15');
 
   const rows = page.locator('.ll__row');

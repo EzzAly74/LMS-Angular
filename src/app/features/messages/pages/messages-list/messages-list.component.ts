@@ -28,6 +28,7 @@ import {
   NasShimmerComponent,
 } from '../../../../shared/nas';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 /* ── Models (unified conversation store) ─────────────────────────────── */
 
@@ -55,7 +56,7 @@ type InboxTab = 'unread' | 'received' | 'sent';
 @Component({
   selector: 'app-messages-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     TranslateModule,
     FormsModule,

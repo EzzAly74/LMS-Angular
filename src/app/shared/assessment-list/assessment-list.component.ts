@@ -33,6 +33,7 @@ import type {
   AssessmentAttemptRow, AssessmentItemRow, AssessmentListSource, AssessmentOptionRow, AssessmentType,
 } from './assessment-list.source';
 import { ToastService } from '../../core/services/toast.service';
+import { AuthService } from '../../core/services/auth.service';
 
 /** Passed / Failed (D-065); no choice is "all". */
 const RESULTS = ['passed', 'failed'] as const;
@@ -98,6 +99,7 @@ const SHARED_KEYS = {
   styleUrl: './assessment-list.component.scss',
 })
 export class AssessmentListComponent implements OnInit {
+  protected readonly auth = inject(AuthService);
   private readonly api        = inject(ApiService);
   private readonly confirm    = inject(ConfirmationService);
   private readonly toast      = inject(ToastService);
@@ -304,14 +306,22 @@ export class AssessmentListComponent implements OnInit {
     this.router.navigate([this.source().route, 'submissions', row.id]);
   }
 
+  /* ── Permissions (D-073) ───────────────────────────────────────── */
+  private readonly section = computed(() => (this.source().kind === 'quiz' ? 'quizzes' : 'assignments'));
+  readonly canCreate = computed(() => this.auth.canDo(this.section(), 'create'));
+  readonly canEdit = computed(() => this.auth.canDo(this.section(), 'edit'));
+  readonly canDelete = computed(() => this.auth.canDo(this.section(), 'delete'));
+
   /* ── "Created" table ───────────────────────────────────────────── */
   editItem(row: AssessmentItemRow, event?: Event): void {
     event?.stopPropagation();
+    if (!this.canEdit()) return;
     this.router.navigate([this.source().route, row.id, 'edit']);
   }
 
   confirmDelete(row: AssessmentItemRow, event: Event): void {
     event.stopPropagation();
+    if (!this.canDelete()) return;
     const toastNs = this.source().toastNs;
     this.confirm.confirm({
       message: this.t.instant('confirm.delete_message_title', { title: row.title }),

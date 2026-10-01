@@ -3,7 +3,7 @@
   <nas-page-header
     [title]="'blogs.title' | translate"
     [subtitle]="'blogs.subtitle' | translate">
-    <a routerLink="/admin/blogs/add" class="nas-cta-btn">
+    <a *nasCan="'create-resources'" routerLink="/admin/blogs/add" class="nas-cta-btn">
       <i class="pi pi-plus-circle"></i>
       {{ 'blogs.new_blog' | translate }}
     </a>
@@ -27,7 +27,7 @@
       <div class="blog-empty">
         <i class="pi pi-book blog-empty__icon"></i>
         <p>{{ 'blogs.no_results' | translate }}</p>
-        <a routerLink="/admin/blogs/add" class="nas-cta-btn">
+        <a *nasCan="'create-resources'" routerLink="/admin/blogs/add" class="nas-cta-btn">
           <i class="pi pi-plus-circle"></i>
           {{ 'blogs.new_blog' | translate }}
         </a>
@@ -67,7 +67,7 @@
           </div>
 
           <!-- Kebab menu -->
-          <div class="blog-menu-wrap" (click)="$event.stopPropagation()">
+          <div *nasCan="['edit-resources', 'delete-resources']" class="blog-menu-wrap" (click)="$event.stopPropagation()">
             <button
               type="button"
               class="blog-menu-btn"
@@ -79,10 +79,11 @@
             </button>
             @if (openMenuId() === item.id) {
               <div class="blog-menu-dropdown">
-                <button type="button" class="blog-menu-item" (click)="edit(item.id)">
+                <button *nasCan="'edit-resources'" type="button" class="blog-menu-item" (click)="edit(item.id)">
                   <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
                 </button>
                 <button
+                  *nasCan="'delete-resources'"
                   type="button"
                   class="blog-menu-item blog-menu-item--danger"
                   (click)="askDelete(item, $event)"

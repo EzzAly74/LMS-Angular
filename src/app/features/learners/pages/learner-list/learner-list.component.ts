@@ -48,7 +48,7 @@ interface LearnerView extends LearnerRow {
 /**
  * Learners list - Figma 1986:74701 (D3).
  *
- * GET admin/users?role=learner with the Learners filters (B2/D3, D-053):
+ * GET admin/learners (D-075) with the Learners filters (B2/D3, D-053):
  * instructors who teach the learner's courses, learner type, courses,
  * qualifications, and the last-activity range. They live in the Dashboard's
  * one Filter modal (D-070: the frame's chips and From / To pickers moved into
@@ -84,7 +84,7 @@ export class LearnerListComponent implements OnInit {
   private readonly auth       = inject(AuthService);
 
   /** UX only - POST admin/qualification-skills/{id}/learners enforces it. */
-  readonly canAssign  = computed(() => this.auth.hasView('view-qualifications'));
+  readonly canAssign  = computed(() => this.auth.can('edit-qualifications'));
   readonly assignOpen = signal(false);
 
   readonly skeletons = SKELETON_ROWS;
@@ -97,7 +97,7 @@ export class LearnerListComponent implements OnInit {
       search: '', page: 1, perPage: 15,
       instructorIds: [], learnerTypes: [], courseIds: [], qualificationIds: [], activeFrom: null, activeTo: null,
     },
-    load: q => this.api.getPaginated<LearnerRow>(API.ADMIN_USERS, this.params(q)).pipe(toPaged(r => ({ ...r, tone: tone(r.compliance_pct ?? 0) }))),
+    load: q => this.api.getPaginated<LearnerRow>(API.ADMIN_LEARNERS, this.params(q)).pipe(toPaged(r => ({ ...r, tone: tone(r.compliance_pct ?? 0) }))),
   });
 
   /* ── Filter modal ──────────────────────────────────────────────── */
@@ -216,7 +216,7 @@ export class LearnerListComponent implements OnInit {
     if (this.lookupsLoaded) return;
     this.lookupsLoaded = true;
     forkJoin({
-      instructors: this.api.get<{ instructors: { id: number; name: string }[] }>(`${API.ADMIN_USERS}/filter-options`).pipe(catchError(() => of(null))),
+      instructors: this.api.get<{ instructors: { id: number; name: string }[] }>(`${API.ADMIN_LEARNERS}/filter-options`).pipe(catchError(() => of(null))),
       qualifications: this.api.get<{ id: number; name: string }[]>(API.QUALIFICATIONS_ACTIVE).pipe(catchError(() => of(null))),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -230,7 +230,6 @@ export class LearnerListComponent implements OnInit {
 
   private params(q: Query): ApiParams {
     const p = pagedParams(q);
-    p['role'] = 'learner';
     withList(p, 'course_instructor_ids', q.instructorIds);
     withList(p, 'learner_types', q.learnerTypes);
     withList(p, 'course_ids', q.courseIds);

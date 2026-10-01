@@ -105,7 +105,7 @@ export class CourseLearnersTabComponent implements OnInit {
   });
 
   // Same key the /admin/learners route is gated on (admin-layout.routes.ts).
-  readonly canOpenLearner = computed(() => this.auth.hasView('view-users'));
+  readonly canOpenLearner = computed(() => this.auth.hasView('view-learners'));
   readonly columns = computed(() => (this.canOpenLearner() ? 6 : 5));
   /** Learner, cohort, progress, status, enrolled (+ the eye). */
   readonly skeletonCells = computed<readonly NasSkeletonCell[]>(() =>

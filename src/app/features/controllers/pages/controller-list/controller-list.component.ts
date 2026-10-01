@@ -33,6 +33,7 @@ import type {
   AdminRoleColor,
 } from '../../../roles/models/role.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 /* ── Types ──────────────────────────────────────────────────────── */
 
@@ -69,7 +70,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-controller-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

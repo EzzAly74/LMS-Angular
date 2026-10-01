@@ -33,6 +33,7 @@ import {
 } from '../../../../shared/nas';
 import { NotificationsDrawerService } from '../../../../shared/nas/notifications-drawer/notifications-drawer.service';
 import { PasscodeWidgetComponent } from '../../components/passcode-widget/passcode-widget.component';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 interface KpiStats {
   active_learners: number;
@@ -63,7 +64,7 @@ type TrendRange = DashboardTrendRange;
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     RouterLink,
     TranslateModule,

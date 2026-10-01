@@ -27,6 +27,7 @@ import {
   type SubmissionDetail,
 } from '../../models/assignment.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 interface QuestionRow {
   answer: SubmissionAnswer;
@@ -45,7 +46,7 @@ interface QuestionRow {
 @Component({
   selector: 'app-submission-detail',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     FormsModule,
     RouterLink,
     SkeletonModule,

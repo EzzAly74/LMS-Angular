@@ -4,7 +4,7 @@
   <nas-page-header
     [title]="'inbox.title' | translate"
     [subtitle]="'inbox.subtitle' | translate">
-    <button type="button" class="nas-cta-btn" (click)="openCompose()">
+    <button *nasCan="'create-inbox'" type="button" class="nas-cta-btn" (click)="openCompose()">
       <i class="pi pi-plus-circle"></i>
       <span>{{ 'inbox.new_message' | translate }}</span>
     </button>
@@ -88,7 +88,7 @@
           }
         }
       </div>
-      <form class="thread__composer" (ngSubmit)="sendReply()">
+      <form *nasCan="'create-inbox'" class="thread__composer" (ngSubmit)="sendReply()">
         <input type="text" class="nas-input"
                [ngModel]="draftReply()" [ngModelOptions]="{ standalone: true }"
                (ngModelChange)="draftReply.set($event)"

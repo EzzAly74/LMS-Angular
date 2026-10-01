@@ -34,6 +34,8 @@ import { withLocaleReload } from '../../../../../../core/utils/with-locale-reloa
 import type { Cohort, CourseDetail } from '../../../../../../core/models/course.types';
 import { CohortLearnersDialogComponent } from './cohort-learners-dialog.component';
 import { NewCohortDialogComponent } from './new-cohort-dialog.component';
+import { NasCanDirective } from '../../../../../../shared/nas/nas-can/nas-can.directive';
+import { AuthService } from '../../../../../../core/services/auth.service';
 
 type SortKey = 'name' | 'status';
 type RowActionId = 'edit' | 'attendance';
@@ -62,7 +64,7 @@ interface CohortRow extends Cohort {
 @Component({
   selector: 'app-course-cohorts-tab',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     NewCohortDialogComponent,
     TranslateModule,
     NasIconComponent,
@@ -81,6 +83,7 @@ interface CohortRow extends Cohort {
   styleUrl: './course-cohorts-tab.component.scss',
 })
 export class CourseCohortsTabComponent {
+  protected readonly auth = inject(AuthService);
   private readonly enums = inject(EnumsService);
   private readonly t = inject(TranslateService);
   protected readonly locale = inject(LocaleService).locale;
@@ -139,7 +142,9 @@ export class CourseCohortsTabComponent {
 
   /** Row menu: Edit Cohort and View Attendance, as drawn (2266:129226). */
   readonly rowActions = (_row: CohortRow): readonly NasRowAction<RowActionId>[] => [
-    { id: 'edit', label: this.t.instant('course_detail.edit_cohort'), icon: 'assets/icons/figma/pencil-simple.svg' },
+    ...(this.auth.can('edit-courses')
+      ? [{ id: 'edit' as const, label: this.t.instant('course_detail.edit_cohort'), icon: 'assets/icons/figma/pencil-simple.svg' }]
+      : []),
     { id: 'attendance', label: this.t.instant('course_detail.view_attendance'), icon: 'calendar-blank' },
   ];
 

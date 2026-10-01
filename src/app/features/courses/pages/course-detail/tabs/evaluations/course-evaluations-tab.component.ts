@@ -28,6 +28,7 @@ import { LocaleService } from '../../../../../../core/services/locale.service';
 import { pluralKey } from '../../../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../../../core/utils/with-locale-reload';
 import type { CourseEvaluationSummary, CourseEvaluationTemplate } from '../../../../models/course-detail.model';
+import { NasCanDirective } from '../../../../../../shared/nas/nas-can/nas-can.directive';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -44,7 +45,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'app-course-evaluations-tab',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslateModule, DropdownModule, SkeletonModule, NasStatTileComponent, EvQuestionCardComponent],
+  imports: [NasCanDirective, FormsModule, RouterLink, TranslateModule, DropdownModule, SkeletonModule, NasStatTileComponent, EvQuestionCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-evaluations-tab.component.html',
   styleUrl: './course-evaluations-tab.component.scss',

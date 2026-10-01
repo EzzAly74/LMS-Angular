@@ -40,6 +40,7 @@ import { CourseContentTabComponent } from './tabs/content/course-content-tab.com
 import { CourseSubmissionsTabComponent } from './tabs/submissions/course-submissions-tab.component';
 import { CourseQualificationsTabComponent } from './tabs/qualifications/course-qualifications-tab.component';
 import { CourseEvaluationsTabComponent } from './tabs/evaluations/course-evaluations-tab.component';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 export type { CourseDetail, Cohort };
 
@@ -78,7 +79,7 @@ type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 @Component({
   selector: 'app-course-detail',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     RouterLink,
     TranslateModule,
     SkeletonModule,

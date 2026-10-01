@@ -6,7 +6,7 @@
       <h1 class="cat-page__title">{{ 'categories.title' | translate }}</h1>
       <p class="cat-page__subtitle">{{ 'categories.subtitle' | translate }}</p>
     </div>
-    <button type="button" class="cat-new-btn" (click)="openCreate()">
+    <button *nasCan="'create-categories'" type="button" class="cat-new-btn" (click)="openCreate()">
       <nas-icon name="plus-circle" [size]="20" />
       <span>{{ 'categories.new_category' | translate }}</span>
     </button>
@@ -52,7 +52,7 @@
                   <span class="cat-pill">{{ item.courses_count ?? 0 }} {{ 'categories.courses_word' | translate }}</span>
                 </td>
                 <td class="cat-table__action">
-                  <button type="button" class="cat-row-menu-btn"
+                  <button *nasCan="['edit-categories', 'delete-categories']" type="button" class="cat-row-menu-btn"
                     [attr.aria-label]="'common.actions_for' | translate:{ name: item.name }"
                     (click)="openRowMenu($event, item)">
                     <nas-icon name="dots-three" [size]="16" />
@@ -92,12 +92,12 @@
 <!-- ── Row actions overlay panel ───────────────────────────────────── -->
 <p-overlayPanel #rowMenu styleClass="cat-row-menu" [showCloseIcon]="false">
   <ng-template pTemplate>
-    <button type="button" class="cat-row-menu__item"
+    <button *nasCan="'edit-categories'" type="button" class="cat-row-menu__item"
       (click)="menuTarget() && openEdit(menuTarget()!)">
       <nas-icon name="eye" [size]="16" />
       <span>{{ 'common.edit' | translate }}</span>
     </button>
-    <button type="button" class="cat-row-menu__item cat-row-menu__item--danger"
+    <button *nasCan="'delete-categories'" type="button" class="cat-row-menu__item cat-row-menu__item--danger"
       (click)="menuTarget() && requestDelete(menuTarget()!)">
       <nas-icon name="trash" [size]="16" />
       <span>{{ 'common.delete' | translate }}</span>

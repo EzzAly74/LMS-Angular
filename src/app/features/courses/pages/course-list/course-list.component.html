@@ -6,7 +6,7 @@
       <h1 class="cl-title">{{ 'courses_list.title' | translate }}</h1>
       <p class="cl-subtitle">{{ 'courses_list.subtitle' | translate }}</p>
     </div>
-    <button type="button" class="cl-primary" (click)="openAddCourse()">
+    <button *nasCan="'create-courses'" type="button" class="cl-primary" (click)="openAddCourse()">
       <nas-icon name="plus-circle" [size]="20" />
       <span>{{ 'courses_list.new_course' | translate }}</span>
     </button>

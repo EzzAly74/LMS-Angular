@@ -809,3 +809,42 @@
 :host ::ng-deep .ul-confirm-dialog .p-dialog-content {
   padding-top: 0;
 }
+
+
+/* ── Password rule checklist (D-075) ──────────────────────── */
+.ul-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px var(--nas-space-3);
+  margin: var(--nas-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-muted);
+    transition: color var(--transition-speed);
+
+    i { font-size: 13px; }
+
+    &--ok { color: var(--nas-status-green-700, #15803d); }
+  }
+}
+
+.ul-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-rules__item { transition: none; }
+}

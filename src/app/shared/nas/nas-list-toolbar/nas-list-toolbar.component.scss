@@ -21,7 +21,7 @@
   padding: var(--nas-space-2) var(--nas-space-3);
   border: 1px solid var(--nas-color-border);
   border-radius: var(--nas-radius-md);
-  background: var(--nas-neutral-100);
+  background: var(--nas-neutral-200);
 
   nas-icon { color: var(--nas-color-text-subtle); flex-shrink: 0; }
   &:focus-within { border-color: var(--nas-teal-700); box-shadow: 0 0 0 3px var(--nas-teal-1000-16); }

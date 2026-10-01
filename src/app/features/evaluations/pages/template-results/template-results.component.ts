@@ -24,6 +24,7 @@ import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { EvQuestionCardComponent } from '../../components/ev-question-card/ev-question-card.component';
 import { NasStatTileComponent } from '../../../../shared/nas/nas-stat-tile/nas-stat-tile.component';
 import { TemplateQuestion, TemplateResults, formatScore } from '../../models/evaluation.model';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 
@@ -37,7 +38,7 @@ type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 @Component({
   selector: 'app-evaluation-template-results',
   standalone: true,
-  imports: [RouterLink, TranslateModule, SkeletonModule, NasDatePipe, EvQuestionCardComponent, NasStatTileComponent],
+  imports: [NasCanDirective, RouterLink, TranslateModule, SkeletonModule, NasDatePipe, EvQuestionCardComponent, NasStatTileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './template-results.component.html',
   styleUrl: './template-results.component.scss',

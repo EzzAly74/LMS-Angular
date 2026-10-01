@@ -17,6 +17,7 @@ import { EtStatsComponent } from '../../components/et-stats/et-stats.component';
 import { RejectDialogComponent } from '../../components/reject-dialog/reject-dialog.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 type Confirm = 'approve' | 'reopen' | null;
@@ -34,7 +35,7 @@ type Confirm = 'approve' | 'reopen' | null;
 @Component({
   selector: 'app-external-training-review',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     FormsModule, RouterLink, TranslateModule, DropdownModule, SkeletonModule,
     NasConfirmModalComponent, NasDatePipe, EtStatsComponent, RejectDialogComponent,
   ],

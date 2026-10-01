@@ -36,6 +36,8 @@ import { QualificationDialogComponent } from '../../components/qualification-dia
 import { QualificationImportError, QualificationRow } from '../../models/qualification.model';
 import { QualificationsApiService, TransferFormat } from '../../services/qualifications-api.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type Tone = 'high' | 'mid' | 'low';
 type RowActionId = 'edit' | 'delete';
@@ -64,7 +66,7 @@ interface QualificationListRow extends QualificationRow {
 @Component({
   selector: 'app-qualification-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     TranslateModule,
     NasIconComponent,
     NasPagerComponent,
@@ -83,6 +85,7 @@ interface QualificationListRow extends QualificationRow {
   styleUrl: './qualification-list.component.scss',
 })
 export class QualificationListComponent implements OnInit {
+  protected readonly auth = inject(AuthService);
   private readonly api        = inject(QualificationsApiService);
   private readonly toast      = inject(ToastService);
   private readonly t          = inject(TranslateService);
@@ -115,10 +118,14 @@ export class QualificationListComponent implements OnInit {
   /** Rebuilt on language change so the labels follow it. */
   readonly importItems = computed<NasActionMenuItem[]>(() => {
     this.locale.locale();
+    // Uploading creates qualifications; the blank template is for anyone.
+    const upload = this.auth.can('create-qualifications');
     return [
       { id: 'template', label: this.t.instant('qualifications.transfer.template'), icon: 'download-simple' },
-      { id: 'xlsx', label: this.t.instant('qualifications.transfer.import_xlsx'), icon: 'file-text' },
-      { id: 'csv', label: this.t.instant('qualifications.transfer.import_csv'), icon: 'file-text' },
+      ...(upload ? [
+        { id: 'xlsx', label: this.t.instant('qualifications.transfer.import_xlsx'), icon: 'file-text' },
+        { id: 'csv', label: this.t.instant('qualifications.transfer.import_csv'), icon: 'file-text' },
+      ] : []),
     ];
   });
 
@@ -132,8 +139,12 @@ export class QualificationListComponent implements OnInit {
 
   /** Row menu entries: the same for every qualification. */
   readonly rowActions = (_row: QualificationListRow): readonly NasRowAction<RowActionId>[] => [
-    { id: 'edit', label: this.t.instant('common.edit'), icon: 'assets/icons/figma/pencil-simple.svg' },
-    { id: 'delete', label: this.t.instant('common.delete'), icon: 'trash', danger: true },
+    ...(this.auth.can('edit-qualifications')
+      ? [{ id: 'edit' as const, label: this.t.instant('common.edit'), icon: 'assets/icons/figma/pencil-simple.svg' }]
+      : []),
+    ...(this.auth.can('delete-qualifications')
+      ? [{ id: 'delete' as const, label: this.t.instant('common.delete'), icon: 'trash', danger: true }]
+      : []),
   ];
 
   /** Accept attribute for the picker, set just before it opens. */

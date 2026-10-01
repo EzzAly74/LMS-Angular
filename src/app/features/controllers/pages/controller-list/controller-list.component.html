@@ -159,7 +159,7 @@
   <nas-page-header
     [title]="'controllers.title' | translate"
     [subtitle]="'controllers.subtitle' | translate">
-    <button type="button" class="ctrl-add-btn" (click)="openCreate()">
+    <button *nasCan="'create-controllers'" type="button" class="ctrl-add-btn" (click)="openCreate()">
       <i class="pi pi-plus"></i> {{ 'controllers.add' | translate }}
     </button>
   </nas-page-header>
@@ -249,11 +249,11 @@
                 </td>
 
                 <td class="ctrl-table__actions">
-                  <button type="button" class="ctrl-icon-btn"
+                  <button *nasCan="'edit-controllers'" type="button" class="ctrl-icon-btn"
                           [title]="'common.edit' | translate" (click)="openEdit(item)">
                     <i class="pi pi-pencil"></i>
                   </button>
-                  <button type="button" class="ctrl-icon-btn ctrl-icon-btn--danger"
+                  <button *nasCan="'delete-controllers'" type="button" class="ctrl-icon-btn ctrl-icon-btn--danger"
                           [title]="'common.delete' | translate" (click)="askDelete(item)">
                     <i class="pi pi-trash"></i>
                   </button>

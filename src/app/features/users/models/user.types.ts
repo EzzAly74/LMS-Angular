@@ -29,6 +29,10 @@ export interface AdminUserListItem {
   source: AdminUserSource;
   /** "{source}:{id}" — useful as a stable trackBy key. */
   composite_id: string;
+  /** Holds a super-admin role: only a super admin may change it (D-073). */
+  is_super_admin?: boolean;
+  /** The instructor record this account teaches as (D-074). */
+  instructor_id?: number | null;
   name: string | null;
   name_en: string | null;
   name_ar: string | null;
@@ -80,6 +84,10 @@ export interface AdminUserRoleOption {
   color: AdminRoleColor | string;
   /** Live count of people attached to the role (bucketed or pivoted). */
   count: number;
+  /** The signed-in admin may give this role (D-073): it carries no more than they hold. */
+  assignable?: boolean;
+  /** `assigned`: the role sees only the courses its members teach (D-074). */
+  course_scope?: 'all' | 'assigned';
 }
 
 export interface AdminUserFilterOptions {

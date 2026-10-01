@@ -48,6 +48,8 @@ import {
 } from '../../models/evaluation.model';
 import { EvaluationTemplatesApiService, TransferFormat } from '../../services/evaluation-templates-api.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type SortKey = 'created_at' | 'name';
 
@@ -79,7 +81,7 @@ interface Query extends PagedQuery {
 @Component({
   selector: 'app-evaluation-template-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     RouterLink,
     TranslateModule,
     SkeletonModule,
@@ -100,6 +102,7 @@ interface Query extends PagedQuery {
   styleUrl: './template-list.component.scss',
 })
 export class EvaluationTemplateListComponent implements OnInit {
+  protected readonly auth = inject(AuthService);
   private readonly api        = inject(ApiService);
   private readonly t          = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
@@ -190,8 +193,10 @@ export class EvaluationTemplateListComponent implements OnInit {
     return [
       { label: this.t.instant('evaluations.transfer.template_xlsx'), command: () => this.downloadTemplate('xlsx') },
       { label: this.t.instant('evaluations.transfer.template_csv'),  command: () => this.downloadTemplate('csv') },
-      { separator: true },
-      { label: this.t.instant('evaluations.transfer.upload'), command: () => this.pickFile() },
+      // Uploading creates templates; the blank files are for anyone.
+      ...(this.auth.can('create-evaluations')
+        ? [{ separator: true }, { label: this.t.instant('evaluations.transfer.upload'), command: () => this.pickFile() }]
+        : []),
     ];
   });
   readonly exportItems = computed<MenuItem[]>(() => {

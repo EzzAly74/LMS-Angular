@@ -36,6 +36,8 @@ import { CourseDialogComponent } from '../../components/course-dialog/course-dia
 import { mapApiCourseListItem, type ApiCourseRaw } from '../../../../core/utils/course-mapper';
 import type { LookupOption } from '../../models/course-form.model';
 import type { Course, CourseStatus, CourseType } from '../../../../core/models/course.types';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /** Statuses the list filters on (the backend's derived course status). */
 const FILTER_STATUSES = ['active', 'upcoming', 'inactive'] as const;
@@ -81,7 +83,7 @@ type RowActionId = 'view' | 'edit';
 @Component({
   selector: 'app-course-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     DecimalPipe, RouterLink, TranslateModule,
     NasIconComponent, NasStatusBadgeComponent, NasPagerComponent, NasFilterDialogComponent,
     NasListToolbarComponent, NasTableCardComponent, NasListStateComponent, NasSkeletonRowComponent, NasRowMenuComponent,
@@ -92,6 +94,7 @@ type RowActionId = 'view' | 'edit';
   styleUrl: './course-list.component.scss',
 })
 export class CourseListComponent implements OnInit {
+  protected readonly auth = inject(AuthService);
   private readonly api    = inject(ApiService);
   private readonly enums  = inject(EnumsService);
   private readonly router = inject(Router);
@@ -181,7 +184,9 @@ export class CourseListComponent implements OnInit {
   /** Row menu entries: the same for every course. */
   readonly rowActions = (_row: CourseRow): readonly NasRowAction<RowActionId>[] => [
     { id: 'view', label: this.t.instant('dashboard.view_details'), icon: 'eye' },
-    { id: 'edit', label: this.t.instant('dashboard.edit_course'), icon: 'assets/icons/figma/pencil-simple.svg' },
+    ...(this.auth.can('edit-courses')
+      ? [{ id: 'edit' as const, label: this.t.instant('dashboard.edit_course'), icon: 'assets/icons/figma/pencil-simple.svg' }]
+      : []),
   ];
 
   constructor() {
@@ -198,7 +203,7 @@ export class CourseListComponent implements OnInit {
 
     // The dashboard's "Add Course" lands here with ?new=1: open the modal,
     // then drop the flag so Back / refresh don't reopen it.
-    if (this.route.snapshot.queryParamMap.get('new') === '1') {
+    if (this.route.snapshot.queryParamMap.get('new') === '1' && this.auth.can('create-courses')) {
       this.openAddCourse();
       this.router.navigate([], { relativeTo: this.route, queryParams: { new: null }, replaceUrl: true });
     }

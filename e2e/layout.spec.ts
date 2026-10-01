@@ -77,7 +77,7 @@ const ROUTES: Route[] = [
   'audit-log',
   'settings',
   { name: 'job-titles-detail', list: '/api/v1/job-titles', path: (r) => r.id && `job-titles/${r.id}` },
-  { name: 'learners-detail', list: '/api/v1/admin/users', params: { role: 'learner' }, path: (r) => r.id && `learners/${r.id}` },
+  { name: 'learners-detail', list: '/api/v1/admin/learners', params: {}, path: (r) => r.id && `learners/${r.id}` },
   { name: 'courses-detail', list: '/api/v1/courses', path: (r) => r.id && `courses/${r.id}` },
   // D2 Course Details tabs (Figma 2266:128868); overview is the default above.
   ...(['cohort', 'learners', 'content', 'quizzes', 'assignments', 'qualifications', 'evaluations'] as const).map(

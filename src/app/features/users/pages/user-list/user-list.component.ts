@@ -28,6 +28,8 @@ import type {
 } from '../../models/user.types';
 import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface UserFormState {
   id: number | null;
@@ -52,7 +54,7 @@ interface UserFormState {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     DialogModule,
@@ -67,6 +69,7 @@ interface UserFormState {
   styleUrl: './user-list.component.scss',
 })
 export class UserListComponent implements OnInit, OnDestroy {
+  protected readonly auth = inject(AuthService);
   private readonly api      = inject(AdminUsersApiService);
   private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
@@ -109,6 +112,8 @@ export class UserListComponent implements OnInit, OnDestroy {
   /* ── Lookups ─────────────────────────────────────────────────── */
   readonly lookupInstructors = signal<Array<{ id: number; name: string; email: string | null }>>([]);
   readonly roleOptions       = signal<AdminUserRoleOption[]>([]);
+  /** The form offers only roles the signed-in admin may give (D-073). */
+  readonly assignableRoles   = computed(() => this.roleOptions().filter(r => r.assignable !== false));
 
   /* ── Row action menu (kebab) ─────────────────────────────────── */
   readonly menuOpenKey = signal<string | null>(null);
@@ -130,6 +135,23 @@ export class UserListComponent implements OnInit, OnDestroy {
   readonly deactivating     = signal(false);
 
   /* ── Computed ────────────────────────────────────────────────── */
+  /**
+   * The Dashboard password rule, as the server enforces it (D-075): at least
+   * 8 characters with an upper-case letter, a lower-case letter and a number.
+   * Shown as a live checklist so the form never sends a password it will refuse.
+   */
+  readonly passwordChecks = computed(() => {
+    const p = this.form().password;
+    return [
+      { key: 'users.password_rule_length', ok: p.length >= 8 },
+      { key: 'users.password_rule_upper', ok: /\p{Lu}/u.test(p) },
+      { key: 'users.password_rule_lower', ok: /\p{Ll}/u.test(p) },
+      { key: 'users.password_rule_number', ok: /\d/.test(p) },
+    ];
+  });
+
+  readonly passwordStrong = computed(() => this.passwordChecks().every(c => c.ok));
+
   readonly formValid = computed(() => {
     const f = this.form();
     const base = f.name_en.trim().length > 0
@@ -140,13 +162,12 @@ export class UserListComponent implements OnInit, OnDestroy {
 
     if (this.formMode() === 'create') {
       // Password + confirmation required and must match on create.
-      return f.password.length >= 8 && f.password === f.password_confirmation;
+      return this.passwordStrong() && f.password === f.password_confirmation;
     }
     // On edit the password is optional ("leave blank to keep current"),
-    // but if one is typed it must be ≥ 8 chars AND match the confirmation
-    // (the backend enforces the `confirmed` rule).
+    // but one that is typed follows the same rule and must match.
     return f.password.length === 0
-        || (f.password.length >= 8 && f.password === f.password_confirmation);
+        || (this.passwordStrong() && f.password === f.password_confirmation);
   });
 
   readonly visibleStatusKpi = computed(() =>
@@ -344,11 +365,8 @@ export class UserListComponent implements OnInit, OnDestroy {
           ));
         this.refresh();
       },
-      error: (err) => {
-        this.formSaving.set(false);
-        const msg = err?.error?.message ?? this.t.instant('common.operation_failed');
-        this.messages.error(msg);
-      },
+      // The error interceptor shows the server's reason, once (D-072).
+      error: () => this.formSaving.set(false),
     });
   }
 
@@ -359,6 +377,19 @@ export class UserListComponent implements OnInit, OnDestroy {
   }
 
   cancelDeactivate(): void { this.deactivateTarget.set(null); }
+
+  /** The signed-in admin's own account: no deactivating yourself (D-073). */
+  isMe(user: AdminUserListItem): boolean {
+    return user.source === 'admin' && user.id === this.auth.currentAdmin()?.id;
+  }
+
+  /**
+   * Only a super admin may change a super-admin account (D-073); the server
+   * refuses it anyway, so the actions are not offered.
+   */
+  canManage(user: AdminUserListItem): boolean {
+    return !user.is_super_admin || this.auth.isSuperAdmin();
+  }
 
   /** A deactivated user shows "Reactivate" instead of "Deactivate". */
   isDeactivated(user: AdminUserListItem): boolean {

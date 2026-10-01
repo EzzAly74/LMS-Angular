@@ -3,7 +3,7 @@
   (searchChange)="search.set($event)" (filter)="filterOpen.set(true)" />
 <div class="ct-bar">
   <p class="cl-count" aria-live="polite">{{ countLabel() | translate: { count: rowCount() } }}</p>
-  <button type="button" class="ct-add" (click)="openAddCohort()">
+  <button *nasCan="'edit-courses'" type="button" class="ct-add" (click)="openAddCohort()">
     <nas-icon name="plus-circle" [size]="20" />
     <span>{{ 'course_detail.add_cohort' | translate }}</span>
   </button>

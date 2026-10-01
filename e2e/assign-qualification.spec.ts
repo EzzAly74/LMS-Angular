@@ -82,7 +82,7 @@ test('"everyone matching" pages through the whole filtered list and posts every 
     compliance_pct: null, last_certification_at: null, last_active_at: null,
   }));
   const listCalls: string[] = [];
-  await page.route('**/api/v1/admin/users?**', (route) => {
+  await page.route('**/api/v1/admin/learners?**', (route) => {
     const q = new URL(route.request().url()).searchParams;
     if (!q.getAll('learner_types[]').includes('offline')) return route.continue();
     const pageNo = Number(q.get('page') ?? '1');

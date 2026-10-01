@@ -7,7 +7,7 @@
       <p class="cl-subtitle">{{ 'qualifications.subtitle' | translate }}</p>
     </div>
     <div class="cl-head__actions">
-      <button type="button" class="cl-primary" (click)="openCreate()">
+      <button *nasCan="'create-qualifications'" type="button" class="cl-primary" (click)="openCreate()">
         <nas-icon name="plus-circle" [size]="20" />
         <span>{{ 'qualifications.new_qualification' | translate }}</span>
       </button>
@@ -78,7 +78,7 @@
                 <td><span class="ql__chip">{{ q.titlesKey | translate: { count: q.job_titles_count } }}</span></td>
                 <td><span class="ql__chip">{{ q.learnersKey | translate: { count: q.learners_count } }}</span></td>
                 <td class="cl-end">
-                  <button type="button" class="cl-more" aria-haspopup="menu"
+                  <button *nasCan="['edit-qualifications', 'delete-qualifications']" type="button" class="cl-more" aria-haspopup="menu"
                     [attr.aria-label]="'qualifications.actions_for' | translate: { name: q.name }"
                     (click)="rowMenu.open($event, q)">
                     <nas-icon name="dots-three" [size]="16" />

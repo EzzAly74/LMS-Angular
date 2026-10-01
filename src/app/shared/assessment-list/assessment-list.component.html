@@ -53,10 +53,12 @@
       <h1 class="cl-title">{{ ns + '.title' | translate }}</h1>
       <p class="cl-subtitle">{{ src.keys.subtitle | translate }}</p>
     </div>
-    <a [routerLink]="[src.route, 'new']" class="cl-primary cl-primary--sm">
-      <nas-icon name="plus-circle" [size]="20" />
-      {{ ns + '.create' | translate }}
-    </a>
+    @if (canCreate()) {
+      <a [routerLink]="[src.route, 'new']" class="cl-primary cl-primary--sm">
+        <nas-icon name="plus-circle" [size]="20" />
+        {{ ns + '.create' | translate }}
+      </a>
+    }
   </header>
 
   <!-- Created: the five newest -->
@@ -66,7 +68,9 @@
       <p class="ql-count" id="ql-created">
         {{ cc.itemsKey | translate: { count: cc.items } }} · {{ cc.coursesKey | translate: { count: cc.courses } }}
       </p>
-      <button type="button" class="ql-outline" (click)="openViewAll()">{{ ns + '.view_all' | translate }}</button>
+      @if (canEdit()) {
+        <button type="button" class="ql-outline" (click)="openViewAll()">{{ ns + '.view_all' | translate }}</button>
+      }
     </div>
 
     <nas-table-card [label]="src.keys.colItems | translate" [busy]="items.state() === 'loading'">
@@ -94,7 +98,7 @@
             }
             @default {
               @for (item of items.items(); track item.id) {
-                <tr class="cl-row" (click)="editItem(item)">
+                <tr class="cl-row" [class.cl-row--static]="!canEdit()" (click)="editItem(item)">
                   <td class="cl-strong">{{ item.title }}</td>
                   <td>{{ item.course_title ?? '—' }}</td>
                   <td>
@@ -107,14 +111,18 @@
                   <td class="cl-small">{{ item.due_date ? (item.due_date | nasDate: locale()) : '—' }}</td>
                   <td class="ql-actions">
                     <span class="ql-actions__inner">
-                      <button type="button" class="ql-icon" (click)="editItem(item, $event)"
-                        [attr.aria-label]="('common.edit' | translate) + ' ' + item.title">
-                        <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
-                      </button>
-                      <button type="button" class="ql-icon ql-icon--danger" (click)="confirmDelete(item, $event)"
-                        [attr.aria-label]="('common.delete' | translate) + ' ' + item.title">
-                        <nas-icon name="trash" [size]="20" />
-                      </button>
+                      @if (canEdit()) {
+                        <button type="button" class="ql-icon" (click)="editItem(item, $event)"
+                          [attr.aria-label]="('common.edit' | translate) + ' ' + item.title">
+                          <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
+                        </button>
+                      }
+                      @if (canDelete()) {
+                        <button type="button" class="ql-icon ql-icon--danger" (click)="confirmDelete(item, $event)"
+                          [attr.aria-label]="('common.delete' | translate) + ' ' + item.title">
+                          <nas-icon name="trash" [size]="20" />
+                        </button>
+                      }
                     </span>
                   </td>
                 </tr>

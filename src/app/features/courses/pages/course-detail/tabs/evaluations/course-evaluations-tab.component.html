@@ -77,7 +77,7 @@
         <div class="et-message">
           <p class="et-message__title">{{ 'course_detail.no_evaluation_template' | translate }}</p>
           <p>{{ 'course_detail.no_evaluation_template_hint' | translate }}</p>
-          <a class="et-btn" routerLink="/admin/evaluations/new">{{ 'course_detail.create_template' | translate }}</a>
+          <a *nasCan="'create-evaluations'" class="et-btn" routerLink="/admin/evaluations/new">{{ 'course_detail.create_template' | translate }}</a>
         </div>
       }
     }

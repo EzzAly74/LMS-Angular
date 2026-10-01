@@ -3,7 +3,7 @@
   <!-- Header: count line + Module CTA -->
   <header class="modules-tab__head">
     <span class="modules-tab__count">{{ modulesHeader() }}</span>
-    <button type="button" class="nas-modules-cta" (click)="openAddModule()">
+    <button *nasCan="'edit-courses'" type="button" class="nas-modules-cta" (click)="openAddModule()">
       <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_module' | translate }}
     </button>
   </header>
@@ -60,7 +60,7 @@
             </div>
             <span class="module-row__sub">{{ moduleSubline(m) }}</span>
           </div>
-          <div class="module-row__actions">
+          <div *nasCan="'edit-courses'" class="module-row__actions">
             <button type="button" class="row-action-btn" [title]="'common.edit' | translate"
                     (click)="openEditModule(m)">
               <i class="pi pi-pencil"></i>

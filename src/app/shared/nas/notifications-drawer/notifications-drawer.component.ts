@@ -24,6 +24,7 @@ import {
   type FeedNotification,
 } from '../../../core/services/notification-feed.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { NasCanDirective } from '../nas-can/nas-can.directive';
 
 interface RecipientUser {
   id: number;
@@ -56,7 +57,7 @@ type RecipientRole = 'learner' | 'instructor';
 @Component({
   selector: 'nas-notifications-drawer',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     DatePipe,

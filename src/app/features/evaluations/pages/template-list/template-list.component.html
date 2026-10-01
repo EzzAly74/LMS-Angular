@@ -10,7 +10,7 @@
       <p class="cl-subtitle">{{ 'evaluations.templates.subtitle' | translate }}</p>
     </div>
     <div class="cl-head__actions">
-      <a class="ev__btn ev__btn--primary tl__create" routerLink="new">
+      <a *nasCan="'create-evaluations'" class="ev__btn ev__btn--primary tl__create" routerLink="new">
         <nas-icon name="plus-circle" [size]="24" />
         {{ 'evaluations.templates.create' | translate }}
       </a>
@@ -103,7 +103,7 @@
               <div class="tl__tcard-foot">
                 <span class="tl__created">{{ 'evaluations.created_on' | translate: { date: (t.created_at | nasDate: locale()) } }}</span>
                 @if (!t.locked) {
-                  <a class="ev__btn ev__btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
+                  <a *nasCan="'edit-evaluations'" class="ev__btn ev__btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
                     <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
                     {{ 'common.edit' | translate }}
                     <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>

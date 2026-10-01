@@ -64,7 +64,7 @@
             </p>
           </div>
           <!-- Figma note on this button: "No delete option". -->
-          <button type="button" class="cd-head__edit" (click)="showEdit.set(true)">
+          <button *nasCan="'edit-courses'" type="button" class="cd-head__edit" (click)="showEdit.set(true)">
             <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
             <span>{{ 'course_detail.edit' | translate }}</span>
           </button>

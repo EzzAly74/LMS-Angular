@@ -51,7 +51,7 @@
     <div class="ul-form__field">
       <label>{{ 'users.role' | translate }} <span class="ul-form__req">*</span></label>
       <p-dropdown
-        [options]="roleOptions()"
+        [options]="assignableRoles()"
         optionLabel="label"
         optionValue="key"
         [ngModel]="form().role"
@@ -76,6 +76,7 @@
           [placeholder]="'users.password_placeholder' | translate"
           [ngModel]="form().password"
           (ngModelChange)="updateForm('password', $event)"
+          aria-describedby="ul-password-rules"
           name="password" />
         <button type="button" class="ul-password__toggle" (click)="togglePassword()"
                 [attr.aria-label]="'users.toggle_password' | translate">
@@ -84,6 +85,17 @@
       </div>
       @if (formMode() === 'edit') {
         <p class="ul-form__hint">{{ 'users.password_edit_hint' | translate }}</p>
+      }
+      @if (formMode() === 'create' || form().password) {
+        <ul class="ul-rules" id="ul-password-rules" [attr.aria-label]="'users.password_rules' | translate">
+          @for (rule of passwordChecks(); track rule.key) {
+            <li class="ul-rules__item" [class.ul-rules__item--ok]="rule.ok">
+              <i class="pi" [class.pi-check-circle]="rule.ok" [class.pi-circle]="!rule.ok" aria-hidden="true"></i>
+              <span>{{ rule.key | translate }}</span>
+              <span class="ul-sr-only">{{ (rule.ok ? 'users.password_rule_met' : 'users.password_rule_unmet') | translate }}</span>
+            </li>
+          }
+        </ul>
       }
     </div>
 
@@ -268,7 +280,7 @@
 
     <footer class="ul-drawer__footer">
       <button type="button" class="ul-btn ul-btn--ghost" (click)="closeProfile()">{{ 'common.cancel' | translate }}</button>
-      <button type="button" class="ul-btn ul-btn--primary" (click)="editFromProfile()">
+      <button *nasCan="'edit-users'" type="button" class="ul-btn ul-btn--primary" (click)="editFromProfile()">
         <i class="pi pi-pencil"></i> {{ 'users.edit_profile' | translate }}
       </button>
     </footer>
@@ -283,7 +295,7 @@
   <nas-page-header
     [title]="'users.title' | translate"
     [subtitle]="'users.subtitle' | translate">
-    <button type="button" class="ul-btn ul-btn--primary ul-add-btn" (click)="openCreateForm()">
+    <button *nasCan="'create-users'" type="button" class="ul-btn ul-btn--primary ul-add-btn" (click)="openCreateForm()">
       <i class="pi pi-plus-circle"></i>
       {{ 'users.add_user' | translate }}
     </button>
@@ -419,11 +431,13 @@
                   @if (menuOpenKey() === user.composite_id) {
                     <div class="ul-row-menu" (click)="$event.stopPropagation()">
                       <button type="button" (click)="openProfile(user)">{{ 'users.view_profile' | translate }}</button>
-                      <button type="button" (click)="openEditForm(user)">{{ 'common.edit' | translate }}</button>
-                      @if (isDeactivated(user)) {
-                        <button type="button" (click)="reactivate(user)">{{ 'common.reactivate' | translate }}</button>
-                      } @else {
-                        <button type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">{{ 'common.deactivate' | translate }}</button>
+                      @if (canManage(user)) {
+                        <button *nasCan="'edit-users'" type="button" (click)="openEditForm(user)">{{ 'common.edit' | translate }}</button>
+                        @if (isDeactivated(user)) {
+                          <button *nasCan="'edit-users'" type="button" (click)="reactivate(user)">{{ 'common.reactivate' | translate }}</button>
+                        } @else if (!isMe(user)) {
+                          <button *nasCan="'delete-users'" type="button" class="ul-row-menu__danger" (click)="askDeactivate(user)">{{ 'common.deactivate' | translate }}</button>
+                        }
                       }
                     </div>
                   }

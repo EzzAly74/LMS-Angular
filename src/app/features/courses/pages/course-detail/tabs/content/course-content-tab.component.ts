@@ -33,6 +33,7 @@ import { pickLocalized } from '../../../../../../core/utils/localized';
 import { pluralKey } from '../../../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../../../shared/nas/nas-can/nas-can.directive';
 
 /** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
 type ModuleFilter = 'all' | ModuleContentType;
@@ -47,7 +48,7 @@ type ModuleFilter = 'all' | ModuleContentType;
 @Component({
   selector: 'app-course-content-tab',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

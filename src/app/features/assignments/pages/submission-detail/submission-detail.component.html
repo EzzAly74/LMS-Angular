@@ -218,7 +218,7 @@
               @if (a.feedback) {
                 <p class="asd-feedback"><strong>{{ 'assignments.feedback_label' | translate }}</strong> <span dir="auto">{{ a.feedback }}</span></p>
               }
-              <button type="button" class="asd-btn asd-btn--outline asd-edit" (click)="startEdit(a)">
+              <button *nasCan="'edit-assignments'" type="button" class="asd-btn asd-btn--outline asd-edit" (click)="startEdit(a)">
                 <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
                 {{ 'common.edit' | translate }}
               </button>

@@ -20,7 +20,7 @@
   <div class="nd-body">
 
     <!-- ── New Notification (collapsible) ───────────────────────────── -->
-    <section class="nd-card">
+    <section *nasCan="'create-notifications'" class="nd-card">
       <button type="button" class="nd-card__head" (click)="toggleComposer()" [attr.aria-expanded]="composerOpen()">
         <span class="nd-card__title">{{ 'notifications.new_notification' | translate }}</span>
         <span class="nd-card__toggle">

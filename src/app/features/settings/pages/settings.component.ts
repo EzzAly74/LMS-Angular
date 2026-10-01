@@ -18,12 +18,13 @@ import { EnumsService } from '../../../core/services/enums.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { API } from '../../../core/constants/api.constants';
 // Direct file imports — re-exporting through `index.ts` barrels confuses
-// Angular's compile-time `imports:[]` resolver and disables template type
+// Angular's compile-time `imports: [NasCanDirective, ]` resolver and disables template type
 // inference (we end up with `$event: Event` on photo-upload handlers).
 import { NasIconComponent }        from '../../../shared/nas/nas-icon/nas-icon.component';
 import { NasPhotoUploadComponent } from '../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
 import { NasRichTextComponent }    from '../../../shared/nas/nas-rich-text/nas-rich-text.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { NasCanDirective } from '../../../shared/nas/nas-can/nas-can.directive';
 
 interface Setting {
   id:    number;

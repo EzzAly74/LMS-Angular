@@ -38,7 +38,7 @@
           </div>
           <div class="tr__head-actions">
             @if (!d.template.locked) {
-              <a class="ev__btn ev__btn--primary" [routerLink]="['/admin/evaluations', d.template.id, 'edit']">
+              <a *nasCan="'edit-evaluations'" class="ev__btn ev__btn--primary" [routerLink]="['/admin/evaluations', d.template.id, 'edit']">
                 <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
                 {{ 'common.edit' | translate }}
               </a>

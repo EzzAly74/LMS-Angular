@@ -24,6 +24,7 @@ import type {
   QuizSubmissionDetail,
 } from '../../models/quiz.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 interface QuestionRow {
   answer: QuizSubmissionAnswer;
@@ -33,7 +34,7 @@ interface QuestionRow {
 @Component({
   selector: 'app-quiz-submission-detail',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     RouterLink,

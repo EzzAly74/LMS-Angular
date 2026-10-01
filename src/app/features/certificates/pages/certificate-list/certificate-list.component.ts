@@ -31,6 +31,7 @@ import {
   IssuedCertificate,
 } from '../../models/certificate.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_BYTES     = 8 * 1024 * 1024;
@@ -52,7 +53,7 @@ interface IssuedRow extends IssuedCertificate {
 @Component({
   selector: 'app-certificate-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     SkeletonModule,

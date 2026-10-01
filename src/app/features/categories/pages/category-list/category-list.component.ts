@@ -21,6 +21,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 interface Category {
   id: number;
@@ -50,7 +51,7 @@ interface CategoryFormState {
 @Component({
   selector: 'app-category-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     DialogModule,

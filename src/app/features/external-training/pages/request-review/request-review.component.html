@@ -115,7 +115,7 @@
           <hr class="etr__rule" />
 
           @if (pending()) {
-            <div class="etr__actions">
+            <div *nasCan="'edit-external-training'" class="etr__actions">
               <button type="button" class="etr__btn etr__btn--ghost" [disabled]="busy()" (click)="rejectOpen.set(true)">
                 {{ 'external_training.review.reject' | translate }}
               </button>
@@ -123,7 +123,7 @@
                 {{ 'external_training.review.approve' | translate }}
               </button>
             </div>
-          } @else if (auth.isSuperAdmin()) {
+          } @else if (auth.isSuperAdmin() && auth.can('edit-external-training')) {
             <div class="etr__actions">
               <button type="button" class="etr__btn etr__btn--ghost" [disabled]="busy()" (click)="confirm.set('reopen')">
                 {{ 'external_training.review.reopen' | translate }}
