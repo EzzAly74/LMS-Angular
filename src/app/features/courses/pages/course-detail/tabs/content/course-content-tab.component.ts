@@ -160,6 +160,18 @@ export class CourseContentTabComponent implements OnInit {
     require_completion: [false],
   });
 
+  /** Longest article body in characters (backend CourseLectureRequest::ARTICLE_MAX). */
+  readonly articleMax = 500_000;
+
+  /** The article field's message after a save attempt, or null. */
+  articleError(): string | null {
+    const control = this.moduleForm.controls.content;
+    if (!control.errors || !control.touched) return null;
+    if (control.errors['maxlength']) return 'course_detail.article_too_long';
+    if (control.errors['required']) return 'course_detail.article_required';
+    return null;
+  }
+
   /**
    * Helper for templates that need to compare a form's enum-id value
    * against a known string code (e.g. "is this module learner_scope ==
@@ -479,6 +491,13 @@ export class CourseContentTabComponent implements OnInit {
     const contentMissing = isArticle
       ? this.isRichTextEmpty(contentValue)
       : !videoValue;
+    // NEW2B-5763: the server's article limit, checked here so a long paste
+    // gets a field message instead of a failed save.
+    if (isArticle && contentValue.length > this.articleMax) {
+      this.moduleForm.controls.content.setErrors({ maxlength: true });
+      this.moduleForm.markAllAsTouched();
+      return;
+    }
     if (contentMissing) {
       // Flag the field the admin actually edits for this content type.
       this.moduleForm.controls[isArticle ? 'content' : 'video'].setErrors({

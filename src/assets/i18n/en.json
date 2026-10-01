@@ -1670,6 +1670,8 @@
     "module_url": "URL",
     "article": "Article",
     "article_placeholder": "Write the article content learners will read…",
+    "article_required": "Write the article learners will read.",
+    "article_too_long": "This article is too long to save. Shorten it or split it into two modules.",
     "content_link": "Content Link",
     "content_link_hint": "Use a video URL, article URL, policy document, or trusted external learning resource.",
     "instructions_en": "Instructions (English)",

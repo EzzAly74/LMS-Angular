@@ -244,6 +244,9 @@
         <nas-rich-text formControlName="content"
                          areaMinHeight="138px"
                          [placeholder]="'course_detail.article_placeholder' | translate" />
+        @if (articleError(); as error) {
+          <p class="module-form__hint module-form__hint--warn" role="alert">{{ error | translate }}</p>
+        }
       </div>
     } @else if (moduleIsLink()) {
       <div class="nas-form__field">
