@@ -4,9 +4,9 @@
   <!-- ── Breadcrumb + title ─────────────────────────────────── -->
   <header class="rf-header">
     <nav class="rf-breadcrumb" aria-label="breadcrumb">
-      <i class="pi pi-shield rf-breadcrumb__icon"></i>
+      <i class="pi pi-shield rf-breadcrumb__icon" aria-hidden="true"></i>
       <a [routerLink]="['/admin/roles']">{{ 'roles.title' | translate }}</a>
-      <i class="pi pi-chevron-right rf-breadcrumb__sep"></i>
+      <i class="pi pi-chevron-right rf-breadcrumb__sep" aria-hidden="true"></i>
       <span>{{ (mode() === 'create' ? 'roles.create_role' : 'roles.edit_role') | translate }}</span>
     </nav>
 
@@ -31,9 +31,9 @@
                 [hidden]="readOnly()"
                 (click)="submit()">
           @if (saving()) {
-            <i class="pi pi-spin pi-spinner"></i>
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
           } @else {
-            <i class="pi pi-check-circle"></i>
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
           }
           {{ (mode() === 'create' ? 'roles.create_role' : 'common.save_changes') | translate }}
         </button>
@@ -121,7 +121,7 @@
                           [attr.aria-label]="c"
                           (click)="pickColor(c)">
                     @if (form().color === c) {
-                      <i class="pi pi-check"></i>
+                      <i class="pi pi-check" aria-hidden="true"></i>
                     }
                   </button>
                 }

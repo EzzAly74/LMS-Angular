@@ -71,13 +71,13 @@
                 class="nas-table-pagination__btn"
                 [disabled]="page === 1"
                 (click)="goTo(page - 1)">
-          <i class="pi pi-chevron-left"></i>
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
         </button>
         <button type="button"
                 class="nas-table-pagination__btn"
                 [disabled]="page >= lastPage"
                 (click)="goTo(page + 1)">
-          <i class="pi pi-chevron-right"></i>
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
         </button>
       </div>
     </div>

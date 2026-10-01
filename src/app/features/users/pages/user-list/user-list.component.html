@@ -80,7 +80,7 @@
           name="password" />
         <button type="button" class="ul-password__toggle" (click)="togglePassword()"
                 [attr.aria-label]="'users.toggle_password' | translate">
-          <i class="pi" [class.pi-eye]="!showPassword()" [class.pi-eye-slash]="showPassword()"></i>
+          <i class="pi" aria-hidden="true" [class.pi-eye]="!showPassword()" [class.pi-eye-slash]="showPassword()"></i>
         </button>
       </div>
       @if (formMode() === 'edit') {
@@ -90,7 +90,7 @@
         <ul class="ul-rules" id="ul-password-rules" [attr.aria-label]="'users.password_rules' | translate">
           @for (rule of passwordChecks(); track rule.key) {
             <li class="ul-rules__item" [class.ul-rules__item--ok]="rule.ok">
-              <i class="pi" [class.pi-check-circle]="rule.ok" [class.pi-circle]="!rule.ok" aria-hidden="true"></i>
+              <i class="pi" aria-hidden="true" [class.pi-check-circle]="rule.ok" [class.pi-circle]="!rule.ok" aria-hidden="true"></i>
               <span>{{ rule.key | translate }}</span>
               <span class="ul-sr-only">{{ (rule.ok ? 'users.password_rule_met' : 'users.password_rule_unmet') | translate }}</span>
             </li>
@@ -115,7 +115,7 @@
           name="password_confirmation" />
         <button type="button" class="ul-password__toggle" (click)="togglePasswordConfirm()"
                 [attr.aria-label]="'users.toggle_password' | translate">
-          <i class="pi" [class.pi-eye]="!showPasswordConfirm()" [class.pi-eye-slash]="showPasswordConfirm()"></i>
+          <i class="pi" aria-hidden="true" [class.pi-eye]="!showPasswordConfirm()" [class.pi-eye-slash]="showPasswordConfirm()"></i>
         </button>
       </div>
       @if (form().password && form().password_confirmation && form().password !== form().password_confirmation) {
@@ -175,9 +175,9 @@
       [disabled]="!formValid() || formSaving()"
       (click)="submitForm()">
       @if (formSaving()) {
-        <i class="pi pi-spin pi-spinner"></i>
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
       } @else {
-        <i class="pi pi-plus"></i>
+        <i class="pi pi-plus" aria-hidden="true"></i>
       }
       {{ (formMode() === 'create' ? 'users.add_user' : 'common.save_changes') | translate }}
     </button>
@@ -228,7 +228,7 @@
     <header class="ul-drawer__header">
       <h3>{{ 'users.profile_title' | translate }}</h3>
       <button type="button" class="ul-icon-btn" (click)="closeProfile()">
-        <i class="pi pi-times"></i>
+        <i class="pi pi-times" aria-hidden="true"></i>
       </button>
     </header>
 
@@ -281,7 +281,7 @@
     <footer class="ul-drawer__footer">
       <button type="button" class="ul-btn ul-btn--ghost" (click)="closeProfile()">{{ 'common.cancel' | translate }}</button>
       <button *nasCan="'edit-users'" type="button" class="ul-btn ul-btn--primary" (click)="editFromProfile()">
-        <i class="pi pi-pencil"></i> {{ 'users.edit_profile' | translate }}
+        <i class="pi pi-pencil" aria-hidden="true"></i> {{ 'users.edit_profile' | translate }}
       </button>
     </footer>
   </aside>
@@ -296,7 +296,7 @@
     [title]="'users.title' | translate"
     [subtitle]="'users.subtitle' | translate">
     <button *nasCan="'create-users'" type="button" class="ul-btn ul-btn--primary ul-add-btn" (click)="openCreateForm()">
-      <i class="pi pi-plus-circle"></i>
+      <i class="pi pi-plus-circle" aria-hidden="true"></i>
       {{ 'users.add_user' | translate }}
     </button>
   </nas-page-header>
@@ -342,7 +342,7 @@
 
   <!-- ── Search + Pills ───────────────────────────────────────── -->
   <div class="ul-search">
-    <i class="pi pi-search ul-search__icon"></i>
+    <i class="pi pi-search ul-search__icon" aria-hidden="true"></i>
     <input
       type="text"
       class="ul-search__input"
@@ -395,7 +395,7 @@
           } @else if (!items().length) {
             <tr>
               <td colspan="5" class="ul-table__empty">
-                <i class="pi pi-users"></i>
+                <i class="pi pi-users" aria-hidden="true"></i>
                 <span>{{ 'users.no_results' | translate }}</span>
               </td>
             </tr>
@@ -426,7 +426,7 @@
                 <td class="ul-cell-muted">{{ user.last_active_at ? (user.last_active_at | date:'dd MMM') : '—' }}</td>
                 <td class="ul-table__action" (click)="$event.stopPropagation()">
                   <button type="button" class="ul-icon-btn" (click)="toggleMenu(user.composite_id, $event)">
-                    <i class="pi pi-ellipsis-h"></i>
+                    <i class="pi pi-ellipsis-h" aria-hidden="true"></i>
                   </button>
                   @if (menuOpenKey() === user.composite_id) {
                     <div class="ul-row-menu" (click)="$event.stopPropagation()">
@@ -456,10 +456,10 @@
         </span>
         <div class="ul-pagination__nav">
           <button type="button" class="ul-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left"></i>
+            <i class="pi pi-chevron-left" aria-hidden="true"></i>
           </button>
           <button type="button" class="ul-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right"></i>
+            <i class="pi pi-chevron-right" aria-hidden="true"></i>
           </button>
         </div>
       </div>

@@ -97,7 +97,7 @@
         <button type="button" class="ctrl-pwd-toggle"
                 (click)="togglePwd()"
                 [attr.aria-label]="'common.toggle_password_visibility' | translate">
-          <i class="pi" [ngClass]="showPwd() ? 'pi-eye-slash' : 'pi-eye'"></i>
+          <i class="pi" aria-hidden="true" [ngClass]="showPwd() ? 'pi-eye-slash' : 'pi-eye'"></i>
         </button>
       </div>
       @if (pwdCtrl.invalid && pwdCtrl.touched) {
@@ -124,7 +124,7 @@
         <button type="button" class="ctrl-pwd-toggle"
                 (click)="toggleConfirm()"
                 [attr.aria-label]="'common.toggle_password_visibility' | translate">
-          <i class="pi" [ngClass]="showConfirm() ? 'pi-eye-slash' : 'pi-eye'"></i>
+          <i class="pi" aria-hidden="true" [ngClass]="showConfirm() ? 'pi-eye-slash' : 'pi-eye'"></i>
         </button>
       </div>
       @if ((confirmCtrl.touched || pwdCtrl.touched) && dialogForm.hasError('passwordMismatch')) {
@@ -142,9 +142,9 @@
     <button type="button" class="ctrl-btn ctrl-btn--primary"
             [disabled]="saving()" (click)="submit()">
       @if (saving()) {
-        <i class="pi pi-spin pi-spinner"></i>
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
       } @else {
-        <i class="pi pi-check-circle"></i>
+        <i class="pi pi-check-circle" aria-hidden="true"></i>
       }
       {{ (dialogMode() === 'create' ? 'controllers.create' : 'common.save_changes') | translate }}
     </button>
@@ -160,13 +160,13 @@
     [title]="'controllers.title' | translate"
     [subtitle]="'controllers.subtitle' | translate">
     <button *nasCan="'create-controllers'" type="button" class="ctrl-add-btn" (click)="openCreate()">
-      <i class="pi pi-plus"></i> {{ 'controllers.add' | translate }}
+      <i class="pi pi-plus" aria-hidden="true"></i> {{ 'controllers.add' | translate }}
     </button>
   </nas-page-header>
 
   <!-- ── Search ────────────────────────────────────────────── -->
   <div class="ctrl-search">
-    <i class="pi pi-search ctrl-search__icon"></i>
+    <i class="pi pi-search ctrl-search__icon" aria-hidden="true"></i>
     <input
       type="text"
       class="ctrl-search__input"
@@ -208,7 +208,7 @@
           } @else if (!hasRows()) {
             <tr>
               <td colspan="4" class="ctrl-table__empty">
-                <i class="pi pi-users ctrl-table__empty-icon"></i>
+                <i class="pi pi-users ctrl-table__empty-icon" aria-hidden="true"></i>
                 <strong>{{ 'controllers.no_results' | translate }}</strong>
                 <span>{{ 'controllers.no_results_hint' | translate }}</span>
               </td>
@@ -251,11 +251,11 @@
                 <td class="ctrl-table__actions">
                   <button *nasCan="'edit-controllers'" type="button" class="ctrl-icon-btn"
                           [title]="'common.edit' | translate" (click)="openEdit(item)">
-                    <i class="pi pi-pencil"></i>
+                    <i class="pi pi-pencil" aria-hidden="true"></i>
                   </button>
                   <button *nasCan="'delete-controllers'" type="button" class="ctrl-icon-btn ctrl-icon-btn--danger"
                           [title]="'common.delete' | translate" (click)="askDelete(item)">
-                    <i class="pi pi-trash"></i>
+                    <i class="pi pi-trash" aria-hidden="true"></i>
                   </button>
                 </td>
               </tr>
@@ -273,11 +273,11 @@
         <div class="ctrl-pagination__nav">
           <button type="button" class="ctrl-icon-btn"
                   [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left"></i>
+            <i class="pi pi-chevron-left" aria-hidden="true"></i>
           </button>
           <button type="button" class="ctrl-icon-btn"
                   [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right"></i>
+            <i class="pi pi-chevron-right" aria-hidden="true"></i>
           </button>
         </div>
       </div>

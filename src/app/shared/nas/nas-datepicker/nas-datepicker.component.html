@@ -23,7 +23,7 @@
     @if (variant === 'inset') {
       <nas-icon name="calendar-blank" [size]="24" />
     } @else {
-      <i class="pi pi-calendar"></i>
+      <i class="pi pi-calendar" aria-hidden="true"></i>
     }
   </button>
 </div>
@@ -42,7 +42,7 @@
         (click)="prevMonth()"
         aria-label="Previous month"
       >
-        <i class="pi pi-chevron-left"></i>
+        <i class="pi pi-chevron-left" aria-hidden="true"></i>
       </button>
       <span class="nasdp__title">{{ monthLabel() }}</span>
       <button
@@ -51,7 +51,7 @@
         (click)="nextMonth()"
         aria-label="Next month"
       >
-        <i class="pi pi-chevron-right"></i>
+        <i class="pi pi-chevron-right" aria-hidden="true"></i>
       </button>
     </div>
 

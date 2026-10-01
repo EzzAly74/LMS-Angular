@@ -243,6 +243,20 @@ body {
   .p-inputtext {
     text-align: right;
   }
+  /* PrimeNG 17 pins the dropdown / multiselect search icon to the right and
+     pads only that side, so right-aligned Arabic text ran under the icon
+     (NEW2B-6106). Move the icon and its padding to the left. The Filter
+     modal's lists (.fd-ms-panel) place theirs with logical properties. */
+  .p-dropdown-panel .p-dropdown-filter,
+  .p-multiselect-panel:not(.fd-ms-panel) .p-multiselect-filter {
+    padding-right: 0.75rem;
+    padding-left: 1.75rem;
+  }
+  .p-dropdown-panel .p-dropdown-filter-icon,
+  .p-multiselect-panel:not(.fd-ms-panel) .p-multiselect-filter-icon {
+    right: auto;
+    left: 0.75rem;
+  }
   /* Mirror ONLY directional icons (chevrons / angles / arrows / carets).
      Other glyphs keep their natural orientation, and component-level
      `transform: translateY(-50%)` for vertically-centred icons survives. */

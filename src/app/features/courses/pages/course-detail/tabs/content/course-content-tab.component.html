@@ -4,7 +4,7 @@
   <header class="modules-tab__head">
     <span class="modules-tab__count">{{ modulesHeader() }}</span>
     <button *nasCan="'edit-courses'" type="button" class="nas-modules-cta" (click)="openAddModule()">
-      <i class="pi pi-plus-circle"></i> {{ 'course_detail.add_module' | translate }}
+      <i class="pi pi-plus-circle" aria-hidden="true"></i> {{ 'course_detail.add_module' | translate }}
     </button>
   </header>
 
@@ -42,7 +42,7 @@
     </div>
   } @else if (!filteredModules().length) {
     <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
-      <i class="pi pi-folder-open"></i>
+      <i class="pi pi-folder-open" aria-hidden="true"></i>
       <h3>{{ 'course_detail.no_modules' | translate }}</h3>
       <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
     </article>
@@ -63,11 +63,11 @@
           <div *nasCan="'edit-courses'" class="module-row__actions">
             <button type="button" class="row-action-btn" [title]="'common.edit' | translate"
                     (click)="openEditModule(m)">
-              <i class="pi pi-pencil"></i>
+              <i class="pi pi-pencil" aria-hidden="true"></i>
             </button>
             <button type="button" class="row-action-btn" [title]="'common.more' | translate"
                     (click)="openModuleMenu($event, m, moduleMenu)">
-              <i class="pi pi-ellipsis-h"></i>
+              <i class="pi pi-ellipsis-h" aria-hidden="true"></i>
             </button>
           </div>
         </article>
@@ -83,10 +83,10 @@
   @if (activeModule(); as m) {
     <div class="row-menu">
       <button class="row-menu__item" (click)="moduleMenu.hide(); openEditModule(m)">
-        <i class="pi pi-pencil"></i> {{ 'course_detail.edit_module_menu' | translate }}
+        <i class="pi pi-pencil" aria-hidden="true"></i> {{ 'course_detail.edit_module_menu' | translate }}
       </button>
       <button class="row-menu__item" (click)="confirmDeleteModule(m, moduleMenu)">
-        <i class="pi pi-trash"></i> {{ 'course_detail.delete_module_menu' | translate }}
+        <i class="pi pi-trash" aria-hidden="true"></i> {{ 'course_detail.delete_module_menu' | translate }}
       </button>
     </div>
   }
@@ -167,12 +167,12 @@
           <button type="button" class="duration-input__step"
                   [attr.aria-label]="'course_detail.increase_duration' | translate"
                   (click)="adjustDuration(1)">
-            <i class="pi pi-chevron-up"></i>
+            <i class="pi pi-chevron-up" aria-hidden="true"></i>
           </button>
           <button type="button" class="duration-input__step"
                   [attr.aria-label]="'course_detail.decrease_duration' | translate"
                   (click)="adjustDuration(-1)">
-            <i class="pi pi-chevron-down"></i>
+            <i class="pi pi-chevron-down" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -187,7 +187,7 @@
         @if (moduleUploading()) {
           <div class="module-upload-progress" role="status" aria-live="polite">
             <div class="module-upload-progress__icon" [class.is-video]="moduleIsVideo()">
-              <i class="pi" [ngClass]="moduleIsVideo() ? 'pi-video' : 'pi-file'"></i>
+              <i class="pi" aria-hidden="true" [ngClass]="moduleIsVideo() ? 'pi-video' : 'pi-file'"></i>
               <span class="module-upload-progress__ring"></span>
             </div>
             <div class="module-upload-progress__body">
@@ -220,7 +220,7 @@
                 }
               </div>
               <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
-                <i class="pi pi-trash"></i>
+                <i class="pi pi-trash" aria-hidden="true"></i>
               </button>
             </div>
           } @else {
@@ -229,7 +229,7 @@
                      [accept]="moduleIsVideo()
                        ? 'video/mp4,video/quicktime,video/webm,video/x-m4v,video/ogg'
                        : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,image/*'" />
-              <i class="pi pi-cloud-upload"></i>
+              <i class="pi pi-cloud-upload" aria-hidden="true"></i>
               <span>{{ (moduleIsVideo() ? 'course_detail.upload_video' : 'course_detail.upload_file') | translate }}</span>
             </label>
           }
@@ -278,9 +278,9 @@
         {{ 'common.cancel' | translate }}
       </button>
       <button type="submit" class="nas-btn nas-btn--primary" [disabled]="moduleSaving()">
-        @if (moduleSaving()) { <i class="pi pi-spin pi-spinner"></i> }
-        @else if (moduleEditMode()) { <i class="pi pi-pencil"></i> }
-        @else { <i class="pi pi-plus-circle"></i> }
+        @if (moduleSaving()) { <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> }
+        @else if (moduleEditMode()) { <i class="pi pi-pencil" aria-hidden="true"></i> }
+        @else { <i class="pi pi-plus-circle" aria-hidden="true"></i> }
         <span>{{ (moduleEditMode() ? 'course_detail.save_changes' : 'course_detail.create_module') | translate }}</span>
       </button>
     </footer>

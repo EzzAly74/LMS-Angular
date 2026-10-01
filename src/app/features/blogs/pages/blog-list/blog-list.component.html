@@ -4,7 +4,7 @@
     [title]="'blogs.title' | translate"
     [subtitle]="'blogs.subtitle' | translate">
     <a *nasCan="'create-resources'" routerLink="/admin/blogs/add" class="nas-cta-btn">
-      <i class="pi pi-plus-circle"></i>
+      <i class="pi pi-plus-circle" aria-hidden="true"></i>
       {{ 'blogs.new_blog' | translate }}
     </a>
   </nas-page-header>
@@ -25,10 +25,10 @@
       }
     } @else if (!items().length) {
       <div class="blog-empty">
-        <i class="pi pi-book blog-empty__icon"></i>
+        <i class="pi pi-book blog-empty__icon" aria-hidden="true"></i>
         <p>{{ 'blogs.no_results' | translate }}</p>
         <a *nasCan="'create-resources'" routerLink="/admin/blogs/add" class="nas-cta-btn">
-          <i class="pi pi-plus-circle"></i>
+          <i class="pi pi-plus-circle" aria-hidden="true"></i>
           {{ 'blogs.new_blog' | translate }}
         </a>
       </div>
@@ -38,7 +38,7 @@
 
           <!-- Leading icon -->
           <div class="blog-row__icon-wrap">
-            <i class="pi pi-book"></i>
+            <i class="pi pi-book" aria-hidden="true"></i>
           </div>
 
           <!-- Content -->
@@ -75,12 +75,12 @@
               (click)="toggleMenu(item.id, $event)"
               [attr.aria-label]="'common.options_for' | translate:{ name: item.title }"
             >
-              <i class="pi pi-ellipsis-h"></i>
+              <i class="pi pi-ellipsis-h" aria-hidden="true"></i>
             </button>
             @if (openMenuId() === item.id) {
               <div class="blog-menu-dropdown">
                 <button *nasCan="'edit-resources'" type="button" class="blog-menu-item" (click)="edit(item.id)">
-                  <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
+                  <i class="pi pi-pencil" aria-hidden="true"></i> {{ 'common.edit' | translate }}
                 </button>
                 <button
                   *nasCan="'delete-resources'"
@@ -88,7 +88,7 @@
                   class="blog-menu-item blog-menu-item--danger"
                   (click)="askDelete(item, $event)"
                 >
-                  <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
+                  <i class="pi pi-trash" aria-hidden="true"></i> {{ 'common.delete' | translate }}
                 </button>
               </div>
             }
@@ -108,10 +108,10 @@
       </span>
       <div class="nas-table-pagination__nav">
         <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-          <i class="pi pi-chevron-left"></i>
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
         </button>
         <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-          <i class="pi pi-chevron-right"></i>
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -126,7 +126,7 @@
       <div class="blog-modal__head">
         <h2 class="blog-modal__title">{{ 'blogs.delete_title' | translate }}</h2>
         <button type="button" class="blog-modal__close" (click)="cancelDelete()" aria-label="Close">
-          <i class="pi pi-times"></i>
+          <i class="pi pi-times" aria-hidden="true"></i>
         </button>
       </div>
       <div class="blog-modal__body">
@@ -134,7 +134,7 @@
       </div>
       <div class="blog-modal__foot">
         <button type="button" class="blog-modal__btn blog-modal__btn--danger" [disabled]="deleting()" (click)="confirmDelete()">
-          <i class="pi" [ngClass]="deleting() ? 'pi-spin pi-spinner' : 'pi-trash'"></i>
+          <i class="pi" aria-hidden="true" [ngClass]="deleting() ? 'pi-spin pi-spinner' : 'pi-trash'"></i>
           {{ 'blogs.delete_confirm' | translate }}
         </button>
         <button type="button" class="blog-modal__btn blog-modal__btn--keep" [disabled]="deleting()" (click)="cancelDelete()">

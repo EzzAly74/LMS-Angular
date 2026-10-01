@@ -44,7 +44,7 @@
   <ng-template pTemplate="footer">
     <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">{{ 'common.cancel' | translate }}</button>
     <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="save()">
-      <i class="pi pi-send"></i>
+      <i class="pi pi-send" aria-hidden="true"></i>
       {{ 'notifications.send' | translate }}
     </button>
   </ng-template>
@@ -57,7 +57,7 @@
     [title]="'notifications.title' | translate"
     [subtitle]="'notifications.subtitle' | translate">
     <button type="button" class="nas-cta-btn" (click)="openCreate(); $event.stopPropagation()">
-      <i class="pi pi-plus-circle"></i>
+      <i class="pi pi-plus-circle" aria-hidden="true"></i>
       {{ 'notifications.new_notification' | translate }}
     </button>
   </nas-page-header>
@@ -66,7 +66,7 @@
     <!-- Search toolbar -->
     <div class="notif-toolbar">
       <div class="notif-search">
-        <i class="pi pi-search notif-search__icon"></i>
+        <i class="pi pi-search notif-search__icon" aria-hidden="true"></i>
         <input
           type="text"
           class="notif-search__input"
@@ -111,7 +111,7 @@
                 <td class="nas-table__action">
                   <div class="row-actions">
                     <button type="button" class="row-action-btn row-action-btn--danger" [title]="'common.delete' | translate" (click)="confirmDelete(item)">
-                      <i class="pi pi-trash"></i>
+                      <i class="pi pi-trash" aria-hidden="true"></i>
                     </button>
                   </div>
                 </td>

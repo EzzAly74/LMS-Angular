@@ -10,7 +10,7 @@
       <app-passcode-widget />
     </div>
     <button *nasCan="'create-courses'" type="button" class="dashboard-add-btn" routerLink="/admin/courses" [queryParams]="{ new: 1 }">
-      <i class="pi pi-plus-circle"></i>
+      <i class="pi pi-plus-circle" aria-hidden="true"></i>
       <span>{{ 'dashboard.add_course' | translate }}</span>
     </button>
   </header>
@@ -62,7 +62,7 @@
           <div class="chart-card__title-row">
             <h2 class="chart-card__title">{{ 'dashboard.enrollment_trend' | translate }}</h2>
             <span class="chart-card__delta">
-              <i class="pi pi-arrow-up"></i> {{ 'dashboard.delta_up' | translate:{ pct: '5' } }}
+              <i class="pi pi-arrow-up" aria-hidden="true"></i> {{ 'dashboard.delta_up' | translate:{ pct: '5' } }}
             </span>
           </div>
           <p class="chart-card__sub">{{ trendTotalEnrollments() }} {{ 'dashboard.enrollments' | translate }}</p>
@@ -116,7 +116,7 @@
       <h2 class="top-courses__title">{{ 'dashboard.top_courses' | translate }}</h2>
       <a routerLink="/admin/courses" class="top-courses__view-all">
         {{ 'dashboard.view_all' | translate }}
-        <i class="pi pi-arrow-right"></i>
+        <i class="pi pi-arrow-right" aria-hidden="true"></i>
       </a>
     </header>
 
@@ -148,7 +148,7 @@
             </td>
             <td class="nas-table__action">
               <button class="nas-view-btn" type="button" [title]="'View' | translate">
-                <i class="pi pi-eye"></i>
+                <i class="pi pi-eye" aria-hidden="true"></i>
               </button>
             </td>
           </tr>

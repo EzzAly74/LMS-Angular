@@ -8,9 +8,9 @@
       [disabled]="downloadingAll()"
       (click)="exportAll('csv')">
       @if (downloadingAll()) {
-        <i class="pi pi-spin pi-spinner"></i>
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
       } @else {
-        <i class="pi pi-upload"></i>
+        <i class="pi pi-upload" aria-hidden="true"></i>
       }
       {{ 'common.export_all' | translate }}
     </button>
@@ -52,7 +52,7 @@
               [disabled]="isDownloading(card.key, 'csv')"
               (click)="exportReport(card.key, 'csv')">
               @if (isDownloading(card.key, 'csv')) {
-                <i class="pi pi-spin pi-spinner"></i>
+                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
               }
               {{ 'reports.export_csv' | translate }}
             </button>
@@ -62,7 +62,7 @@
               [disabled]="isDownloading(card.key, 'xlsx')"
               (click)="exportReport(card.key, 'xlsx')">
               @if (isDownloading(card.key, 'xlsx')) {
-                <i class="pi pi-spin pi-spinner"></i>
+                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
               }
               {{ 'reports.export_excel' | translate }}
             </button>
@@ -85,9 +85,9 @@
         [disabled]="isDownloading('compliance-by-job-title', 'csv')"
         (click)="exportReport('compliance-by-job-title', 'csv')">
         @if (isDownloading('compliance-by-job-title', 'csv')) {
-          <i class="pi pi-spin pi-spinner"></i>
+          <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
         } @else {
-          <i class="pi pi-upload"></i>
+          <i class="pi pi-upload" aria-hidden="true"></i>
         }
         {{ 'reports.export_csv' | translate }}
       </button>

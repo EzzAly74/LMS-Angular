@@ -5,7 +5,7 @@
     [title]="'inbox.title' | translate"
     [subtitle]="'inbox.subtitle' | translate">
     <button *nasCan="'create-inbox'" type="button" class="nas-cta-btn" (click)="openCompose()">
-      <i class="pi pi-plus-circle"></i>
+      <i class="pi pi-plus-circle" aria-hidden="true"></i>
       <span>{{ 'inbox.new_message' | translate }}</span>
     </button>
   </nas-page-header>
@@ -35,10 +35,10 @@
         <article class="inbox-item"
                  [class.inbox-item--unread]="c.unread_count > 0"
                  (click)="openConversation(c)">
-          <div class="inbox-item__icon"><i class="pi pi-comments"></i></div>
+          <div class="inbox-item__icon"><i class="pi pi-comments" aria-hidden="true"></i></div>
           <div class="inbox-item__body">
             <div class="inbox-item__sender">
-              <i class="pi pi-user"></i>
+              <i class="pi pi-user" aria-hidden="true"></i>
               <span>{{ c.counterpart.name }}</span>
             </div>
             <div class="inbox-item__row">
@@ -58,7 +58,7 @@
       }
     } @else {
       <div class="inbox-empty">
-        <i class="pi pi-inbox"></i>
+        <i class="pi pi-inbox" aria-hidden="true"></i>
         <p>{{ 'inbox.empty' | translate }}</p>
       </div>
     }
@@ -95,7 +95,7 @@
                [placeholder]="'inbox.compose_message_placeholder' | translate" />
         <button type="submit" class="nas-btn nas-btn--primary"
                 [disabled]="!draftReply().trim() || replying()">
-          <i class="pi pi-send"></i>
+          <i class="pi pi-send" aria-hidden="true"></i>
         </button>
       </form>
     </div>
@@ -137,7 +137,7 @@
       <label>{{ 'inbox.compose_recipients' | translate }} <span class="nas-req">*</span></label>
 
       <div class="nas-input-with-icon">
-        <i class="pi pi-search"></i>
+        <i class="pi pi-search" aria-hidden="true"></i>
         <input type="text" class="nas-input"
                [ngModel]="recipientSearch()" [ngModelOptions]="{ standalone: true }"
                (ngModelChange)="recipientSearch.set($event)"
@@ -202,7 +202,7 @@
       </button>
       <button type="submit" class="nas-btn nas-btn--primary"
               [disabled]="saving() || composeForm.invalid || selectedCount() === 0">
-        <i class="pi pi-send"></i>
+        <i class="pi pi-send" aria-hidden="true"></i>
         {{ 'inbox.send' | translate }}
       </button>
     </footer>

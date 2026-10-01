@@ -4,9 +4,9 @@
   <!-- ── Breadcrumb ─────────────────────────────────────────── -->
   <div class="asd-breadcrumb">
     <a routerLink="/admin/quizzes" class="asd-breadcrumb__link">
-      <i class="pi pi-book"></i> {{ 'quizzes.title' | translate }}
+      <i class="pi pi-book" aria-hidden="true"></i> {{ 'quizzes.title' | translate }}
     </a>
-    <i class="pi pi-angle-right asd-breadcrumb__sep"></i>
+    <i class="pi pi-angle-right asd-breadcrumb__sep" aria-hidden="true"></i>
     <span class="asd-breadcrumb__current">{{ 'quizzes.view_details' | translate }}</span>
   </div>
 
@@ -32,13 +32,13 @@
         }
       </div>
       <p class="asd-subtitle">
-        <i class="pi pi-user"></i>
+        <i class="pi pi-user" aria-hidden="true"></i>
         <span>{{ d.user?.name ?? '—' }}</span>
         <span class="asd-subtitle__sep">·</span>
         <span>{{ d.course_title ?? '—' }}</span>
         @if (d.instructor_name) {
           <span class="asd-subtitle__sep">·</span>
-          <span><i class="pi pi-hashtag"></i> {{ d.instructor_name }}</span>
+          <span><i class="pi pi-hashtag" aria-hidden="true"></i> {{ d.instructor_name }}</span>
         }
         @if (d.submitted_at) {
           <span class="asd-subtitle__sep">·</span>
@@ -99,7 +99,7 @@
                 [class.asd-option--correct]="isCorrectOption(row.answer, opt)"
                 [class.asd-option--wrong]="isLearnerOption(row.answer, opt) && !isCorrectOption(row.answer, opt)">
                 <span class="asd-option__radio" [class.asd-option__radio--filled]="isLearnerOption(row.answer, opt)">
-                  @if (isLearnerOption(row.answer, opt)) { <i class="pi pi-check"></i> }
+                  @if (isLearnerOption(row.answer, opt)) { <i class="pi pi-check" aria-hidden="true"></i> }
                 </span>
                 <span class="asd-option__label">{{ opt }}</span>
                 @if (isCorrectOption(row.answer, opt)) {
@@ -119,7 +119,7 @@
                 [class.asd-option--correct]="isYesNoCorrect(row.answer, $any(val))"
                 [class.asd-option--wrong]="yesNoLearner(row.answer) === val && !isYesNoCorrect(row.answer, $any(val))">
                 <span class="asd-option__radio" [class.asd-option__radio--filled]="yesNoLearner(row.answer) === val">
-                  @if (yesNoLearner(row.answer) === val) { <i class="pi pi-check"></i> }
+                  @if (yesNoLearner(row.answer) === val) { <i class="pi pi-check" aria-hidden="true"></i> }
                 </span>
                 <span class="asd-option__label">{{ (val === 'yes' ? 'quizzes.yes' : 'quizzes.no') | translate }}</span>
                 @if (isYesNoCorrect(row.answer, $any(val))) {
@@ -163,14 +163,14 @@
                     class="asd-btn asd-btn--primary"
                     [disabled]="savingAnswerId() === row.answer.id"
                     (click)="saveEdit(row.answer)">
-                    @if (savingAnswerId() === row.answer.id) { <i class="pi pi-spin pi-spinner"></i> }
+                    @if (savingAnswerId() === row.answer.id) { <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> }
                     {{ 'quizzes.update' | translate }}
                   </button>
                 </div>
               </div>
             } @else {
               <button *nasCan="'edit-quizzes'" type="button" class="asd-open__edit-btn" (click)="startEdit(row.answer)">
-                <i class="pi pi-pen-to-square"></i> {{ 'common.edit' | translate }}
+                <i class="pi pi-pen-to-square" aria-hidden="true"></i> {{ 'common.edit' | translate }}
               </button>
               @if (row.answer.feedback) {
                 <div class="asd-open__feedback-shown">
@@ -217,7 +217,7 @@
 
     @if (!questionRows().length) {
       <div class="nas-card asd-empty">
-        <i class="pi pi-info-circle"></i>
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
         <p>{{ 'quizzes.no_answers' | translate }}</p>
       </div>
     }

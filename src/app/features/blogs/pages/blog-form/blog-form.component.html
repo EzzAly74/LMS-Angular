@@ -3,10 +3,10 @@
   <!-- Breadcrumbs -->
   <div class="bf-breadcrumbs">
     <a routerLink="/admin/blogs" class="bf-breadcrumbs__link">
-      <i class="pi pi-book"></i>
+      <i class="pi pi-book" aria-hidden="true"></i>
       {{ 'blogs.title' | translate }}
     </a>
-    <i class="pi pi-chevron-right bf-breadcrumbs__sep"></i>
+    <i class="pi pi-chevron-right bf-breadcrumbs__sep" aria-hidden="true"></i>
     <span class="bf-breadcrumbs__current">
       {{ (isEdit() ? 'blogs.edit_blog' : 'blogs.new_blog') | translate }}
     </span>
@@ -102,7 +102,7 @@
               }
               <label class="bf-check">
                 <input type="checkbox" formControlName="is_anonymous" />
-                <span class="bf-check__box"><i class="pi pi-check"></i></span>
+                <span class="bf-check__box"><i class="pi pi-check" aria-hidden="true"></i></span>
                 <span class="bf-check__label">{{ 'blogs.anonymous' | translate }}</span>
               </label>
             </div>
@@ -131,7 +131,7 @@
             <h3 class="bf-section__title">{{ 'blogs.section' | translate }} {{ i + 1 }}</h3>
             @if (sections.length > 1) {
             <button type="button" class="bf-section__remove" (click)="removeSection(i)">
-              <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
+              <i class="pi pi-trash" aria-hidden="true"></i> {{ 'common.delete' | translate }}
             </button>
             }
           </div>
@@ -195,7 +195,7 @@
         <!-- Add section -->
         <button type="button" class="bf-add-section" (click)="addSection()">
           <span>{{ 'blogs.add_section' | translate }}</span>
-          <i class="pi pi-plus-circle"></i>
+          <i class="pi pi-plus-circle" aria-hidden="true"></i>
         </button>
 
       </div>
@@ -221,7 +221,7 @@
             <button type="button" class="bf-btn bf-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate
               }}</button>
             <button type="submit" class="bf-btn bf-btn--save" [disabled]="saving()">
-              <i class="pi" [ngClass]="saving() ? 'pi-spin pi-spinner' : (isEdit() ? 'pi-save' : 'pi-send')"></i>
+              <i class="pi" aria-hidden="true" [ngClass]="saving() ? 'pi-spin pi-spinner' : (isEdit() ? 'pi-save' : 'pi-send')"></i>
               {{ (isEdit() ? 'blogs.save_changes' : 'blogs.publish') | translate }}
             </button>
           </div>

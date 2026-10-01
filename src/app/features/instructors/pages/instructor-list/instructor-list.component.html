@@ -10,7 +10,7 @@
   <div class="nas-card inst-table-card">
     <div class="inst-toolbar">
       <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
+        <i class="pi pi-search nas-search__icon" aria-hidden="true"></i>
         <input
           type="text"
           class="nas-search__input"
@@ -58,7 +58,7 @@
                 <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
                 <td class="nas-table__action">
                   <button type="button" class="row-action-btn" [title]="'common.delete' | translate" (click)="confirmDelete(item)">
-                    <i class="pi pi-trash"></i>
+                    <i class="pi pi-trash" aria-hidden="true"></i>
                   </button>
                 </td>
               </tr>
@@ -78,10 +78,10 @@
         </span>
         <div class="nas-table-pagination__nav">
           <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left"></i>
+            <i class="pi pi-chevron-left" aria-hidden="true"></i>
           </button>
           <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right"></i>
+            <i class="pi pi-chevron-right" aria-hidden="true"></i>
           </button>
         </div>
       </div>

@@ -26,9 +26,9 @@
             [disabled]="deleting()"
             (click)="confirmDelete()">
       @if (deleting()) {
-        <i class="pi pi-spin pi-spinner"></i>
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
       } @else {
-        <i class="pi pi-trash"></i>
+        <i class="pi pi-trash" aria-hidden="true"></i>
       }
       {{ 'common.yes_delete' | translate }}
     </button>
@@ -44,7 +44,7 @@
     [title]="'roles.title' | translate"
     [subtitle]="'roles.subtitle' | translate">
     <button *nasCan="'create-roles'" type="button" class="rl-add-btn" (click)="goToCreate()">
-      <i class="pi pi-plus"></i> {{ 'roles.add_role' | translate }}
+      <i class="pi pi-plus" aria-hidden="true"></i> {{ 'roles.add_role' | translate }}
     </button>
   </nas-page-header>
 
@@ -69,7 +69,7 @@
           <!-- Card head -->
           <header class="rl-card__head">
             <div class="rl-card__icon-wrap">
-              <i class="pi pi-user rl-card__icon"></i>
+              <i class="pi pi-user rl-card__icon" aria-hidden="true"></i>
             </div>
 
             <div class="rl-card__title-block">
@@ -86,18 +86,18 @@
               <button type="button" class="rl-icon-btn"
                       (click)="toggleMenu(role.id, $event)"
                       [attr.aria-expanded]="menuOpenId() === role.id">
-                <i class="pi pi-ellipsis-v"></i>
+                <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
               </button>
 
               @if (menuOpenId() === role.id) {
                 <div class="rl-card-menu" (click)="$event.stopPropagation()">
                   <button *nasCan="'edit-roles'" type="button" (click)="goToEdit(role)">
-                    <i class="pi pi-pencil"></i> {{ (role.can_manage ? 'common.edit' : 'common.view') | translate }}
+                    <i class="pi pi-pencil" aria-hidden="true"></i> {{ (role.can_manage ? 'common.edit' : 'common.view') | translate }}
                   </button>
                   @if (role.can_delete && auth.can('delete-roles')) {
                     <button type="button" class="rl-card-menu__danger"
                             (click)="askDelete(role)">
-                      <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
+                      <i class="pi pi-trash" aria-hidden="true"></i> {{ 'common.delete' | translate }}
                     </button>
                   }
                 </div>
@@ -108,11 +108,11 @@
           <!-- Card foot -->
           <footer class="rl-card__foot">
             <span class="rl-card__meta">
-              <i class="pi pi-users"></i>
+              <i class="pi pi-users" aria-hidden="true"></i>
               {{ role.user_count }} {{ (role.user_count === 1 ? 'common.user_one' : 'common.user_many') | translate }}
             </span>
             <span class="rl-card__meta">
-              <i class="pi pi-eye"></i>
+              <i class="pi pi-eye" aria-hidden="true"></i>
               {{ 'common.sections_visible' | translate:{ count: role.view_count, total: role.view_total } }}
             </span>
 
@@ -123,7 +123,7 @@
             <button type="button" class="rl-icon-btn rl-icon-btn--chevron"
                     (click)="toggleExpand(role.id, $event)"
                     [attr.aria-expanded]="isExpanded(role.id)">
-              <i class="pi"
+              <i class="pi" aria-hidden="true"
                  [ngClass]="isExpanded(role.id) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
           </footer>
@@ -160,7 +160,7 @@
 
       <!-- "Add New Role" empty card -->
       <button *nasCan="'create-roles'" type="button" class="rl-card rl-card--add" (click)="goToCreate()">
-        <i class="pi pi-plus rl-card--add__icon"></i>
+        <i class="pi pi-plus rl-card--add__icon" aria-hidden="true"></i>
         <span class="rl-card--add__label">{{ 'roles.add_new_role' | translate }}</span>
       </button>
     </div>

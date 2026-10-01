@@ -15,7 +15,7 @@
   <div class="al-modal-label">{{ 'nav.instructors' | translate }}</div>
 
   <div class="al-modal-search">
-    <i class="pi pi-search al-modal-search__icon"></i>
+    <i class="pi pi-search al-modal-search__icon" aria-hidden="true"></i>
     <input
       type="text"
       class="al-modal-search__input"
@@ -44,7 +44,7 @@
       {{ 'common.reset' | translate }}
     </button>
     <button type="button" class="al-btn al-btn--primary" (click)="applyInstructorFilter()">
-      <i class="pi pi-filter"></i> {{ 'common.filter' | translate }}
+      <i class="pi pi-filter" aria-hidden="true"></i> {{ 'common.filter' | translate }}
     </button>
   </ng-template>
 </p-dialog>
@@ -63,9 +63,9 @@
       [disabled]="exporting() || loading()"
       (click)="exportLog()">
       @if (exporting()) {
-        <i class="pi pi-spin pi-spinner"></i>
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
       } @else {
-        <i class="pi pi-upload"></i>
+        <i class="pi pi-upload" aria-hidden="true"></i>
       }
       {{ 'audit_log.export_log' | translate }}
     </button>
@@ -73,7 +73,7 @@
 
   <!-- ── Search ─────────────────────────────────────────────── -->
   <div class="al-search">
-    <i class="pi pi-search al-search__icon"></i>
+    <i class="pi pi-search al-search__icon" aria-hidden="true"></i>
     <input
       type="text"
       class="al-search__input"
@@ -98,7 +98,7 @@
       [class.al-pill--active]="activeTab() === 'admin'"
       (click)="setTab('admin')">
       {{ 'dashboard.admin' | translate }}
-      <i class="pi pi-chevron-down"></i>
+      <i class="pi pi-chevron-down" aria-hidden="true"></i>
     </button>
 
     <button
@@ -110,7 +110,7 @@
       @if (instructorTabCount()) {
         <span class="al-pill__count">{{ instructorTabCount() }}</span>
       }
-      <i class="pi pi-chevron-down"></i>
+      <i class="pi pi-chevron-down" aria-hidden="true"></i>
     </button>
   </div>
 
@@ -139,7 +139,7 @@
           } @else if (!items().length) {
             <tr>
               <td colspan="5" class="al-table__empty">
-                <i class="pi pi-shield"></i>
+                <i class="pi pi-shield" aria-hidden="true"></i>
                 {{ 'audit_log.no_results' | translate }}
               </td>
             </tr>
@@ -162,7 +162,7 @@
                         [attr.title]="row.action_raw || (row.entity_token + ' ' + row.action_token)">
                     @if (row.entity_token) {
                       <span class="al-action-chip__entity">{{ row.entity_token }}</span>
-                      <i class="pi pi-arrow-right al-action-chip__sep"></i>
+                      <i class="pi pi-arrow-right al-action-chip__sep" aria-hidden="true"></i>
                     }
                     <span class="al-action-chip__verb">{{ row.action_token || row.action_raw }}</span>
                   </span>
@@ -187,14 +187,14 @@
             class="al-pagination__btn"
             [disabled]="page === 1"
             (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left"></i>
+            <i class="pi pi-chevron-left" aria-hidden="true"></i>
           </button>
           <button
             type="button"
             class="al-pagination__btn"
             [disabled]="page * perPage >= total()"
             (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right"></i>
+            <i class="pi pi-chevron-right" aria-hidden="true"></i>
           </button>
         </div>
       </div>
