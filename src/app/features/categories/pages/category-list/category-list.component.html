@@ -145,10 +145,13 @@
         [disabled]="saving()" />
     </div>
 
-    <label class="cat-toggle">
-      <input type="checkbox" [(ngModel)]="form.active" [disabled]="saving()" />
-      <span>{{ 'common.active' | translate }}</span>
-    </label>
+    <!-- A new category is always active; the switch is for editing (NEW2B-5903). -->
+    @if (dialogMode() === 'edit') {
+      <label class="cat-toggle">
+        <input type="checkbox" [(ngModel)]="form.active" [disabled]="saving()" />
+        <span>{{ 'common.active' | translate }}</span>
+      </label>
+    }
   </div>
 
   <ng-template pTemplate="footer">

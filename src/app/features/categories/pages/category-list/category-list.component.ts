@@ -26,6 +26,9 @@ import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directiv
 interface Category {
   id: number;
   name: string;
+  /** Each language as stored (NEW2B-6104); null when not filled in. */
+  name_en?: string | null;
+  name_ar?: string | null;
   logo?: string | null;
   active?: boolean;
   courses_count?: number;
@@ -177,8 +180,8 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   openEdit(item: Category): void {
     this.resetForm();
     this.form.id      = item.id;
-    this.form.name_en = item.name ?? '';
-    this.form.name_ar = item.name ?? '';
+    this.form.name_en = item.name_en ?? '';
+    this.form.name_ar = item.name_ar ?? '';
     this.form.active  = item.active ?? true;
     this.formSnapshot = this.snapshot();
     this.dialogMode.set('edit');
@@ -214,7 +217,9 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   get isFormValid(): boolean {
     const en = this.form.name_en.trim();
     const ar = this.form.name_ar.trim();
-    if (!en && !ar) return false;
+    // Both languages are required (the server agrees): copying one into
+    // the other showed English as the Arabic name (NEW2B-6104).
+    if (!en || !ar) return false;
     if (this.dialogMode() === 'edit' && this.snapshot() === this.formSnapshot) return false;
     return true;
   }
@@ -222,8 +227,8 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   save(): void {
     if (!this.isFormValid || this.saving()) return;
     const fd = new FormData();
-    fd.append('name[en]', this.form.name_en.trim() || this.form.name_ar.trim());
-    fd.append('name[ar]', this.form.name_ar.trim() || this.form.name_en.trim());
+    fd.append('name[en]', this.form.name_en.trim());
+    fd.append('name[ar]', this.form.name_ar.trim());
     fd.append('active', this.form.active ? '1' : '0');
 
     this.saving.set(true);
