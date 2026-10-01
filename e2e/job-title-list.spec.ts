@@ -93,6 +93,24 @@ test.describe('behaviour', () => {
     await expect(page.getByRole('dialog')).toBeHidden();
   });
 
+  test('a long qualification name wraps in the list and can be read in full (NEW2B-6113)', async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
+    await mockIndex(page);
+    const long = 'Occupational Health and Safety Management Systems Lead Auditor Certification';
+    await page.route('**/api/v1/qualification-skills/active', (r) =>
+      r.fulfill({ json: { status: 'success', message: '', result: [{ id: 21, name: long }] } }));
+    await page.goto('/admin/job-titles');
+    await page.getByRole('button', { name: 'Filter' }).click();
+    await page.getByRole('dialog').locator('.p-multiselect').click();
+
+    const option = page.getByRole('option', { name: long });
+    await expect(option).toBeVisible();
+    // Nothing clipped sideways: the whole text fits inside the option.
+    const clipped = await option.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+    expect(clipped).toBe(false);
+    expect((await option.boundingBox())!.height).toBeGreaterThan(41);
+  });
+
   test('a failed load offers a retry', async ({ page }) => {
     await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
     await mockIndex(page);

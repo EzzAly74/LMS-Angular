@@ -261,6 +261,14 @@
     font-weight: var(--nas-weight-medium);
     line-height: 16.8px;
     color: var(--nas-neutral-1000);
+    // A long option (e.g. a qualification name) wraps onto more lines: the
+    // panel is only as wide as its field and clips sideways (NEW2B-6113).
+    align-items: flex-start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+
+    > span { min-inline-size: 0; }
+    .p-checkbox { flex-shrink: 0; }
 
     &:last-child { border-block-end: 0; }
     &.p-highlight { background: transparent; color: var(--nas-neutral-1000); }
@@ -284,3 +292,10 @@
 
 // The clear button is positioned against the header.
 ::ng-deep .fd-ms-panel .p-multiselect-header { position: relative; }
+
+// Single-choice lists wrap long options too (NEW2B-6113); the panel is as
+// wide as its field.
+::ng-deep .fd-dd-panel.p-dropdown-panel .p-dropdown-item {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
