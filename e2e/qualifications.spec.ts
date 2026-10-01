@@ -238,7 +238,7 @@ test('Delete asks first, then removes the row through the API', async ({ page })
   expect(deletes).toHaveLength(0);
 
   const before = listCalls.length;
-  await confirm.getByRole('button', { name: 'Delete' }).click();
+  await confirm.getByRole('button', { name: 'Yes, Delete' }).click();
   await expect(confirm).toBeHidden();
   expect(deletes).toHaveLength(1);
   await expect.poll(() => listCalls.length).toBeGreaterThan(before);
