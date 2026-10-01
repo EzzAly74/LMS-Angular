@@ -223,19 +223,21 @@
     text-overflow: ellipsis;
     text-align: start;
   }
+  // Figma "Learning" row: Icon/Solid/chevron-left in its 16px frame, turned
+  // -90deg (pointing down), full #fffbf7. Open, it turns to point up. The old
+  // asset was only the 4.8x8 vector squeezed into a 6px box, so it distorted.
   &__chevron {
     flex-shrink: 0;
-    width: auto;
-    height: auto;
-    aspect-ratio: 1/1;
-    width: 6px;
-    object-fit: contain;
     display: block;
-    opacity: 0.7;
+    width: 16px;
+    height: 16px;
     transform: rotate(-90deg);
     transition: transform var(--transition-speed);
     &.expanded {
       transform: rotate(90deg);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
     }
   }
 

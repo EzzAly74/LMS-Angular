@@ -160,7 +160,7 @@
             (click)="requestLogout()"
             [title]="'nav.logout' | translate"
           >
-            <i class="pi pi-sign-out"></i>
+            <i class="pi pi-sign-out" aria-hidden="true"></i>
           </button>
         }
       </div>
@@ -172,7 +172,7 @@
     <!-- Header -->
     <header class="nas-header">
       <div class="nas-search">
-        <i class="pi pi-search nas-search__icon"></i>
+        <i class="pi pi-search nas-search__icon" aria-hidden="true"></i>
         <input
           type="text"
           [ngModel]="searchTerm()"
@@ -197,7 +197,7 @@
                   (mousedown)="$event.preventDefault()"
                   (click)="navigateMatch(m.route)"
                 >
-                  <i class="pi pi-arrow-right nas-search__menu-icon"></i>
+                  <i class="pi pi-arrow-right nas-search__menu-icon" aria-hidden="true"></i>
                   <span class="nas-search__menu-label">
                     {{ m.translatedLabel }}
                     @if (m.translatedParent) {
