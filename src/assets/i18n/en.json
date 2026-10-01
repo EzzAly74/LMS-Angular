@@ -84,6 +84,7 @@
     "close": "Dismiss notification"
   },
   "common": {
+    "no_keep": "No, keep it",
     "list_separator": ", ",
     "search_learners": "Search learners...",
     "filters_on": "{{count}} filters applied",
@@ -962,7 +963,7 @@
     "saved": "The qualification was saved.",
     "deleted": "The qualification was deleted.",
     "confirm_delete": "Delete Qualification",
-    "confirm_delete_text": "Delete \"{{name}}\"? It is removed from its courses and job titles, and learners granted it directly lose it. Courses and completions stay.",
+    "confirm_delete_text": "Are you sure you want to delete \"{{name}}\"? It is removed from its courses and job titles.",
     "col": {
       "qualification": "Qualification",
       "linked_courses": "Linked Courses",
@@ -1924,6 +1925,10 @@
     "delete_message_title": "Delete \"{{title}}\"? This action cannot be undone."
   },
   "platform_settings": {
+    "errors": {
+      "required": "Enter a value.",
+      "range": "Enter a whole number from {{min}} to {{max}}."
+    },
     "title": "Platform Settings",
     "subtitle": "Configure platform behaviour",
     "save_changes": "Save Changes",
@@ -1935,7 +1940,7 @@
     "default_cohort_size": "Default Cohort Size",
     "default_cohort_size_help": "Maximum learners per cohort unless overridden",
     "academy_close_offset": "Enrolment Closes Before Start",
-    "academy_close_offset_help": "Days before a cohort starts that enrolment closes (0 = open until the start date). Applies when a cohort has no explicit close date.",
+    "academy_close_offset_help": "Days before a cohort starts that enrolment closes (0 = open until the day before the start date). Applies when a cohort has no explicit close date.",
     "days": "Days",
     "course_attendance": "Course Attendance",
     "course_attendance_sub": "The passcode will remain the same for the entire session.",

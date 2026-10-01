@@ -57,6 +57,19 @@ test('a view-only role sees no create, edit or delete controls', async ({ page }
   }
 });
 
+test('a role holding every action sees every write control', async ({ page }) => {
+  // Catches a page whose *nasCan never renders (e.g. the directive missing
+  // from the component's imports), which the view-only test cannot see.
+  test.setTimeout(240_000);
+  await signInWith(page, SECTIONS.flatMap(s => ['view', 'create', 'edit', 'delete'].map(a => `${a}-${s}`)));
+
+  for (const [url, label] of WRITE_CONTROLS) {
+    await page.goto(url);
+    await expect(page.getByRole('button', { name: label }).or(page.getByRole('link', { name: label })).first(), `${url}: ${label}`)
+      .toBeVisible({ timeout: 20_000 });
+  }
+});
+
 test('a view-only role is turned away from create and edit pages', async ({ page }) => {
   await signInWith(page, viewOnly);
 
@@ -77,7 +90,11 @@ test('the row menu offers only the actions the role holds', async ({ page }) => 
 });
 
 test('granting the action brings the control back', async ({ page }) => {
-  await signInWith(page, [...viewOnly, 'create-courses', 'create-categories', 'create-quizzes', 'edit-quizzes']);
+  await signInWith(page, [...viewOnly, 'create-courses', 'create-categories', 'create-quizzes', 'edit-quizzes', 'edit-platform-config']);
+
+  // The directive must be in each page's imports, or the control never shows.
+  await page.goto('/admin/settings');
+  await expect(page.getByRole('button', { name: /^Save Changes$/ })).toBeVisible();
 
   await page.goto('/admin/courses');
   await expect(page.getByRole('button', { name: /^New Course$/ })).toBeVisible();

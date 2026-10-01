@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -18,7 +18,7 @@ import { EnumsService } from '../../../core/services/enums.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { API } from '../../../core/constants/api.constants';
 // Direct file imports — re-exporting through `index.ts` barrels confuses
-// Angular's compile-time `imports: [NasCanDirective, ]` resolver and disables template type
+// Angular's compile-time `imports: []` resolver and disables template type
 // inference (we end up with `$event: Event` on photo-upload handlers).
 import { NasIconComponent }        from '../../../shared/nas/nas-icon/nas-icon.component';
 import { NasPhotoUploadComponent } from '../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
@@ -65,13 +65,25 @@ type CertificateBasis = 'attendance' | 'score' | 'both';
  * keys go through `PUT /admin/settings`, image keys go through
  * `POST /admin/settings/upload`.
  */
+/** The Platform Config number fields and their limits (match the server). */
+type NumericSetting = 'default_cohort_size' | 'academy_close_offset_days' | 'passcode_reset_seconds'
+  | 'min_passing_attendance' | 'min_passing_score';
+
+const NUMERIC_LIMITS: Record<NumericSetting, { min: number; max: number }> = {
+  default_cohort_size:       { min: 1, max: 1000 },
+  academy_close_offset_days: { min: 0, max: 365 },
+  passcode_reset_seconds:    { min: 1, max: 86400 },
+  min_passing_attendance:    { min: 0, max: 100 },
+  min_passing_score:         { min: 0, max: 100 },
+};
+
 @Component({
   selector: 'app-settings',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, TranslateModule,
     DropdownModule, InputSwitchModule, SkeletonModule,
-    NasIconComponent, NasPhotoUploadComponent, NasRichTextComponent,
+    NasIconComponent, NasPhotoUploadComponent, NasRichTextComponent, NasCanDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.component.html',
@@ -135,13 +147,13 @@ export class SettingsComponent implements OnInit {
   /* ── Lifecycle ───────────────────────────────────────────── */
   ngOnInit(): void {
     this.form = this.fb.group({
-      default_cohort_size:       [30],
-      academy_close_offset_days: [0],
+      default_cohort_size:       [30, this.rangeValidators('default_cohort_size')],
+      academy_close_offset_days: [0, this.rangeValidators('academy_close_offset_days')],
       course_attendance_enabled: [true],
-      passcode_reset_seconds:    [30],
+      passcode_reset_seconds:    [30, this.rangeValidators('passcode_reset_seconds')],
       certificate_award_basis:   ['attendance' as CertificateBasis],
-      min_passing_attendance:    [70],
-      min_passing_score:         [30],
+      min_passing_attendance:    [70, this.rangeValidators('min_passing_attendance')],
+      min_passing_score:         [30, this.rangeValidators('min_passing_score')],
     });
 
     this.load();
@@ -212,6 +224,14 @@ export class SettingsComponent implements OnInit {
   /* ── Save ────────────────────────────────────────────────── */
   async save(): Promise<void> {
     if (this.saving()) return;
+    // Same limits as the server (UpdateSettingsRequest); stop before the
+    // request and show every field's reason (NEW2B-6055, NEW2B-6059).
+    if (this.invalidFields().length) {
+      this.form.markAllAsTouched();
+      this.validationShown.set(true);
+      document.getElementById(this.invalidFields()[0])?.focus();
+      return;
+    }
     this.saving.set(true);
 
     try {
@@ -284,15 +304,48 @@ export class SettingsComponent implements OnInit {
   }
 
   /* ── Stepper handlers ─────────────────────────────────── */
-  adjust(field: 'default_cohort_size' | 'min_passing_score'
-              | 'min_passing_attendance' | 'passcode_reset_seconds' | 'academy_close_offset_days',
-         delta: number): void {
+  adjust(field: NumericSetting, delta: number): void {
     const ctrl = this.form.get(field);
     if (!ctrl) return;
-    // Percentages are bounded 0–100; the other steppers are open-ended counts.
-    const isPercent = field === 'min_passing_score' || field === 'min_passing_attendance';
-    const next = Math.max(0, Number(ctrl.value || 0) + delta);
-    ctrl.setValue(isPercent ? Math.min(100, next) : next);
+    // The steppers stay inside the field's limits.
+    const { min, max } = this.limit(field);
+    const next = Math.round(Number(ctrl.value || 0)) + delta;
+    ctrl.setValue(Math.min(max, Math.max(min, next)));
+    ctrl.markAsTouched();
+  }
+
+  /* ── Validation ─────────────────────────────────────────── */
+  /** Set when Save was pressed with an invalid field: show every error. */
+  readonly validationShown = signal(false);
+
+  limit(field: NumericSetting): { min: number; max: number } {
+    return NUMERIC_LIMITS[field];
+  }
+
+  /** The visible numeric fields that hold an invalid value, in page order. */
+  private invalidFields(): NumericSetting[] {
+    const visible: NumericSetting[] = ['default_cohort_size', 'academy_close_offset_days'];
+    if (!this.attendanceSig()) visible.push('passcode_reset_seconds');
+    if (this.showMinAttendance()) visible.push('min_passing_attendance');
+    if (this.showMinScore()) visible.push('min_passing_score');
+    return visible.filter(f => this.form.get(f)?.invalid);
+  }
+
+  /** The field's error, once it was touched or Save was pressed. */
+  fieldError(field: NumericSetting): string | null {
+    const ctrl = this.form?.get(field);
+    if (!ctrl || ctrl.valid || !(ctrl.touched || ctrl.dirty || this.validationShown())) return null;
+    const { min, max } = this.limit(field);
+    return ctrl.hasError('required')
+      ? this.translate.instant('platform_settings.errors.required')
+      : this.translate.instant('platform_settings.errors.range', { min, max });
+  }
+
+  private rangeValidators(field: NumericSetting): ValidatorFn[] {
+    const { min, max } = NUMERIC_LIMITS[field];
+    const whole: ValidatorFn = c =>
+      c.value === null || c.value === '' || Number.isInteger(Number(c.value)) ? null : { whole: true };
+    return [Validators.required, Validators.min(min), Validators.max(max), whole];
   }
 
   /* ── Helpers ────────────────────────────────────────────── */

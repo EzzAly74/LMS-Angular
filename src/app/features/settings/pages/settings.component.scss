@@ -151,6 +151,16 @@
 
 .ps-asterisk { color: var(--nas-status-red-500); margin-inline-start: 2px; }
 
+.ps-error {
+  margin: 0;
+  font-size: var(--nas-size-3xs);
+  color: var(--nas-status-red-700, var(--nas-status-red-500));
+}
+
+.ps-input[aria-invalid='true'] {
+  border-color: var(--nas-status-red-500);
+}
+
 .ps-help {
   margin: 0;
   font-size: var(--nas-size-3xs);

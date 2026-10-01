@@ -42,9 +42,11 @@
             <div class="ps-field">
               <label for="default_cohort_size">{{ 'platform_settings.default_cohort_size' | translate }}</label>
               <div class="ps-number">
-                <input id="default_cohort_size" type="number" min="0" inputmode="numeric"
+                <input id="default_cohort_size" type="number" [attr.min]="limit('default_cohort_size').min" [attr.max]="limit('default_cohort_size').max" inputmode="numeric"
                        class="ps-input ps-input--number"
-                       formControlName="default_cohort_size" />
+                       formControlName="default_cohort_size"
+                       [attr.aria-invalid]="fieldError('default_cohort_size') ? true : null"
+                       [attr.aria-describedby]="fieldError('default_cohort_size') ? 'default_cohort_size-error' : null" />
                 <div class="ps-number__steppers">
                   <button type="button" class="ps-number__step"
                           (click)="adjust('default_cohort_size', +1)"
@@ -58,14 +60,19 @@
                   </button>
                 </div>
               </div>
+              @if (fieldError('default_cohort_size'); as err) {
+                <p class="ps-error" id="default_cohort_size-error">{{ err }}</p>
+              }
               <p class="ps-help">{{ 'platform_settings.default_cohort_size_help' | translate }}</p>
             </div>
             <div class="ps-field">
               <label for="academy_close_offset_days">{{ 'platform_settings.academy_close_offset' | translate }}</label>
               <div class="ps-number ps-number--unit">
-                <input id="academy_close_offset_days" type="number" min="0" inputmode="numeric"
+                <input id="academy_close_offset_days" type="number" [attr.min]="limit('academy_close_offset_days').min" [attr.max]="limit('academy_close_offset_days').max" inputmode="numeric"
                        class="ps-input ps-input--unit"
-                       formControlName="academy_close_offset_days" />
+                       formControlName="academy_close_offset_days"
+                       [attr.aria-invalid]="fieldError('academy_close_offset_days') ? true : null"
+                       [attr.aria-describedby]="fieldError('academy_close_offset_days') ? 'academy_close_offset_days-error' : null" />
                 <div class="ps-number__suffix">
                   <span class="ps-unit">{{ 'platform_settings.days' | translate }}</span>
                   <div class="ps-number__steppers ps-number__steppers--static">
@@ -82,6 +89,9 @@
                   </div>
                 </div>
               </div>
+              @if (fieldError('academy_close_offset_days'); as err) {
+                <p class="ps-error" id="academy_close_offset_days-error">{{ err }}</p>
+              }
               <p class="ps-help">{{ 'platform_settings.academy_close_offset_help' | translate }}</p>
             </div>
           </div>
@@ -111,9 +121,11 @@
             <div class="ps-field ps-field--half">
               <label for="passcode_reset_seconds">{{ 'platform_settings.passcode_reset_each' | translate }}</label>
               <div class="ps-number ps-number--unit">
-                <input id="passcode_reset_seconds" type="number" min="0" inputmode="numeric"
+                <input id="passcode_reset_seconds" type="number" [attr.min]="limit('passcode_reset_seconds').min" [attr.max]="limit('passcode_reset_seconds').max" inputmode="numeric"
                        class="ps-input ps-input--unit"
-                       formControlName="passcode_reset_seconds" />
+                       formControlName="passcode_reset_seconds"
+                       [attr.aria-invalid]="fieldError('passcode_reset_seconds') ? true : null"
+                       [attr.aria-describedby]="fieldError('passcode_reset_seconds') ? 'passcode_reset_seconds-error' : null" />
                 <div class="ps-number__suffix">
                   <span class="ps-unit">{{ 'platform_settings.seconds' | translate }}</span>
                   <div class="ps-number__steppers ps-number__steppers--static">
@@ -130,6 +142,9 @@
                   </div>
                 </div>
               </div>
+              @if (fieldError('passcode_reset_seconds'); as err) {
+                <p class="ps-error" id="passcode_reset_seconds-error">{{ err }}</p>
+              }
             </div>
           }
         </div>
@@ -175,9 +190,11 @@
                 {{ 'platform_settings.min_passing_attendance' | translate }} <span class="ps-asterisk">*</span>
               </label>
               <div class="ps-number">
-                <input id="min_passing_attendance" type="number" min="0" max="100" inputmode="numeric"
+                <input id="min_passing_attendance" type="number" [attr.min]="limit('min_passing_attendance').min" [attr.max]="limit('min_passing_attendance').max" inputmode="numeric"
                        class="ps-input ps-input--number"
-                       formControlName="min_passing_attendance" />
+                       formControlName="min_passing_attendance"
+                       [attr.aria-invalid]="fieldError('min_passing_attendance') ? true : null"
+                       [attr.aria-describedby]="fieldError('min_passing_attendance') ? 'min_passing_attendance-error' : null" />
                 <div class="ps-number__steppers">
                   <button type="button" class="ps-number__step"
                           (click)="adjust('min_passing_attendance', +1)"
@@ -191,6 +208,9 @@
                   </button>
                 </div>
               </div>
+              @if (fieldError('min_passing_attendance'); as err) {
+                <p class="ps-error" id="min_passing_attendance-error">{{ err }}</p>
+              }
               <p class="ps-help">{{ 'platform_settings.min_passing_attendance_help' | translate }}</p>
             </div>
           }
@@ -201,9 +221,11 @@
                 {{ 'platform_settings.min_passing_score' | translate }} <span class="ps-asterisk">*</span>
               </label>
               <div class="ps-number">
-                <input id="min_passing_score" type="number" min="0" max="100" inputmode="numeric"
+                <input id="min_passing_score" type="number" [attr.min]="limit('min_passing_score').min" [attr.max]="limit('min_passing_score').max" inputmode="numeric"
                        class="ps-input ps-input--number"
-                       formControlName="min_passing_score" />
+                       formControlName="min_passing_score"
+                       [attr.aria-invalid]="fieldError('min_passing_score') ? true : null"
+                       [attr.aria-describedby]="fieldError('min_passing_score') ? 'min_passing_score-error' : null" />
                 <div class="ps-number__steppers">
                   <button type="button" class="ps-number__step"
                           (click)="adjust('min_passing_score', +1)"
@@ -217,6 +239,9 @@
                   </button>
                 </div>
               </div>
+              @if (fieldError('min_passing_score'); as err) {
+                <p class="ps-error" id="min_passing_score-error">{{ err }}</p>
+              }
               <p class="ps-help">{{ 'platform_settings.min_passing_score_help' | translate }}</p>
             </div>
           }
