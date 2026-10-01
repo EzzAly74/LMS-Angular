@@ -43,7 +43,7 @@
   <nas-page-header
     [title]="'roles.title' | translate"
     [subtitle]="'roles.subtitle' | translate">
-    <button type="button" class="rl-add-btn" (click)="goToCreate()">
+    <button *nasCan="'create-roles'" type="button" class="rl-add-btn" (click)="goToCreate()">
       <i class="pi pi-plus"></i> {{ 'roles.add_role' | translate }}
     </button>
   </nas-page-header>
@@ -82,7 +82,7 @@
               <p class="rl-card__desc">{{ role.description || '—' }}</p>
             </div>
 
-            <div class="rl-card__head-actions">
+            <div *nasCan="['edit-roles', 'delete-roles']" class="rl-card__head-actions">
               <button type="button" class="rl-icon-btn"
                       (click)="toggleMenu(role.id, $event)"
                       [attr.aria-expanded]="menuOpenId() === role.id">
@@ -91,10 +91,10 @@
 
               @if (menuOpenId() === role.id) {
                 <div class="rl-card-menu" (click)="$event.stopPropagation()">
-                  <button type="button" (click)="goToEdit(role)">
-                    <i class="pi pi-pencil"></i> {{ 'common.edit' | translate }}
+                  <button *nasCan="'edit-roles'" type="button" (click)="goToEdit(role)">
+                    <i class="pi pi-pencil"></i> {{ (role.can_manage ? 'common.edit' : 'common.view') | translate }}
                   </button>
-                  @if (!role.is_system) {
+                  @if (role.can_delete && auth.can('delete-roles')) {
                     <button type="button" class="rl-card-menu__danger"
                             (click)="askDelete(role)">
                       <i class="pi pi-trash"></i> {{ 'common.delete' | translate }}
@@ -150,6 +150,8 @@
                     }
                   </div>
                 </div>
+              } @empty {
+                <p class="rl-card__empty">{{ 'roles.no_permissions' | translate }}</p>
               }
             </div>
           }
@@ -157,7 +159,7 @@
       }
 
       <!-- "Add New Role" empty card -->
-      <button type="button" class="rl-card rl-card--add" (click)="goToCreate()">
+      <button *nasCan="'create-roles'" type="button" class="rl-card rl-card--add" (click)="goToCreate()">
         <i class="pi pi-plus rl-card--add__icon"></i>
         <span class="rl-card--add__label">{{ 'roles.add_new_role' | translate }}</span>
       </button>

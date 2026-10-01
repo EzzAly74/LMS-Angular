@@ -25,6 +25,9 @@ export const TOAST_LIFE: Readonly<Record<ToastSeverity, number>> = {
 
 const SEVERITIES: readonly string[] = ['success', 'info', 'warn', 'error'];
 
+/** A second problem toast this soon after one is the same failure reported twice. */
+const PROBLEM_WINDOW_MS = 1500;
+
 /**
  * The app's MessageService (D-072), provided once at the root in place of
  * PrimeNG's. Every toast - from ToastService, the HTTP error interceptor or an
@@ -36,12 +39,31 @@ const SEVERITIES: readonly string[] = ['success', 'info', 'warn', 'error'];
 export class NasMessageService extends MessageService {
   private readonly t = inject(TranslateService);
 
+  /** When the last problem (warn / error) toast was shown. */
+  private lastProblemAt = 0;
+
   override add(message: Message): void {
-    super.add(this.normalise(message));
+    const m = this.normalise(message);
+    if (this.isEcho(m)) return;
+    super.add(m);
   }
 
   override addAll(messages: Message[]): void {
-    super.addAll(messages.map(m => this.normalise(m)));
+    super.addAll(messages.map(m => this.normalise(m)).filter(m => !this.isEcho(m)));
+  }
+
+  /**
+   * One failure, one toast. The HTTP error interceptor reports every failed
+   * request first; a page's own error handler for the same failure runs a
+   * moment later and would stack a second toast. A problem toast that follows
+   * another within PROBLEM_WINDOW_MS is that echo, and is dropped.
+   */
+  private isEcho(m: Message): boolean {
+    if (m.severity !== 'warn' && m.severity !== 'error') return false;
+    const now = Date.now();
+    const echo = now - this.lastProblemAt < PROBLEM_WINDOW_MS;
+    if (!echo) this.lastProblemAt = now;
+    return echo;
   }
 
   private normalise(m: Message): Message {

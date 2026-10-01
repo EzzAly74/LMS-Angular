@@ -28,6 +28,7 @@
         </button>
         <button type="button" class="rf-btn rf-btn--primary"
                 [disabled]="!canSubmit()"
+                [hidden]="readOnly()"
                 (click)="submit()">
           @if (saving()) {
             <i class="pi pi-spin pi-spinner"></i>
@@ -61,6 +62,7 @@
               <label>{{ 'roles.role_name_en' | translate }} <span class="rf-req">*</span></label>
               <input type="text"
                      class="rf-input"
+                     [disabled]="readOnly()"
                      [placeholder]="'roles.role_name_en_placeholder' | translate"
                      [ngModel]="form().name_en"
                      (ngModelChange)="updateField('name_en', $event)"
@@ -71,6 +73,7 @@
               <label>{{ 'roles.description_en' | translate }} <span class="rf-opt">{{ 'roles.optional' | translate }}</span></label>
               <input type="text"
                      class="rf-input"
+                     [disabled]="readOnly()"
                      [placeholder]="'roles.description_en_placeholder' | translate"
                      [ngModel]="form().description_en"
                      (ngModelChange)="updateField('description_en', $event)"
@@ -81,6 +84,7 @@
               <label>{{ 'roles.role_name_ar' | translate }} <span class="rf-req">*</span></label>
               <input type="text"
                      class="rf-input"
+                     [disabled]="readOnly()"
                      dir="rtl"
                      [placeholder]="'roles.role_name_ar_placeholder' | translate"
                      [ngModel]="form().name_ar"
@@ -92,6 +96,7 @@
               <label>{{ 'roles.description_ar' | translate }} <span class="rf-opt">{{ 'roles.optional' | translate }}</span></label>
               <input type="text"
                      class="rf-input"
+                     [disabled]="readOnly()"
                      dir="rtl"
                      [placeholder]="'roles.description_ar_placeholder' | translate"
                      [ngModel]="form().description_ar"
@@ -112,6 +117,7 @@
                           class="rf-swatch"
                           [ngClass]="swatchClass(c)"
                           [class.rf-swatch--active]="form().color === c"
+                          [disabled]="readOnly()"
                           [attr.aria-label]="c"
                           (click)="pickColor(c)">
                     @if (form().color === c) {
@@ -132,39 +138,75 @@
         </div>
       </section>
 
-      <!-- Dashboard Views card -->
-      <section class="rf-card">
-        <header class="rf-card__head rf-card__head--row">
-          <div>
-            <h2 class="rf-card__title">{{ 'roles.dashboard_views' | translate }}</h2>
-            <p class="rf-card__sub">
-              {{ 'roles.views_sub' | translate }}
-            </p>
-          </div>
+      @if (readOnly() && !loading()) {
+        <div class="rf-notice" role="status">
+          <i class="pi pi-lock" aria-hidden="true"></i>
+          <p>{{ (isSuperRole() ? 'roles.read_only_super' : 'roles.read_only_own') | translate }}</p>
+        </div>
+      }
 
-          <div class="rf-card__head-actions">
-            <button type="button" class="rf-link" (click)="selectAll()">{{ 'roles.select_all_views' | translate }}</button>
-            <button type="button" class="rf-link rf-link--muted" (click)="clearAll()">{{ 'roles.clear_all_views' | translate }}</button>
-          </div>
+      <!-- Course access card (D-074) -->
+      <section class="rf-card">
+        <header class="rf-card__head">
+          <h2 class="rf-card__title" id="rf-scope-title">{{ 'roles.course_access' | translate }}</h2>
+          <p class="rf-card__sub">{{ 'roles.course_access_sub' | translate }}</p>
         </header>
 
         <div class="rf-card__body">
-          <!-- Status row -->
-          <div class="rf-status"
+          <div class="rf-scope" role="radiogroup" aria-labelledby="rf-scope-title">
+            @for (scope of scopes; track scope) {
+              <label class="rf-scope__option" [class.rf-scope__option--on]="form().courseScope === scope"
+                     [class.rf-scope__option--disabled]="readOnly()">
+                <input type="radio" name="course_scope" class="rf-scope__input"
+                       [value]="scope" [checked]="form().courseScope === scope" [disabled]="readOnly()"
+                       (change)="pickScope(scope)" />
+                <span class="rf-scope__mark" aria-hidden="true"></span>
+                <span class="rf-scope__text">
+                  <strong>{{ ('roles.scope_' + scope) | translate }}</strong>
+                  <span>{{ ('roles.scope_' + scope + '_sub') | translate }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Permissions card (D-073) -->
+      <section class="rf-card">
+        <header class="rf-card__head rf-card__head--row">
+          <div>
+            <h2 class="rf-card__title">{{ 'roles.permissions_title' | translate }}</h2>
+            <p class="rf-card__sub">{{ 'roles.permissions_sub' | translate }}</p>
+          </div>
+
+          @if (!readOnly()) {
+            <div class="rf-card__head-actions">
+              <button type="button" class="rf-link" (click)="selectAll()">{{ 'roles.select_all_views' | translate }}</button>
+              <button type="button" class="rf-link rf-link--muted" (click)="clearAll()">{{ 'roles.clear_all_views' | translate }}</button>
+            </div>
+          }
+        </header>
+
+        <div class="rf-card__body">
+          <div class="rf-status" role="status"
                [class.rf-status--warning]="noneSelected()"
                [class.rf-status--success]="!noneSelected()">
-            <i class="pi" [ngClass]="noneSelected() ? 'pi-exclamation-triangle' : 'pi-check-circle'"></i>
+            <i class="pi" [ngClass]="noneSelected() ? 'pi-exclamation-triangle' : 'pi-check-circle'" aria-hidden="true"></i>
             <div>
-              <strong>{{ 'roles.views_selected' | translate:{ selected: selectedCount(), total: totalViews() } }}</strong>
+              <strong>{{ 'roles.permissions_selected' | translate:{ selected: selectedCount(), total: totalPermissions() } }}</strong>
               <p>
                 @if (noneSelected()) {
-                  {{ 'roles.views_warning' | translate }}
+                  {{ 'roles.permissions_warning' | translate }}
                 } @else {
-                  {{ 'roles.views_success' | translate }}
+                  {{ 'roles.permissions_success' | translate:{ sections: sectionsVisible() } }}
                 }
               </p>
             </div>
           </div>
+
+          @if (!readOnly() && !auth.isSuperAdmin()) {
+            <p class="rf-hint"><i class="pi pi-info-circle" aria-hidden="true"></i> {{ 'roles.cant_grant' | translate }}</p>
+          }
 
           @if (catalogLoading()) {
             <div class="rf-skeleton-block">
@@ -173,30 +215,65 @@
               <p-skeleton height="48px" styleClass="rf-skeleton-block__line"></p-skeleton>
             </div>
           } @else {
-            @for (g of groupCounts(); track g.group.key) {
+            @for (g of matrix(); track g.group.key) {
               <div class="rf-group">
                 <header class="rf-group__head">
-                  <span class="rf-group__title">{{ g.group.label }}</span>
+                  <h3 class="rf-group__title" [id]="'rf-group-' + g.group.key">{{ g.group.label }}</h3>
                   <span class="rf-group__count">{{ g.selected }} / {{ g.total }}</span>
 
-                  <div class="rf-group__actions">
-                    <button type="button" class="rf-link"
-                            (click)="selectGroup(g.group.items)">{{ 'roles.select_group' | translate }}</button>
-                    <button type="button" class="rf-link rf-link--muted"
-                            (click)="clearGroup(g.group.items)">{{ 'roles.clear_group' | translate }}</button>
-                  </div>
+                  @if (!readOnly()) {
+                    <div class="rf-group__actions">
+                      <button type="button" class="rf-link" (click)="selectGroup(g.rows)">{{ 'roles.select_group' | translate }}</button>
+                      <button type="button" class="rf-link rf-link--muted" (click)="clearGroup(g.rows)">{{ 'roles.clear_group' | translate }}</button>
+                    </div>
+                  }
                 </header>
 
-                <div class="rf-checkbox-grid">
-                  @for (item of g.group.items; track item.key) {
-                    <label class="rf-checkbox-row"
-                           [class.rf-checkbox-row--checked]="isSelected(item.key)">
-                      <input type="checkbox"
-                             [checked]="isSelected(item.key)"
-                             (change)="toggle(item.key)" />
-                      <span class="rf-checkbox-row__label">{{ item.label }}</span>
-                    </label>
-                  }
+                <div class="rf-matrix-wrap">
+                  <table class="rf-matrix" [attr.aria-labelledby]="'rf-group-' + g.group.key">
+                    <thead>
+                      <tr>
+                        <th scope="col" class="rf-matrix__section">{{ 'roles.section_col' | translate }}</th>
+                        @for (a of actions(); track a.key) {
+                          <th scope="col" class="rf-matrix__action">{{ a.label }}</th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of g.rows; track row.item.key) {
+                        <tr [class.rf-matrix__row--on]="row.all || row.some" [class.rf-matrix__row--blocked]="row.scopeBlocked">
+                          <th scope="row" class="rf-matrix__section">
+                            <label class="rf-matrix__row-toggle">
+                              <input type="checkbox" class="rf-check"
+                                     [checked]="row.all" [indeterminate]="row.some" [disabled]="row.disabled"
+                                     [attr.aria-label]="'roles.full_row' | translate:{ section: row.item.label }"
+                                     (change)="toggleRow(row)" />
+                              <span class="rf-matrix__name">
+                                {{ row.item.label }}
+                                @if (row.scopeBlocked) {
+                                  <small class="rf-matrix__note">{{ 'roles.org_wide_blocked' | translate }}</small>
+                                }
+                              </span>
+                            </label>
+                          </th>
+                          @for (cell of row.cells; track cell.action) {
+                            <td class="rf-matrix__cell">
+                              @if (cell.supported) {
+                                <input type="checkbox" class="rf-check"
+                                       [checked]="cell.checked" [disabled]="cell.disabled"
+                                       [attr.aria-label]="cellLabel(cell, row)"
+                                       [attr.title]="cell.disabled && !readOnly() && !row.scopeBlocked ? ('roles.cant_grant' | translate) : null"
+                                       (change)="toggle(cell, row)" />
+                              } @else {
+                                <span class="rf-matrix__none" aria-hidden="true">—</span>
+                                <span class="rf-sr-only">{{ 'roles.not_available' | translate }}</span>
+                              }
+                            </td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
                 </div>
               </div>
             }
@@ -206,7 +283,7 @@
     </div>
 
     <!-- ── RIGHT (sticky summary) ──────────────────────────── -->
-    <aside class="rf-summary">
+    <aside class="rf-summary" [attr.aria-label]="'roles.role_summary' | translate">
       <span class="rf-summary__eyebrow">{{ 'roles.role_summary' | translate }}</span>
       <h2 class="rf-summary__title">{{ form().name_en.trim() || ('roles.new_role' | translate) }}</h2>
       <p class="rf-summary__desc">
@@ -216,24 +293,19 @@
       <div class="rf-summary__status"
            [class.rf-summary__status--warning]="noneSelected()"
            [class.rf-summary__status--success]="!noneSelected()">
-        <strong>{{ 'roles.dashboard_views_selected' | translate:{ count: selectedCount() } }}</strong>
-        @if (noneSelected()) {
-          <p>{{ 'roles.summary_warning' | translate }}</p>
-        } @else {
-          <p>{{ 'roles.summary_success' | translate:{ selected: selectedCount(), total: totalViews() } }}</p>
-        }
+        <strong>{{ 'roles.summary_permissions' | translate:{ count: selectedCount() } }}</strong>
+        <p>{{ ('roles.summary_scope_' + form().courseScope) | translate }}</p>
       </div>
 
       <div class="rf-summary__groups">
-        @for (g of groupCounts(); track g.group.key) {
+        @for (g of matrix(); track g.group.key) {
           <div class="rf-summary__group">
             <div class="rf-summary__group-head">
               <span class="rf-summary__group-label">{{ g.group.label }}</span>
               <span class="rf-summary__group-count">{{ g.selected }}/{{ g.total }}</span>
             </div>
             <div class="rf-progress" [ngClass]="badgePreviewClass()">
-              <span class="rf-progress__bar"
-                    [style.width.%]="g.total > 0 ? (g.selected / g.total) * 100 : 0"></span>
+              <span class="rf-progress__bar" [style.width.%]="g.total > 0 ? (g.selected / g.total) * 100 : 0"></span>
             </div>
           </div>
         }

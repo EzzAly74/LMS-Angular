@@ -51,7 +51,7 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
       { path: 'quizzes',        loadChildren: () => import('../../features/quizzes/quizzes.routes').then(m => m.QUIZZES_ROUTES),                 data: { viewKey: 'view-quizzes' } },
 
       // ── Organisation ──────────────────────────────────────────────
-      { path: 'learners',       loadChildren: () => import('../../features/learners/learners.routes').then(m => m.LEARNERS_ROUTES),             data: { viewKey: 'view-users' } },
+      { path: 'learners',       loadChildren: () => import('../../features/learners/learners.routes').then(m => m.LEARNERS_ROUTES),             data: { viewKey: 'view-learners' } },
       { path: 'external-training', loadChildren: () => import('../../features/external-training/external-training.routes').then(m => m.EXTERNAL_TRAINING_ROUTES), data: { viewKey: 'view-external-training' } },
       { path: 'job-titles',     loadChildren: () => import('../../features/job-titles/job-titles.routes').then(m => m.JOB_TITLES_ROUTES),       data: { viewKey: 'view-job-titles' } },
       { path: 'qualifications', loadChildren: () => import('../../features/qualifications/qualifications.routes').then(m => m.QUALIFICATIONS_ROUTES), data: { viewKey: 'view-qualifications' } },

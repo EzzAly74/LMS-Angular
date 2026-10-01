@@ -516,3 +516,199 @@
 
   &__line { margin: 0; }
 }
+
+/* ── Read-only notice (own role / super-admin role, D-073) ── */
+.rf-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border: 1px solid var(--nas-status-amber-200, #fde8b8);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-status-amber-50, #fff7ed);
+  color: var(--nas-color-text-strong);
+  font-size: var(--nas-size-xs);
+
+  i { color: var(--nas-status-amber-700, #c2410c); margin-block-start: 2px; }
+  p { margin: 0; }
+}
+
+.rf-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  margin: 0;
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-muted);
+}
+
+/* ── Course access (D-074) ────────────────────────────────── */
+.rf-scope {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--nas-space-3);
+
+  @media (max-width: 720px) { grid-template-columns: 1fr; }
+
+  &__option {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nas-space-3);
+    padding: var(--nas-space-4);
+    border: 1px solid var(--nas-color-border);
+    border-radius: var(--nas-radius-md);
+    cursor: pointer;
+    transition: border-color var(--transition-speed), background var(--transition-speed);
+
+    &:hover { background: var(--nas-neutral-100); }
+
+    &--on {
+      border-color: var(--nas-essential-cta, var(--nas-teal-700));
+      background: var(--nas-neutral-100);
+    }
+
+    &--disabled { cursor: default; opacity: 0.7; }
+  }
+
+  // The native radio keeps keyboard and screen-reader behaviour; the mark draws it.
+  &__input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: inherit;
+  }
+
+  &__mark {
+    flex: none;
+    inline-size: 18px;
+    block-size: 18px;
+    margin-block-start: 1px;
+    border: 2px solid var(--nas-neutral-500, #8a96a3);
+    border-radius: 50%;
+    transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+  }
+
+  &__option--on &__mark {
+    border-color: var(--nas-essential-cta, var(--nas-teal-700));
+    box-shadow: inset 0 0 0 3px var(--nas-color-bg-surface, #fff), inset 0 0 0 9px var(--nas-essential-cta, var(--nas-teal-700));
+  }
+
+  &__input:focus-visible + &__mark {
+    outline: 2px solid var(--nas-essential-cta, var(--nas-teal-700));
+    outline-offset: 2px;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+    font-size: var(--nas-size-2xs);
+    color: var(--nas-color-text-muted);
+
+    strong {
+      font-size: var(--nas-size-xs);
+      font-weight: var(--nas-weight-semibold);
+      color: var(--nas-color-text-strong);
+    }
+  }
+}
+
+/* ── Permission matrix (D-073) ────────────────────────────── */
+// Scrolls inside the card on the narrowest phones; the page never does.
+.rf-matrix-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--nas-color-border);
+  border-radius: var(--nas-radius-md);
+}
+
+.rf-matrix {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--nas-size-xs);
+
+  th, td { padding: 0 var(--nas-space-3); block-size: 48px; }
+
+  thead th {
+    block-size: 40px;
+    background: var(--nas-neutral-100);
+    font-size: var(--nas-size-2xs);
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-muted);
+    white-space: nowrap;
+  }
+
+  tbody tr + tr :is(th, td) { border-block-start: 1px solid var(--nas-color-border); }
+
+  &__section {
+    text-align: start;
+    min-inline-size: 150px;
+  }
+
+  &__action,
+  &__cell {
+    inline-size: 76px;
+    text-align: center;
+  }
+
+  &__row--on { background: color-mix(in srgb, var(--nas-essential-cta, #0f766e) 4%, transparent); }
+  &__row--blocked { color: var(--nas-color-text-muted); }
+
+  &__row-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--nas-space-3);
+    min-block-size: 44px;
+    cursor: pointer;
+  }
+
+  &__name {
+    display: flex;
+    flex-direction: column;
+    font-weight: var(--nas-weight-medium);
+    color: var(--nas-color-text-strong);
+  }
+
+  &__row--blocked &__name { color: var(--nas-color-text-muted); }
+
+  &__note {
+    font-size: var(--nas-size-3xs, 11px);
+    font-weight: var(--nas-weight-regular, 400);
+    color: var(--nas-color-text-muted);
+  }
+
+  &__none { color: var(--nas-neutral-400, #b8c0c8); }
+
+  @media (max-width: 560px) {
+    th, td { padding: 0 var(--nas-space-2); }
+    &__section { min-inline-size: 128px; }
+    &__action, &__cell { inline-size: 52px; }
+  }
+}
+
+// 20 px boxes in a 44 px target: the cell is the hit area.
+.rf-check {
+  inline-size: 20px;
+  block-size: 20px;
+  margin: 0;
+  accent-color: var(--nas-essential-cta, var(--nas-teal-700));
+  cursor: pointer;
+
+  &:disabled { cursor: not-allowed; opacity: 0.45; }
+  &:focus-visible { outline: 2px solid var(--nas-essential-cta, var(--nas-teal-700)); outline-offset: 2px; }
+}
+
+.rf-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-scope__option, .rf-scope__mark { transition: none; }
+}

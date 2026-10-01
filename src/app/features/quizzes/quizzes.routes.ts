@@ -9,7 +9,7 @@ export const QUIZZES_ROUTES: Routes = [
     title: 'Quizzes — 2B Academy',
   },
   {
-    path: 'new',
+    path: 'new', data: { permission: 'create-quizzes' },
     loadComponent: () =>
       import('./pages/quiz-form/quiz-form.component')
         .then(m => m.QuizFormComponent),
@@ -23,7 +23,7 @@ export const QUIZZES_ROUTES: Routes = [
     title: 'Submission Details — 2B Academy',
   },
   {
-    path: ':id/edit',
+    path: ':id/edit', data: { permission: 'edit-quizzes' },
     loadComponent: () =>
       import('./pages/quiz-form/quiz-form.component')
         .then(m => m.QuizFormComponent),

@@ -10,7 +10,7 @@ export const ROLES_ROUTES: Routes = [
     title: 'Roles — 2B Academy',
   },
   {
-    path: 'new',
+    path: 'new', data: { permission: 'create-roles' },
     loadComponent: () =>
       import('./pages/role-form/role-form.component').then(
         (m) => m.RoleFormComponent,
@@ -18,7 +18,7 @@ export const ROLES_ROUTES: Routes = [
     title: 'Create Role — 2B Academy',
   },
   {
-    path: ':id/edit',
+    path: ':id/edit', data: { permission: 'edit-roles' },
     loadComponent: () =>
       import('./pages/role-form/role-form.component').then(
         (m) => m.RoleFormComponent,

@@ -24,11 +24,13 @@ import type {
   AdminRoleSectionGroup,
 } from '../../models/role.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-role-list',
   standalone: true,
-  imports: [
+  imports: [NasCanDirective, 
     CommonModule,
     FormsModule,
     RouterLink,
@@ -42,6 +44,7 @@ import { ToastService } from '../../../../core/services/toast.service';
   styleUrl: './role-list.component.scss',
 })
 export class RoleListComponent implements OnInit, OnDestroy {
+  protected readonly auth = inject(AuthService);
   private readonly api      = inject(AdminRolesApiService);
   private readonly router   = inject(Router);
   private readonly messages = inject(ToastService);
@@ -186,16 +189,26 @@ export class RoleListComponent implements OnInit, OnDestroy {
   }
 
   /* ── Helpers for the expanded section pills ─────────────────── */
+  /**
+   * The sections the role can open, per sidebar group, each with the actions
+   * it holds there (D-073): "Courses · View, Delete".
+   */
   groupsForRole(role: AdminRoleListItem): Array<{
     group: AdminRoleSectionGroup;
     visible: { key: string; label: string }[];
     hidden: number;
   }> {
     const groups = this.catalog()?.groups ?? [];
-    const selectedSet = new Set(role.view_keys);
+    const held = new Set(role.permissions ?? role.view_keys);
+    const actionLabel = new Map((this.catalog()?.actions ?? []).map(a => [a.key, a.label] as const));
 
     return groups.map(group => {
-      const selected = group.items.filter(item => selectedSet.has(item.key));
+      const selected = group.items
+        .filter(item => held.has(`view-${item.key}`))
+        .map(item => {
+          const actions = item.actions.filter(a => held.has(`${a}-${item.key}`)).map(a => actionLabel.get(a) ?? a);
+          return { key: item.key, label: `${item.label} · ${actions.join(this.t.instant('common.list_separator'))}` };
+        });
       const VISIBLE_MAX = 6;
       return {
         group,

@@ -9,7 +9,7 @@ export const ASSIGNMENTS_ROUTES: Routes = [
     title: 'Assignments — 2B Academy',
   },
   {
-    path: 'new',
+    path: 'new', data: { permission: 'create-assignments' },
     loadComponent: () =>
       import('./pages/assignment-form/assignment-form.component')
         .then(m => m.AssignmentFormComponent),
@@ -23,7 +23,7 @@ export const ASSIGNMENTS_ROUTES: Routes = [
     title: 'Submission Details — 2B Academy',
   },
   {
-    path: ':id/edit',
+    path: ':id/edit', data: { permission: 'edit-assignments' },
     loadComponent: () =>
       import('./pages/assignment-form/assignment-form.component')
         .then(m => m.AssignmentFormComponent),

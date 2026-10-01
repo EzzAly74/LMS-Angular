@@ -7,12 +7,12 @@ export const BLOGS_ROUTES: Routes = [
     title: 'Blogs — 2B Academy',
   },
   {
-    path: 'add',
+    path: 'add', data: { permission: 'create-resources' },
     loadComponent: () => import('./pages/blog-form/blog-form.component').then(m => m.BlogFormComponent),
     title: 'Add Blog — 2B Academy',
   },
   {
-    path: ':id/edit',
+    path: ':id/edit', data: { permission: 'edit-resources' },
     loadComponent: () => import('./pages/blog-form/blog-form.component').then(m => m.BlogFormComponent),
     title: 'Edit Blog — 2B Academy',
   },

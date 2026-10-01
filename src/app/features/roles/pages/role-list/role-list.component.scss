@@ -386,3 +386,9 @@
   line-height: 1.6;
   color: var(--nas-color-text-body);
 }
+
+.rl-card__empty {
+  margin: 0;
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-muted);
+}

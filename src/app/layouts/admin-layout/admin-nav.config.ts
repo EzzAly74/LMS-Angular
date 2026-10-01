@@ -43,7 +43,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
           { label: 'nav.assignments', route: '/admin/assignments', icon: '', viewKey: 'view-assignments' },
           { label: 'nav.quizzes',     route: '/admin/quizzes',     icon: '', viewKey: 'view-quizzes' },
           { label: 'nav.evaluations', route: '/admin/evaluations', icon: '', viewKey: 'view-evaluations' },
-          { label: 'nav.learners',    route: '/admin/learners',    icon: '', viewKey: 'view-users' },
+          { label: 'nav.learners',    route: '/admin/learners',    icon: '', viewKey: 'view-learners' },
           { label: 'nav.external_training', route: '/admin/external-training', icon: '', viewKey: 'view-external-training' },
         ],
       },

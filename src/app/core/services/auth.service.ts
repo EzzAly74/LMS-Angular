@@ -4,7 +4,7 @@ import { Observable, tap, catchError, of, map, retry, throwError, timer } from '
 import { Router } from '@angular/router';
 import { API } from '../constants/api.constants';
 import { ApiResponse } from '../models/api-response.model';
-import type { AuthAdmin } from '../models/auth.types';
+import type { AuthAdmin, PermissionAction } from '../models/auth.types';
 
 const TOKEN_KEY = '2b_token';
 
@@ -42,6 +42,27 @@ export class AuthService {
 
   /** True when the current admin holds the legacy `superAdmin` role. */
   readonly isSuperAdmin = computed(() => !!this._admin()?.is_super_admin);
+
+  /** Every matrix permission the admin holds (D-073), for O(1) checks. */
+  readonly permissions = computed<ReadonlySet<string>>(() => new Set(this._admin()?.permissions ?? []));
+
+  /** True when the account sees only the courses it teaches (D-074). */
+  readonly isCourseScoped = computed(() => this._admin()?.course_scope === 'assigned');
+
+  /**
+   * May the admin perform this permission (`edit-courses`)? UX only: it
+   * hides controls the server would refuse anyway. Super admins pass.
+   */
+  can(permission: string | null | undefined): boolean {
+    if (!permission) return true;
+    if (this.isSuperAdmin()) return true;
+    return this.permissions().has(permission);
+  }
+
+  /** `canDo('courses', 'edit')` is `can('edit-courses')`. */
+  canDo(section: string, action: PermissionAction): boolean {
+    return this.can(`${action}-${section}`);
+  }
 
   /**
    * True when the current admin can access a permission-gated section.
@@ -102,6 +123,25 @@ export class AuthService {
         return of(null);
       }),
     );
+  }
+
+  /** When /me was last read, for refreshPermissions()'s throttle. */
+  private lastRefresh = Date.now();
+
+  /**
+   * Re-read the signed-in admin (/me) so a role change made by someone else
+   * takes effect without signing out (D-073): when the tab regains focus (at
+   * most once a minute) and right after the server refuses an action.
+   * A rejected token ends the session as on bootstrap.
+   */
+  refreshPermissions(force = false): void {
+    if (!this._token() || !this._admin()) return;
+    if (!force && Date.now() - this.lastRefresh < 60_000) return;
+    this.lastRefresh = Date.now();
+    this.http.get<ApiResponse<AuthAdmin>>(API.AUTH.ME).subscribe({
+      next: res => { if (res.result) this._admin.set(res.result); },
+      error: (err: unknown) => { if (isRejected(err)) this.clearSession(); },
+    });
   }
 
   logout(): void {

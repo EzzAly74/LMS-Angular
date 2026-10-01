@@ -22,6 +22,10 @@ import { ADMIN_NAV_ITEMS } from '../../layouts/admin-layout/admin-nav.config';
  *
  * Routes without a `viewKey` are treated as un-gated and pass through
  * (preserves behavior for legacy sub-features not in the Figma matrix).
+ *
+ * `route.data.permission` (D-073) gates a create / edit page on its action,
+ * e.g. `create-courses` on `/admin/courses/new`. UX only: the API refuses
+ * the save regardless.
  */
 export const permissionGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
@@ -33,6 +37,7 @@ export const permissionGuard: CanActivateFn = (
   const data    = route.data ?? {};
   const required: string | undefined          = data['viewKey'];
   const any:      readonly string[] | undefined = data['viewKeyAny'];
+  const action:   string | undefined          = data['permission'];
 
   if (auth.isSuperAdmin()) return true;
 
@@ -41,6 +46,10 @@ export const permissionGuard: CanActivateFn = (
   }
 
   if (any?.length && !any.some(k => auth.hasView(k))) {
+    return router.createUrlTree([fallbackRoute(auth)]);
+  }
+
+  if (action && !auth.can(action)) {
     return router.createUrlTree([fallbackRoute(auth)]);
   }
 

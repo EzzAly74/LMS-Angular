@@ -14,12 +14,12 @@ export const EVALUATIONS_ROUTES: Routes = [
   },
   {
     // Figma 2409:132793 / 2409:133222.
-    path: 'new',
+    path: 'new', data: { permission: 'create-evaluations' },
     loadComponent: () => import('./pages/template-builder/template-builder.component').then(m => m.EvaluationTemplateBuilderComponent),
     title: 'Create Evaluation — 2B Academy',
   },
   {
-    path: ':id/edit',
+    path: ':id/edit', data: { permission: 'edit-evaluations' },
     loadComponent: () => import('./pages/template-builder/template-builder.component').then(m => m.EvaluationTemplateBuilderComponent),
     title: 'Edit Evaluation — 2B Academy',
   },
