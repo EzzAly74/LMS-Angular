@@ -1916,6 +1916,10 @@
     "email": "Please enter a valid email address.",
     "url": "Please enter a valid URL (e.g. https://example.com).",
     "min_length": "Minimum length is {{min}} characters.",
+    "max_length_now": "Use {{max}} characters or fewer (now {{now}}).",
+    "max_value": "Must be {{max}} or less.",
+    "min_value": "Must be at least {{min}}.",
+    "whole_number": "Enter a whole number.",
     "max_length": "Maximum length is {{max}} characters."
   },
   "success": {

@@ -9,12 +9,14 @@ import {
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription, debounceTime, takeUntil } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -25,6 +27,12 @@ import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload
 import { NasRichTextComponent } from '../../../../shared/nas/nas-rich-text/nas-rich-text.component';
 import { BlogsApiService } from '../../services/blogs-api.service';
 import { AdminBlog, AdminBlogSection, QualificationOption, UserOption } from '../../models/blog.types';
+
+/** The server's limits (BlogRequest); the form says them before it sends (NEW2B-5877 / 5878 / 5890). */
+export const BLOG_LIMITS = { title: 255, subtitle: 1000, quote: 1000, readMin: 1, readMax: 1000 } as const;
+
+/** A field's message: the translation key and its parameters. */
+export interface FieldError { key: string; params?: Record<string, unknown>; }
 
 @Component({
   selector: 'app-blog-form',
@@ -53,6 +61,7 @@ export class BlogFormComponent implements OnInit, OnDestroy {
   private readonly userSearch$ = new Subject<string>();
   private userSearchSub?: Subscription;
 
+  readonly LIMITS = BLOG_LIMITS;
   readonly isEdit = signal(false);
   private blogId: number | null = null;
 
@@ -69,14 +78,14 @@ export class BlogFormComponent implements OnInit, OnDestroy {
   userOptions = signal<UserOption[]>([]);
 
   readonly form = this.fb.group({
-    title_en: ['', [Validators.required, Validators.maxLength(255)]],
-    title_ar: ['', [Validators.required, Validators.maxLength(255)]],
-    subtitle_en: [''],
-    subtitle_ar: [''],
+    title_en: ['', [Validators.required, Validators.maxLength(BLOG_LIMITS.title)]],
+    title_ar: ['', [Validators.required, Validators.maxLength(BLOG_LIMITS.title)]],
+    subtitle_en: ['', [Validators.maxLength(BLOG_LIMITS.subtitle)]],
+    subtitle_ar: ['', [Validators.maxLength(BLOG_LIMITS.subtitle)]],
     level: [null as string | null, Validators.required],
     author_user_id: [null as number | null],
     is_anonymous: [false],
-    reading_time: [null as number | null, [Validators.required, Validators.min(1)]],
+    reading_time: [null as number | null, [Validators.required, Validators.min(BLOG_LIMITS.readMin), Validators.max(BLOG_LIMITS.readMax), Validators.pattern(/^\d+$/)]],
     qualification_skill_ids: [[] as number[]],
     sections: this.fb.array<FormGroup>([]),
   });
@@ -201,12 +210,12 @@ export class BlogFormComponent implements OnInit, OnDestroy {
   private buildSection(data?: AdminBlogSection): FormGroup {
     return this.fb.group({
       id: [data?.id ?? null],
-      title_en: [data?.title?.en ?? '', [Validators.required, Validators.maxLength(255)]],
-      title_ar: [data?.title?.ar ?? '', [Validators.required, Validators.maxLength(255)]],
+      title_en: [data?.title?.en ?? '', [Validators.required, Validators.maxLength(BLOG_LIMITS.title)]],
+      title_ar: [data?.title?.ar ?? '', [Validators.required, Validators.maxLength(BLOG_LIMITS.title)]],
       body_en: [data?.body?.en ?? '', Validators.required],
       body_ar: [data?.body?.ar ?? '', Validators.required],
-      quote_en: [data?.quote?.en ?? ''],
-      quote_ar: [data?.quote?.ar ?? ''],
+      quote_en: [data?.quote?.en ?? '', [Validators.maxLength(BLOG_LIMITS.quote)]],
+      quote_ar: [data?.quote?.ar ?? '', [Validators.maxLength(BLOG_LIMITS.quote)]],
       existing_image: [data?.image ?? null],
       image_file: [null as File | null],
       image_preview: [data?.image_url ?? null],
@@ -278,8 +287,45 @@ export class BlogFormComponent implements OnInit, OnDestroy {
         this.saving.set(false);
         this.router.navigate(['/admin/blogs']);
       },
-      error: () => this.saving.set(false),
+      error: (e: unknown) => {
+        this.saving.set(false);
+        this.showServerErrors(e);
+      },
     });
+  }
+
+  /**
+   * The message for a touched, invalid field: what is wrong and the limit,
+   * not always "This field is required" (NEW2B-5877 / 5878 / 5890).
+   */
+  fieldError(ctrl: AbstractControl | null | undefined): FieldError | null {
+    if (!ctrl || !ctrl.invalid || !ctrl.touched) return null;
+    const e = ctrl.errors ?? {};
+    if (e['server']) return { key: String(e['server']) };
+    if (e['required']) return { key: 'errors.required' };
+    if (e['maxlength']) return { key: 'errors.max_length_now', params: { max: e['maxlength'].requiredLength, now: e['maxlength'].actualLength } };
+    if (e['max']) return { key: 'errors.max_value', params: { max: e['max'].max } };
+    if (e['min']) return { key: 'errors.min_value', params: { min: e['min'].min } };
+    if (e['pattern']) return { key: 'errors.whole_number' };
+    return { key: 'errors.validation' };
+  }
+
+  /** A 422 from the server: its message on the field it names (top-level and per-section). */
+  private showServerErrors(e: unknown): void {
+    if (!(e instanceof HttpErrorResponse) || e.status !== 422) return;
+    const errors = (e.error?.errors ?? {}) as Record<string, string[] | undefined>;
+    for (const [path, messages] of Object.entries(errors)) {
+      const message = messages?.[0];
+      if (!message) continue;
+      const m = /^sections\.(\d+)\.(\w+)(?:\.(en|ar))?$/.exec(path);
+      const ctrl = m
+        ? this.sections.at(Number(m[1]))?.get(m[3] ? `${m[2]}_${m[3]}` : m[2])
+        : this.form.get(path.replace('.', '_'));
+      if (ctrl) {
+        ctrl.setErrors({ ...(ctrl.errors ?? {}), server: message });
+        ctrl.markAsTouched();
+      }
+    }
   }
 
   private buildFormData(): FormData {

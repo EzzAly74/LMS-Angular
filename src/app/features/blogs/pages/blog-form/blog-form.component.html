@@ -34,8 +34,8 @@
             <input type="text" formControlName="title_en" class="bf-input"
               [placeholder]="'blogs.title_placeholder' | translate"
               [class.bf-input--error]="form.controls.title_en.invalid && form.controls.title_en.touched" />
-            @if (form.controls.title_en.invalid && form.controls.title_en.touched) {
-            <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            @if (fieldError(form.controls.title_en); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
             }
           </div>
 
@@ -46,8 +46,8 @@
             <input type="text" formControlName="title_ar" class="bf-input" dir="rtl"
               [placeholder]="'blogs.title_placeholder' | translate"
               [class.bf-input--error]="form.controls.title_ar.invalid && form.controls.title_ar.touched" />
-            @if (form.controls.title_ar.invalid && form.controls.title_ar.touched) {
-            <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            @if (fieldError(form.controls.title_ar); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
             }
           </div>
 
@@ -55,14 +55,32 @@
           <div class="bf-field">
             <label class="bf-field__label">{{ 'blogs.subtitle_en' | translate }}</label>
             <textarea formControlName="subtitle_en" rows="3" class="bf-textarea"
+              [class.bf-input--error]="fieldError(form.controls.subtitle_en)"
               [placeholder]="'blogs.subtitle_placeholder' | translate"></textarea>
+            <div class="bf-field__foot">
+              @if (fieldError(form.controls.subtitle_en); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
+              <span class="bf-counter" [class.bf-counter--over]="(form.controls.subtitle_en.value?.length ?? 0) > LIMITS.subtitle">
+                {{ form.controls.subtitle_en.value?.length ?? 0 }}/{{ LIMITS.subtitle }}
+              </span>
+            </div>
           </div>
 
           <!-- Subtitle AR -->
           <div class="bf-field">
             <label class="bf-field__label">{{ 'blogs.subtitle_ar' | translate }}</label>
             <textarea formControlName="subtitle_ar" rows="3" class="bf-textarea" dir="rtl"
+              [class.bf-input--error]="fieldError(form.controls.subtitle_ar)"
               [placeholder]="'blogs.subtitle_placeholder' | translate"></textarea>
+            <div class="bf-field__foot">
+              @if (fieldError(form.controls.subtitle_ar); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
+              <span class="bf-counter" [class.bf-counter--over]="(form.controls.subtitle_ar.value?.length ?? 0) > LIMITS.subtitle">
+                {{ form.controls.subtitle_ar.value?.length ?? 0 }}/{{ LIMITS.subtitle }}
+              </span>
+            </div>
           </div>
 
           <!-- Cover image -->
@@ -83,8 +101,8 @@
             <p-dropdown formControlName="level" [options]="levelOptions()" optionLabel="value" optionValue="code"
               appendTo="body" [placeholder]="'blogs.level_placeholder' | translate" styleClass="bf-dropdown"
               [class.bf-dropdown--error]="form.controls.level.invalid && form.controls.level.touched" />
-            @if (form.controls.level.invalid && form.controls.level.touched) {
-            <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            @if (fieldError(form.controls.level); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
             }
           </div>
 
@@ -97,9 +115,9 @@
                 appendTo="body" [filter]="true" [showClear]="true" (onFilter)="onUserFilter($event)"
                 [placeholder]="'blogs.owner_placeholder' | translate" styleClass="bf-dropdown"
                 [class.bf-dropdown--error]="form.controls.author_user_id.invalid && form.controls.author_user_id.touched" />
-              @if (form.controls.author_user_id.invalid && form.controls.author_user_id.touched) {
-              <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
-              }
+              @if (fieldError(form.controls.author_user_id); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
               <label class="bf-check">
                 <input type="checkbox" formControlName="is_anonymous" />
                 <span class="bf-check__box"><i class="pi pi-check" aria-hidden="true"></i></span>
@@ -112,13 +130,13 @@
                   class="bf-field__req">*</span></label>
               <div class="bf-time-input"
                 [class.bf-input--error]="form.controls.reading_time.invalid && form.controls.reading_time.touched">
-                <input type="number" min="1" formControlName="reading_time"
+                <input type="number" [min]="LIMITS.readMin" [max]="LIMITS.readMax" step="1" formControlName="reading_time"
                   [placeholder]="'blogs.read_time_placeholder' | translate" />
                 <span class="bf-time-input__suffix">{{ 'blogs.minutes' | translate }}</span>
               </div>
-              @if (form.controls.reading_time.invalid && form.controls.reading_time.touched) {
-              <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
-              }
+              @if (fieldError(form.controls.reading_time); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
             </div>
           </div>
 
@@ -142,6 +160,9 @@
             <input type="text" formControlName="title_en" class="bf-input"
               [placeholder]="'blogs.title_placeholder' | translate"
               [class.bf-input--error]="section.controls['title_en'].invalid && section.controls['title_en'].touched" />
+            @if (fieldError(section.controls['title_en']); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
           </div>
 
           <div class="bf-field">
@@ -150,6 +171,9 @@
             <input type="text" formControlName="title_ar" class="bf-input" dir="rtl"
               [placeholder]="'blogs.title_placeholder' | translate"
               [class.bf-input--error]="section.controls['title_ar'].invalid && section.controls['title_ar'].touched" />
+            @if (fieldError(section.controls['title_ar']); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
           </div>
 
           <div class="bf-field">
@@ -164,8 +188,8 @@
                 class="bf-field__req">*</span></label>
             <nas-rich-text formControlName="body_en" areaMinHeight="140px"
               [placeholder]="'blogs.body_placeholder' | translate" />
-            @if (section.controls['body_en'].invalid && section.controls['body_en'].touched) {
-            <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            @if (fieldError(section.controls['body_en']); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
             }
           </div>
 
@@ -174,20 +198,28 @@
                 class="bf-field__req">*</span></label>
             <nas-rich-text formControlName="body_ar" areaMinHeight="140px"
               [placeholder]="'blogs.body_placeholder' | translate" />
-            @if (section.controls['body_ar'].invalid && section.controls['body_ar'].touched) {
-            <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
+            @if (fieldError(section.controls['body_ar']); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
             }
           </div>
 
           <div class="bf-field">
             <label class="bf-field__label">{{ 'blogs.quote' | translate }}</label>
             <input type="text" formControlName="quote_en" class="bf-input"
+              [class.bf-input--error]="fieldError(section.controls['quote_en'])"
               [placeholder]="'blogs.quote_placeholder_en' | translate" />
+            @if (fieldError(section.controls['quote_en']); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
           </div>
           <div class="bf-field">
             <label class="bf-field__label">{{ 'blogs.quote_ar' | translate }}</label>
             <input type="text" formControlName="quote_ar" class="bf-input" dir="rtl"
+              [class.bf-input--error]="fieldError(section.controls['quote_ar'])"
               [placeholder]="'blogs.quote_placeholder_ar' | translate" />
+            @if (fieldError(section.controls['quote_ar']); as err) {
+            <span class="bf-field__error" role="alert">{{ err.key | translate: err.params }}</span>
+            }
           </div>
         </div>
         }

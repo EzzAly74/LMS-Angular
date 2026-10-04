@@ -316,3 +316,21 @@
     &:disabled { opacity: 0.45; cursor: not-allowed; }
   }
 }
+
+// Under a long field: the message on the start side, the count on the end side.
+.bf-field__foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nas-space-3);
+
+  .bf-counter { margin-inline-start: auto; }
+}
+
+.bf-counter {
+  flex-shrink: 0;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-muted);
+
+  &--over { color: var(--nas-status-red-500, #dc2626); font-weight: var(--nas-weight-medium); }
+}
