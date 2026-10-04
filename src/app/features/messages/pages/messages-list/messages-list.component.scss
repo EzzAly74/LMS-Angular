@@ -27,6 +27,9 @@
   flex-direction: column;
 }
 
+/* NEW2B-5905: the pager under the last row. */
+.inbox-card nas-pager { border-block-start: 1px solid var(--nas-color-border); }
+
 .inbox-item {
   display: grid;
   grid-template-columns: 40px 1fr;
@@ -38,6 +41,7 @@
 
   &:first-child { border-top: none; }
   &:hover { background: #fafafa; }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: -2px; }
 
   /* Unread / highlighted state — soft mint background from Figma */
   &--unread {

@@ -17,7 +17,7 @@
 
   <!-- ── Conversation list ───────────────────────────────────────────── -->
   <div class="nas-card inbox-card">
-    @if (loading()) {
+    @if (list.state() === 'loading') {
       @for (i of skeletonRows; track i) {
         <article class="inbox-item inbox-item--skeleton">
           <div class="inbox-item__icon inbox-item__icon--skeleton"></div>
@@ -30,11 +30,16 @@
           </div>
         </article>
       }
-    } @else if (items().length) {
-      @for (c of items(); track c.id) {
+    } @else if (list.state() === 'error') {
+      <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+    } @else if (list.items().length) {
+      @for (c of list.items(); track c.id) {
         <article class="inbox-item"
                  [class.inbox-item--unread]="c.unread_count > 0"
-                 (click)="openConversation(c)">
+                 role="button" tabindex="0"
+                 (click)="openConversation(c)"
+                 (keydown.enter)="openConversation(c)"
+                 (keydown.space)="$event.preventDefault(); openConversation(c)">
           <div class="inbox-item__icon"><i class="pi pi-comments" aria-hidden="true"></i></div>
           <div class="inbox-item__body">
             <div class="inbox-item__sender">
@@ -61,6 +66,10 @@
         <i class="pi pi-inbox" aria-hidden="true"></i>
         <p>{{ 'inbox.empty' | translate }}</p>
       </div>
+    }
+    @if (list.pageable()) {
+      <nas-pager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+        (pageChange)="list.goTo($event)" />
     }
   </div>
 </div>
@@ -91,7 +100,7 @@
       <form *nasCan="'create-inbox'" class="thread__composer" (ngSubmit)="sendReply()">
         <input type="text" class="nas-input"
                [ngModel]="draftReply()" [ngModelOptions]="{ standalone: true }"
-               (ngModelChange)="draftReply.set($event)"
+               (ngModelChange)="draftReply.set($event)" [attr.maxlength]="BODY_MAX"
                [placeholder]="'inbox.compose_message_placeholder' | translate" />
         <button type="submit" class="nas-btn nas-btn--primary"
                 [disabled]="!draftReply().trim() || replying()">
@@ -191,9 +200,16 @@
       <textarea formControlName="message" class="nas-input nas-input--area" rows="4"
                 [class.nas-input--error]="messageCtrl.invalid && messageCtrl.touched"
                 [placeholder]="'inbox.compose_message_placeholder' | translate"></textarea>
-      @if (messageCtrl.touched && messageCtrl.errors?.['required']) {
-        <span class="nas-form__error">{{ 'inbox.error_required' | translate }}</span>
-      }
+      <div class="nas-field-footer">
+        @if (messageCtrl.touched && messageCtrl.errors?.['required']) {
+          <span class="nas-form__error">{{ 'inbox.error_required' | translate }}</span>
+        } @else if (messageCtrl.errors?.['maxlength']) {
+          <span class="nas-form__error">{{ 'inbox.error_max_chars' | translate : { max: BODY_MAX } }}</span>
+        } @else { <span></span> }
+        <span class="nas-char-counter" [class.nas-char-counter--error]="(messageCtrl.value?.length ?? 0) > BODY_MAX">
+          {{ messageCtrl.value?.length ?? 0 }}/{{ BODY_MAX }}
+        </span>
+      </div>
     </div>
 
     <footer class="nas-form__footer">

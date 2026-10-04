@@ -15,7 +15,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
-import { Subscription } from 'rxjs';
+import { Subscription, map } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { MessagesRealtimeService } from '../../../../core/services/messages-realtime.service';
@@ -29,6 +29,9 @@ import {
 } from '../../../../shared/nas';
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
+import { createPagedList, type PagedQuery } from '../../../../shared/list/paged-list';
 
 /* ── Models (unified conversation store) ─────────────────────────────── */
 
@@ -53,10 +56,18 @@ interface ComposeEntry { uid: string; id: number; name: string; type: 'learner' 
 
 type InboxTab = 'unread' | 'received' | 'sent';
 
+interface InboxQuery extends PagedQuery { readonly tab: InboxTab; }
+
+/** Rows per inbox page (NEW2B-5905). */
+const INBOX_PER_PAGE = 15;
+/** The API's reply / broadcast body limit. */
+const BODY_MAX = 5000;
+
 @Component({
   selector: 'app-messages-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [
+    NasCanDirective,
     CommonModule,
     TranslateModule,
     FormsModule,
@@ -67,6 +78,8 @@ type InboxTab = 'unread' | 'received' | 'sent';
     NasPageHeaderComponent,
     NasPillTabsComponent,
     NasShimmerComponent,
+    NasPagerComponent,
+    NasListStateComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './messages-list.component.html',
@@ -82,10 +95,11 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   private realtimeSub?: Subscription;
 
   readonly TITLE_MAX = 191;
+  readonly BODY_MAX = BODY_MAX;
 
   constructor() {
     withLocaleReload(() => {
-      this.load();
+      this.list.reload();
       this.loadRecipients();
     });
 
@@ -108,9 +122,15 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   }
 
   /* ── List state ────────────────────────────────────────────────────── */
-  items = signal<Conversation[]>([]);
-  loading = signal(true);
-  activeTab = signal<InboxTab>('unread');
+  /** Server pages, newest first; the tab is filtered by the API before paging (NEW2B-5905). */
+  readonly list = createPagedList<InboxQuery, Conversation>({
+    initial: { search: '', page: 1, perPage: INBOX_PER_PAGE, tab: 'unread' },
+    load: q =>
+      this.api
+        .getPaginated<Conversation>(API.CONVERSATIONS, { tab: q.tab, page: q.page, per_page: q.perPage })
+        .pipe(map(res => ({ items: res.result.data, total: res.result.total }))),
+  });
+  activeTab = computed(() => this.list.query().tab);
   readonly skeletonRows = [0, 1, 2, 3, 4];
 
   tabs = computed<NasPillTab[]>(() =>
@@ -133,11 +153,10 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   recipientSearch = signal('');
   activeChip = signal<string>('all'); // 'all' | 'learner' | 'role:<id>'
   private selected = signal<Set<string>>(new Set());
-  private allFlags = signal<Set<string>>(new Set());
 
   composeForm = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(this.TITLE_MAX)]],
-    message: ['', [Validators.required]],
+    message: ['', [Validators.required, Validators.maxLength(BODY_MAX)]],
   });
   get titleCtrl() { return this.composeForm.controls.title; }
   get messageCtrl() { return this.composeForm.controls.message; }
@@ -194,13 +213,13 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   selectedCount = computed(() => this.selected().size);
 
   ngOnInit(): void {
-    this.load();
+    this.list.reload();
     this.loadRecipients();
 
     // Realtime push (see MessagesRealtimeService) — refresh the list preview
     // for every incoming message, and live-append it if its thread is open.
     this.realtimeSub = this.realtime.messageReceived$.subscribe((payload) => {
-      this.load();
+      this.list.reload();
       if (this.thread()?.conversation.id === payload.conversation_id) {
         // The thread is already open — fetching it marks the conversation
         // read server-side, so the badge the realtime push just bumped
@@ -216,17 +235,6 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   }
 
   /* ── Data ──────────────────────────────────────────────────────────── */
-  load(): void {
-    this.loading.set(true);
-    this.api.get<Conversation[]>(API.CONVERSATIONS, { tab: this.activeTab() }).subscribe({
-      next: (res) => {
-        this.items.set(Array.isArray(res.result) ? res.result : []);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
-  }
-
   loadRecipients(): void {
     this.api.get<CatalogGroup[]>(API.MESSAGES_RECIPIENTS).subscribe({
       next: (res) => this.catalog.set(res.result ?? []),
@@ -234,8 +242,7 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   }
 
   setTab(t: string): void {
-    this.activeTab.set(t as InboxTab);
-    this.load();
+    this.list.patch({ tab: t as InboxTab });
   }
 
   /* ── Open thread / reply ───────────────────────────────────────────── */
@@ -248,7 +255,7 @@ export class MessagesListComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.thread.set(res.result ?? null);
         this.loadingThread.set(false);
-        this.load();
+        this.list.reload();
         // Fetching the thread marks it read server-side — reflect that in
         // the sidebar badge right away instead of waiting for the next push.
         this.realtime.refreshUnread();
@@ -283,7 +290,6 @@ export class MessagesListComponent implements OnInit, OnDestroy {
     this.recipientSearch.set('');
     this.activeChip.set('all');
     this.selected.set(new Set());
-    this.allFlags.set(new Set());
     this.showCompose.set(true);
   }
 
@@ -292,76 +298,36 @@ export class MessagesListComponent implements OnInit, OnDestroy {
   toggleEntry(entry: ComposeEntry, checked: boolean): void {
     const next = new Set(this.selected());
     if (checked) next.add(entry.uid);
-    else {
-      next.delete(entry.uid);
-      const flags = new Set(this.allFlags());
-      if (entry.type === 'learner') flags.delete('learner');
-      else for (const r of entry.roleIds) flags.delete(`role:${r}`);
-      this.allFlags.set(flags);
-    }
+    else next.delete(entry.uid);
     this.selected.set(next);
   }
 
+  /**
+   * "All" / "All <group>" ticks every row the list shows now: the chosen group
+   * and the search together. It used to tick the whole group whatever the
+   * search, so a search then "All" messaged everyone (NEW2B-5904).
+   */
   isGroupAllChecked(): boolean {
-    const chip = this.activeChip();
-    if (chip === 'all') {
-      const entries = this.entries();
-      return entries.length > 0 && entries.every((e) => this.selected().has(e.uid));
-    }
-    return this.allFlags().has(chip);
+    const visible = this.visibleEntries();
+    const selected = this.selected();
+    return visible.length > 0 && visible.every((e) => selected.has(e.uid));
   }
 
   toggleGroupAll(checked: boolean): void {
-    const chip = this.activeChip();
     const next = new Set(this.selected());
-    const flags = new Set(this.allFlags());
-    const targets =
-      chip === 'all'
-        ? this.entries()
-        : this.entries().filter((e) =>
-            chip === 'learner'
-              ? e.type === 'learner'
-              : e.type === 'admin' && e.roleIds.includes(Number(chip.slice(5))),
-          );
-    for (const e of targets) {
+    for (const e of this.visibleEntries()) {
       if (checked) next.add(e.uid);
       else next.delete(e.uid);
     }
-    if (chip === 'all') {
-      flags.clear();
-      if (checked) {
-        flags.add('learner');
-        for (const g of this.catalog()) if (g.type === 'role') flags.add(`role:${g.role_id}`);
-      }
-    } else if (checked) {
-      flags.add(chip);
-    } else {
-      flags.delete(chip);
-    }
     this.selected.set(next);
-    this.allFlags.set(flags);
   }
 
-  /** Resolve the current selection to a flat recipient list (fan-out). */
+  /** The selection as a flat recipient list (one conversation each). */
   private buildRecipients(): Array<{ type: 'learner' | 'admin'; id: number }> {
-    const flags = this.allFlags();
     const selected = this.selected();
-    const out = new Map<string, { type: 'learner' | 'admin'; id: number }>();
-    for (const g of this.catalog()) {
-      if (g.type === 'learner') {
-        const ids = flags.has('learner')
-          ? g.members.map((m) => m.id)
-          : g.members.filter((m) => selected.has(`learner:${m.id}`)).map((m) => m.id);
-        for (const id of ids) out.set(`learner:${id}`, { type: 'learner', id });
-      } else if (g.role_id != null) {
-        const chipId = `role:${g.role_id}`;
-        const ids = flags.has(chipId)
-          ? g.members.map((m) => m.id)
-          : g.members.filter((m) => selected.has(`admin:${m.id}`)).map((m) => m.id);
-        for (const id of ids) out.set(`admin:${id}`, { type: 'admin', id });
-      }
-    }
-    return [...out.values()];
+    return this.entries()
+      .filter((e) => selected.has(e.uid))
+      .map((e) => ({ type: e.type, id: e.id }));
   }
 
   send(): void {
@@ -378,8 +344,7 @@ export class MessagesListComponent implements OnInit, OnDestroy {
           this.toast.success('messages_list_toasts.sent');
           this.showCompose.set(false);
           this.saving.set(false);
-          this.activeTab.set('sent');
-          this.load();
+          this.list.patch({ tab: 'sent' });
         },
         error: () => this.saving.set(false),
       });
