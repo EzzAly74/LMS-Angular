@@ -39,6 +39,9 @@ export interface AdminUserListItem {
   /** Instructor "Brief" (bio). Locale-resolved string + per-locale keys;
    *  null for non-instructor rows. */
   brief: string | null;
+  /** Instructor job title, per language (NEW2B-5926). */
+  title_en?: string | null;
+  title_ar?: string | null;
   brief_en: string | null;
   brief_ar: string | null;
   email: string | null;
@@ -109,6 +112,9 @@ export interface AdminUserStorePayload {
   /** Instructor "Brief" (bilingual). Only meaningful for the instructor role. */
   brief_en?: string | null;
   brief_ar?: string | null;
+  /** Instructor job title, shown under the name on the Website. */
+  title_en?: string | null;
+  title_ar?: string | null;
   /** Optional avatar upload. Sent as multipart/form-data when present. */
   image?: File | null;
 }

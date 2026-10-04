@@ -37,6 +37,8 @@ interface UserFormState {
   name_en: string;
   name_ar: string;
   /** Instructor "Brief" (bio), bilingual. Only used when role === instructor. */
+  title_en: string;
+  title_ar: string;
   brief_en: string;
   brief_ar: string;
   email: string;
@@ -303,6 +305,8 @@ export class UserListComponent implements OnInit, OnDestroy {
       source:    user.source,
       name_en:   user.name_en ?? user.name ?? '',
       name_ar:   user.name_ar ?? '',
+      title_en:  user.title_en ?? '',
+      title_ar:  user.title_ar ?? '',
       brief_en:  user.brief_en ?? '',
       brief_ar:  user.brief_ar ?? '',
       email:     user.email ?? '',
@@ -338,7 +342,7 @@ export class UserListComponent implements OnInit, OnDestroy {
       // Brief (instructor bio) — only relevant for the instructor role, so
       // only send it then. Empty strings are allowed (clears the brief).
       ...(f.role === 'instructor'
-        ? { brief_en: f.brief_en.trim(), brief_ar: f.brief_ar.trim() }
+        ? { title_en: f.title_en.trim(), title_ar: f.title_ar.trim(), brief_en: f.brief_en.trim(), brief_ar: f.brief_ar.trim() }
         : {}),
       // Send the password only when one was entered. On create it is
       // required (enforced by `formValid`); on edit it is optional and a
@@ -487,7 +491,7 @@ export class UserListComponent implements OnInit, OnDestroy {
   /* ── Internals ──────────────────────────────────────────────── */
   private emptyForm(): UserFormState {
     return {
-      id: null, source: null, name_en: '', name_ar: '', brief_en: '', brief_ar: '', email: '',
+      id: null, source: null, name_en: '', name_ar: '', title_en: '', title_ar: '', brief_en: '', brief_ar: '', email: '',
       role: '', password: '', password_confirmation: '',
       image: null, imagePreview: null,
     };

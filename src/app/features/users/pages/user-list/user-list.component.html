@@ -136,6 +136,25 @@
 
     <!-- Brief — only the Instructor "user" carries one (persists to bio). -->
     @if (form().role === 'instructor') {
+      <!-- Title: under the instructor's name on the Website (NEW2B-5926). -->
+      <div class="ul-form__field">
+        <label for="ul-title-en">{{ 'users.title_en' | translate }}</label>
+        <input id="ul-title-en" class="ul-input" type="text" maxlength="150"
+          [placeholder]="'users.title_placeholder' | translate"
+          [ngModel]="form().title_en"
+          (ngModelChange)="updateForm('title_en', $event)"
+          name="title_en" />
+      </div>
+
+      <div class="ul-form__field">
+        <label for="ul-title-ar">{{ 'users.title_ar' | translate }}</label>
+        <input id="ul-title-ar" class="ul-input" type="text" maxlength="150" dir="rtl"
+          [placeholder]="'users.title_placeholder' | translate"
+          [ngModel]="form().title_ar"
+          (ngModelChange)="updateForm('title_ar', $event)"
+          name="title_ar" />
+      </div>
+
       <div class="ul-form__field">
         <label>{{ 'users.brief_en' | translate }}</label>
         <textarea
