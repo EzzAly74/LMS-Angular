@@ -172,9 +172,6 @@ export interface CreateCoursePayload {
 /** Possible content types for a course module — drives form fields + chip label. */
 export type ModuleContentType = 'video' | 'document' | 'article' | 'link';
 
-/** Who can see the module: every cohort or one specific cohort/session. */
-export type ModuleLearnerScope = 'all' | 'cohort';
-
 /**
  * One module belonging to a course (backed by `course_lectures` rows).
  * `title` / `instructions` arrive as bilingual JSON so the edit dialog can
@@ -187,9 +184,6 @@ export interface CourseModule {
   title: LocalizedText;
   instructions?: LocalizedText | null;
   content_type: ModuleContentType;
-  learner_scope: ModuleLearnerScope;
-  session_id?: number | null;
-  session_number: number | null;
   duration_minutes?: number | null;
   type?: 'url' | 'file' | 'article';
   /** URL (link) or stored file path (video/document); null for articles. */
@@ -279,10 +273,6 @@ export interface ModulePayload {
   title: LocalizedText;
   instructions?: LocalizedText | null;
   content_type: ModuleContentType;
-  learner_scope: ModuleLearnerScope;
-  /** "Related to session number" — the week/session this module is taught in. */
-  session_number?: number | null;
-  session_id?: number | null;
   duration_minutes?: number | null;
   type?: 'url' | 'file' | 'article';
   /** URL (link) or stored file path (video/document); empty/null for articles. */

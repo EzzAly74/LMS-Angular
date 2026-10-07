@@ -120,41 +120,11 @@
     </div>
 
     <div class="nas-form__field">
-      <label>{{ 'course_detail.related_session_number' | translate }} <span class="required">*</span></label>
-      <p-dropdown [options]="sessionNumberOptions()"
-                  formControlName="session_number" styleClass="w-full" appendTo="body"
-                  [placeholder]="'course_detail.related_session_number_ph' | translate" />
-    </div>
-
-    <div class="nas-form__field">
       <label>{{ 'course_detail.content_type' | translate }} <span class="required">*</span></label>
       <p-dropdown [options]="moduleContentTypeOpts()" optionLabel="value" optionValue="id"
                   formControlName="content_type" styleClass="w-full" appendTo="body"
                   (onChange)="onModuleContentTypeChange()" />
     </div>
-
-    <div class="nas-form__field">
-      <label>{{ 'course_detail.learner_scope' | translate }} <span class="required">*</span></label>
-      <p-dropdown [options]="learnerScopeOpts()" optionLabel="value" optionValue="id"
-                  formControlName="learner_scope" styleClass="w-full" appendTo="body" />
-    </div>
-
-    @if (enumCode('module_learner_scope', moduleForm.value.learner_scope) === 'cohort') {
-      <div class="nas-form__field">
-        <label>{{ 'course_detail.cohort' | translate }} <span class="required">*</span></label>
-        @if (cohortDropdownOpts().length) {
-          <p-dropdown [options]="cohortDropdownOpts()" optionLabel="name" optionValue="id"
-                      formControlName="session_id"
-                      [placeholder]="'course_detail.select_cohort' | translate"
-                      appendTo="body"
-                      styleClass="w-full" />
-        } @else {
-          <div class="module-form__hint module-form__hint--warn">
-            {{ 'course_detail.no_cohorts_yet' | translate }}
-          </div>
-        }
-      </div>
-    }
 
     <div class="nas-form__field">
       <label>{{ 'course_detail.approximate_duration' | translate }} <span class="required">*</span></label>

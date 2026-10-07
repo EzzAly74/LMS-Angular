@@ -18,7 +18,6 @@ export type EnumName =
   | 'course_level'
   | 'cohort_status'
   | 'module_content_type'
-  | 'module_learner_scope'
   | 'resource_type'
   | 'certificate_basis'
   | 'locale'

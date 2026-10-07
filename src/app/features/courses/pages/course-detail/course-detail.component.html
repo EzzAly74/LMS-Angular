@@ -105,7 +105,7 @@
               <app-course-learners-tab [courseId]="courseId" [cohorts]="cohorts()" />
             }
             @case ('content') {
-              <app-course-content-tab [courseId]="courseId" [cohorts]="cohorts()" [numberOfSessions]="c.number_of_sessions ?? null"
+              <app-course-content-tab [courseId]="courseId"
                 (countChange)="modulesCount.set($event)" />
             }
             @case ('quizzes') {

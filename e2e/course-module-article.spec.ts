@@ -7,8 +7,8 @@ import { mockCourse } from './fixtures/course-detail-mocks';
  * and is never sent. Runs in every viewport project, in EN and AR.
  */
 const COPY = {
-  en: { module: 'Module', article: 'Article', all: 'All cohorts', create: 'Create Module', required: 'Write the article learners will read.', tooLong: /too long to save/ },
-  ar: { module: 'وحدة', article: 'مقال', all: 'جميع المجموعات', create: /إنشاء/, required: 'اكتب المقال الذي سيقرأه المتدربون.', tooLong: /أطول من أن يُحفظ/ },
+  en: { module: 'Module', article: 'Article', create: 'Create Module', required: 'Write the article learners will read.', tooLong: /too long to save/ },
+  ar: { module: 'وحدة', article: 'مقال', create: /إنشاء/, required: 'اكتب المقال الذي سيقرأه المتدربون.', tooLong: /أطول من أن يُحفظ/ },
 } as const;
 
 async function openArticleForm(page: Page, locale: 'en' | 'ar'): Promise<Request[]> {
@@ -20,12 +20,10 @@ async function openArticleForm(page: Page, locale: 'en' | 'ar'): Promise<Request
   const dialog = page.getByRole('dialog');
   await dialog.locator('input[formcontrolname="title_en"]').fill('Reading');
   await dialog.locator('input[formcontrolname="title_ar"]').fill('قراءة');
-  await dialog.locator('p-dropdown[formcontrolname="session_number"]').click();
-  await page.getByRole('option', { name: '1', exact: true }).click();
   await dialog.locator('p-dropdown[formcontrolname="content_type"]').click();
   await page.getByRole('option', { name: COPY[locale].article, exact: true }).click();
-  await dialog.locator('p-dropdown[formcontrolname="learner_scope"]').click();
-  await page.getByRole('option', { name: COPY[locale].all, exact: true }).click();
+  // The module form has no session-number or learner-scope field any more (D-079).
+  await expect(dialog.locator('[formcontrolname="session_number"], [formcontrolname="learner_scope"], [formcontrolname="session_id"]')).toHaveCount(0);
   return seen;
 }
 

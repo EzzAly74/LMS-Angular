@@ -108,12 +108,11 @@ export class CoursesApiService {
    * New Cohort with its completed schedule. All-or-nothing on the server: a
    * 422 carries every problem under `report.errors` (NasImportProblem rows).
    */
-  createCohortWithSchedule(courseId: number, body: { name_en: string; name_ar: string; capacity: number | null; open_early: boolean; schedule: File }): Observable<ApiResponse<Cohort>> {
+  createCohortWithSchedule(courseId: number, body: { name_en: string; name_ar: string; capacity: number | null; schedule: File }): Observable<ApiResponse<Cohort>> {
     const form = new FormData();
     form.append('name[en]', body.name_en);
     form.append('name[ar]', body.name_ar);
     if (body.capacity !== null) form.append('capacity', String(body.capacity));
-    form.append('open_for_enrollment', body.open_early ? '1' : '0');
     form.append('schedule', body.schedule, body.schedule.name);
     return this.api.post<Cohort>(courseUrl.cohortScheduled(courseId), form);
   }
@@ -129,13 +128,11 @@ export class CoursesApiService {
    * the server adds only the new sessions (held ones never change). A 422
    * carries every problem under `report.errors`, and nothing is saved.
    */
-  updateCohortWithSchedule(courseId: number, cohortId: number, body: { name_en: string; name_ar: string; capacity: number | null; open_early: boolean | null; schedule: File | null }): Observable<ApiResponse<CohortScheduleUpdate>> {
+  updateCohortWithSchedule(courseId: number, cohortId: number, body: { name_en: string; name_ar: string; capacity: number | null; schedule: File | null }): Observable<ApiResponse<CohortScheduleUpdate>> {
     const form = new FormData();
     form.append('name[en]', body.name_en);
     form.append('name[ar]', body.name_ar);
     if (body.capacity !== null) form.append('capacity', String(body.capacity));
-    // Null (a started cohort) leaves the enrolment window to the calendar.
-    if (body.open_early !== null) form.append('open_for_enrollment', body.open_early ? '1' : '0');
     if (body.schedule) form.append('schedule', body.schedule, body.schedule.name);
     return this.api.post<CohortScheduleUpdate>(courseUrl.cohortSectionScheduled(courseId, cohortId), form);
   }

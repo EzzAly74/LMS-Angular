@@ -22,10 +22,8 @@ import { CoursesApiService } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
 import type {
-  Cohort,
   CourseModule,
   ModuleContentType,
-  ModuleLearnerScope,
   ModulePayload,
   ModuleUploadResult,
 } from '../../../../../../core/models/course.types';
@@ -76,10 +74,6 @@ export class CourseContentTabComponent implements OnInit {
   private readonly locale = inject(LocaleService).locale;
 
   readonly courseId = input.required<number>();
-  /** The course's cohorts, for the Specific-Cohort scope and row sublines. */
-  readonly cohorts = input<Cohort[]>([]);
-  /** The course's planned session count ("Related to session number" options). */
-  readonly numberOfSessions = input<number | null>(null);
   /** The module count after each load, for the tab pill. */
   readonly countChange = output<number>();
 
@@ -123,31 +117,10 @@ export class CourseContentTabComponent implements OnInit {
   /** Module content-type dropdown — backend `module_content_type` enum. */
   moduleContentTypeOpts = this.enums.options('module_content_type');
 
-  /** Module learner-scope dropdown — backend `module_learner_scope` enum. */
-  learnerScopeOpts = this.enums.options('module_learner_scope');
-
-  /** Cohort dropdown options for the Specific-Cohort scope. */
-  cohortDropdownOpts = computed(() =>
-    this.cohorts().map((c) => ({
-      id: c.id,
-      name: c.name || `Cohort ${c.id}`,
-    })),
-  );
-
-  /** "Related to session number" options — 1..N from the course's planned sessions. */
-  sessionNumberOptions = computed<number[]>(() => {
-    const n = this.numberOfSessions() ?? 0;
-    const count = n && n > 0 ? n : 12;
-    return Array.from({ length: count }, (_, i) => i + 1);
-  });
-
   moduleForm = this.fb.group({
     title_en: ['', Validators.required],
     title_ar: ['', Validators.required],
-    session_number: [null as number | null, Validators.required],
     content_type: [null as number | null, Validators.required],
-    learner_scope: [null as number | null, Validators.required],
-    session_id: [null as number | null],
     duration_minutes: [
       30 as number | null,
       [Validators.required, Validators.min(0)],
@@ -174,8 +147,8 @@ export class CourseContentTabComponent implements OnInit {
 
   /**
    * Helper for templates that need to compare a form's enum-id value
-   * against a known string code (e.g. "is this module learner_scope ==
-   * 'cohort'?"). Returns null when the enum hasn't loaded yet so callers
+   * against a known string code (e.g. "is this module content_type ==
+   * 'article'?"). Returns null when the enum hasn't loaded yet so callers
    * can default safely.
    */
   enumCode(
@@ -298,10 +271,7 @@ export class CourseContentTabComponent implements OnInit {
     this.moduleForm.reset({
       title_en: '',
       title_ar: '',
-      session_number: null,
       content_type: this.enums.idForCode('module_content_type', 'video'),
-      learner_scope: this.enums.idForCode('module_learner_scope', 'all'),
-      session_id: null,
       duration_minutes: 30,
       video: '',
       content: '',
@@ -328,13 +298,7 @@ export class CourseContentTabComponent implements OnInit {
     this.moduleForm.reset({
       title_en: pickLocalized(m.title, 'en'),
       title_ar: pickLocalized(m.title, 'ar'),
-      session_number: m.session_number ?? null,
       content_type: this.enums.idForCode('module_content_type', m.content_type),
-      learner_scope: this.enums.idForCode(
-        'module_learner_scope',
-        m.learner_scope,
-      ),
-      session_id: m.session_id ?? null,
       duration_minutes: m.duration_minutes ?? 30,
       video: m.video ?? '',
       content: m.content ?? '',
@@ -473,11 +437,7 @@ export class CourseContentTabComponent implements OnInit {
       'module_content_type',
       v.content_type ?? null,
     ) as ModuleContentType | null;
-    const learnerScopeCode = this.enums.codeForId(
-      'module_learner_scope',
-      v.learner_scope ?? null,
-    ) as ModuleLearnerScope | null;
-    if (!contentTypeCode || !learnerScopeCode) return;
+    if (!contentTypeCode) return;
 
     // Video/Document store an uploaded file (`video` = storage path, `type` =
     // file); External Link stores a URL in `video`; Article stores rich-text
@@ -520,9 +480,6 @@ export class CourseContentTabComponent implements OnInit {
             }
           : null,
       content_type: contentTypeCode,
-      learner_scope: learnerScopeCode,
-      session_number: v.session_number ?? null,
-      session_id: learnerScopeCode === 'cohort' ? (v.session_id ?? null) : null,
       duration_minutes: v.duration_minutes ?? null,
       type: isArticle ? 'article' : isFile ? 'file' : 'url',
       video: isArticle ? null : videoValue,
@@ -580,17 +537,8 @@ export class CourseContentTabComponent implements OnInit {
     overlay.toggle(ev);
   }
 
-  /** "Cohort A · 30 min" subline shown under each module title in tight rows. */
+  /** "30 min" subline shown under each module title in tight rows. */
   moduleSubline(m: CourseModule): string {
-    const parts: string[] = [];
-    const dur = this.moduleDurationLabel(m);
-    if (dur) parts.push(dur);
-    if (m.learner_scope === 'cohort' && m.session_id) {
-      const cohort = this.cohorts().find(
-        (c) => c.id === m.session_id,
-      );
-      if (cohort?.name) parts.push(cohort.name);
-    }
-    return parts.join(' · ');
+    return this.moduleDurationLabel(m) ?? '';
   }
 }

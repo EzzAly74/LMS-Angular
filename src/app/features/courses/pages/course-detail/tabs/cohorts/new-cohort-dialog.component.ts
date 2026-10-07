@@ -61,16 +61,6 @@ export class NewCohortDialogComponent {
     name_en: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(255)] }),
     name_ar: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(255)] }),
     capacity: new FormControl<number | null>(30, [Validators.min(1), Validators.max(10000)]),
-    // "Open for enrolment early" (Q-073): shown in the app before the start date.
-    open_early: new FormControl(false, { nonNullable: true }),
-  });
-
-  /** Once a cohort has started its enrolment window follows the calendar; the switch is locked. */
-  readonly started = computed(() => {
-    const start = this.cohort()?.start_date;
-    if (!start) return false;
-    const today = new Date();
-    return start.slice(0, 10) <= `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   });
 
   /** Learners already in the edited cohort: the capacity cannot go below it (the server checks too). */
@@ -114,8 +104,7 @@ export class NewCohortDialogComponent {
     if (c === null) return true;
     const v = this.form.getRawValue();
     return v.name_en.trim() !== (c.name_en ?? '').trim() || v.name_ar.trim() !== (c.name_ar ?? '').trim()
-      || (v.capacity ?? null) !== (c.capacity ?? null)
-      || v.open_early !== (c.status === 'open_for_enrollment');
+      || (v.capacity ?? null) !== (c.capacity ?? null);
   }
 
   /** Each time the dialog opens: a fresh form (or the edited cohort), no file, no errors. */
@@ -123,10 +112,8 @@ export class NewCohortDialogComponent {
     const c = this.cohort();
     this.form.controls.capacity.setValidators([Validators.min(this.minCapacity()), Validators.max(10000)]);
     this.form.reset(c
-      ? { name_en: c.name_en ?? c.name ?? '', name_ar: c.name_ar ?? c.name ?? '', capacity: c.capacity ?? 30, open_early: c.status === 'open_for_enrollment' }
-      : { name_en: '', name_ar: '', capacity: 30, open_early: false });
-    if (this.started()) this.form.controls.open_early.disable({ emitEvent: false });
-    else this.form.controls.open_early.enable({ emitEvent: false });
+      ? { name_en: c.name_en ?? c.name ?? '', name_ar: c.name_ar ?? c.name ?? '', capacity: c.capacity ?? 30 }
+      : { name_en: '', name_ar: '', capacity: 30 });
     this.formValid.set(this.form.valid);
     this.formChanged.set(false);
     this.file.set(null);
@@ -206,7 +193,6 @@ export class NewCohortDialogComponent {
         name_en: v.name_en.trim(),
         name_ar: v.name_ar.trim(),
         capacity: v.capacity,
-        open_early: this.started() ? null : v.open_early,
         schedule: file,
       }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: res => {
@@ -227,7 +213,6 @@ export class NewCohortDialogComponent {
       name_en: v.name_en.trim(),
       name_ar: v.name_ar.trim(),
       capacity: v.capacity,
-      open_early: v.open_early,
       schedule: file,
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => this.done(this.t.instant('course_detail_toasts.cohort_created')),
