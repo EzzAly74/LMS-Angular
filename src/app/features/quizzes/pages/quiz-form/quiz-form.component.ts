@@ -419,10 +419,21 @@ export class QuizFormComponent implements OnInit, OnDestroy {
         if (filled(q.options_en).length < 2 || filled(q.options_ar).length < 2) return false;
       }
       if (q.type === 'mcq' && (!q.correct_answer_en.trim() || !q.correct_answer_ar.trim())) return false;
+      // NEW2B-5996: the correct answer is one of the options, as the server checks.
+      if (q.type === 'mcq' && (!filled(q.options_en).includes(q.correct_answer_en.trim())
+        || !filled(q.options_ar).includes(q.correct_answer_ar.trim()))) return false;
       if (q.type === 'yes_no' && !yesNoFromKey(q.correct_answer_en)) return false;
     }
     return true;
   });
+
+  /** A typed MCQ correct answer that matches none of the options (NEW2B-5996). */
+  keyMismatch(index: number, lang: 'en' | 'ar'): boolean {
+    this.formValue();
+    const q = this.questions.at(index).getRawValue();
+    const key = (lang === 'en' ? q.correct_answer_en : q.correct_answer_ar).trim();
+    return q.type === 'mcq' && key !== '' && !filled(lang === 'en' ? q.options_en : q.options_ar).includes(key);
+  }
 
   saveDraft(): void {
     this.submit('draft');

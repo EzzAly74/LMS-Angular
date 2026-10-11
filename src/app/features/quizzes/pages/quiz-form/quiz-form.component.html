@@ -253,7 +253,12 @@
                     <label class="af-label" [for]="'af-key-' + lang + '-' + i">{{ ('quizzes.form_correct_answer_' + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></label>
                     <input [id]="'af-key-' + lang + '-' + i" type="text" class="af-input" aria-required="true"
                       [formControlName]="'correct_answer_' + lang" [attr.dir]="lang === 'ar' ? 'rtl' : null"
+                      [attr.aria-invalid]="keyMismatch(i, lang) ? true : null"
+                      [attr.aria-describedby]="'af-key-err-' + lang + '-' + i"
                       [placeholder]="'quizzes.form_answer_placeholder' | translate" />
+                    <p class="af-hint af-hint--error" [id]="'af-key-err-' + lang + '-' + i" aria-live="polite">
+                      @if (keyMismatch(i, lang)) { {{ 'quizzes.form_key_not_an_option' | translate }} }
+                    </p>
                   </div>
                 }
               } @else if (type === 'yes_no') {

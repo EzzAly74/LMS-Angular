@@ -321,6 +321,7 @@
 }
 
 .af-hint { margin: 0; font-size: var(--nas-size-2xs); color: var(--nas-neutral-750); }
+.af-hint--error { color: var(--nas-status-red-500, #dc2626); }
 
 // ── Question card ─────────────────────────────────────────────────────────
 .af-questions { display: flex; flex-direction: column; gap: var(--nas-space-4); }
