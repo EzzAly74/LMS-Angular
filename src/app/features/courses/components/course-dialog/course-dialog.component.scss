@@ -105,6 +105,17 @@
 .cd__textarea {
   min-block-size: 80px;
   resize: vertical;
+  // Grows with what is typed, so a long description shows in full instead of
+  // hiding past the third line (NEW2B-5870).
+  field-sizing: content;
+  max-block-size: 320px;
+}
+
+// Arabic fields use the Arabic face in the English interface too, rather than
+// whatever system font the browser falls back to (NEW2B-5870).
+.cd__input[dir='rtl'],
+.cd__textarea[dir='rtl'] {
+  font-family: var(--nas-font-ar);
 }
 
 :host ::ng-deep .cd__dropdown {

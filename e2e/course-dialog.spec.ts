@@ -280,3 +280,13 @@ test("the dashboard's Add Course opens the modal on the course list", async ({ p
   await expect(dialog(page).getByRole('heading', { name: 'Add New Course' })).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/courses$/);
 });
+
+test('each language field hints in its own language (NEW2B-5869)', async ({ page }) => {
+  await setup(page);
+  await page.getByRole('button', { name: 'New Course' }).click();
+  const d = dialog(page);
+  await expect(d.getByLabel('Course Title (English)')).toHaveAttribute('placeholder', 'e.g. Workplace Safety Essentials');
+  await expect(d.getByLabel('Course Title (Arabic)')).toHaveAttribute('placeholder', 'مثال: أساسيات السلامة في مكان العمل');
+  await expect(d.locator('textarea[dir="rtl"]')).toHaveAttribute('placeholder', 'نظرة عامة موجزة على أهداف الدورة…');
+  await expect(d.locator('input[dir="rtl"].cd__point-input').first()).toHaveAttribute('placeholder', 'اكتب نقطة');
+});

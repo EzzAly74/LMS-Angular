@@ -42,7 +42,7 @@
                   {{ f.label | translate }} <span class="cd__required" aria-hidden="true">*</span>
                 </label>
                 <input class="cd__input" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir" required
-                  autocomplete="off" [attr.maxlength]="titleMax" [placeholder]="'course_dialog.title_placeholder' | translate"
+                  autocomplete="off" [attr.maxlength]="titleMax" [placeholder]="f.ph | translate"
                   [class.cd__input--error]="invalid(ctrl)" [attr.aria-invalid]="invalid(ctrl)"
                   [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null" (input)="clearFieldError(ctrl)" />
                 @if (invalid(ctrl)) {
@@ -206,7 +206,7 @@
                     <li class="cd__point">
                       <label class="cd__sr-only" [for]="uid + '-' + ctrl + '-' + i">{{ 'course_dialog.point_n' | translate: { n: i + 1, list: (f.label | translate) } }}</label>
                       <input class="cd__input cd__point-input" type="text" [id]="uid + '-' + ctrl + '-' + i" [formControlName]="i" [dir]="f.dir"
-                        [attr.maxlength]="pointMax" [placeholder]="'course_dialog.point_placeholder' | translate"
+                        [attr.maxlength]="pointMax" [placeholder]="f.ph | translate"
                         [class.cd__input--error]="pointInvalid(ctrl, i)" [attr.aria-invalid]="pointInvalid(ctrl, i)"
                         [attr.aria-describedby]="pointInvalid(ctrl, i) ? uid + '-' + ctrl + '-' + i + '-error' : null"
                         (input)="clearFieldError(ctrl)" (keydown.enter)="$event.preventDefault(); addPoint(ctrl)" />

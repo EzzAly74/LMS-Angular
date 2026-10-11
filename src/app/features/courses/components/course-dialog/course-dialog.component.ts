@@ -125,20 +125,21 @@ export class CourseDialogComponent {
   protected readonly accept = IMAGE_TYPES.join(',');
   protected readonly typeOptions = this.enums.options('course_type');
   protected readonly levelOptions = this.enums.options('course_level');
+  // Each field's hint is in the language it asks for (NEW2B-5869, as 6033).
   protected readonly titleFields = [
-    { ctrl: 'title_en', label: 'course_dialog.title_en', dir: 'ltr' },
-    { ctrl: 'title_ar', label: 'course_dialog.title_ar', dir: 'rtl' },
+    { ctrl: 'title_en', label: 'course_dialog.title_en', ph: 'course_dialog.title_en_placeholder', dir: 'ltr' },
+    { ctrl: 'title_ar', label: 'course_dialog.title_ar', ph: 'course_dialog.title_ar_placeholder', dir: 'rtl' },
   ] as const;
   protected readonly textFields: readonly { ctrl: 'description_en' | 'description_ar'; label: string; ph: string; dir: 'ltr' | 'rtl' }[] = [
-    { ctrl: 'description_en', label: 'course_dialog.description_en', ph: 'course_dialog.description_placeholder', dir: 'ltr' },
-    { ctrl: 'description_ar', label: 'course_dialog.description_ar', ph: 'course_dialog.description_placeholder', dir: 'rtl' },
+    { ctrl: 'description_en', label: 'course_dialog.description_en', ph: 'course_dialog.description_en_placeholder', dir: 'ltr' },
+    { ctrl: 'description_ar', label: 'course_dialog.description_ar', ph: 'course_dialog.description_ar_placeholder', dir: 'rtl' },
   ];
 
-  protected readonly listFields: readonly { ctrl: ListField; label: string; dir: 'ltr' | 'rtl' }[] = [
-    { ctrl: 'learn_en', label: 'course_dialog.learn_en', dir: 'ltr' },
-    { ctrl: 'learn_ar', label: 'course_dialog.learn_ar', dir: 'rtl' },
-    { ctrl: 'requirements_en', label: 'course_dialog.requirements_en', dir: 'ltr' },
-    { ctrl: 'requirements_ar', label: 'course_dialog.requirements_ar', dir: 'rtl' },
+  protected readonly listFields: readonly { ctrl: ListField; label: string; ph: string; dir: 'ltr' | 'rtl' }[] = [
+    { ctrl: 'learn_en', label: 'course_dialog.learn_en', ph: 'course_dialog.point_en_placeholder', dir: 'ltr' },
+    { ctrl: 'learn_ar', label: 'course_dialog.learn_ar', ph: 'course_dialog.point_ar_placeholder', dir: 'rtl' },
+    { ctrl: 'requirements_en', label: 'course_dialog.requirements_en', ph: 'course_dialog.point_en_placeholder', dir: 'ltr' },
+    { ctrl: 'requirements_ar', label: 'course_dialog.requirements_ar', ph: 'course_dialog.point_ar_placeholder', dir: 'rtl' },
   ];
   protected readonly rules: readonly { value: CertificateBasis; label: string; help: string }[] = [
     { value: 'attendance', label: 'course_dialog.rule_attendance', help: 'course_dialog.rule_attendance_help' },
