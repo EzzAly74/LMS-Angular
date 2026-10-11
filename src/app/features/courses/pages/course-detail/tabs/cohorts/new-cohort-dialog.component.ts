@@ -51,6 +51,8 @@ export class NewCohortDialogComponent {
   readonly courseId = input.required<number>();
   /** The cohort to edit; null adds a new one. */
   readonly cohort = input<Cohort | null>(null);
+  /** The course's Max per Cohort, which falls back to Platform settings' default cohort size (NEW2B-6060). */
+  readonly defaultCapacity = input<number | null>(null);
   readonly visible = model(false);
   /** A cohort was added or saved. */
   readonly saved = output<void>();
@@ -113,7 +115,7 @@ export class NewCohortDialogComponent {
     this.form.controls.capacity.setValidators([Validators.min(this.minCapacity()), Validators.max(10000)]);
     this.form.reset(c
       ? { name_en: c.name_en ?? c.name ?? '', name_ar: c.name_ar ?? c.name ?? '', capacity: c.capacity ?? 30 }
-      : { name_en: '', name_ar: '', capacity: 30 });
+      : { name_en: '', name_ar: '', capacity: this.defaultCapacity() ?? 30 });
     this.formValid.set(this.form.valid);
     this.formChanged.set(false);
     this.file.set(null);
