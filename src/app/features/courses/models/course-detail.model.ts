@@ -20,6 +20,8 @@ export interface CohortScheduleUpdate {
   readonly sessions_added: number;
   /** Upcoming sessions whose location the sheet changed. */
   readonly sessions_updated: number;
+  /** Future sessions the new sheet left out (D-080). */
+  readonly sessions_removed?: number;
 }
 
 export interface CourseLearnerRow {

@@ -44,7 +44,7 @@
                 <span dir="ltr">{{ cohort.enrolled }} / {{ cohort.seats }}</span>
               </button>
             </td>
-            <td class="cl-center" dir="ltr">{{ cohort.number_of_sessions ?? '-' }}</td>
+            <td class="cl-center" dir="ltr">{{ cohort.sessions_count ?? cohort.number_of_sessions ?? '-' }}</td>
             <td><nas-status-badge [tone]="cohort.statusTone">{{ cohort.statusLabel }}</nas-status-badge></td>
             <td class="cl-end">
               <button type="button" class="cl-more" aria-haspopup="menu"

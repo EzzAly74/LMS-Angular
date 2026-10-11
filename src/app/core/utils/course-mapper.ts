@@ -248,6 +248,7 @@ export interface ApiCohortRaw {
   status?:     string | null;
   number_of_sessions?: number | null;
   held_sessions_count?: number | null;
+  sessions_count?: number | null;
   avg_session_time?: number | string | null;
   enrolled_count?: number;
 }
@@ -282,6 +283,7 @@ export function mapApiCohort(raw: ApiCohortRaw): Cohort {
     status:     normalizeCohortStatus(raw.status),
     number_of_sessions: raw.number_of_sessions != null ? Number(raw.number_of_sessions) : null,
     held_sessions_count: raw.held_sessions_count != null ? Number(raw.held_sessions_count) : null,
+    sessions_count: raw.sessions_count != null ? Number(raw.sessions_count) : null,
     avg_session_time: raw.avg_session_time != null ? Number(raw.avg_session_time) : null,
     // Kept as an alias so the attendance drawer (which still reads
     // `cohort.section_id`) keeps working — cohort.id IS the section id.

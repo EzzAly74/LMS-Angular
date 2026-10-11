@@ -198,8 +198,9 @@ export class NewCohortDialogComponent {
         next: res => {
           const added = res.result?.sessions_added ?? 0;
           const updated = res.result?.sessions_updated ?? 0;
-          const detail = added > 0 || updated > 0
-            ? this.t.instant('course_detail.schedule.updated_with_sessions', { added, updated })
+          const removed = res.result?.sessions_removed ?? 0;
+          const detail = added > 0 || updated > 0 || removed > 0
+            ? this.t.instant(removed > 0 ? 'course_detail.schedule.updated_with_removed' : 'course_detail.schedule.updated_with_sessions', { added, updated, removed })
             : this.t.instant('course_detail_toasts.cohort_updated');
           this.done(detail);
         },

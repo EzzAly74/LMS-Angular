@@ -78,6 +78,8 @@ export interface Cohort {
   number_of_sessions?: number | null;
   /** Sessions already held — drives the completed/active transition. */
   held_sessions_count?: number | null;
+  /** The cohort's scheduled session rows (NEW2B-6206). */
+  sessions_count?: number | null;
   /** Average session length in hours (drives the live attendance window). */
   avg_session_time?: number | null;
   /**
