@@ -70,6 +70,8 @@
 :host ::ng-deep .fd__dropdown,
 ::ng-deep .fd .fd__dropdown {
   inline-size: 100%;
+  // The global 44 px height is lifted so a wrapped long value fits (NEW2B-6212).
+  block-size: auto;
   min-block-size: 44px;
   border-color: var(--nas-color-border);
   border-radius: var(--nas-radius-md);
@@ -140,7 +142,7 @@
 
 :host ::ng-deep .fd__dropdown.p-dropdown,
 ::ng-deep .fd .fd__dropdown.p-dropdown {
-  .p-dropdown-label { white-space: normal; overflow-wrap: anywhere; text-overflow: clip; }
+  .p-dropdown-label { display: block; block-size: auto; white-space: normal; overflow-wrap: anywhere; text-overflow: clip; }
 }
 
 // Multi-select list - Figma 2430:136038: a 40 px search row with a clear
