@@ -254,6 +254,27 @@ test('Edit Course opens the same modal filled in and saves with PUT', async ({ p
   expect(body).not.toContain('name="image"');
 });
 
+test('NEW2B-5792: Save Changes on an incomplete course says why instead of doing nothing', async ({ page }) => {
+  await setup(page);
+  const puts: Request[] = [];
+  // An older course with no instructor: the required field is empty on open.
+  await page.route('**/api/v1/courses/5', r => {
+    if (r.request().method() === 'GET') return r.fulfill({ json: ok({ ...DETAIL, instructors: [], instructor: null }) });
+    puts.push(r.request());
+    return r.fulfill({ json: ok({ id: 5 }) });
+  });
+
+  await page.locator('tbody tr').first().locator('.cl-more').click();
+  await page.getByRole('menuitem', { name: 'Edit Course' }).click();
+  const d = dialog(page);
+  await expect(d.getByLabel('Course Title (English)')).toHaveValue('Fire Safety');
+  await d.getByRole('button', { name: 'Save Changes' }).click();
+
+  await expect(d.locator('.cd__alert')).toContainText('Fix the highlighted fields');
+  await expect(d.getByText('This field is required.').first()).toBeInViewport();
+  expect(puts).toHaveLength(0);
+});
+
 test("the dashboard's Add Course opens the modal on the course list", async ({ page }) => {
   await setup(page, '/admin/courses?new=1');
   await expect(dialog(page).getByRole('heading', { name: 'Add New Course' })).toBeVisible();

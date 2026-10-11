@@ -2100,6 +2100,7 @@
     "no_options": "Nothing to choose from."
   },
   "course_dialog": {
+    "fix_fields": "Some fields need attention. Fix the highlighted fields, then save again.",
     "add_title": "Add New Course",
     "edit_title": "Edit Course",
     "title_en": "Course Title (English)",

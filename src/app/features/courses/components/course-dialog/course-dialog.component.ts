@@ -340,6 +340,10 @@ export class CourseDialogComponent {
     this.form.markAllAsTouched();
     this.imageTouched.set(true);
     if (!this.canSubmit()) {
+      // NEW2B-5792: never a silent no-op. Say why, and bring the field into view.
+      if (this.state() === 'ready' && !this.saving()) {
+        this.serverError.set(this.t.instant('course_dialog.fix_fields'));
+      }
       this.focusFirstInvalid();
       return;
     }
@@ -499,8 +503,13 @@ export class CourseDialogComponent {
 
   private focusFirstInvalid(): void {
     const root = this.document.getElementById(this.uid);
-    const target = root?.querySelector<HTMLElement>('[aria-invalid="true"], .ng-invalid.ng-touched input, input.ng-invalid');
-    target?.focus();
+    const target = root?.querySelector<HTMLElement>(
+      '[aria-invalid="true"], .ng-invalid.ng-touched input, input.ng-invalid, p-dropdown.ng-invalid, .cd__error');
+    target?.scrollIntoView({ block: 'center' });
+    const focusable = target?.matches('input, textarea, button, [tabindex]')
+      ? target
+      : target?.querySelector<HTMLElement>('input, [role="combobox"], [tabindex]:not([tabindex="-1"])');
+    focusable?.focus();
   }
 
   /** A 422 goes next to its field; anything else to the alert above the footer. */
