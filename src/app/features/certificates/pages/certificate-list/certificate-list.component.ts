@@ -113,6 +113,7 @@ export class CertificateListComponent implements OnInit, OnDestroy {
 
   readonly list = createPagedList<PagedQuery, IssuedRow>({
     initial: { search: '', page: 1, perPage: 20 },
+    showAllPerPage: 200, // the issued list takes up to 200
     load: q => this.api.listIssued(pagedParams(q)).pipe(toPaged(it => ({
       ...it,
       key: `${it.user_id}-${it.course_id}-${it.type}`,

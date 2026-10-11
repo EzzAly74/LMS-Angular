@@ -32,8 +32,12 @@ export interface PagedListOptions<Q extends PagedQuery, T> {
 
 /** Search input debounce shared by every list (the Courses List reference). */
 export const LIST_SEARCH_DEBOUNCE_MS = 300;
-/** "Show All" page size: the API's per_page ceiling (B-21). */
-export const LIST_SHOW_ALL_PER_PAGE = 200;
+/**
+ * "Show All" page size. Most admin endpoints cap per_page at 100; asking for
+ * more is a 422, which is how Show All "gave an error" (NEW2B-6175). A list
+ * whose endpoint takes more passes its own `showAllPerPage`.
+ */
+export const LIST_SHOW_ALL_PER_PAGE = 100;
 
 /**
  * The state and loading behaviour of a server-paged list, taken from the

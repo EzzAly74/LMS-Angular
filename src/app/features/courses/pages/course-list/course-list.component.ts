@@ -109,6 +109,7 @@ export class CourseListComponent implements OnInit {
 
   readonly list = createPagedList<Query, CourseRow>({
     initial: { search: '', page: 1, perPage: 15, ids: [], categoryIds: [], instructorIds: [], statuses: [], evaluation: [] },
+    showAllPerPage: 200, // GET courses takes up to 200
     load: q => this.api.getPaginated<ApiCourseRaw>(API.COURSES, this.params(q)).pipe(toPaged(c => this.toRow(mapApiCourseListItem(c)))),
   });
 
