@@ -294,6 +294,11 @@
     "confirm_password": "تأكيد كلمة المرور",
     "confirm_password_placeholder": "أعد إدخال كلمة المرور",
     "password_edit_hint": "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
+    "name_rule_parts": "أدخل اسمين على الأقل، مثل الاسم الأول واسم العائلة.",
+    "name_rule_part_length": "يجب أن يتكون كل اسم من 3 أحرف على الأقل.",
+    "name_rule_max": "يجب ألا يزيد الاسم عن 100 حرف.",
+    "photo_type_error": "يجب أن تكون الصورة بصيغة PNG أو JPG أو JPEG أو WEBP أو GIF.",
+    "photo_size_error": "حجم الصورة كبير. اختر صورة لا يزيد حجمها عن 3 ميجابايت.",
     "password_mismatch": "كلمتا المرور غير متطابقتين.",
     "toggle_password": "إظهار/إخفاء كلمة المرور"
   },

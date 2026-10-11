@@ -294,6 +294,11 @@
     "confirm_password": "Confirm Password",
     "confirm_password_placeholder": "Re-enter your password",
     "password_edit_hint": "Leave blank to keep the current password.",
+    "name_rule_parts": "Enter at least two names, for example first and last name.",
+    "name_rule_part_length": "Each name must be at least 3 letters long.",
+    "name_rule_max": "The name may be at most 100 characters.",
+    "photo_type_error": "The photo must be a PNG, JPG, JPEG, WEBP or GIF image.",
+    "photo_size_error": "The photo is too large. Choose an image of 3 MB or less.",
     "password_mismatch": "Passwords do not match.",
     "toggle_password": "Toggle password visibility"
   },

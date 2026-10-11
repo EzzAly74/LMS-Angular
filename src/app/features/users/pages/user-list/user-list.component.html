@@ -22,7 +22,13 @@
         [placeholder]="'users.name_en_placeholder' | translate"
         [ngModel]="form().name_en"
         (ngModelChange)="updateForm('name_en', $event)"
+        [attr.aria-invalid]="nameEnError() ? true : null"
+        aria-describedby="ul-name-en-error"
+        maxlength="100"
         name="name_en" />
+      <p class="ul-form__hint ul-form__hint--error" id="ul-name-en-error" aria-live="polite">
+        @if (nameEnError(); as err) { {{ err | translate }} }
+      </p>
     </div>
 
     <div class="ul-form__field">
@@ -34,7 +40,13 @@
         dir="rtl"
         [ngModel]="form().name_ar"
         (ngModelChange)="updateForm('name_ar', $event)"
+        [attr.aria-invalid]="nameArError() ? true : null"
+        aria-describedby="ul-name-ar-error"
+        maxlength="100"
         name="name_ar" />
+      <p class="ul-form__hint ul-form__hint--error" id="ul-name-ar-error" aria-live="polite">
+        @if (nameArError(); as err) { {{ err | translate }} }
+      </p>
     </div>
 
     <div class="ul-form__field">
@@ -132,6 +144,9 @@
         [replaceLabel]="'users.replace_photo' | translate"
         (fileSelected)="onPhotoPicked($event)"
         (cleared)="onPhotoCleared()" />
+      <p class="ul-form__hint ul-form__hint--error" aria-live="polite">
+        @if (photoError(); as err) { {{ err | translate }} }
+      </p>
     </div>
 
     <!-- Brief — only the Instructor "user" carries one (persists to bio). -->
@@ -444,7 +459,7 @@
                 </td>
                 <td class="ul-cell-muted">{{ user.last_active_at ? (user.last_active_at | date:'dd MMM') : '—' }}</td>
                 <td class="ul-table__action" (click)="$event.stopPropagation()">
-                  <button type="button" class="ul-icon-btn" (click)="toggleMenu(user.composite_id, $event)">
+                  <button type="button" class="ul-icon-btn" [attr.aria-label]="'common.actions' | translate" (click)="toggleMenu(user.composite_id, $event)">
                     <i class="pi pi-ellipsis-h" aria-hidden="true"></i>
                   </button>
                   @if (menuOpenKey() === user.composite_id) {

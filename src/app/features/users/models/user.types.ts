@@ -121,4 +121,6 @@ export interface AdminUserStorePayload {
 
 export type AdminUserUpdatePayload = Partial<AdminUserStorePayload & {
   status: AdminUserStatus;
+  /** Remove the saved photo (NEW2B-6160). */
+  remove_image: boolean;
 }>;

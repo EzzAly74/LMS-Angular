@@ -51,6 +51,26 @@ interface UserFormState {
   image: File | null;
   /** Existing server-side URL — drives the "Replace Photo" UX. */
   imagePreview: string | null;
+  /** The admin removed the saved photo; sent as `remove_image` on edit (NEW2B-6160). */
+  removeImage: boolean;
+}
+
+/** Photo types and size the server accepts for an account (NEW2B-6165..6167). */
+const PHOTO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const PHOTO_MAX_BYTES = 3 * 1024 * 1024;
+
+/**
+ * The server's full-name rule (NEW2B-6161): two names or more, each at least
+ * three letters, 100 characters at most. Returns the message key, or null.
+ */
+export function fullNameError(value: string): string | null {
+  const name = value.trim().replace(/\s+/g, ' ');
+  if (!name) return null;
+  if ([...name].length > 100) return 'users.name_rule_max';
+  const parts = name.split(' ');
+  if (parts.length < 2) return 'users.name_rule_parts';
+  if (parts.some(part => [...part].length < 3)) return 'users.name_rule_part_length';
+  return null;
 }
 
 @Component({
@@ -131,6 +151,10 @@ export class UserListComponent implements OnInit, OnDestroy {
   readonly form        = signal<UserFormState>(this.emptyForm());
   readonly showPassword        = signal(false);
   readonly showPasswordConfirm = signal(false);
+  /** Message key for a refused photo (wrong type or too large), shown under the picker. */
+  readonly photoError          = signal<string | null>(null);
+  readonly nameEnError = computed(() => fullNameError(this.form().name_en));
+  readonly nameArError = computed(() => fullNameError(this.form().name_ar));
 
   /* ── Deactivate confirm dialog ───────────────────────────────── */
   readonly deactivateTarget = signal<AdminUserListItem | null>(null);
@@ -158,6 +182,8 @@ export class UserListComponent implements OnInit, OnDestroy {
     const f = this.form();
     const base = f.name_en.trim().length > 0
         && f.name_ar.trim().length > 0
+        && !this.nameEnError()
+        && !this.nameArError()
         && /^\S+@\S+\.\S+$/.test(f.email)
         && !!f.role;
     if (!base) return false;
@@ -292,6 +318,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.showPassword.set(false);
     this.showPasswordConfirm.set(false);
     this.form.set(this.emptyForm());
+    this.photoError.set(null);
     this.formOpen.set(true);
   }
 
@@ -316,7 +343,9 @@ export class UserListComponent implements OnInit, OnDestroy {
       password: '', password_confirmation: '',
       image:        null,
       imagePreview: user.image ?? null,
+      removeImage:  false,
     });
+    this.photoError.set(null);
     this.formOpen.set(true);
   }
 
@@ -354,7 +383,9 @@ export class UserListComponent implements OnInit, OnDestroy {
       // file. Omitting the key keeps the request as JSON and avoids
       // accidentally clearing the avatar on edit.
       ...(f.image instanceof File ? { image: f.image } : {}),
+      ...(this.formMode() === 'edit' && f.removeImage && !(f.image instanceof File) ? { remove_image: true } : {}),
     };
+    const editingMe = this.formMode() === 'edit' && f.source === 'admin' && f.id === this.auth.currentAdmin()?.id;
 
     const obs = this.formMode() === 'create'
       ? this.api.create(payload)
@@ -367,6 +398,8 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.messages.success(this.t.instant(
             this.formMode() === 'create' ? 'common.created' : 'common.updated',
           ));
+        // Your own name / photo in the header follows at once (NEW2B-6174).
+        if (editingMe) this.auth.refreshPermissions(true);
         this.refresh();
       },
       // The error interceptor shows the server's reason, once (D-072).
@@ -475,17 +508,23 @@ export class UserListComponent implements OnInit, OnDestroy {
    * deferred to `submitForm()` which posts it as multipart/form-data.
    */
   onPhotoPicked(file: File): void {
+    // Refuse what the server refuses, with the reason, before any upload.
+    if (!PHOTO_TYPES.includes(file.type)) { this.photoError.set('users.photo_type_error'); return; }
+    if (file.size > PHOTO_MAX_BYTES) { this.photoError.set('users.photo_size_error'); return; }
+    this.photoError.set(null);
     const reader = new FileReader();
     reader.onload = () => this.form.update(f => ({
       ...f,
       image:        file,
       imagePreview: reader.result as string,
+      removeImage:  false,
     }));
     reader.readAsDataURL(file);
   }
 
   onPhotoCleared(): void {
-    this.form.update(f => ({ ...f, image: null, imagePreview: null }));
+    this.photoError.set(null);
+    this.form.update(f => ({ ...f, image: null, imagePreview: null, removeImage: f.id !== null }));
   }
 
   /* ── Internals ──────────────────────────────────────────────── */
@@ -493,7 +532,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     return {
       id: null, source: null, name_en: '', name_ar: '', title_en: '', title_ar: '', brief_en: '', brief_ar: '', email: '',
       role: '', password: '', password_confirmation: '',
-      image: null, imagePreview: null,
+      image: null, imagePreview: null, removeImage: false,
     };
   }
 }
