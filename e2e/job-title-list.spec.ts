@@ -20,7 +20,7 @@ async function mockIndex(page: Page): Promise<{ lists: Request[]; learnerSearche
   const learnerSearches: string[] = [];
   await page.route('**/api/v1/admin/job-titles?**', (r) => {
     lists.push(r.request());
-    const filtered = new URL(r.request().url()).searchParams.has('learner_id');
+    const filtered = new URL(r.request().url()).searchParams.has('learner_ids[]');
     const rows = filtered ? [card(2, 'Sales Representative', 81)] : [card(1, 'HR Specialist', 91), card(2, 'Sales Representative', 81), card(3, 'Product Designer', 21)];
     return r.fulfill({ json: { status: 'success', message: '', result: rows, meta: { current_page: 1, last_page: 1, per_page: 12, total: rows.length } } });
   });
@@ -55,7 +55,7 @@ test.describe('behaviour', () => {
     await expect(d.getByRole('button', { name: 'Filter' })).toBeDisabled();
 
     // Qualification: several choices (Figma annotation "multi select + search").
-    await d.locator('.p-multiselect').click();
+    await d.locator('.p-multiselect').first().click();
     await page.getByRole('option', { name: 'Safety' }).click();
     await page.getByRole('option', { name: 'First Aid' }).click();
     // Escape closes the list only; the modal and its choices stay.
@@ -63,26 +63,30 @@ test.describe('behaviour', () => {
     await expect(page.locator('.p-multiselect-panel')).toHaveCount(0);
     await expect(d).toBeVisible();
 
-    // Learner: searched on the server.
-    await d.locator('.p-dropdown').click();
-    await page.locator('.p-dropdown-filter').fill('ava');
+    // Learner: searched on the server, several at once (NEW2B-6178).
+    await d.locator('.p-multiselect').nth(1).click();
+    await page.locator('.p-multiselect-filter').fill('ava');
     await expect.poll(() => learnerSearches.at(-1)).toBe('ava');
     await page.getByRole('option', { name: 'Ava Chen (AC-2048)' }).click();
+    await page.locator('.p-multiselect-filter').fill('');
+    await page.getByRole('option', { name: 'Liam Patel' }).click();
+    await page.keyboard.press('Escape');
 
     await d.getByRole('button', { name: 'Filter' }).click();
     await expect(d).toBeHidden();
     const params = new URL(lists.at(-1)!.url()).searchParams;
     expect(params.getAll('qualification_ids[]').sort()).toEqual(['21', '22']);
-    expect(params.get('learner_id')).toBe('7');
+    expect(params.getAll('learner_ids[]').sort()).toEqual(['7', '8']);
     await expect(page.locator('.nlt__badge')).toHaveText('2');
     await expect(page.locator('.jt-card')).toHaveCount(1);
 
     // Reopening shows what is applied; Clear removes every filter at once.
     await page.getByRole('button', { name: /Filter/ }).first().click();
-    await expect(page.getByRole('dialog').getByText('Ava Chen (AC-2048)')).toBeVisible();
+    // Two learners chosen: the field says how many (the shared multi-select shows one label at most).
+    await expect(page.getByRole('dialog').locator('.p-multiselect').nth(1)).toContainText('2');
     await page.getByRole('dialog').getByRole('button', { name: 'Clear' }).click();
     const cleared = new URL(lists.at(-1)!.url()).searchParams;
-    expect(cleared.has('learner_id')).toBe(false);
+    expect(cleared.has('learner_ids[]')).toBe(false);
     expect(cleared.has('qualification_ids[]')).toBe(false);
     await expect(page.locator('.nlt__badge')).toHaveCount(0);
 
@@ -101,7 +105,7 @@ test.describe('behaviour', () => {
       r.fulfill({ json: { status: 'success', message: '', result: [{ id: 21, name: long }] } }));
     await page.goto('/admin/job-titles');
     await page.getByRole('button', { name: 'Filter' }).click();
-    await page.getByRole('dialog').locator('.p-multiselect').click();
+    await page.getByRole('dialog').locator('.p-multiselect').first().click();
 
     const option = page.getByRole('option', { name: long });
     await expect(option).toBeVisible();

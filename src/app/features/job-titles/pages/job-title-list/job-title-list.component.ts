@@ -45,7 +45,7 @@ interface LearnerOption {
 
 interface Query extends PagedQuery {
   readonly qualificationIds: readonly number[];
-  readonly learnerId: number | null;
+  readonly learnerIds: readonly number[];
 }
 
 /**
@@ -82,7 +82,9 @@ export class JobTitleListComponent implements OnInit {
 
   readonly list = createPagedList<Query, JobTitleCard>({
     // 12 = four rows of three cards.
-    initial: { search: '', page: 1, perPage: 12, qualificationIds: [], learnerId: null },
+    initial: { search: '', page: 1, perPage: 12, qualificationIds: [], learnerIds: [] },
+    // The endpoint's per_page ceiling is 100 (NEW2B-6175: Show All asked for 200 and failed).
+    showAllPerPage: 100,
     load: q => this.api.getPaginated<JobTitle>(API.ADMIN_JOB_TITLES, this.params(q)).pipe(toPaged(j => {
       const compliance = Number(j.compliance_percent ?? 0);
       return { ...j, compliance, tone: complianceTone(compliance) };
@@ -102,7 +104,7 @@ export class JobTitleListComponent implements OnInit {
 
   readonly appliedFilters = computed<NasFilterValues>(() => {
     const q = this.list.query();
-    return appliedValues({ qualification_ids: q.qualificationIds, learner_id: q.learnerId });
+    return appliedValues({ qualification_ids: q.qualificationIds, learner_ids: q.learnerIds });
   });
   readonly activeFilters = computed(() => activeFilterCount(this.appliedFilters()));
   readonly hasQuery = computed(() => this.activeFilters() > 0 || this.list.query().search !== '');
@@ -117,7 +119,8 @@ export class JobTitleListComponent implements OnInit {
         options: this.qualifications(),
       },
       {
-        key: 'learner_id', remote: true,
+        // Several learners at once (NEW2B-6178).
+        key: 'learner_ids', remote: true, multiple: true,
         label: this.t.instant('job_titles.filter_learner'),
         placeholder: this.t.instant('job_titles.filter_learner_placeholder'),
         options: this.learnerOptions.options(),
@@ -145,13 +148,13 @@ export class JobTitleListComponent implements OnInit {
   }
 
   onFilterSearch(e: { key: string; term: string }): void {
-    if (e.key === 'learner_id') this.learnerOptions.search(e.term);
+    if (e.key === 'learner_ids') this.learnerOptions.search(e.term);
   }
 
   onFilter(v: NasFilterValues): void {
-    const learnerId = filterNumbers(v['learner_id'])[0] ?? null;
-    this.learnerOptions.remember(learnerId === null ? [] : [learnerId]);
-    this.list.patch({ qualificationIds: filterNumbers(v['qualification_ids']), learnerId });
+    const learnerIds = filterNumbers(v['learner_ids']);
+    this.learnerOptions.remember(learnerIds);
+    this.list.patch({ qualificationIds: filterNumbers(v['qualification_ids']), learnerIds });
   }
 
   private loadLookups(): void {
@@ -171,7 +174,7 @@ export class JobTitleListComponent implements OnInit {
   private params(q: Query): ApiParams {
     const p = pagedParams(q);
     withList(p, 'qualification_ids', q.qualificationIds);
-    if (q.learnerId !== null) p['learner_id'] = q.learnerId;
+    withList(p, 'learner_ids', q.learnerIds);
     return p;
   }
 }
