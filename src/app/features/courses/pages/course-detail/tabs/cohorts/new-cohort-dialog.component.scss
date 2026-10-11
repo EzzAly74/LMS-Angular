@@ -279,3 +279,11 @@
 
   nas-icon { flex-shrink: 0; margin-block-start: 1px; }
 }
+
+// Date / time formats under the download card (NEW2B-6183).
+.nc__formats {
+  margin: 8px 0 0;
+  font-size: var(--nas-size-3xs, 12px);
+  color: var(--nas-color-text-muted);
+  unicode-bidi: plaintext;
+}

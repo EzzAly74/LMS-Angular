@@ -69,6 +69,8 @@
           {{ (editing() ? 'course_detail.schedule.download_button_edit' : 'course_detail.schedule.download_button') | translate }}
         </button>
       </div>
+      <!-- NEW2B-6183: the formats before the upload, not only in its errors. -->
+      <p class="nc__formats">{{ 'course_detail.schedule.formats_hint' | translate }}</p>
     </section>
 
     <!-- Step 2 -->

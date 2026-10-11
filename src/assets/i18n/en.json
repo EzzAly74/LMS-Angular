@@ -1536,6 +1536,7 @@
       "step1": "Step 1 · Download schedule template",
       "step2": "Step 2 · Upload completed schedule",
       "download_title": "Download schedule template",
+      "formats_hint": "Dates as YYYY-MM-DD (2026-10-05); start_time and end_time in 24-hour HH:MM (09:30).",
       "download_desc": "Use the generated sheet to plan dates, times, optional location and each session's content (module IDs from the modules sheet) before upload.",
       "download_button": "Download Schedule Template",
       "download_failed": "The template could not be downloaded. Please retry.",
