@@ -132,6 +132,15 @@
 ::ng-deep .fd .fd__dropdown.p-multiselect {
   .p-multiselect-label { font-size: var(--nas-size-xs); padding-block: 12px; }
   .p-multiselect-label.p-placeholder { color: var(--nas-neutral-750); }
+  // NEW2B-6212: a chosen long option shows in full in the closed field,
+  // wrapping onto more lines, instead of being cut off mid-word.
+  .p-multiselect-label-container { min-inline-size: 0; }
+  .p-multiselect-label { white-space: normal; overflow-wrap: anywhere; text-overflow: clip; }
+}
+
+:host ::ng-deep .fd__dropdown.p-dropdown,
+::ng-deep .fd .fd__dropdown.p-dropdown {
+  .p-dropdown-label { white-space: normal; overflow-wrap: anywhere; text-overflow: clip; }
 }
 
 // Multi-select list - Figma 2430:136038: a 40 px search row with a clear
