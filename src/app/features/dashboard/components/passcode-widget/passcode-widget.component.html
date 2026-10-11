@@ -69,7 +69,7 @@
           [(ngModel)]="selectedCourseId" optionLabel="title" optionValue="id"
           [placeholder]="'dashboard.passcode_select_course' | translate"
           [loading]="coursesLoading()" [filter]="true" filterBy="title"
-          appendTo="body" styleClass="nas-dropdown"
+          appendTo="body" styleClass="nas-dropdown" panelStyleClass="passcode-dd-panel"
           (onChange)="onCourseChange()" />
       </div>
 
@@ -80,7 +80,7 @@
           [(ngModel)]="selectedCohortId" optionLabel="name" optionValue="id"
           [placeholder]="'dashboard.passcode_select_cohort' | translate"
           [disabled]="selectedCourseId() === null"
-          appendTo="body" styleClass="nas-dropdown" />
+          appendTo="body" styleClass="nas-dropdown" panelStyleClass="passcode-dd-panel" />
       </div>
     </div>
   } @else if (passcode()) {

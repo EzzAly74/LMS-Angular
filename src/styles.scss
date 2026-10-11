@@ -977,8 +977,34 @@ input[type="number"]::-webkit-outer-spin-button {
     color: #676e76;
   }
 
+  /* A chosen long name shows in full, the field growing to fit it, rather
+     than cut mid-word (NEW2B-5981). */
   .p-dropdown {
     width: 100%;
+    height: auto;
+    min-height: 44px;
+  }
+
+  .p-dropdown-label {
+    display: block;
+    height: auto;
+    padding-block: 13px;
+    line-height: 16.8px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* The course / cohort lists stay as wide as their field and wrap long names
+   (NEW2B-5981). Content-sized panels ran past the dialog and, at 375 px, off
+   the screen. The field is the dialog (512 px, or the full width on a phone)
+   less its 24 px side padding. */
+.p-dropdown-panel.passcode-dd-panel {
+  max-inline-size: min(464px, calc(100vw - 48px));
+
+  .p-dropdown-item {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 
