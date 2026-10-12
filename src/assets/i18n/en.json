@@ -1530,6 +1530,11 @@
     "empty": "No messages yet"
   },
   "course_detail": {
+    "english_version_hint": "Optional. Learners using the site in English see this; without it they see the Arabic version.",
+    "document_en": "Document (English)",
+    "document_ar": "Document (Arabic)",
+    "article_en": "Article (English)",
+    "article_ar": "Article (Arabic)",
     "schedule": {
       "name_en_placeholder": "e.g. Cohort D",
       "name_ar_placeholder": "مثال: المجموعة د",

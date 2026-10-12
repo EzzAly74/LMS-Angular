@@ -196,6 +196,12 @@ export interface CourseModule {
   file_name?: string | null;
   /** Public URL for an uploaded file, resolved server-side. */
   file_url?: string | null;
+  /** Optional English article text; `content` is the Arabic (main) one. */
+  content_en?: string | null;
+  /** Optional English document: stored path, original name and URL. */
+  video_en?: string | null;
+  file_name_en?: string | null;
+  file_url_en?: string | null;
   require_completion: boolean;
   created_at?: string;
   updated_at?: string;
@@ -283,6 +289,10 @@ export interface ModulePayload {
   content?: string | null;
   /** Original filename for uploaded video/document modules (`type === 'file'`). */
   file_name?: string | null;
+  /** English article text / English document (optional; Arabic is the main one). */
+  content_en?: string | null;
+  video_en?: string | null;
+  file_name_en?: string | null;
   require_completion: boolean;
 }
 

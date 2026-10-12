@@ -36,6 +36,16 @@ import { NasCanDirective } from '../../../../../../shared/nas/nas-can/nas-can.di
 /** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
 type ModuleFilter = 'all' | ModuleContentType;
 
+/** Which upload slot: the main (Arabic) file or a document's English one. */
+type FileSlot = 'main' | 'en';
+
+/** The attached-file chip: "File Title.pdf · 313 KB". */
+interface ModuleFileInfo {
+  name: string;
+  size: number | null;
+  url: string | null;
+}
+
 /**
  * Course Details - Content tab (course modules). Not part of the 2026
  * redesign (D-025): moved out of the course-detail mega-component (DB-15)
@@ -108,11 +118,28 @@ export class CourseContentTabComponent implements OnInit {
    * row. Populated from a fresh upload or, on edit, from the persisted
    * `file_name`/`file_url`. `null` renders the upload dropzone instead.
    */
-  moduleFileInfo = signal<{
-    name: string;
-    size: number | null;
-    url: string | null;
-  } | null>(null);
+  moduleFileInfo = signal<ModuleFileInfo | null>(null);
+
+  /**
+   * A document's optional English file, uploaded the same way as the main
+   * (Arabic) one above. Learners reading in English get it; without it they
+   * get the Arabic file.
+   */
+  moduleUploadingEn = signal(false);
+  moduleUploadingNameEn = signal<string | null>(null);
+  moduleUploadEn = signal<ModuleUploadResult | null>(null);
+  moduleFileInfoEn = signal<ModuleFileInfo | null>(null);
+
+  /** The slot's state for the file-upload template ('main' or 'en'). */
+  slotUploading(lang: FileSlot): boolean {
+    return lang === 'en' ? this.moduleUploadingEn() : this.moduleUploading();
+  }
+  slotUploadingName(lang: FileSlot): string | null {
+    return lang === 'en' ? this.moduleUploadingNameEn() : this.moduleUploadingName();
+  }
+  slotFileInfo(lang: FileSlot): ModuleFileInfo | null {
+    return lang === 'en' ? this.moduleFileInfoEn() : this.moduleFileInfo();
+  }
 
   /** Module content-type dropdown — backend `module_content_type` enum. */
   moduleContentTypeOpts = this.enums.options('module_content_type');
@@ -126,8 +153,12 @@ export class CourseContentTabComponent implements OnInit {
       [Validators.required, Validators.min(0)],
     ],
     video: [''],
+    // A document's optional English file (stored path).
+    video_en: [''],
     // Rich-text HTML body — used only by the "article" content type.
+    // `content` is the Arabic (main) text, `content_en` the optional English.
     content: [''],
+    content_en: [''],
     instructions_en: [''],
     instructions_ar: [''],
     require_completion: [false],
@@ -135,6 +166,13 @@ export class CourseContentTabComponent implements OnInit {
 
   /** Longest article body in characters (backend CourseLectureRequest::ARTICLE_MAX). */
   readonly articleMax = 500_000;
+
+  /** The English article field's message after a save attempt, or null. */
+  articleEnError(): string | null {
+    const control = this.moduleForm.controls.content_en;
+    if (!control.touched || !control.errors) return null;
+    return control.errors['maxlength'] ? 'course_detail.article_too_long' : null;
+  }
 
   /** The article field's message after a save attempt, or null. */
   articleError(): string | null {
@@ -265,6 +303,7 @@ export class CourseContentTabComponent implements OnInit {
     this.moduleUpload.set(null);
     this.moduleFileInfo.set(null);
     this.moduleUploading.set(false);
+    this.resetEnglishFile(null);
     // Defaults map to the canonical first option per Figma — translate
     // the codes into enum ids the dropdowns are bound to. Returns null
     // if the enum hasn't loaded yet; the user can still pick.
@@ -274,7 +313,9 @@ export class CourseContentTabComponent implements OnInit {
       content_type: this.enums.idForCode('module_content_type', 'video'),
       duration_minutes: 30,
       video: '',
+      video_en: '',
       content: '',
+      content_en: '',
       instructions_en: '',
       instructions_ar: '',
       require_completion: false,
@@ -295,13 +336,16 @@ export class CourseContentTabComponent implements OnInit {
         ? { name: m.file_name || m.video, size: null, url: m.file_url ?? null }
         : null,
     );
+    this.resetEnglishFile(m);
     this.moduleForm.reset({
       title_en: pickLocalized(m.title, 'en'),
       title_ar: pickLocalized(m.title, 'ar'),
       content_type: this.enums.idForCode('module_content_type', m.content_type),
       duration_minutes: m.duration_minutes ?? 30,
       video: m.video ?? '',
+      video_en: m.video_en ?? '',
       content: m.content ?? '',
+      content_en: m.content_en ?? '',
       instructions_en: pickLocalized(m.instructions, 'en'),
       instructions_ar: pickLocalized(m.instructions, 'ar'),
       require_completion: m.require_completion,
@@ -329,6 +373,15 @@ export class CourseContentTabComponent implements OnInit {
     );
   }
 
+  moduleIsDocument(): boolean {
+    return (
+      this.enumCode(
+        'module_content_type',
+        this.moduleForm.value.content_type,
+      ) === 'document'
+    );
+  }
+
   moduleIsLink(): boolean {
     return (
       this.enumCode(
@@ -351,19 +404,54 @@ export class CourseContentTabComponent implements OnInit {
   onModuleContentTypeChange(): void {
     this.moduleUpload.set(null);
     this.moduleFileInfo.set(null);
-    this.moduleForm.patchValue({ video: '', content: '' });
+    this.resetEnglishFile(null);
+    this.moduleForm.patchValue({ video: '', video_en: '', content: '', content_en: '' });
     this.moduleForm.controls.video.setErrors(null);
     this.moduleForm.controls.content.setErrors(null);
   }
 
+  /** The English file slot, empty or as the module has it. */
+  private resetEnglishFile(m: CourseModule | null): void {
+    this.moduleUploadEn.set(null);
+    this.moduleUploadingEn.set(false);
+    this.moduleUploadingNameEn.set(null);
+    this.moduleFileInfoEn.set(
+      m && m.content_type === 'document' && m.video_en
+        ? { name: m.file_name_en || m.video_en, size: null, url: m.file_url_en ?? null }
+        : null,
+    );
+  }
+
   /** Upload the picked file immediately, then keep its storage path on the form. */
-  onModuleFileSelected(event: Event): void {
+  onModuleFileSelected(event: Event, lang: FileSlot = 'main'): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     input.value = '';
     if (!file) return;
 
     const id = this.courseId();
+
+    if (lang === 'en') {
+      this.moduleUploadingNameEn.set(file.name);
+      this.moduleUploadingEn.set(true);
+      this.coursesApi.uploadModuleFile(id, file).subscribe({
+        next: (res) => {
+          const r = res.result;
+          if (r) {
+            this.moduleUploadEn.set(r);
+            this.moduleFileInfoEn.set({ name: r.name, size: r.size, url: r.url });
+            this.moduleForm.patchValue({ video_en: r.path });
+          }
+          this.moduleUploadingEn.set(false);
+          this.moduleUploadingNameEn.set(null);
+        },
+        error: () => {
+          this.moduleUploadingEn.set(false);
+          this.moduleUploadingNameEn.set(null);
+        },
+      });
+      return;
+    }
 
     this.moduleUploadingName.set(file.name);
     this.moduleUploading.set(true);
@@ -386,7 +474,13 @@ export class CourseContentTabComponent implements OnInit {
     });
   }
 
-  clearModuleFile(): void {
+  clearModuleFile(lang: FileSlot = 'main'): void {
+    if (lang === 'en') {
+      this.moduleUploadEn.set(null);
+      this.moduleFileInfoEn.set(null);
+      this.moduleForm.patchValue({ video_en: '' });
+      return;
+    }
     this.moduleUpload.set(null);
     this.moduleFileInfo.set(null);
     this.moduleForm.patchValue({ video: '' });
@@ -422,7 +516,7 @@ export class CourseContentTabComponent implements OnInit {
   }
 
   submitModule(): void {
-    if (this.moduleUploading()) return;
+    if (this.moduleUploading() || this.moduleUploadingEn()) return;
     if (this.moduleForm.invalid) {
       this.moduleForm.markAllAsTouched();
       return;
@@ -445,8 +539,11 @@ export class CourseContentTabComponent implements OnInit {
     const isFile =
       contentTypeCode === 'video' || contentTypeCode === 'document';
     const isArticle = contentTypeCode === 'article';
+    const isDocument = contentTypeCode === 'document';
     const videoValue = (v.video ?? '').trim();
     const contentValue = (v.content ?? '').trim();
+    const videoEnValue = (v.video_en ?? '').trim();
+    const contentEnValue = (v.content_en ?? '').trim();
 
     const contentMissing = isArticle
       ? this.isRichTextEmpty(contentValue)
@@ -455,6 +552,11 @@ export class CourseContentTabComponent implements OnInit {
     // gets a field message instead of a failed save.
     if (isArticle && contentValue.length > this.articleMax) {
       this.moduleForm.controls.content.setErrors({ maxlength: true });
+      this.moduleForm.markAllAsTouched();
+      return;
+    }
+    if (isArticle && contentEnValue.length > this.articleMax) {
+      this.moduleForm.controls.content_en.setErrors({ maxlength: true });
       this.moduleForm.markAllAsTouched();
       return;
     }
@@ -486,6 +588,12 @@ export class CourseContentTabComponent implements OnInit {
       content: isArticle ? contentValue : null,
       file_name: isFile
         ? (this.moduleUpload()?.name ?? this.activeModule()?.file_name ?? null)
+        : null,
+      // English versions are optional; learners fall back to the Arabic.
+      content_en: isArticle && !this.isRichTextEmpty(contentEnValue) ? contentEnValue : null,
+      video_en: isDocument && videoEnValue ? videoEnValue : null,
+      file_name_en: isDocument && videoEnValue
+        ? (this.moduleUploadEn()?.name ?? this.activeModule()?.file_name_en ?? null)
         : null,
       require_completion: !!v.require_completion,
     };

@@ -1574,6 +1574,11 @@
     "empty": "لا توجد رسائل بعد"
   },
   "course_detail": {
+    "english_version_hint": "اختياري. يظهر للمتعلمين الذين يستخدمون الموقع بالإنجليزية، وإن لم يوجد تظهر لهم النسخة العربية.",
+    "document_en": "المستند (إنجليزي)",
+    "document_ar": "المستند (عربي)",
+    "article_en": "المقال (إنجليزي)",
+    "article_ar": "المقال (عربي)",
     "schedule": {
       "name_en_placeholder": "e.g. Cohort D",
       "name_ar_placeholder": "مثال: المجموعة د",

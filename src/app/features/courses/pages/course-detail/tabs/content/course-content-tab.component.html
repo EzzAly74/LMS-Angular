@@ -149,72 +149,30 @@
     </div>
 
     @if (moduleIsFileType()) {
-      <div class="nas-form__field">
-        <label>
-          {{ (moduleIsVideo() ? 'course_detail.video' : 'course_detail.document') | translate }}
-          <span class="required">*</span>
-        </label>
-        @if (moduleUploading()) {
-          <div class="module-upload-progress" role="status" aria-live="polite">
-            <div class="module-upload-progress__icon" [class.is-video]="moduleIsVideo()">
-              <i class="pi" aria-hidden="true" [ngClass]="moduleIsVideo() ? 'pi-video' : 'pi-file'"></i>
-              <span class="module-upload-progress__ring"></span>
-            </div>
-            <div class="module-upload-progress__body">
-              <span class="module-upload-progress__name">{{ moduleUploadingName() || (moduleIsVideo() ? ('course_detail.upload_video' | translate) : ('course_detail.upload_file' | translate)) }}</span>
-              <span class="module-upload-progress__status">
-                <span class="module-upload-progress__dot"></span>
-                {{ 'course_detail.uploading' | translate }}
-              </span>
-              <div class="module-upload-progress__track">
-                <span class="module-upload-progress__bar"></span>
-              </div>
-            </div>
-          </div>
-        } @else {
-          @if (moduleFileInfo(); as f) {
-            <div class="module-form__file">
-              <img class="module-form__file-icon"
-                   [src]="moduleIsVideo() ? 'assets/icons/phosphor/mp4.svg' : 'assets/icons/phosphor/pdf.svg'"
-                   [alt]="moduleIsVideo() ? 'MP4' : 'PDF'" />
-              <div class="module-form__file-meta">
-                @if (f.url) {
-                  <a class="module-form__file-name" [href]="f.url" target="_blank" rel="noopener">{{ f.name }}</a>
-                } @else {
-                  <span class="module-form__file-name">{{ f.name }}</span>
-                }
-                @if (f.size) {
-                  <span class="module-form__file-sub">{{ fileSizeLabel(f.size) }}</span>
-                } @else {
-                  <span class="module-form__file-sub">{{ 'course_detail.existing_file' | translate }}</span>
-                }
-              </div>
-              <button type="button" class="module-form__file-remove" (click)="clearModuleFile()">
-                <i class="pi pi-trash" aria-hidden="true"></i>
-              </button>
-            </div>
-          } @else {
-            <label class="module-form__upload">
-              <input type="file" hidden (change)="onModuleFileSelected($event)"
-                     [accept]="moduleIsVideo()
-                       ? 'video/mp4,video/quicktime,video/webm,video/x-m4v,video/ogg'
-                       : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,image/*'" />
-              <i class="pi pi-cloud-upload" aria-hidden="true"></i>
-              <span>{{ (moduleIsVideo() ? 'course_detail.upload_video' : 'course_detail.upload_file') | translate }}</span>
-            </label>
-          }
-        }
-      </div>
+      <ng-container *ngTemplateOutlet="fileSlot; context: { $implicit: 'main' }" />
+      @if (moduleIsDocument()) {
+        <ng-container *ngTemplateOutlet="fileSlot; context: { $implicit: 'en' }" />
+      }
     } @else if (moduleIsArticle()) {
       <div class="nas-form__field module-form__article">
         <label>
-          {{ 'course_detail.article' | translate }}
+          {{ 'course_detail.article_ar' | translate }}
           <span class="required">*</span>
         </label>
         <nas-rich-text formControlName="content"
                          areaMinHeight="138px"
                          [placeholder]="'course_detail.article_placeholder' | translate" />
         @if (articleError(); as error) {
+          <p class="module-form__hint module-form__hint--warn" role="alert">{{ error | translate }}</p>
+        }
+      </div>
+      <div class="nas-form__field module-form__article">
+        <label>{{ 'course_detail.article_en' | translate }}</label>
+        <p class="module-form__hint">{{ 'course_detail.english_version_hint' | translate }}</p>
+        <nas-rich-text formControlName="content_en"
+                         areaMinHeight="138px"
+                         [placeholder]="'course_detail.article_placeholder' | translate" />
+        @if (articleEnError(); as error) {
           <p class="module-form__hint module-form__hint--warn" role="alert">{{ error | translate }}</p>
         }
       </div>
@@ -259,3 +217,67 @@
     </footer>
   </form>
 </p-dialog>
+
+<!-- One file slot of the module form: the main (Arabic) file, or a
+     document's optional English one. -->
+<ng-template #fileSlot let-lang>
+  <div class="nas-form__field">
+    <label>
+      {{ (lang === 'en' ? 'course_detail.document_en' : moduleIsVideo() ? 'course_detail.video' : 'course_detail.document_ar') | translate }}
+      @if (lang === 'main') { <span class="required">*</span> }
+    </label>
+    @if (lang === 'en') {
+      <p class="module-form__hint">{{ 'course_detail.english_version_hint' | translate }}</p>
+    }
+    @if (slotUploading(lang)) {
+      <div class="module-upload-progress" role="status" aria-live="polite">
+        <div class="module-upload-progress__icon" [class.is-video]="moduleIsVideo()">
+          <i class="pi" aria-hidden="true" [ngClass]="moduleIsVideo() ? 'pi-video' : 'pi-file'"></i>
+          <span class="module-upload-progress__ring"></span>
+        </div>
+        <div class="module-upload-progress__body">
+          <span class="module-upload-progress__name">{{ slotUploadingName(lang) || (moduleIsVideo() ? ('course_detail.upload_video' | translate) : ('course_detail.upload_file' | translate)) }}</span>
+          <span class="module-upload-progress__status">
+            <span class="module-upload-progress__dot"></span>
+            {{ 'course_detail.uploading' | translate }}
+          </span>
+          <div class="module-upload-progress__track">
+            <span class="module-upload-progress__bar"></span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      @if (slotFileInfo(lang); as f) {
+        <div class="module-form__file">
+          <img class="module-form__file-icon"
+               [src]="moduleIsVideo() ? 'assets/icons/phosphor/mp4.svg' : 'assets/icons/phosphor/pdf.svg'"
+               [alt]="moduleIsVideo() ? 'MP4' : 'PDF'" />
+          <div class="module-form__file-meta">
+            @if (f.url) {
+              <a class="module-form__file-name" [href]="f.url" target="_blank" rel="noopener">{{ f.name }}</a>
+            } @else {
+              <span class="module-form__file-name">{{ f.name }}</span>
+            }
+            @if (f.size) {
+              <span class="module-form__file-sub">{{ fileSizeLabel(f.size) }}</span>
+            } @else {
+              <span class="module-form__file-sub">{{ 'course_detail.existing_file' | translate }}</span>
+            }
+          </div>
+          <button type="button" class="module-form__file-remove" (click)="clearModuleFile(lang)">
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      } @else {
+        <label class="module-form__upload">
+          <input type="file" hidden (change)="onModuleFileSelected($event, lang)"
+                 [accept]="moduleIsVideo()
+                   ? 'video/mp4,video/quicktime,video/webm,video/x-m4v,video/ogg'
+                   : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,image/*'" />
+          <i class="pi pi-cloud-upload" aria-hidden="true"></i>
+          <span>{{ (moduleIsVideo() ? 'course_detail.upload_video' : 'course_detail.upload_file') | translate }}</span>
+        </label>
+      }
+    }
+  </div>
+</ng-template>
