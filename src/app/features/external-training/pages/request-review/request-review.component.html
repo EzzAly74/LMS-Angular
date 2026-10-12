@@ -12,8 +12,20 @@
       <h1 class="etr__title">{{ 'external_training.review.title' | translate }}</h1>
       @if (stats(); as s) {
         <p class="etr__meta">
-          <img src="assets/icons/figma/user-16.svg" width="16" height="16" alt="" />
-          {{ 'external_training.list.pending_meta' | translate: { count: s.pending } }}
+          <span class="et-meta__item">
+            <img src="assets/icons/figma/user-16.svg" width="16" height="16" alt="" />
+            {{ 'external_training.list.pending_meta' | translate: { count: s.pending } }}
+          </span>
+          <!-- Figma 2181:116196: "Compliance · Updated …" (NEW2B-6237). -->
+          <span class="et-meta__item">
+            <img src="assets/icons/figma/circles-three-plus-16.svg" width="16" height="16" alt="" />
+            {{ 'external_training.list.compliance' | translate }}
+          </span>
+          @if (s.compliance_updated_at) {
+            <time class="et-meta__item" [attr.datetime]="s.compliance_updated_at">
+              {{ 'external_training.list.updated' | translate: { when: (s.compliance_updated_at | nasRelativeTime: locale.locale()) } }}
+            </time>
+          }
         </p>
       }
     </div>

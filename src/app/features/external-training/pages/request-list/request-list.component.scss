@@ -14,13 +14,17 @@
 
 .etl__meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--nas-space-1);
+  gap: var(--nas-space-1) var(--nas-space-2);
   margin: 0;
   font-size: var(--nas-size-xs);
   line-height: 21px;
   color: var(--nas-neutral-750);
 }
+
+// Pending · Compliance · Updated (Figma 2181:116196): 4 px icon gap, 8 px apart.
+.et-meta__item { display: inline-flex; align-items: center; gap: var(--nas-space-1); }
 
 .etl__card {
   display: flex;

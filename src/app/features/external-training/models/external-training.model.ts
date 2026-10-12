@@ -34,6 +34,8 @@ export interface RequestStats {
   this_year: number;
   rejected_this_year: number;
   year: number;
+  /** Last approval: when external training last changed compliance (NEW2B-6237). */
+  compliance_updated_at: string | null;
 }
 
 export interface ReviewOptions {

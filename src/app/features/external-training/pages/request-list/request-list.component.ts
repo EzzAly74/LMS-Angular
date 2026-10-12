@@ -8,7 +8,7 @@ import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
-import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
+import { NasDatePipe, NasRelativeTimePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { ExternalTrainingRequest, REQUEST_STATUSES, RequestStats, RequestStatus } from '../../models/external-training.model';
 import { ExternalTrainingApiService } from '../../services/external-training-api.service';
 import { EtStatsComponent } from '../../components/et-stats/et-stats.component';
@@ -27,7 +27,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'app-external-training-list',
   standalone: true,
-  imports: [RouterLink, TranslateModule, SkeletonModule, NasIconComponent, NasPagerComponent, NasDatePipe, EtStatsComponent],
+  imports: [RouterLink, TranslateModule, SkeletonModule, NasIconComponent, NasPagerComponent, NasDatePipe, NasRelativeTimePipe, EtStatsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './request-list.component.html',
   styleUrl: './request-list.component.scss',

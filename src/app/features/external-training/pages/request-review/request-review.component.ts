@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { NasConfirmModalComponent } from '../../../../shared/nas/nas-confirm-modal/nas-confirm-modal.component';
-import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
+import { NasDatePipe, NasRelativeTimePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { ExternalTrainingRequest, RequestStats, ReviewOptions } from '../../models/external-training.model';
 import { ExternalTrainingApiService } from '../../services/external-training-api.service';
 import { EtStatsComponent } from '../../components/et-stats/et-stats.component';
@@ -37,7 +37,7 @@ type Confirm = 'approve' | 'reopen' | null;
   standalone: true,
   imports: [NasCanDirective, 
     FormsModule, RouterLink, TranslateModule, DropdownModule, SkeletonModule,
-    NasConfirmModalComponent, NasDatePipe, EtStatsComponent, RejectDialogComponent,
+    NasConfirmModalComponent, NasDatePipe, NasRelativeTimePipe, EtStatsComponent, RejectDialogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './request-review.component.html',
