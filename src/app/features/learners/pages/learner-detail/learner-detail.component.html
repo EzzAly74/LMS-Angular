@@ -18,6 +18,19 @@
       <p class="ld__subtitle">{{ 'learners.subtitle' | translate }}</p>
     </header>
 
+    <!-- Figma 2181:115043: search + From / To filter both tables (NEW2B-6226). -->
+    <nas-list-toolbar class="ld__toolbar" [label]="'learners.detail.search_label' | translate"
+      [placeholder]="'learners.detail.search_placeholder' | translate" (searchChange)="onSearch($event)">
+      <div class="ld__range">
+        <label class="ld__sr" for="ld-from">{{ 'learners.from' | translate }}</label>
+        <nas-datepicker class="ld__date" inputId="ld-from" [placeholder]="'learners.from' | translate"
+          [max]="to()" [ngModel]="from()" (ngModelChange)="setRange('from', $event)" />
+        <label class="ld__sr" for="ld-to">{{ 'learners.to' | translate }}</label>
+        <nas-datepicker class="ld__date" inputId="ld-to" [placeholder]="'learners.to' | translate"
+          [min]="from()" [ngModel]="to()" (ngModelChange)="setRange('to', $event)" />
+      </div>
+    </nas-list-toolbar>
+
     @if (profileState() === 'error') {
       <div class="ld__card ld__message" role="alert">
         <p>{{ 'common.could_not_load' | translate }}</p>
@@ -171,7 +184,7 @@
                   </tr>
                 } @empty {
                   <tr><td colspan="9" class="ld__message" role="status">
-                    <p>{{ 'learners.detail.no_courses' | translate }}</p>
+                    <p>{{ (filtered() ? 'learners.detail.no_matches' : 'learners.detail.no_courses') | translate }}</p>
                   </td></tr>
                 }
               }
@@ -237,7 +250,7 @@
                   </tr>
                 } @empty {
                   <tr><td colspan="7" class="ld__message" role="status">
-                    <p>{{ 'learners.detail.no_performance' | translate }}</p>
+                    <p>{{ (filtered() ? 'learners.detail.no_matches' : 'learners.detail.no_performance') | translate }}</p>
                   </td></tr>
                 }
               }

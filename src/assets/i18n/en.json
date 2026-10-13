@@ -2085,6 +2085,8 @@
         "last_updated": "Last Updated"
       },
       "status": {
+        "upcoming": "Upcoming",
+        "ended": "Ended",
         "completed": "Completed",
         "in_progress": "In Progress",
         "not_started": "Not started"
@@ -2106,6 +2108,9 @@
       "progress_of": "Progress in {{name}}",
       "open_course": "Open {{name}}",
       "open_submission": "Open the submission for {{name}}",
+      "search_label": "Search this learner's courses and results",
+      "search_placeholder": "Search by course, quiz or assignment",
+      "no_matches": "Nothing matches the search or dates.",
       "no_courses": "This learner is not enrolled in any course.",
       "no_performance": "No quiz or assignment submissions yet."
     }

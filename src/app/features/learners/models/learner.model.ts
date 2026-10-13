@@ -67,7 +67,7 @@ export interface LearnerCourseRow {
   attended: number;
   absent: number;
   sessions_scheduled: number;
-  status: 'completed' | 'active';
+  status: 'completed' | 'active' | 'upcoming' | 'ended';
   /** Attendance-based; null when the cohort has no scheduled sessions. */
   progress_percent: number | null;
   started_on: string | null;

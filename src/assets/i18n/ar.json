@@ -2161,6 +2161,8 @@
         "last_updated": "آخر تحديث"
       },
       "status": {
+        "upcoming": "قادمة",
+        "ended": "منتهية",
         "completed": "مكتملة",
         "in_progress": "قيد التقدم",
         "not_started": "لم تبدأ"
@@ -2182,6 +2184,9 @@
       "progress_of": "التقدم في {{name}}",
       "open_course": "فتح {{name}}",
       "open_submission": "فتح تسليم {{name}}",
+      "search_label": "ابحث في دورات هذا المتعلم ونتائجه",
+      "search_placeholder": "ابحث باسم الدورة أو الاختبار أو الواجب",
+      "no_matches": "لا توجد نتائج تطابق البحث أو التواريخ.",
       "no_courses": "هذا المتعلم غير مسجل في أي دورة.",
       "no_performance": "لا توجد تسليمات اختبارات أو مهام بعد."
     }

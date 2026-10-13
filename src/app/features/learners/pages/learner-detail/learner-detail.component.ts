@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   OnInit,
+  computed,
   inject,
   input,
   signal,
@@ -11,9 +12,10 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
-import { Observable, Subject, catchError, map, of, switchMap } from 'rxjs';
+import { Observable, Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { API } from '../../../../core/constants/api.constants';
@@ -23,6 +25,9 @@ import { NasAvatarComponent } from '../../../../shared/nas/nas-avatar/nas-avatar
 import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import { NasStatusBadgeComponent, NasStatusTone } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
+import { NasListToolbarComponent } from '../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
+import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
+import { dateToApi } from '../../../../core/utils/assessment-question';
 import {
   LearnerCourseRow,
   LearnerPerformanceRow,
@@ -48,9 +53,9 @@ const EMPTY_TABLE = { rows: [], total: 0, page: 1, state: 'loading' as LoadState
  * two tables with their own pagers (…/courses, …/performance): the design
  * gives each "1–4 of 6", which is why B2 made them separate endpoints.
  *
- * Figma repeats the list page's search + From/To above the cards; on one
- * learner's page it is unclear what they would filter, so they are left out
- * pending the designer (FG-24) rather than wired to a guess.
+ * The search + From/To above the cards (NEW2B-6226, closing FG-24 a) filter
+ * both tables: course and quiz / assignment names in either language; a
+ * cohort whose dates overlap the range, and results updated within it.
  */
 @Component({
   selector: 'app-learner-detail',
@@ -64,6 +69,9 @@ const EMPTY_TABLE = { rows: [], total: 0, page: 1, state: 'loading' as LoadState
     NasPagerComponent,
     NasStatusBadgeComponent,
     NasDatePipe,
+    FormsModule,
+    NasListToolbarComponent,
+    NasDatepickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './learner-detail.component.html',
@@ -89,6 +97,13 @@ export class LearnerDetailComponent implements OnInit {
   private readonly courses$     = new Subject<number>();
   private readonly performance$ = new Subject<number>();
 
+  /* ── Search + From / To (both tables) ── */
+  readonly search = signal('');
+  readonly from   = signal<Date | null>(null);
+  readonly to     = signal<Date | null>(null);
+  readonly filtered = computed(() => this.search() !== '' || this.from() !== null || this.to() !== null);
+  private readonly search$ = new Subject<string>();
+
   constructor() {
     // Course, cohort, quiz and qualification names are localised server-side.
     withLocaleReload(() => this.loadAll());
@@ -97,7 +112,28 @@ export class LearnerDetailComponent implements OnInit {
   ngOnInit(): void {
     this.table(this.courses$, 'courses', this.courses);
     this.table(this.performance$, 'performance', this.performance);
+    this.search$
+      .pipe(map(v => v.trim()), debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(term => {
+        this.search.set(term);
+        this.reloadTables();
+      });
     this.loadAll();
+  }
+
+  onSearch(value: string): void {
+    this.search$.next(value);
+  }
+
+  setRange(edge: 'from' | 'to', value: Date | null): void {
+    (edge === 'from' ? this.from : this.to).set(value);
+    this.reloadTables();
+  }
+
+  /** A filter changed: both tables start again at page 1. */
+  private reloadTables(): void {
+    this.courses$.next(1);
+    this.performance$.next(1);
   }
 
   loadAll(): void {
@@ -122,6 +158,9 @@ export class LearnerDetailComponent implements OnInit {
    */
   courseStatus(row: LearnerCourseRow): { key: string; tone: NasStatusTone } {
     if (row.status === 'completed') return { key: 'learners.detail.status.completed', tone: 'success' };
+    // The cohort has not started yet / is over without a pass (NEW2B-6228).
+    if (row.status === 'upcoming') return { key: 'learners.detail.status.upcoming', tone: 'neutral' };
+    if (row.status === 'ended') return { key: 'learners.detail.status.ended', tone: 'danger' };
     if (row.attended === 0 && !row.progress_percent) return { key: 'learners.detail.status.not_started', tone: 'neutral' };
     return { key: 'learners.detail.status.in_progress', tone: 'info' };
   }
@@ -163,6 +202,16 @@ export class LearnerDetailComponent implements OnInit {
       });
   }
 
+  private tableParams(page: number): Record<string, string | number> {
+    const params: Record<string, string | number> = { page, per_page: this.perPage };
+    const from = dateToApi(this.from());
+    const to = dateToApi(this.to());
+    if (this.search()) params['search'] = this.search();
+    if (from) params['from'] = from;
+    if (to) params['to'] = to;
+    return params;
+  }
+
   /** Wire one table: each page request cancels the previous one. */
   private table<T>(
     trigger$: Subject<number>,
@@ -174,7 +223,7 @@ export class LearnerDetailComponent implements OnInit {
         switchMap((page): Observable<TableState<T>> => {
           target.update(t => ({ ...t, page, state: 'loading' }));
           return this.api
-            .getPaginated<T>(`${API.ADMIN_LEARNERS}/${this.id()}/${path}`, { page, per_page: this.perPage })
+            .getPaginated<T>(`${API.ADMIN_LEARNERS}/${this.id()}/${path}`, this.tableParams(page))
             .pipe(
               map(res => ({ rows: res.result.data, total: res.result.total, page, state: 'ready' as LoadState })),
               catchError(() => of({ rows: [], total: 0, page, state: 'error' as LoadState })),
