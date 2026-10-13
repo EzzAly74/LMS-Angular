@@ -1,96 +1,77 @@
+<!-- Content tab (Figma 2486:139920): count line + Module, type filters, module list. -->
 <section class="modules-tab">
 
-  <!-- Header: count line + Module CTA -->
   <header class="modules-tab__head">
-    <span class="modules-tab__count">{{ modulesHeader() }}</span>
-    <button *nasCan="'edit-courses'" type="button" class="nas-modules-cta" (click)="openAddModule()">
-      <i class="pi pi-plus-circle" aria-hidden="true"></i> {{ 'course_detail.add_module' | translate }}
+    <p class="modules-tab__count">{{ modulesHeader() }}</p>
+    <button *nasCan="'edit-courses'" type="button" class="modules-tab__add" (click)="openAddModule()">
+      <img src="assets/icons/figma/plus-circle-light-20.svg" width="20" height="20" alt="" />
+      {{ 'course_detail.add_module' | translate }}
     </button>
   </header>
 
-  <!-- Filter chips — driven by the `module_content_type` enum so
-       the chip list and labels track whatever the backend ships. -->
-  <div class="modules-filters">
-    <label class="modules-filter">
-      <p-checkbox [binary]="true"
-                  [ngModel]="isFilterActive('all')"
-                  (onChange)="toggleModuleFilter('all')" />
-      <span>{{ 'common.all' | translate }}</span>
-    </label>
-    @for (opt of moduleContentTypeOpts(); track opt.id) {
+  <div class="modules-tab__body">
+    <!-- Type filters, from the `module_content_type` enum. -->
+    <fieldset class="modules-filters">
+      <legend class="modules-filters__legend">{{ 'course_detail.filter_by_type' | translate }}</legend>
       <label class="modules-filter">
-        <p-checkbox [binary]="true"
-                    [ngModel]="isFilterActive($any(opt.code))"
-                    (onChange)="toggleModuleFilter($any(opt.code))" />
-        <span>{{ opt.value }}</span>
+        <input type="checkbox" class="modules-filter__box" [checked]="isFilterActive('all')" (change)="toggleModuleFilter('all')" />
+        <span>{{ 'common.all' | translate }}</span>
       </label>
+      @for (opt of moduleContentTypeOpts(); track opt.id) {
+        <label class="modules-filter">
+          <input type="checkbox" class="modules-filter__box" [checked]="isFilterActive($any(opt.code))"
+                 (change)="toggleModuleFilter($any(opt.code))" />
+          <!-- Filter copy is the design's ("Videos", "Links"); badges use the type's name. -->
+          <span>{{ ('course_detail.module_filter.' + opt.code) | translate }}</span>
+        </label>
+      }
+    </fieldset>
+
+    @if (modulesLoading()) {
+      <ol class="modules-list" aria-busy="true" [attr.aria-label]="'common.loading' | translate">
+        @for (s of [1, 2, 3, 4, 5]; track s) {
+          <li class="module-row module-row--skeleton">
+            <span class="module-row__index"></span>
+            <div class="module-row__body">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
+            </div>
+          </li>
+        }
+      </ol>
+    } @else if (!filteredModules().length) {
+      <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
+        <i class="pi pi-folder-open" aria-hidden="true"></i>
+        <h3>{{ 'course_detail.no_modules' | translate }}</h3>
+        <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
+      </article>
+    } @else {
+      <ol class="modules-list">
+        @for (m of filteredModules(); track m.id; let idx = $index) {
+          <li class="module-row">
+            <span class="module-row__index" aria-hidden="true">{{ idx + 1 }}</span>
+            <div class="module-row__body">
+              <div class="module-row__title-line">
+                <span class="module-row__title" dir="auto">{{ moduleTitle(m) }}</span>
+                <span class="module-type" [class]="'module-type module-type--' + m.content_type">
+                  {{ enumValueFromCode('module_content_type', m.content_type) }}
+                </span>
+              </div>
+              @if (moduleSubline(m); as sub) { <span class="module-row__sub">{{ sub }}</span> }
+            </div>
+            <button *nasCan="'edit-courses'" type="button" class="module-row__edit"
+                    [attr.aria-label]="'course_detail.edit_module_named' | translate: { name: moduleTitle(m) }"
+                    (click)="openEditModule(m)">
+              <img src="assets/icons/figma/pencil-simple-neutral-20.svg" width="20" height="20" alt="" />
+            </button>
+          </li>
+        }
+      </ol>
     }
   </div>
-
-  <!-- List -->
-  @if (modulesLoading()) {
-    <div class="modules-list">
-      @for (s of [1,2,3,4,5]; track s) {
-        <article class="module-row module-row--skeleton">
-          <span class="module-row__index"></span>
-          <div class="module-row__body">
-            <div class="skeleton-line skeleton-line--lg"></div>
-            <div class="skeleton-line skeleton-line--sm"></div>
-          </div>
-        </article>
-      }
-    </div>
-  } @else if (!filteredModules().length) {
-    <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
-      <i class="pi pi-folder-open" aria-hidden="true"></i>
-      <h3>{{ 'course_detail.no_modules' | translate }}</h3>
-      <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
-    </article>
-  } @else {
-    <div class="modules-list">
-      @for (m of filteredModules(); track m.id; let idx = $index) {
-        <article class="module-row">
-          <span class="module-row__index">{{ idx + 1 }}</span>
-          <div class="module-row__body">
-            <div class="module-row__title-line">
-              <span class="module-row__title">{{ moduleTitle(m) }}</span>
-              <nas-status-badge [tone]="moduleChipTone(m.content_type)">
-                {{ enumValueFromCode('module_content_type', m.content_type) }}
-              </nas-status-badge>
-            </div>
-            <span class="module-row__sub">{{ moduleSubline(m) }}</span>
-          </div>
-          <div *nasCan="'edit-courses'" class="module-row__actions">
-            <button type="button" class="row-action-btn" [title]="'common.edit' | translate"
-                    (click)="openEditModule(m)">
-              <i class="pi pi-pencil" aria-hidden="true"></i>
-            </button>
-            <button type="button" class="row-action-btn" [title]="'common.more' | translate"
-                    (click)="openModuleMenu($event, m, moduleMenu)">
-              <i class="pi pi-ellipsis-h" aria-hidden="true"></i>
-            </button>
-          </div>
-        </article>
-      }
-    </div>
-  }
 </section>
 
 <p-confirmDialog />
-
-<!-- ── Module row menu (Edit / Delete) ─────────────────────────────── -->
-<p-overlayPanel #moduleMenu>
-  @if (activeModule(); as m) {
-    <div class="row-menu">
-      <button class="row-menu__item" (click)="moduleMenu.hide(); openEditModule(m)">
-        <i class="pi pi-pencil" aria-hidden="true"></i> {{ 'course_detail.edit_module_menu' | translate }}
-      </button>
-      <button class="row-menu__item" (click)="confirmDeleteModule(m, moduleMenu)">
-        <i class="pi pi-trash" aria-hidden="true"></i> {{ 'course_detail.delete_module_menu' | translate }}
-      </button>
-    </div>
-  }
-</p-overlayPanel>
 
 <!-- ── Module modal (Add / Edit) ───────────────────────────────────── -->
 <p-dialog
@@ -205,6 +186,13 @@
     </label>
 
     <footer class="nas-form__footer">
+      <!-- Delete lives here: the row shows only the pencil (Figma 2486:139920). -->
+      @if (moduleEditMode() && activeModule(); as m) {
+        <button type="button" class="nas-btn nas-btn--ghost module-form__delete" (click)="confirmDeleteModule(m)" [disabled]="moduleSaving()">
+          <i class="pi pi-trash" aria-hidden="true"></i>
+          <span>{{ 'course_detail.delete_module_menu' | translate }}</span>
+        </button>
+      }
       <button type="button" class="nas-btn nas-btn--ghost" (click)="showModule.set(false)" [disabled]="moduleSaving()">
         {{ 'common.cancel' | translate }}
       </button>

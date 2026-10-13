@@ -3,130 +3,197 @@
 @use '../../styles/table';
 @use '../../styles/form';
 
+// Content tab, Figma 2486:139920. Header 16px above the filters and list,
+// filters 8px above the card; values are the Figma ones.
 .modules-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--nas-space-3);
+  gap: var(--nas-space-4);
 }
 
 .modules-tab__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--nas-space-4);
-  flex-wrap: wrap;
-  &__count,
-  .modules-tab__count {
-    font-size: var(--nas-size-2xs);
-    color: var(--nas-color-text-muted);
-  }
 }
 
-.nas-modules-cta {
+.modules-tab__count {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  color: var(--nas-neutral-750);
+}
+
+// The dark "Module" button (Eng/Button/Medium, Shadows/Small).
+.modules-tab__add {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--nas-space-2);
-  background: var(--nas-essential-cta);
-  color: var(--nas-color-text-onDark, #ffffff);
-  border: none;
-  height: 36px;
-  padding: 0 var(--nas-space-5);
-  border-radius: var(--nas-radius-full);
-  font-size: var(--nas-size-2xs);
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-teal-1000);
+  color: var(--nas-neutral-100);
+  box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
+  font: inherit;
+  font-size: var(--nas-size-xs);
   font-weight: var(--nas-weight-medium);
+  line-height: 16.8px;
+  white-space: nowrap;
   cursor: pointer;
   transition: background var(--transition-speed);
-  &:hover {
-    background: var(--nas-teal-900, var(--nas-essential-cta));
-  }
-  i {
-    font-size: 13px;
-  }
+
+  img { display: block; }
+  &:hover { background: var(--nas-teal-900); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
 }
 
-.modules-filters {
-  display: flex;
-  align-items: center;
-  gap: var(--nas-space-5);
-  padding: var(--nas-space-2) 0 var(--nas-space-2);
-  flex-wrap: wrap;
-}
-.modules-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nas-space-2);
-  font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-body);
-  cursor: pointer;
-  user-select: none;
-}
-
-.modules-list {
+.modules-tab__body {
   display: flex;
   flex-direction: column;
   gap: var(--nas-space-2);
 }
 
+// ── Type filters: 16px boxes, 4px to the label, 8px apart ───────────────
+.modules-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nas-space-2);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  &__legend {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+.modules-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-1);
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  color: var(--nas-neutral-750);
+  cursor: pointer;
+  user-select: none;
+
+  &__box {
+    appearance: none;
+    flex-shrink: 0;
+    inline-size: 16px;
+    block-size: 16px;
+    margin: 0;
+    border: 1px solid var(--nas-neutral-500);
+    border-radius: 4px;
+    background: var(--nas-neutral-0) no-repeat center / 12px 12px;
+    cursor: pointer;
+
+    &:checked {
+      border-color: var(--nas-teal-1000);
+      background-color: var(--nas-teal-1000);
+      background-image: url('/assets/icons/figma/checkbox-check-12.svg');
+    }
+    &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+  }
+}
+
+// ── The list: one white card, rows split by a 1px rule ─────────────────
+.modules-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 1px;
+  list-style: none;
+  border: 1px solid var(--nas-neutral-400);
+  border-radius: var(--nas-radius-xl);
+  background: var(--nas-neutral-0);
+  box-shadow: 0 1px 2px 0 rgba(12, 36, 39, 0.08);
+  overflow: hidden;
+}
+
 .module-row {
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
+  display: flex;
   align-items: center;
   gap: var(--nas-space-4);
-  background: var(--nas-color-bg-surface);
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-md);
-  padding: var(--nas-space-3) var(--nas-space-4);
-  transition:
-    border-color var(--transition-speed),
-    box-shadow var(--transition-speed);
+  min-block-size: 76px;
+  padding: var(--nas-space-4) var(--nas-space-5);
 
-  &:hover {
-    border-color: var(--nas-neutral-400, var(--nas-color-border));
+  & + & {
+    border-block-start: 1px solid var(--nas-neutral-400);
   }
 
   &__index {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--nas-neutral-200);
-    color: var(--nas-color-text-strong);
-    font-size: var(--nas-size-2xs);
-    font-weight: var(--nas-weight-medium);
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
+    inline-size: 32px;
+    block-size: 32px;
+    border-radius: 50%;
+    background: var(--nas-teal-100);
+    color: var(--nas-teal-700);
+    font-size: var(--nas-size-2xs);
+    font-weight: var(--nas-weight-bold);
+    line-height: 16px;
   }
 
   &__body {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
-    gap: 4px;
-    min-width: 0;
+    gap: 2px;
+    min-inline-size: 0;
   }
 
   &__title-line {
     display: flex;
-    align-items: center;
-    gap: var(--nas-space-3);
     flex-wrap: wrap;
+    align-items: center;
+    gap: 4px var(--nas-space-2);
+    min-inline-size: 0;
   }
 
   &__title {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     font-size: var(--nas-size-xs);
-    font-weight: var(--nas-weight-medium);
-    color: var(--nas-color-text-strong);
-    line-height: 1.2;
+    font-weight: var(--nas-weight-semibold);
+    line-height: 21px;
+    color: var(--nas-neutral-1000);
   }
 
   &__sub {
-    font-size: var(--nas-size-3xs);
-    color: var(--nas-color-text-muted);
+    font-size: var(--nas-size-2xs);
+    line-height: 18px;
+    color: var(--nas-neutral-750);
   }
 
-  &__actions {
+  // Ghost pencil button (44 x 36).
+  &__edit {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
-    gap: var(--nas-space-2);
+    justify-content: center;
+    padding: var(--nas-space-2) var(--nas-space-3);
+    border: 0;
+    border-radius: var(--nas-radius-md);
+    background: transparent;
+    cursor: pointer;
+
+    img { display: block; }
+    &:hover { background: var(--nas-neutral-300); }
+    &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
   }
 
   &--skeleton {
@@ -532,4 +599,30 @@
     background: var(--nas-color-bg-surface);
     border-style: dashed;
   }
+}
+
+.module-type {
+  display: inline-flex;
+  align-items: center;
+  block-size: 18px;
+  padding: 2px var(--nas-space-2);
+  border-radius: 9999px;
+  font-size: var(--nas-size-2xs);
+  font-weight: var(--nas-weight-medium);
+  line-height: 14.4px;
+  white-space: nowrap;
+
+  &--video { background: var(--nas-teal-200); color: var(--nas-teal-800); }
+  &--link { background: var(--nas-status-operational-2); color: var(--nas-neutral-100); }
+  &--document { background: var(--nas-status-operational-10); color: var(--nas-status-operational); }
+  &--article { background: var(--nas-sky-300); color: var(--nas-neutral-1000); }
+}
+
+.module-form__delete {
+  margin-inline-end: auto;
+  color: var(--nas-status-red-700);
+}
+
+@media (max-width: 767px) {
+  .module-row { padding-inline: var(--nas-space-4); gap: var(--nas-space-3); }
 }

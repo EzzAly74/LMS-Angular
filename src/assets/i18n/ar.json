@@ -1875,7 +1875,24 @@
     },
     "modules_minutes": "{{minutes}} دقيقة وقت تعلم تقديري",
     "edit_module_menu": "تعديل الوحدة",
-    "delete_module_menu": "حذف الوحدة"
+    "delete_module_menu": "حذف الوحدة",
+    "filter_by_type": "التصفية حسب النوع",
+    "module_filter": {
+      "video": "الفيديوهات",
+      "document": "المستندات",
+      "article": "المقالات",
+      "link": "الروابط"
+    },
+    "edit_module_named": "تعديل {{name}}",
+    "duration_min": "{{count}} دقيقة",
+    "duration_hours": {
+      "zero": "{{count}} ساعة",
+      "one": "ساعة واحدة",
+      "two": "ساعتان",
+      "few": "{{count}} ساعات",
+      "many": "{{count}} ساعة",
+      "other": "{{count}} ساعة"
+    }
   },
   "courses_list": {
     "title": "كل الدورات",

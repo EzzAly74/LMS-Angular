@@ -9,15 +9,14 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
-import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { NasStatusBadgeComponent, NasRichTextComponent } from '../../../../../../shared/nas';
+import { NasRichTextComponent } from '../../../../../../shared/nas';
 import { CoursesApiService } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
@@ -58,15 +57,12 @@ interface ModuleFileInfo {
   standalone: true,
   imports: [NasCanDirective, 
     CommonModule,
-    FormsModule,
     ReactiveFormsModule,
     TranslateModule,
     DialogModule,
     DropdownModule,
     CheckboxModule,
-    OverlayPanelModule,
     ConfirmDialogModule,
-    NasStatusBadgeComponent,
     NasRichTextComponent,
   ],
   providers: [ConfirmationService],
@@ -267,34 +263,15 @@ export class CourseContentTabComponent implements OnInit {
     return pickLocalized(m.title, this.locale(), this.t.instant('course_detail.untitled_module'));
   }
 
-  /** Pretty duration: minutes < 60 → "30 min", otherwise → "2 hrs". */
+  /** "30 min", "1 hr", "2 hrs", "1 hr 15 min" (Figma 2486:139920), in the UI language. */
   moduleDurationLabel(m: CourseModule): string {
     const min = m.duration_minutes ?? 0;
-    if (!min) return '';
-    if (min % 60 === 0) {
-      const hrs = min / 60;
-      return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'}`;
-    }
-    if (min >= 60) {
-      const hrs = Math.floor(min / 60);
-      const mins = min % 60;
-      return `${hrs}h ${mins}m`;
-    }
-    return `${min} min`;
-  }
-
-  /** Tone for the content-type chip on the row. */
-  moduleChipTone(t: ModuleContentType): 'teal' | 'success' | 'sky' | 'neutral' {
-    switch (t) {
-      case 'video':
-        return 'teal';
-      case 'article':
-        return 'success';
-      case 'link':
-        return 'sky';
-      case 'document':
-        return 'neutral';
-    }
+    if (min <= 0) return '';
+    if (min < 60) return this.t.instant('course_detail.duration_min', { count: min });
+    const hrs = Math.floor(min / 60);
+    const hours = this.t.instant(pluralKey('course_detail.duration_hours', hrs, this.locale()), { count: hrs });
+    const rest = min % 60;
+    return rest ? `${hours} ${this.t.instant('course_detail.duration_min', { count: rest })}` : hours;
   }
 
   openAddModule(): void {
@@ -619,8 +596,8 @@ export class CourseContentTabComponent implements OnInit {
     });
   }
 
-  confirmDeleteModule(m: CourseModule, overlay: OverlayPanel): void {
-    overlay.hide();
+  /** From the Edit Module dialog; the dialog closes once it is deleted. */
+  confirmDeleteModule(m: CourseModule): void {
     const id = this.courseId();
     this.confirm.confirm({
       message: this.t.instant('course_detail_toasts.module_delete_message', {
@@ -632,17 +609,12 @@ export class CourseContentTabComponent implements OnInit {
         this.coursesApi.deleteModule(id, m.id).subscribe({
           next: () => {
             this.toast.success('course_detail_toasts.module_deleted');
+            this.showModule.set(false);
             this.loadModules(id);
           },
         });
       },
     });
-  }
-
-  /** Open the row's overflow menu and remember which module triggered it. */
-  openModuleMenu(ev: Event, m: CourseModule, overlay: OverlayPanel): void {
-    this.activeModule.set(m);
-    overlay.toggle(ev);
   }
 
   /** "30 min" subline shown under each module title in tight rows. */

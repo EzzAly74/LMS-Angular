@@ -1799,7 +1799,20 @@
     },
     "modules_minutes": "{{minutes}} min estimated learner time",
     "edit_module_menu": "Edit module",
-    "delete_module_menu": "Delete module"
+    "delete_module_menu": "Delete module",
+    "filter_by_type": "Filter by type",
+    "module_filter": {
+      "video": "Videos",
+      "document": "Document",
+      "article": "Articles",
+      "link": "Links"
+    },
+    "edit_module_named": "Edit {{name}}",
+    "duration_min": "{{count}} min",
+    "duration_hours": {
+      "one": "{{count}} hr",
+      "other": "{{count}} hrs"
+    }
   },
   "courses_list": {
     "title": "All Courses",
