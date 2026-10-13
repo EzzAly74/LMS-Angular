@@ -1884,6 +1884,7 @@
       "link": "الروابط"
     },
     "edit_module_named": "تعديل {{name}}",
+    "delete_module_named": "حذف {{name}}",
     "duration_min": "{{count}} دقيقة",
     "duration_hours": {
       "zero": "{{count}} ساعة",

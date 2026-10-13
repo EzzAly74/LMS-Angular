@@ -59,11 +59,19 @@
               </div>
               @if (moduleSubline(m); as sub) { <span class="module-row__sub">{{ sub }}</span> }
             </div>
-            <button *nasCan="'edit-courses'" type="button" class="module-row__edit"
-                    [attr.aria-label]="'course_detail.edit_module_named' | translate: { name: moduleTitle(m) }"
-                    (click)="openEditModule(m)">
-              <img src="assets/icons/figma/pencil-simple-neutral-20.svg" width="20" height="20" alt="" />
-            </button>
+            <div *nasCan="'edit-courses'" class="module-row__actions">
+              <button type="button" class="module-row__action"
+                      [attr.aria-label]="'course_detail.edit_module_named' | translate: { name: moduleTitle(m) }"
+                      (click)="openEditModule(m)">
+                <img src="assets/icons/figma/pencil-simple-neutral-20.svg" width="20" height="20" alt="" />
+              </button>
+              <!-- Delete beside Edit (human, 2026-10-13); asks before deleting. -->
+              <button type="button" class="module-row__action module-row__action--danger"
+                      [attr.aria-label]="'course_detail.delete_module_named' | translate: { name: moduleTitle(m) }"
+                      (click)="confirmDeleteModule(m)">
+                <nas-icon name="trash" [size]="20" />
+              </button>
+            </div>
           </li>
         }
       </ol>
@@ -186,13 +194,6 @@
     </label>
 
     <footer class="nas-form__footer">
-      <!-- Delete lives here: the row shows only the pencil (Figma 2486:139920). -->
-      @if (moduleEditMode() && activeModule(); as m) {
-        <button type="button" class="nas-btn nas-btn--ghost module-form__delete" (click)="confirmDeleteModule(m)" [disabled]="moduleSaving()">
-          <i class="pi pi-trash" aria-hidden="true"></i>
-          <span>{{ 'course_detail.delete_module_menu' | translate }}</span>
-        </button>
-      }
       <button type="button" class="nas-btn nas-btn--ghost" (click)="showModule.set(false)" [disabled]="moduleSaving()">
         {{ 'common.cancel' | translate }}
       </button>

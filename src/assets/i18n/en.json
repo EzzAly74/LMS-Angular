@@ -1808,6 +1808,7 @@
       "link": "Links"
     },
     "edit_module_named": "Edit {{name}}",
+    "delete_module_named": "Delete {{name}}",
     "duration_min": "{{count}} min",
     "duration_hours": {
       "one": "{{count}} hr",

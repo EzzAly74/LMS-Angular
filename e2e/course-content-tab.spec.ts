@@ -66,8 +66,9 @@ test.describe('behaviour', () => {
     await expect(page.locator('.module-row__sub')).toHaveText(['30 min', '45 min', '35 min', '1 hr', '2 hrs', '1 hr 15 min']);
     await expect(page.locator('.module-type')).toHaveText(['Video', 'External Link', 'Document', 'Article', 'Video', 'Document']);
     await expect(page.locator('.modules-filter')).toHaveText(['All', 'Videos', 'Document', 'Articles', 'Links']);
-    await expect(row.getByRole('button')).toHaveCount(1);
+    await expect(row.getByRole('button')).toHaveCount(2);
     await expect(row.getByRole('button', { name: 'Edit Introduction to Workplace Safety' })).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Delete Introduction to Workplace Safety' })).toBeVisible();
 
     const card = await page.locator('.modules-list').evaluate(el => [getComputedStyle(el).borderRadius, getComputedStyle(el).borderTopColor]);
     expect(card).toEqual(['16px', 'rgb(230, 231, 232)']);
@@ -82,19 +83,18 @@ test.describe('behaviour', () => {
     await expect(page.locator('.module-row')).toHaveCount(MODULES.length);
   });
 
-  test('delete is offered in the Edit Module dialog', async ({ page }) => {
+  test('Delete beside Edit asks, then deletes the module', async ({ page }) => {
     await open(page);
     let deleted = false;
     await page.route('**/api/v1/courses/10/lectures/3', r => {
       if (r.request().method() === 'DELETE') { deleted = true; return r.fulfill({ json: ok(null) }); }
       return r.fallback();
     });
-    await page.getByRole('button', { name: 'Edit PPE & Equipment Handling' }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByRole('button', { name: 'Delete module' }).click();
-    await page.getByRole('alertdialog').getByRole('button', { name: /Yes|Delete|Confirm/ }).click();
+    await page.getByRole('button', { name: 'Delete PPE & Equipment Handling' }).click();
+    const confirm = page.getByRole('alertdialog');
+    await expect(confirm).toContainText('PPE & Equipment Handling');
+    await confirm.getByRole('button', { name: /Yes|Delete|Confirm/ }).click();
     await expect.poll(() => deleted).toBe(true);
-    await expect(dialog).toBeHidden();
   });
 });
 

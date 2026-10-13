@@ -179,8 +179,15 @@
     color: var(--nas-neutral-750);
   }
 
-  // Ghost pencil button (44 x 36).
-  &__edit {
+  &__actions {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--nas-space-1);
+  }
+
+  // Ghost icon buttons (44 x 36): the design's pencil, and Delete beside it.
+  &__action {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -191,9 +198,14 @@
     background: transparent;
     cursor: pointer;
 
+    color: var(--nas-neutral-800);
+
     img { display: block; }
     &:hover { background: var(--nas-neutral-300); }
     &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+
+    &--danger { color: var(--nas-status-red-700); }
+    &--danger:hover { background: var(--nas-status-red-50, var(--nas-neutral-300)); }
   }
 
   &--skeleton {
@@ -616,11 +628,6 @@
   &--link { background: var(--nas-status-operational-2); color: var(--nas-neutral-100); }
   &--document { background: var(--nas-status-operational-10); color: var(--nas-status-operational); }
   &--article { background: var(--nas-sky-300); color: var(--nas-neutral-1000); }
-}
-
-.module-form__delete {
-  margin-inline-end: auto;
-  color: var(--nas-status-red-700);
 }
 
 @media (max-width: 767px) {

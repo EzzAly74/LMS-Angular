@@ -17,6 +17,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { NasRichTextComponent } from '../../../../../../shared/nas';
+import { NasIconComponent } from '../../../../../../shared/nas/nas-icon/nas-icon.component';
 import { CoursesApiService } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
@@ -64,6 +65,7 @@ interface ModuleFileInfo {
     CheckboxModule,
     ConfirmDialogModule,
     NasRichTextComponent,
+    NasIconComponent,
   ],
   providers: [ConfirmationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -596,7 +598,7 @@ export class CourseContentTabComponent implements OnInit {
     });
   }
 
-  /** From the Edit Module dialog; the dialog closes once it is deleted. */
+  /** The row's Delete button: asks first, then removes the module. */
   confirmDeleteModule(m: CourseModule): void {
     const id = this.courseId();
     this.confirm.confirm({
@@ -609,7 +611,6 @@ export class CourseContentTabComponent implements OnInit {
         this.coursesApi.deleteModule(id, m.id).subscribe({
           next: () => {
             this.toast.success('course_detail_toasts.module_deleted');
-            this.showModule.set(false);
             this.loadModules(id);
           },
         });
