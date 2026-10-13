@@ -50,7 +50,7 @@
               [attr.aria-invalid]="showError(form.controls.title)"
               [placeholder]="'assignments.form_title_en_placeholder' | translate" />
             @if (showError(form.controls.title)) {
-              <p class="af-err">{{ 'assignments.form_title_required' | translate }}</p>
+              <p class="af-err" role="alert">{{ (form.controls.title.hasError('maxlength') ? 'assignments.form_title_too_long' : 'assignments.form_title_required') | translate: titleLimit }}</p>
             }
           </div>
 
@@ -60,14 +60,17 @@
               [attr.aria-invalid]="showError(form.controls.title_ar)"
               [placeholder]="'assignments.form_title_ar_placeholder' | translate" />
             @if (showError(form.controls.title_ar)) {
-              <p class="af-err">{{ 'assignments.form_title_required' | translate }}</p>
+              <p class="af-err" role="alert">{{ (form.controls.title_ar.hasError('maxlength') ? 'assignments.form_title_too_long' : 'assignments.form_title_required') | translate: titleLimit }}</p>
             }
           </div>
 
           <div class="af-field">
             <label class="af-label" id="af-course-label">{{ 'assignments.form_course' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+            <!-- Search by course name (NEW2B-6248). -->
             <p-dropdown formControlName="course_id" [options]="courses()" optionLabel="title" optionValue="id"
               ariaLabelledBy="af-course-label" [placeholder]="'assignments.form_select_course' | translate"
+              [filter]="true" filterBy="title" [filterPlaceholder]="'assignments.form_search_course' | translate"
+              [emptyFilterMessage]="'common.no_results' | translate" [resetFilterOnHide]="true"
               appendTo="body" styleClass="af-dropdown">
               <ng-template pTemplate="dropdownicon">
                 <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
@@ -137,7 +140,10 @@
 
         <div class="af-field">
           <label class="af-label" for="af-due">{{ 'assignments.form_due_date' | translate }}</label>
-          <nas-datepicker formControlName="due_date" variant="inset" inputId="af-due" placeholder="DD/MM/YYYY" />
+          <nas-datepicker formControlName="due_date" variant="inset" inputId="af-due" placeholder="DD/MM/YYYY" [min]="dueMin()" />
+          @if (form.controls.due_date.hasError('past')) {
+            <p class="af-err" role="alert">{{ 'assignments.form_due_date_past' | translate }}</p>
+          }
         </div>
 
         <div class="af-field">
@@ -203,7 +209,8 @@
               <div class="af-field">
                 <label class="af-label" [for]="'af-q-score-' + i">{{ 'assignments.form_max_score' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
                 <div class="af-number">
-                  <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true" />
+                  <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true"
+                    [attr.aria-invalid]="q.controls.score.hasError('min')" [attr.aria-describedby]="q.controls.score.hasError('min') ? 'af-q-score-err-' + i : null" />
                   <span class="af-number__steps">
                     <button type="button" class="af-step af-step--up" (click)="stepScore(i, 1)" [attr.aria-label]="'assignments.form_score_up' | translate">
                       <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
@@ -213,6 +220,9 @@
                     </button>
                   </span>
                 </div>
+                @if (q.controls.score.hasError('min')) {
+                  <p class="af-err" role="alert" [id]="'af-q-score-err-' + i">{{ 'assignments.form_score_negative' | translate }}</p>
+                }
               </div>
 
               <!-- ── File: the assignment file (1983:44040 / 1983:43199) ── -->
@@ -344,7 +354,14 @@
         </dl>
         <div class="af-field af-field--loose">
           <label class="af-label" for="af-pass">{{ 'assignments.form_pass_score' | translate }}</label>
-          <input id="af-pass" type="number" inputmode="numeric" class="af-input" min="0" [max]="totalScore()" [formControl]="form.controls.pass_score" />
+          <input id="af-pass" type="number" inputmode="numeric" class="af-input" min="0" [max]="totalScore()" [formControl]="form.controls.pass_score"
+            [placeholder]="defaultPassScore()" aria-describedby="af-pass-hint" [attr.aria-invalid]="form.controls.pass_score.invalid" />
+          @if (form.controls.pass_score.hasError('min')) {
+            <p class="af-err" role="alert">{{ 'assignments.form_score_negative' | translate }}</p>
+          } @else if (form.controls.pass_score.hasError('overTotal')) {
+            <p class="af-err" role="alert">{{ 'assignments.form_pass_over_total' | translate: { total: totalScore() } }}</p>
+          }
+          <p class="af-hint" id="af-pass-hint">{{ 'assignments.form_pass_default_hint' | translate: { score: defaultPassScore() } }}</p>
         </div>
       </section>
 

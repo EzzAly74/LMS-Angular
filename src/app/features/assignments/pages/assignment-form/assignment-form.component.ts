@@ -15,6 +15,7 @@ import {
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -173,10 +174,12 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     course_id:       this.fb.control<number | null>(null, [Validators.required]),
     cohort_scope:    this.fb.nonNullable.control<AssignmentCohortScope>('all', [Validators.required]),
     cohort_ids:      this.fb.nonNullable.control<number[]>([]),
-    due_date:        this.fb.control<Date | null>(null),
+    // Not in the past; an edit may keep the date it had (NEW2B-6256).
+    due_date:        this.fb.control<Date | null>(null, [c => this.dueDateError(c.value as Date | null)]),
     instructions_en: [''],
     instructions_ar: [''],
-    pass_score:      this.fb.control<number | null>(null),
+    // 0..total; empty means half the total (NEW2B-6276, D-090).
+    pass_score:      this.fb.control<number | null>(null, [Validators.min(0), c => this.passScoreError(c.value as number | null)]),
     status:          this.fb.nonNullable.control<AssignmentStatus>('draft'),
     /** Pre / Mid / Post: exactly one (D-065, D-066); Figma draws it as checkboxes. */
     type:            this.fb.control<'pre' | 'mid' | 'post' | null>(null, [Validators.required]),
@@ -191,6 +194,23 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
 
   readonly totalScore = signal(0);
   readonly questionCount = signal(0);
+  /** What an empty pass score becomes on the server (D-090). */
+  readonly defaultPassScore = computed(() => Math.ceil(this.totalScore() / 2));
+  readonly titleLimit = { max: 255 };
+
+  /** The saved due date (YYYY-MM-DD), which an edit may keep even once past. */
+  private readonly keptDueDate = signal<string | null>(null);
+  readonly dueMin = computed(() => (this.keptDueDate() ? null : startOfToday()));
+
+  private dueDateError(value: Date | null): ValidationErrors | null {
+    const day = dateToApi(value);
+    if (!day || day === this.keptDueDate?.()) return null;
+    return day < (dateToApi(startOfToday()) ?? '') ? { past: true } : null;
+  }
+
+  private passScoreError(value: number | null): ValidationErrors | null {
+    return value !== null && Number(value) > (this.totalScore?.() ?? 0) ? { overTotal: true } : null;
+  }
 
   constructor() {
     // Refetch the form + lookups whenever the UI locale changes so the
@@ -282,6 +302,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   }
 
   private populateForm(a: Assignment): void {
+    this.keptDueDate.set(a.due_date ?? null);
     this.form.patchValue({
       title:           a.title,
       title_ar:        a.title_ar ?? '',
@@ -447,7 +468,10 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
 
   private submit(status: AssignmentStatus): void {
     if (!this.form.valid && status === 'active') {
+      // Say what blocks the save instead of doing nothing (NEW2B-6268).
       this.form.markAllAsTouched();
+      this.form.controls.questions.controls.forEach(g => g.controls.score.markAsDirty());
+      this.toast.error(this.t.instant('assignments.form_fix_errors'));
       return;
     }
     this.form.controls.status.setValue(status);
@@ -561,6 +585,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     }
     this.totalScore.set(total);
     this.questionCount.set(qs.length);
+    this.form.controls.pass_score.updateValueAndValidity({ emitEvent: false });
   }
 
   private buildQuestionGroup(q: Partial<AssignmentQuestion>): FormGroup<QuestionGroup> {
@@ -616,4 +641,11 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
   isCohortSelected(id: number): boolean {
     return (this.form.controls.cohort_ids.value ?? []).includes(id);
   }
+}
+
+/** Midnight today, local time: the earliest due date. */
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }

@@ -1,5 +1,5 @@
 {
-  "hr_sync": {"not_configured": "The connection to HR is not set up on the server (HR address and account). Ask the system administrator.", "running": "Updating…", "done": "Updated from HR: {{employees}} employees ({{created}} new, {{updated}} updated).", "failed": "The update from HR did not finish. Try again later."},
+  "hr_sync": {"no_data": "HR did not send any employees: the sign-in to HR failed or HR is unreachable. Check the HR address and account on the server.", "not_configured": "The connection to HR is not set up on the server (HR address and account). Ask the system administrator.", "running": "Updating…", "done": "Updated from HR: {{employees}} employees ({{created}} new, {{updated}} updated).", "failed": "The update from HR did not finish. Try again later."},
   "app": {
     "title": "2B Academy",
     "loading": "Loading..."
@@ -446,6 +446,13 @@
     "form_title_en": "Assignment title (English)",
     "form_title_ar": "Assignment title (Arabic)",
     "form_title_required": "Title is required.",
+    "form_title_too_long": "The title is too long. Use {{max}} characters or fewer.",
+    "form_search_course": "Search by course name",
+    "form_due_date_past": "The due date cannot be in the past.",
+    "form_score_negative": "The score cannot be negative.",
+    "form_pass_over_total": "The pass score cannot be more than the total score ({{total}}).",
+    "form_pass_default_hint": "Left empty, the pass score is half the total ({{score}}).",
+    "form_fix_errors": "Some fields need fixing before saving.",
     "form_title_en_placeholder": "e.g. Safety readiness assessment",
     "form_title_ar_placeholder": "مثال: تقييم الجاهزية للسلامة",
     "form_course": "Course",

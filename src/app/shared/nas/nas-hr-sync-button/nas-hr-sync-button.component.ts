@@ -102,7 +102,8 @@ export class NasHrSyncButtonComponent {
       }));
       this.done.emit();
     } else {
-      this.toast.error(this.t.instant(status?.reason === 'not_configured' ? 'hr_sync.not_configured' : 'hr_sync.failed'));
+      this.toast.error(this.t.instant(status?.reason === 'not_configured' ? 'hr_sync.not_configured'
+        : status?.reason === 'no_data' ? 'hr_sync.no_data' : 'hr_sync.failed'));
     }
   }
 }
