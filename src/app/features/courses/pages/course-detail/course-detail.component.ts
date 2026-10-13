@@ -20,7 +20,6 @@ import { NasStatTileComponent } from '../../../../shared/nas/nas-stat-tile/nas-s
 import type { NasStatusTone } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { CoursesApiService } from '../../services/courses-api.service';
-import { CourseDialogComponent } from '../../components/course-dialog/course-dialog.component';
 import { EnumsService } from '../../../../core/services/enums.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
@@ -87,7 +86,6 @@ type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
     NasStatusBadgeComponent,
     NasStatTileComponent,
     NasDatePipe,
-    CourseDialogComponent,
     CourseOverviewTabComponent,
     CourseCohortsTabComponent,
     CourseLearnersTabComponent,
@@ -124,7 +122,6 @@ export class CourseDetailComponent {
   /** The Content tab's own count once it has loaded, fresher than the course's. */
   readonly modulesCount = signal<number | null>(null);
 
-  readonly showEdit = signal(false);
 
   /** Bumped on every locale switch: `instant()` below is not signal-tracked. */
   private readonly langTick = signal(0);
@@ -215,10 +212,6 @@ export class CourseDetailComponent {
   refresh(): void {
     const id = this.courseId();
     if (id !== null) this.load(id, true);
-  }
-
-  onCourseSaved(): void {
-    this.refresh();
   }
 
   learnersActiveKey(): string {

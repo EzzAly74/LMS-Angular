@@ -1,273 +1,325 @@
-<p-dialog #cdDlg
-  [visible]="visible()"
-  (visibleChange)="visible.set($event)"
-  (onHide)="restoreFocus()"
-  [modal]="true"
-  [closable]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="!saving()"
-  [closeOnEscape]="!saving()"
-  styleClass="cd"
-  [style]="{ width: '512px', maxWidth: 'calc(100vw - 32px)' }">
-  <ng-template pTemplate="headless">
-    <form class="cd__card" [id]="uid" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <header class="cd__head">
-        <h2 class="cd__title" [id]="cdDlg.ariaLabelledBy">
-          {{ (editing() ? 'course_dialog.edit_title' : 'course_dialog.add_title') | translate }}
-        </h2>
-        <button type="button" class="cd__close" (click)="close()" [disabled]="saving()" [attr.aria-label]="'common.close' | translate">
-          <img src="assets/icons/figma/close-x.svg" width="16" height="16" alt="" />
+<!-- Add / Edit Course (fields: Figma 2401:126596 / 2401:126340; page layout: the Add / Edit Assignment form) -->
+<div class="nas-page-container cf">
+
+  <div class="af-top">
+    <nav class="af-crumbs" [attr.aria-label]="'course_form.breadcrumb' | translate">
+      <a routerLink="/admin/courses" class="af-crumbs__link">
+        <img src="assets/icons/figma/books-eyebrow.svg" width="18" height="18" alt="" />
+        {{ 'courses.title' | translate }}
+      </a>
+      @if (editing() && courseTitle()) {
+        <img class="af-crumbs__sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+        <a [routerLink]="['/admin/courses', courseId()]" class="af-crumbs__link cf__crumb-course" dir="auto">{{ courseTitle() }}</a>
+      }
+      <img class="af-crumbs__sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+      <span class="af-crumbs__current" aria-current="page">
+        {{ (editing() ? 'course_form.edit_title' : 'course_form.add_title') | translate }}
+      </span>
+    </nav>
+
+    <div class="af-head">
+      <h1 class="af-title">{{ (editing() ? 'course_form.edit_title' : 'course_form.add_title') | translate }}</h1>
+      <div class="af-actions">
+        <button type="button" class="af-btn af-btn--outline af-btn--cancel" (click)="cancel()" [disabled]="saving()">
+          {{ 'common.cancel' | translate }}
         </button>
-      </header>
+        <button type="submit" class="af-btn af-btn--primary af-btn--save" [attr.form]="uid" [disabled]="saving() || state() !== 'ready'">
+          <nas-icon [name]="saving() ? 'spinner-gap' : editing() ? 'floppy-disk' : 'plus-circle'" [size]="20" [class.af-spin]="saving()" />
+          {{ (saving() ? 'common.saving' : editing() ? 'common.save_changes' : 'course_form.create') | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
 
-      <div class="cd__body">
-        @switch (state()) {
-          @case ('loading') {
-            <div class="cd__loading" role="status" [attr.aria-label]="'common.loading' | translate">
-              <p-skeleton height="44px" /><p-skeleton height="44px" /><p-skeleton height="44px" /><p-skeleton height="160px" />
-            </div>
-          }
-          @case ('error') {
-            <div class="cd__message" role="alert">
-              <p>{{ 'common.could_not_load' | translate }}</p>
-              <button type="button" class="cd__btn cd__btn--ghost" (click)="retry()">{{ 'course_dialog.retry' | translate }}</button>
-            </div>
-          }
-          @default {
-            @for (f of titleFields; track f.ctrl) {
-              @let ctrl = f.ctrl;
-              <div class="cd__field">
-                <label class="cd__label" [for]="uid + '-' + ctrl">
-                  {{ f.label | translate }} <span class="cd__required" aria-hidden="true">*</span>
-                </label>
-                <input class="cd__input" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir" required
-                  autocomplete="off" [attr.maxlength]="titleMax" [placeholder]="f.ph | translate"
-                  [class.cd__input--error]="invalid(ctrl)" [attr.aria-invalid]="invalid(ctrl)"
-                  [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null" (input)="clearFieldError(ctrl)" />
-                @if (invalid(ctrl)) {
-                  @let err = errorKey(ctrl);
-                  <p class="cd__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
-                }
-              </div>
-            }
+  @switch (state()) {
+    @case ('loading') {
+      <div class="af-layout" role="status" [attr.aria-label]="'common.loading' | translate" aria-busy="true">
+        <div class="af-card cf__loading">
+          @for (s of [1, 2, 3, 4, 5, 6]; track s) { <p-skeleton height="44px" /> }
+        </div>
+        <div class="af-card cf__loading">
+          @for (s of [1, 2, 3]; track s) { <p-skeleton height="44px" /> }
+        </div>
+      </div>
+    }
+    @case ('error') {
+      <div class="af-card cf__message" role="alert">
+        <p>{{ 'common.could_not_load' | translate }}</p>
+        <button type="button" class="af-btn af-btn--outline" (click)="retry()">{{ 'course_form.retry' | translate }}</button>
+      </div>
+    }
+    @default {
+      @if (locked().size) {
+        <p class="cf__notice" role="note">
+          <nas-icon name="info" [size]="20" />
+          <span>{{ 'course_form.locked_notice' | translate }}</span>
+        </p>
+      }
 
-            <div class="cd__row">
-              <div class="cd__field">
-                <label class="cd__label" [id]="uid + '-type-label'" [for]="uid + '-type'">
-                  {{ 'course_dialog.type' | translate }} <span class="cd__required" aria-hidden="true">*</span>
+      @if (serverError(); as msg) {
+        <p class="cf__alert" role="alert">{{ msg }}</p>
+      }
+
+      <form class="af-layout" [id]="uid" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="af-main">
+
+          <!-- ── Basic information ─────────────────────────────────────── -->
+          <section class="af-card" [attr.aria-labelledby]="uid + '-basics'">
+            <h2 class="af-card__title" [id]="uid + '-basics'">{{ 'course_form.section_basics' | translate }}</h2>
+            <hr class="af-card__rule" />
+
+            <div class="cf__row">
+              @for (f of titleFields; track f.ctrl) {
+                @let ctrl = f.ctrl;
+                <div class="cf__field">
+                  <label class="cf__label" [for]="uid + '-' + ctrl">
+                    {{ f.label | translate }} <span class="cf__required" aria-hidden="true">*</span>
+                  </label>
+                  <input class="cf__input" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir" required
+                    autocomplete="off" [attr.maxlength]="titleMax" [placeholder]="f.ph | translate"
+                    [class.cf__input--error]="invalid(ctrl)" [attr.aria-invalid]="invalid(ctrl)"
+                    [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null" (input)="clearFieldError(ctrl)" />
+                  @if (invalid(ctrl)) {
+                    @let err = errorKey(ctrl);
+                    <p class="cf__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="cf__row">
+              <div class="cf__field">
+                <label class="cf__label" [id]="uid + '-type-label'" [for]="uid + '-type'">
+                  {{ 'course_form.type' | translate }} <span class="cf__required" aria-hidden="true">*</span>
                 </label>
                 <p-dropdown [inputId]="uid + '-type'" [ariaLabelledBy]="uid + '-type-label'" formControlName="course_type" [options]="typeOptions()" optionLabel="value"
-                  optionValue="code" [placeholder]="'course_dialog.select_type' | translate" appendTo="body"
-                  styleClass="cd__dropdown" [class.cd__dropdown--error]="invalid('course_type')"
+                  optionValue="code" [placeholder]="'course_form.select_type' | translate" appendTo="body"
+                  styleClass="cf__dropdown" [class.cf__dropdown--error]="invalid('course_type')"
                   (onChange)="clearFieldError('course_type')" />
+                @if (typeLocked()) { <p class="cf__hint cf__hint--locked">{{ 'course_form.locked_hint' | translate }}</p> }
                 @if (invalid('course_type')) {
-                  <p class="cd__error" role="alert">{{ fieldErrors().course_type ?? ('errors.required' | translate) }}</p>
+                  <p class="cf__error" role="alert">{{ fieldErrors().course_type ?? ('errors.required' | translate) }}</p>
                 }
               </div>
-              <div class="cd__field">
-                <label class="cd__label" [id]="uid + '-category-label'" [for]="uid + '-category'">{{ 'course_dialog.category' | translate }}</label>
+              <div class="cf__field">
+                <label class="cf__label" [id]="uid + '-category-label'" [for]="uid + '-category'">{{ 'course_form.category' | translate }}</label>
                 <p-dropdown [inputId]="uid + '-category'" [ariaLabelledBy]="uid + '-category-label'" formControlName="category_id" [options]="categories()" optionLabel="name"
                   optionValue="id" [showClear]="true" [filter]="categories().length > 8" filterBy="name"
-                  [placeholder]="'course_dialog.select_category' | translate" appendTo="body" styleClass="cd__dropdown"
+                  [placeholder]="'course_form.select_category' | translate" appendTo="body" styleClass="cf__dropdown"
                   (onChange)="clearFieldError('category_id')" />
-                @if (fieldErrors().category_id; as msg) { <p class="cd__error" role="alert">{{ msg }}</p> }
+                @if (fieldErrors().category_id; as msg) { <p class="cf__error" role="alert">{{ msg }}</p> }
               </div>
             </div>
 
-            <div class="cd__row">
-              <div class="cd__field">
-                <label class="cd__label" [id]="uid + '-instructor-label'" [for]="uid + '-instructor'">
-                  {{ 'course_dialog.instructor' | translate }} <span class="cd__required" aria-hidden="true">*</span>
+            <div class="cf__row">
+              <div class="cf__field">
+                <label class="cf__label" [id]="uid + '-instructor-label'" [for]="uid + '-instructor'">
+                  {{ 'course_form.instructor' | translate }} <span class="cf__required" aria-hidden="true">*</span>
                 </label>
                 <p-dropdown [inputId]="uid + '-instructor'" [ariaLabelledBy]="uid + '-instructor-label'" formControlName="instructor_id" [options]="instructors()" optionLabel="name"
                   optionValue="id" [filter]="instructors().length > 8" filterBy="name"
-                  [placeholder]="'course_dialog.select_instructor' | translate" appendTo="body" styleClass="cd__dropdown"
-                  [class.cd__dropdown--error]="invalid('instructor_id')" (onChange)="clearFieldError('instructor_id')" />
+                  [placeholder]="'course_form.select_instructor' | translate" appendTo="body" styleClass="cf__dropdown"
+                  [class.cf__dropdown--error]="invalid('instructor_id')" (onChange)="clearFieldError('instructor_id')" />
                 @if (invalid('instructor_id')) {
-                  <p class="cd__error" role="alert">{{ fieldErrors().instructor_id ?? ('errors.required' | translate) }}</p>
+                  <p class="cf__error" role="alert">{{ fieldErrors().instructor_id ?? ('errors.required' | translate) }}</p>
                 }
-                @if (!instructors().length) { <p class="cd__hint">{{ 'course_dialog.no_instructors' | translate }}</p> }
+                @if (!instructors().length) { <p class="cf__hint">{{ 'course_form.no_instructors' | translate }}</p> }
               </div>
-              <div class="cd__field">
-                <label class="cd__label" [id]="uid + '-level-label'" [for]="uid + '-level'">
-                  {{ 'course_dialog.level' | translate }} <span class="cd__required" aria-hidden="true">*</span>
+              <div class="cf__field">
+                <label class="cf__label" [id]="uid + '-level-label'" [for]="uid + '-level'">
+                  {{ 'course_form.level' | translate }} <span class="cf__required" aria-hidden="true">*</span>
                 </label>
                 <p-dropdown [inputId]="uid + '-level'" [ariaLabelledBy]="uid + '-level-label'" formControlName="level" [options]="levelOptions()" optionLabel="value"
-                  optionValue="code" [placeholder]="'course_dialog.select_level' | translate" appendTo="body"
-                  styleClass="cd__dropdown" [class.cd__dropdown--error]="invalid('level')" (onChange)="clearFieldError('level')" />
+                  optionValue="code" [placeholder]="'course_form.select_level' | translate" appendTo="body"
+                  styleClass="cf__dropdown" [class.cf__dropdown--error]="invalid('level')" (onChange)="clearFieldError('level')" />
                 @if (invalid('level')) {
-                  <p class="cd__error" role="alert">{{ fieldErrors().level ?? ('errors.required' | translate) }}</p>
+                  <p class="cf__error" role="alert">{{ fieldErrors().level ?? ('errors.required' | translate) }}</p>
                 }
               </div>
             </div>
 
-            <fieldset class="cd__cert">
-              <legend class="cd__label">{{ 'course_dialog.general_rule_question' | translate }}</legend>
-              <div class="cd__toggle" role="group" [attr.aria-label]="'course_dialog.general_rule_question' | translate">
-                <button type="button" class="cd__toggle-btn" [class.cd__toggle-btn--on]="form.controls.general_rule.value"
+            <div class="cf__field" role="group" [attr.aria-labelledby]="uid + '-image-label'"
+              [attr.aria-describedby]="imageInvalid() ? uid + '-image-error' : null">
+              <span class="cf__label" [id]="uid + '-image-label'">
+                {{ 'course_form.image' | translate }}
+                @if (!editing()) { <span class="cf__required" aria-hidden="true">*</span> }
+              </span>
+              <nas-photo-upload [value]="imagePreview()" [accept]="accept" [formats]="'course_form.image_formats' | translate"
+                maxLabel="common.max_file_size_3mb" [addLabel]="'course_form.add_photo' | translate"
+                [replaceLabel]="'course_form.replace_photo' | translate" [class.cf__upload--error]="imageInvalid()"
+                (fileSelected)="onImagePicked($event)" (cleared)="onImageCleared()" />
+              @if (imageInvalid()) {
+                <p class="cf__error" [id]="uid + '-image-error'" role="alert">{{ fieldErrors().image ?? ('errors.required' | translate) }}</p>
+              }
+            </div>
+          </section>
+
+          <!-- ── Overview: description and the bullet lists ─────────────── -->
+          <section class="af-card" [attr.aria-labelledby]="uid + '-overview'">
+            <h2 class="af-card__title" [id]="uid + '-overview'">{{ 'course_form.section_overview' | translate }}</h2>
+            <hr class="af-card__rule" />
+
+            <div class="cf__row">
+              @for (f of textFields; track f.ctrl) {
+                @let ctrl = f.ctrl;
+                <div class="cf__field">
+                  <label class="cf__label" [for]="uid + '-' + ctrl">{{ f.label | translate }}</label>
+                  <textarea class="cf__textarea" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir" rows="4"
+                    [attr.maxlength]="textMax" [placeholder]="f.ph | translate"
+                    [class.cf__input--error]="invalid(ctrl)" [attr.aria-invalid]="invalid(ctrl)"
+                    [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null"
+                    (input)="clearFieldError(ctrl)"></textarea>
+                  @if (invalid(ctrl)) {
+                    @let err = errorKey(ctrl);
+                    <p class="cf__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- English and Arabic side by side: one input per point, with Add and Remove. -->
+            <div class="cf__row">
+              @for (f of listFields; track f.ctrl) {
+                @let ctrl = f.ctrl;
+                @let items = list(ctrl);
+                <fieldset class="cf__points" [formArrayName]="ctrl"
+                  [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null">
+                  <legend class="cf__label">{{ f.label | translate }}</legend>
+                  <ol class="cf__point-list">
+                    @for (c of items.controls; track c; let i = $index) {
+                      <li class="cf__point">
+                        <label class="cf__sr-only" [for]="uid + '-' + ctrl + '-' + i">{{ 'course_form.point_n' | translate: { n: i + 1, list: (f.label | translate) } }}</label>
+                        <input class="cf__input" type="text" [id]="uid + '-' + ctrl + '-' + i" [formControlName]="i" [dir]="f.dir"
+                          [attr.maxlength]="pointMax" [placeholder]="f.ph | translate"
+                          [class.cf__input--error]="pointInvalid(ctrl, i)" [attr.aria-invalid]="pointInvalid(ctrl, i)"
+                          [attr.aria-describedby]="pointInvalid(ctrl, i) ? uid + '-' + ctrl + '-' + i + '-error' : null"
+                          (input)="clearFieldError(ctrl)" (keydown.enter)="$event.preventDefault(); addPoint(ctrl)" />
+                        <button type="button" class="cf__point-remove" (click)="removePoint(ctrl, i)"
+                          [disabled]="items.length === 1 && !c.value"
+                          [attr.aria-label]="'course_form.remove_point' | translate: { n: i + 1 }">
+                          <nas-icon name="trash" [size]="20" />
+                        </button>
+                        @if (pointInvalid(ctrl, i)) {
+                          <p class="cf__error cf__point-error" [id]="uid + '-' + ctrl + '-' + i + '-error'" role="alert">{{ 'course_form.point_too_long' | translate: { max: pointMax } }}</p>
+                        }
+                      </li>
+                    }
+                  </ol>
+                  <button type="button" class="cf__point-add" (click)="addPoint(ctrl)" [disabled]="items.length >= pointsMax">
+                    <nas-icon name="plus-circle" [size]="20" />
+                    {{ 'course_form.add_point' | translate }}
+                  </button>
+                  @if (invalid(ctrl)) {
+                    @let err = errorKey(ctrl);
+                    <p class="cf__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
+                  }
+                </fieldset>
+              }
+            </div>
+          </section>
+        </div>
+
+        <aside class="af-main">
+          <!-- ── Certificate (mandatory for every course, D-094) ─────────── -->
+          <section class="af-card" [attr.aria-labelledby]="uid + '-certificate'">
+            <h2 class="af-card__title" [id]="uid + '-certificate'">{{ 'course_form.section_certificate' | translate }}</h2>
+            <hr class="af-card__rule" />
+
+            <fieldset class="cf__cert" [disabled]="ruleLocked()"
+              [attr.aria-describedby]="ruleLocked() ? uid + '-rule-locked' : null">
+              <legend class="cf__label">{{ 'course_form.general_rule_question' | translate }}</legend>
+              <div class="cf__toggle" role="group" [attr.aria-label]="'course_form.general_rule_question' | translate">
+                <button type="button" class="cf__toggle-btn" [class.cf__toggle-btn--on]="form.controls.general_rule.value"
                   [attr.aria-pressed]="form.controls.general_rule.value" (click)="setGeneralRule(true)">{{ 'common.yes' | translate }}</button>
-                <button type="button" class="cd__toggle-btn" [class.cd__toggle-btn--on]="!form.controls.general_rule.value"
+                <button type="button" class="cf__toggle-btn" [class.cf__toggle-btn--on]="!form.controls.general_rule.value"
                   [attr.aria-pressed]="!form.controls.general_rule.value" (click)="setGeneralRule(false)">{{ 'common.no' | translate }}</button>
               </div>
 
               @if (form.controls.general_rule.value) {
-                <p class="cd__hint">{{ 'course_dialog.general_rule_hint' | translate }}</p>
+                <p class="cf__hint">{{ 'course_form.general_rule_hint' | translate }}</p>
               } @else {
-                <div class="cd__rules" role="radiogroup" [attr.aria-label]="'course_dialog.rule_label' | translate">
+                <div class="cf__rules" role="radiogroup" [attr.aria-label]="'course_form.rule_label' | translate">
                   @for (r of rules; track r.value) {
-                    <label class="cd__rule">
-                      <input type="radio" class="cd__radio" formControlName="rule" name="rule" [value]="r.value"
+                    <label class="cf__rule">
+                      <input type="radio" class="cf__radio" formControlName="rule" name="rule" [value]="r.value"
                         [attr.aria-labelledby]="uid + '-rule-name-' + r.value" [attr.aria-describedby]="uid + '-rule-' + r.value" />
-                      <span class="cd__rule-text">
-                        <span class="cd__rule-name" [id]="uid + '-rule-name-' + r.value">{{ r.label | translate }}</span>
-                        <span class="cd__rule-help" [id]="uid + '-rule-' + r.value">{{ r.help | translate }}</span>
+                      <span class="cf__rule-text">
+                        <span class="cf__rule-name" [id]="uid + '-rule-name-' + r.value">{{ r.label | translate }}</span>
+                        <span class="cf__rule-help" [id]="uid + '-rule-' + r.value">{{ r.help | translate }}</span>
                       </span>
                     </label>
                   }
                 </div>
 
-                <div class="cd__thresholds">
+                <div class="cf__thresholds">
                   @if (showsAttendance()) {
-                    <div class="cd__field">
-                      <label class="cd__label" [for]="uid + '-min-attendance'">
-                        {{ 'course_dialog.min_attendance' | translate }} <span class="cd__required" aria-hidden="true">*</span>
+                    <div class="cf__field">
+                      <label class="cf__label" [for]="uid + '-min-attendance'">
+                        {{ 'course_form.min_attendance' | translate }} <span class="cf__required" aria-hidden="true">*</span>
                       </label>
-                      <input class="cd__input" type="number" inputmode="numeric" min="1" max="100" step="1" required
+                      <input class="cf__input" type="number" inputmode="numeric" min="1" max="100" step="1" required
                         [id]="uid + '-min-attendance'" formControlName="min_attendance"
-                        [class.cd__input--error]="invalid('min_attendance')" [attr.aria-invalid]="invalid('min_attendance')"
+                        [class.cf__input--error]="invalid('min_attendance')" [attr.aria-invalid]="invalid('min_attendance')"
                         [attr.aria-describedby]="invalid('min_attendance') ? uid + '-min-attendance-error' : null"
                         (input)="clearFieldError('min_attendance')" />
                       @if (invalid('min_attendance')) {
                         @let err = errorKey('min_attendance');
-                        <p class="cd__error" [id]="uid + '-min-attendance-error'" role="alert">{{ fieldErrors().min_attendance ?? (err.key | translate: err.params) }}</p>
+                        <p class="cf__error" [id]="uid + '-min-attendance-error'" role="alert">{{ fieldErrors().min_attendance ?? (err.key | translate: err.params) }}</p>
                       }
                     </div>
                   }
                   @if (showsScore()) {
-                    <div class="cd__field">
-                      <label class="cd__label" [for]="uid + '-min-score'">
-                        {{ 'course_dialog.min_score' | translate }} <span class="cd__required" aria-hidden="true">*</span>
+                    <div class="cf__field">
+                      <label class="cf__label" [for]="uid + '-min-score'">
+                        {{ 'course_form.min_score' | translate }} <span class="cf__required" aria-hidden="true">*</span>
                       </label>
-                      <input class="cd__input" type="number" inputmode="numeric" min="1" max="100" step="1" required
+                      <input class="cf__input" type="number" inputmode="numeric" min="1" max="100" step="1" required
                         [id]="uid + '-min-score'" formControlName="min_score"
-                        [class.cd__input--error]="invalid('min_score')" [attr.aria-invalid]="invalid('min_score')"
+                        [class.cf__input--error]="invalid('min_score')" [attr.aria-invalid]="invalid('min_score')"
                         [attr.aria-describedby]="invalid('min_score') ? uid + '-min-score-error' : null"
                         (input)="clearFieldError('min_score')" />
                       @if (invalid('min_score')) {
                         @let err = errorKey('min_score');
-                        <p class="cd__error" [id]="uid + '-min-score-error'" role="alert">{{ fieldErrors().min_score ?? (err.key | translate: err.params) }}</p>
+                        <p class="cf__error" [id]="uid + '-min-score-error'" role="alert">{{ fieldErrors().min_score ?? (err.key | translate: err.params) }}</p>
                       }
                     </div>
                   }
                 </div>
               }
-            </fieldset>
-
-            <div class="cd__field" role="group" [attr.aria-labelledby]="uid + '-image-label'"
-              [attr.aria-describedby]="imageInvalid() ? uid + '-image-error' : null">
-              <span class="cd__label" [id]="uid + '-image-label'">
-                {{ 'course_dialog.image' | translate }}
-                @if (!editing()) { <span class="cd__required" aria-hidden="true">*</span> }
-              </span>
-              <nas-photo-upload [value]="imagePreview()" [accept]="accept" [formats]="'course_dialog.image_formats' | translate"
-                maxLabel="common.max_file_size_3mb" [addLabel]="'course_dialog.add_photo' | translate"
-                [replaceLabel]="'course_dialog.replace_photo' | translate" [class.cd__upload--error]="imageInvalid()"
-                (fileSelected)="onImagePicked($event)" (cleared)="onImageCleared()" />
-              @if (imageInvalid()) {
-                <p class="cd__error" [id]="uid + '-image-error'" role="alert">{{ fieldErrors().image ?? ('errors.required' | translate) }}</p>
+              @if (ruleLocked()) {
+                <p class="cf__hint cf__hint--locked" [id]="uid + '-rule-locked'">{{ 'course_form.locked_hint' | translate }}</p>
               }
-            </div>
+              @if (fieldErrors().certificate_rule; as msg) { <p class="cf__error" role="alert">{{ msg }}</p> }
+            </fieldset>
+          </section>
 
-            @for (f of textFields; track f.ctrl) {
-              @let ctrl = f.ctrl;
-              <div class="cd__field">
-                <label class="cd__label" [for]="uid + '-' + ctrl">{{ f.label | translate }}</label>
-                <textarea class="cd__textarea" [id]="uid + '-' + ctrl" [formControlName]="ctrl" [dir]="f.dir" rows="3"
-                  [attr.maxlength]="textMax" [placeholder]="f.ph | translate"
-                  [class.cd__input--error]="invalid(ctrl)" [attr.aria-invalid]="invalid(ctrl)"
-                  [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null"
-                  (input)="clearFieldError(ctrl)"></textarea>
-                @if (invalid(ctrl)) {
-                  @let err = errorKey(ctrl);
-                  <p class="cd__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
-                }
-              </div>
-            }
-            <!-- The bullet lists: one input per point, with Add and Remove. -->
-            @for (f of listFields; track f.ctrl) {
-              @let ctrl = f.ctrl;
-              @let items = list(ctrl);
-              <fieldset class="cd__points" [formArrayName]="ctrl"
-                [attr.aria-describedby]="invalid(ctrl) ? uid + '-' + ctrl + '-error' : null">
-                <legend class="cd__label">{{ f.label | translate }}</legend>
-                <ol class="cd__point-list">
-                  @for (c of items.controls; track c; let i = $index) {
-                    <li class="cd__point">
-                      <label class="cd__sr-only" [for]="uid + '-' + ctrl + '-' + i">{{ 'course_dialog.point_n' | translate: { n: i + 1, list: (f.label | translate) } }}</label>
-                      <input class="cd__input cd__point-input" type="text" [id]="uid + '-' + ctrl + '-' + i" [formControlName]="i" [dir]="f.dir"
-                        [attr.maxlength]="pointMax" [placeholder]="f.ph | translate"
-                        [class.cd__input--error]="pointInvalid(ctrl, i)" [attr.aria-invalid]="pointInvalid(ctrl, i)"
-                        [attr.aria-describedby]="pointInvalid(ctrl, i) ? uid + '-' + ctrl + '-' + i + '-error' : null"
-                        (input)="clearFieldError(ctrl)" (keydown.enter)="$event.preventDefault(); addPoint(ctrl)" />
-                      <button type="button" class="cd__point-remove" (click)="removePoint(ctrl, i)"
-                        [disabled]="items.length === 1 && !c.value"
-                        [attr.aria-label]="'course_dialog.remove_point' | translate: { n: i + 1 }">
-                        <nas-icon name="trash" [size]="20" />
-                      </button>
-                      @if (pointInvalid(ctrl, i)) {
-                        <p class="cd__error cd__point-error" [id]="uid + '-' + ctrl + '-' + i + '-error'" role="alert">{{ 'course_dialog.point_too_long' | translate: { max: pointMax } }}</p>
-                      }
-                    </li>
-                  }
-                </ol>
-                <button type="button" class="cd__point-add" (click)="addPoint(ctrl)" [disabled]="items.length >= pointsMax">
-                  <nas-icon name="plus-circle" [size]="20" />
-                  {{ 'course_dialog.add_point' | translate }}
-                </button>
-                @if (invalid(ctrl)) {
-                  @let err = errorKey(ctrl);
-                  <p class="cd__error" [id]="uid + '-' + ctrl + '-error'" role="alert">{{ fieldErrors()[ctrl] ?? (err.key | translate: err.params) }}</p>
-                }
-              </fieldset>
-            }
-
-            <fieldset class="cd__quals">
-              <legend class="cd__label">
-                {{ 'course_dialog.qualifications' | translate }} <span class="cd__optional">{{ 'course_dialog.optional' | translate }}</span>
-              </legend>
-              <p class="cd__hint">{{ 'course_dialog.qualifications_hint' | translate }}</p>
-              <ul class="cd__qual-list">
+          <!-- ── Qualifications ─────────────────────────────────────────── -->
+          <section class="af-card" [attr.aria-labelledby]="uid + '-quals'">
+            <h2 class="af-card__title" [id]="uid + '-quals'">
+              {{ 'course_form.qualifications' | translate }} <span class="cf__optional">{{ 'course_form.optional' | translate }}</span>
+            </h2>
+            <hr class="af-card__rule" />
+            <fieldset class="cf__quals" [disabled]="qualificationsLocked()">
+              <legend class="cf__sr-only">{{ 'course_form.qualifications' | translate }}</legend>
+              <p class="cf__hint">{{ 'course_form.qualifications_hint' | translate }}</p>
+              <ul class="cf__qual-list">
                 @for (q of qualifications(); track q.id) {
                   <li>
-                    <label class="cd__qual">
-                      <input type="checkbox" class="cd__check" [checked]="pickedQualifications().has(q.id)" (change)="toggleQualification(q.id)" />
+                    <label class="cf__qual">
+                      <input type="checkbox" class="cf__check" [checked]="pickedQualifications().has(q.id)" (change)="toggleQualification(q.id)" />
                       <span dir="auto">{{ q.name }}</span>
                     </label>
                   </li>
                 } @empty {
-                  <li class="cd__hint cd__qual-empty">{{ 'course_dialog.no_qualifications' | translate }}</li>
+                  <li class="cf__hint cf__qual-empty">{{ 'course_form.no_qualifications' | translate }}</li>
                 }
               </ul>
-              @if (fieldErrors().qualifications; as msg) { <p class="cd__error" role="alert">{{ msg }}</p> }
+              @if (qualificationsLocked()) { <p class="cf__hint cf__hint--locked">{{ 'course_form.locked_hint' | translate }}</p> }
+              @if (fieldErrors().qualifications; as msg) { <p class="cf__error" role="alert">{{ msg }}</p> }
             </fieldset>
-          }
-        }
-      </div>
-
-      @if (serverError(); as msg) {
-        <p class="cd__alert" role="alert">{{ msg }}</p>
-      }
-
-      <footer class="cd__foot">
-        <button type="button" class="cd__btn cd__btn--ghost" (click)="close()" [disabled]="saving()">
-          {{ 'common.cancel' | translate }}
-        </button>
-        <button type="submit" class="cd__btn cd__btn--primary" [disabled]="saving() || state() !== 'ready'">
-          <nas-icon [name]="editing() ? 'floppy-disk' : 'plus-circle'" [size]="20" />
-          {{ (saving() ? 'common.saving' : editing() ? 'common.save_changes' : 'course_dialog.create') | translate }}
-        </button>
-      </footer>
-    </form>
-  </ng-template>
-</p-dialog>
+          </section>
+        </aside>
+      </form>
+    }
+  }
+</div>

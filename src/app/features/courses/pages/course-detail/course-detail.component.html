@@ -64,10 +64,10 @@
             </p>
           </div>
           <!-- Figma note on this button: "No delete option". -->
-          <button *nasCan="'edit-courses'" type="button" class="cd-head__edit" (click)="showEdit.set(true)">
+          <a *nasCan="'edit-courses'" class="cd-head__edit" [routerLink]="['/admin/courses', c.id, 'edit']">
             <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
             <span>{{ 'course_detail.edit' | translate }}</span>
-          </button>
+          </a>
         </header>
 
         <section class="cd-tiles" [attr.aria-label]="'course_detail.summary' | translate">
@@ -123,7 +123,6 @@
           }
         </div>
 
-        <app-course-dialog [(visible)]="showEdit" [courseId]="courseId" (saved)="onCourseSaved()" />
       }
     }
   }

@@ -1,10 +1,12 @@
 /**
- * Add / Edit Course modal (D6, Figma 2401:126596 / 2401:126340) - the slice of
- * GET /courses/:id the modal reads, and its limits (mirrors CourseRequest).
+ * Add / Edit Course page (D6, Figma 2401:126596 / 2401:126340) - the slice of
+ * GET /courses/:id the form reads, and its limits (mirrors CourseRequest).
  */
 
 export type CertificateBasis = 'attendance' | 'score' | 'both';
 export type CertificateRule = 'general' | CertificateBasis;
+/** D-095: fixed once learners are enrolled (backend `CourseEditLock::FIELDS`). */
+export type LockedField = 'course_type' | 'certificate_rule' | 'qualification_skill_ids';
 
 export interface Localized {
   en?: string | null;
@@ -31,6 +33,7 @@ export interface CourseFormSource {
   certificate_rule?: CertificateRule | null;
   certificate_min_attendance?: number | null;
   certificate_min_score?: number | null;
+  locked_fields?: LockedField[];
 }
 
 export interface LookupOption {

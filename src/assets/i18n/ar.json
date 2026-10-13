@@ -2198,13 +2198,12 @@
     "filter": "تصفية",
     "no_options": "لا توجد خيارات."
   },
-  "course_dialog": {
+  "course_form": {
     "fix_fields": "بعض الحقول تحتاج إلى مراجعة. صحّح الحقول المحددة ثم احفظ مرة أخرى.",
     "add_title": "إضافة دورة جديدة",
     "edit_title": "تعديل الدورة",
     "title_en": "عنوان الدورة (بالإنجليزية)",
     "title_ar": "عنوان الدورة (بالعربية)",
-    "title_placeholder": "مثال: أساسيات السلامة في مكان العمل",
     "type": "النوع",
     "select_type": "اختر النوع",
     "category": "الفئة",
@@ -2234,19 +2233,15 @@
     "image_size": "حجم الصورة أكبر من 3 ميجابايت.",
     "description_en": "الوصف (بالإنجليزية)",
     "description_ar": "الوصف (بالعربية)",
-    "description_placeholder": "نظرة عامة موجزة على أهداف الدورة…",
     "learn_en": "ما سيتعلمه المتدربون (بالإنجليزية)",
     "learn_ar": "ما سيتعلمه المتدربون (بالعربية)",
     "requirements_en": "متطلبات الدورة (بالإنجليزية)",
     "requirements_ar": "متطلبات الدورة (بالعربية)",
-    "bullets_placeholder": "اكتبها في نقاط",
-    "bullets_hint": "في قائمتي ما سيتعلمه المتدربون والمتطلبات، اكتب كل نقطة في سطر.",
     "too_many_points": "استخدم {{max}} نقطة على الأكثر.",
     "point_too_long": "اجعل كل نقطة أقل من {{max}} حرفًا.",
     "add_point": "إضافة نقطة",
     "remove_point": "حذف النقطة {{n}}",
     "point_n": "{{list}}، النقطة {{n}}",
-    "point_placeholder": "اكتب نقطة",
     "title_en_placeholder": "e.g. Workplace Safety Essentials",
     "title_ar_placeholder": "مثال: أساسيات السلامة في مكان العمل",
     "description_en_placeholder": "Brief overview of course objectives…",
@@ -2260,6 +2255,12 @@
     "create": "إنشاء الدورة",
     "created": "تم إنشاء الدورة.",
     "saved": "تم حفظ الدورة.",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "breadcrumb": "مسار التنقل",
+    "section_basics": "المعلومات الأساسية",
+    "section_overview": "نبذة عن الدورة",
+    "section_certificate": "الشهادة",
+    "locked_notice": "يوجد متعلمون مسجلون في هذه الدورة، لذلك يبقى نوعها وقاعدة الشهادة والمؤهلات كما كانت عند تسجيلهم. ويمكن تعديل باقي البيانات.",
+    "locked_hint": "لا يمكن تغييره: يوجد متعلمون مسجلون."
   }
 }

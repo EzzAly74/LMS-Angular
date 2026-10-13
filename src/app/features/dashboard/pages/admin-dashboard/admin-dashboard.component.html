@@ -9,7 +9,7 @@
       <p class="dashboard-greeting__date">{{ today | date:'fullDate' }}</p>
       <app-passcode-widget />
     </div>
-    <button *nasCan="'create-courses'" type="button" class="dashboard-add-btn" routerLink="/admin/courses" [queryParams]="{ new: 1 }">
+    <button *nasCan="'create-courses'" type="button" class="dashboard-add-btn" routerLink="/admin/courses/new">
       <i class="pi pi-plus-circle" aria-hidden="true"></i>
       <span>{{ 'dashboard.add_course' | translate }}</span>
     </button>

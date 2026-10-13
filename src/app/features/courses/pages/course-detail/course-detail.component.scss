@@ -110,6 +110,7 @@
   font: inherit;
   font-size: var(--nas-size-xs);
   font-weight: var(--nas-weight-medium);
+  text-decoration: none; // a link to the Edit Course page
   cursor: pointer;
 
   &:hover { background: var(--nas-neutral-200); }

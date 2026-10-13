@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService, type ApiParams } from '../../../../core/services/api.service';
@@ -32,7 +32,6 @@ import {
   RemoteFilterOptions, activeFilterCount, appliedValues, filterNumbers, filterStrings, toFilterOptions,
 } from '../../../../shared/list/filter-values';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
-import { CourseDialogComponent } from '../../components/course-dialog/course-dialog.component';
 import { mapApiCourseListItem, type ApiCourseRaw } from '../../../../core/utils/course-mapper';
 import type { LookupOption } from '../../models/course-form.model';
 import type { Course, CourseStatus, CourseType } from '../../../../core/models/course.types';
@@ -87,7 +86,7 @@ type RowActionId = 'view' | 'edit';
     DecimalPipe, RouterLink, TranslateModule,
     NasIconComponent, NasStatusBadgeComponent, NasPagerComponent, NasFilterDialogComponent,
     NasListToolbarComponent, NasTableCardComponent, NasListStateComponent, NasSkeletonRowComponent, NasRowMenuComponent,
-    NasDatePipe, CourseDialogComponent,
+    NasDatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-list.component.html',
@@ -98,7 +97,6 @@ export class CourseListComponent implements OnInit {
   private readonly api    = inject(ApiService);
   private readonly enums  = inject(EnumsService);
   private readonly router = inject(Router);
-  private readonly route  = inject(ActivatedRoute);
   private readonly t      = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   readonly locale         = inject(LocaleService).locale;
@@ -114,8 +112,6 @@ export class CourseListComponent implements OnInit {
   });
 
   /* Add / Edit Course modal (D6) - null course id = Add. */
-  readonly dialogOpen     = signal(false);
-  readonly dialogCourseId = signal<number | null>(null);
 
   /* Filter modal and its option lists (loaded the first time it opens). */
   readonly filterOpen = signal(false);
@@ -201,13 +197,6 @@ export class CourseListComponent implements OnInit {
 
   ngOnInit(): void {
     this.list.reload();
-
-    // The dashboard's "Add Course" lands here with ?new=1: open the modal,
-    // then drop the flag so Back / refresh don't reopen it.
-    if (this.route.snapshot.queryParamMap.get('new') === '1' && this.auth.can('create-courses')) {
-      this.openAddCourse();
-      this.router.navigate([], { relativeTo: this.route, queryParams: { new: null }, replaceUrl: true });
-    }
   }
 
   private params(q: Query): ApiParams {
@@ -267,18 +256,14 @@ export class CourseListComponent implements OnInit {
     this.router.navigate(['/admin/courses', course.id]);
   }
 
-  /** Edit Course from the row menu: the same modal as Add, filled in. */
+  /** Edit Course from the row menu: the course form page, filled in. */
   editCourse(course: Course): void {
-    this.dialogCourseId.set(course.id);
-    this.dialogOpen.set(true);
+    this.router.navigate(['/admin/courses', course.id, 'edit']);
   }
 
   openAddCourse(): void {
-    this.dialogCourseId.set(null);
-    this.dialogOpen.set(true);
+    this.router.navigate(['/admin/courses/new']);
   }
-
-  onCourseSaved(): void { this.list.reload(); }
 
   /* ── Cells ────────────────────────────────────────────────────────── */
   private toRow(c: Course): CourseRow {
