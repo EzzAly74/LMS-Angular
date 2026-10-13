@@ -1,8 +1,7 @@
+import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
@@ -25,14 +24,14 @@ interface Form {
 @Component({
   selector: 'app-form-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './form-list.component.html',
   styleUrl: './form-list.component.scss',
 })
 export class FormListComponent implements OnInit {
   private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private messageService = inject(ToastService);
   private t              = inject(TranslateService);
 
@@ -70,18 +69,17 @@ export class FormListComponent implements OnInit {
   onSearch(term: string): void { this.search$.next(term); }
 
   confirmDelete(item: Form): void {
-    this.confirmService.confirm({
-      message: `${this.t.instant('confirm.delete_message')} (${item.title})`,
-      header:  this.t.instant('forms.confirm_delete'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(`${API.FORMS}/${item.id}`).subscribe({
-          next: () => {
-            this.messageService.success('forms.deleted');
-            this.load();
-          },
-        });
-      },
+    void this.confirmDialog.ask({
+      title: this.t.instant('forms.confirm_delete'),
+      message: this.t.instant('confirm.delete_message_title', { title: item.title }),
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.delete(`${API.FORMS}/${item.id}`).subscribe({
+        next: () => {
+          this.messageService.success('forms.deleted');
+          this.load();
+        },
+      });
     });
   }
 }

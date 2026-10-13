@@ -1,17 +1,19 @@
 @if (visible) {
   <div class="nas-confirm-backdrop" (click)="onBackdropClick()">
-    <div class="nas-confirm-card" role="dialog" aria-modal="true" [attr.aria-label]="title"
-      (click)="$event.stopPropagation()">
+    <div class="nas-confirm-card" [attr.role]="danger ? 'alertdialog' : 'dialog'" aria-modal="true"
+      [attr.aria-labelledby]="uid + '-title'" [attr.aria-describedby]="uid + '-message'"
+      (click)="$event.stopPropagation()" (keydown)="trapTab($event)">
 
       <header class="nas-confirm-card__head">
-        <h2 class="nas-confirm-card__title">{{ title }}</h2>
-        <button type="button" class="nas-confirm-card__close" [disabled]="busy" (click)="onCancel()" aria-label="Close">
+        <h2 class="nas-confirm-card__title" [id]="uid + '-title'">{{ title }}</h2>
+        <button type="button" class="nas-confirm-card__close" [disabled]="busy" (click)="onCancel()"
+          [attr.aria-label]="'common.close' | translate">
           <nas-icon name="x" [size]="20" />
         </button>
       </header>
 
       <div class="nas-confirm-card__body">
-        <p class="nas-confirm-card__message">{{ message }}</p>
+        <p class="nas-confirm-card__message" [id]="uid + '-message'">{{ message }}</p>
       </div>
 
       <footer class="nas-confirm-card__foot">

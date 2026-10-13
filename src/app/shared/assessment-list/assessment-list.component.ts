@@ -1,11 +1,10 @@
+import { NasConfirmService } from '../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { Subject, catchError, forkJoin, map, of, switchMap, timer } from 'rxjs';
-import { ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService, type ApiParams } from '../../core/services/api.service';
@@ -88,12 +87,11 @@ const SHARED_KEYS = {
   selector: 'app-assessment-list',
   standalone: true,
   imports: [
-    RouterLink, DialogModule, ConfirmDialogModule, TranslateModule,
+    RouterLink, DialogModule, TranslateModule,
     NasIconComponent, NasPagerComponent, NasFilterDialogComponent,
     NasListToolbarComponent, NasTableCardComponent, NasListStateComponent, NasSkeletonRowComponent,
     NasDatePipe,
   ],
-  providers: [ConfirmationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './assessment-list.component.html',
   styleUrl: './assessment-list.component.scss',
@@ -101,7 +99,7 @@ const SHARED_KEYS = {
 export class AssessmentListComponent implements OnInit {
   protected readonly auth = inject(AuthService);
   private readonly api        = inject(ApiService);
-  private readonly confirm    = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private readonly toast      = inject(ToastService);
   private readonly router     = inject(Router);
   private readonly t          = inject(TranslateService);
@@ -323,20 +321,17 @@ export class AssessmentListComponent implements OnInit {
     event.stopPropagation();
     if (!this.canDelete()) return;
     const toastNs = this.source().toastNs;
-    this.confirm.confirm({
+    void this.confirmDialog.ask({
+      title: this.t.instant(`${toastNs}.delete_title`),
       message: this.t.instant('confirm.delete_message_title', { title: row.title }),
-      header: this.t.instant(`${toastNs}.delete_title`),
-      icon: 'pi pi-trash',
-      acceptButtonStyleClass: 'p-button-danger p-button-sm',
-      rejectButtonStyleClass: 'p-button-secondary p-button-sm',
-      accept: () => {
-        this.source().remove(row.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: () => {
-            this.toast.success(this.t.instant(`${toastNs}.deleted`));
-            this.refresh();
-          },
-        });
-      },
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.source().remove(row.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          this.toast.success(this.t.instant(`${toastNs}.deleted`));
+          this.refresh();
+        },
+      });
     });
   }
 

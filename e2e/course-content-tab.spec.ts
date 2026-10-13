@@ -98,6 +98,25 @@ test.describe('behaviour', () => {
   });
 });
 
+test.describe('confirm modal (design system, Figma 453:37969)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 0) < 1440, 'desktop project only');
+
+  test('focus starts on Cancel, Tab stays inside, Esc cancels and returns focus', async ({ page }) => {
+    await open(page);
+    const trigger = page.getByRole('button', { name: 'Delete PPE & Equipment Handling' });
+    await trigger.click();
+    const modal = page.getByRole('alertdialog', { name: 'Delete module' });
+    await expect(modal).toContainText('Delete "PPE & Equipment Handling"? This action cannot be undone.');
+    await expect(modal.getByRole('button', { name: 'Cancel' })).toBeFocused();
+    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+    expect(await modal.evaluate(el => el.contains(document.activeElement))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+    await expect(trigger).toBeFocused();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+});
+
 for (const locale of ['en', 'ar'] as const) {
   test(`content tab fits and reads ${locale}`, async ({ page }, info) => {
     const errors: string[] = [];
@@ -108,6 +127,10 @@ for (const locale of ['en', 'ar'] as const) {
     expect(overflow).toBeLessThanOrEqual(0);
     if (locale === 'ar') await expect(page.locator('.module-row__sub').nth(4)).toHaveText('ساعتان');
     await page.locator('.modules-tab').screenshot({ path: `${ARTIFACTS}/course-content/${info.project.name}-${locale}.png` });
+    await page.locator('.module-row__action--danger').first().click();
+    await expect(page.locator('.nas-confirm-card')).toBeVisible();
+    await page.screenshot({ path: `${ARTIFACTS}/course-content/${info.project.name}-${locale}-confirm.png` });
+    await page.keyboard.press('Escape');
     expect(errors).toEqual([]);
   });
 }

@@ -1,10 +1,9 @@
+import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
@@ -27,8 +26,7 @@ interface Notification {
   selector: 'app-notification-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, DialogModule, SkeletonModule,
-    ConfirmDialogModule, TranslateModule, NasPageHeaderComponent,
+    CommonModule, FormsModule, DialogModule, SkeletonModule, TranslateModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notification-list.component.html',
@@ -36,7 +34,7 @@ interface Notification {
 })
 export class NotificationListComponent implements OnInit {
   private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private messageService = inject(ToastService);
   private localeService  = inject(LocaleService);
   private t              = inject(TranslateService);
@@ -120,18 +118,17 @@ export class NotificationListComponent implements OnInit {
   }
 
   confirmDelete(item: Notification): void {
-    this.confirmService.confirm({
-      message: `${this.t.instant('confirm.delete_message')} (${this.display(item.title)})`,
-      header:  this.t.instant('notifications.confirm_delete'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(`${API.NOTIFICATIONS}/${item.id}`).subscribe({
-          next: () => {
-            this.messageService.success('notifications.deleted', { title: 'common.deleted' });
-            this.load();
-          },
-        });
-      },
+    void this.confirmDialog.ask({
+      title: this.t.instant('notifications.confirm_delete'),
+      message: this.t.instant('confirm.delete_message_title', { title: this.display(item.title) }),
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.delete(`${API.NOTIFICATIONS}/${item.id}`).subscribe({
+        next: () => {
+          this.messageService.success('notifications.deleted', { title: 'common.deleted' });
+          this.load();
+        },
+      });
     });
   }
 }

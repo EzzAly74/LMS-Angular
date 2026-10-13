@@ -1,8 +1,7 @@
+import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
@@ -25,14 +24,14 @@ interface Instructor {
 @Component({
   selector: 'app-instructor-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, TranslateModule, NasPageHeaderComponent],
+  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './instructor-list.component.html',
   styleUrl: './instructor-list.component.scss',
 })
 export class InstructorListComponent implements OnInit {
   private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private messageService = inject(ToastService);
   private t              = inject(TranslateService);
 
@@ -71,18 +70,17 @@ export class InstructorListComponent implements OnInit {
   onSearch(term: string): void { this.search$.next(term); }
 
   confirmDelete(item: Instructor): void {
-    this.confirmService.confirm({
-      message: `${this.t.instant('confirm.delete_message')} (${item.name})`,
-      header:  this.t.instant('instructors.confirm_delete'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(`${API.INSTRUCTORS}/${item.id}`).subscribe({
-          next: () => {
-            this.messageService.success('instructors.deleted');
-            this.load();
-          },
-        });
-      },
+    void this.confirmDialog.ask({
+      title: this.t.instant('instructors.confirm_delete'),
+      message: this.t.instant('confirm.delete_message_title', { title: item.name }),
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.delete(`${API.INSTRUCTORS}/${item.id}`).subscribe({
+        next: () => {
+          this.messageService.success('instructors.deleted');
+          this.load();
+        },
+      });
     });
   }
 }

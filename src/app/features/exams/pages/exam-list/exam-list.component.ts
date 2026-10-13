@@ -1,11 +1,10 @@
+import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmationService } from 'primeng/api';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
 import { NasStatusBadgeComponent } from '../../../../shared/nas/nas-status-badge/nas-status-badge.component';
 import { ApiService } from '../../../../core/services/api.service';
@@ -25,14 +24,14 @@ interface Exam {
 @Component({
   selector: 'app-exam-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, DropdownModule, ConfirmDialogModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, DropdownModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exam-list.component.html',
   styleUrl: './exam-list.component.scss',
 })
 export class ExamListComponent implements OnInit {
   private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private messageService = inject(ToastService);
   private t              = inject(TranslateService);
 
@@ -94,18 +93,17 @@ export class ExamListComponent implements OnInit {
   }
 
   confirmDelete(item: Exam): void {
-    this.confirmService.confirm({
-      message: `${this.t.instant('confirm.delete_message')} (${item.title})`,
-      header:  this.t.instant('confirm.delete_title'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(courseUrl.exam(this.selectedCourseId!, item.id)).subscribe({
-          next: () => {
-            this.messageService.success('success.deleted');
-            this.load();
-          },
-        });
-      },
+    void this.confirmDialog.ask({
+      title: this.t.instant('confirm.delete_title'),
+      message: this.t.instant('confirm.delete_message_title', { title: item.title }),
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.delete(courseUrl.exam(this.selectedCourseId!, item.id)).subscribe({
+        next: () => {
+          this.messageService.success('success.deleted');
+          this.load();
+        },
+      });
     });
   }
 }

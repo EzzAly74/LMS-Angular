@@ -1,3 +1,4 @@
+import { NasConfirmService } from '../../../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,8 +15,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
 import { NasRichTextComponent } from '../../../../../../shared/nas';
 import { NasIconComponent } from '../../../../../../shared/nas/nas-icon/nas-icon.component';
 import { CoursesApiService } from '../../../../services/courses-api.service';
@@ -63,11 +62,9 @@ interface ModuleFileInfo {
     DialogModule,
     DropdownModule,
     CheckboxModule,
-    ConfirmDialogModule,
     NasRichTextComponent,
     NasIconComponent,
   ],
-  providers: [ConfirmationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-content-tab.component.html',
   styleUrl: './course-content-tab.component.scss',
@@ -78,7 +75,7 @@ export class CourseContentTabComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
-  private readonly confirm = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private readonly locale = inject(LocaleService).locale;
 
   readonly courseId = input.required<number>();
@@ -601,20 +598,17 @@ export class CourseContentTabComponent implements OnInit {
   /** The row's Delete button: asks first, then removes the module. */
   confirmDeleteModule(m: CourseModule): void {
     const id = this.courseId();
-    this.confirm.confirm({
-      message: this.t.instant('course_detail_toasts.module_delete_message', {
-        name: this.moduleTitle(m),
-      }),
-      header: this.t.instant('course_detail_toasts.module_delete_title'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.coursesApi.deleteModule(id, m.id).subscribe({
-          next: () => {
-            this.toast.success('course_detail_toasts.module_deleted');
-            this.loadModules(id);
-          },
-        });
-      },
+    void this.confirmDialog.ask({
+      title: this.t.instant('course_detail_toasts.module_delete_title'),
+      message: this.t.instant('confirm.delete_message_title', { title: this.moduleTitle(m) }),
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.coursesApi.deleteModule(id, m.id).subscribe({
+        next: () => {
+          this.toast.success('course_detail_toasts.module_deleted');
+          this.loadModules(id);
+        },
+      });
     });
   }
 

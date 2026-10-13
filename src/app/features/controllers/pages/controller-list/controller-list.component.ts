@@ -1,3 +1,4 @@
+import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,8 +20,6 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
@@ -77,10 +76,8 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     SkeletonModule,
     DialogModule,
     DropdownModule,
-    ConfirmDialogModule,
     NasPageHeaderComponent,
   ],
-  providers: [ConfirmationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './controller-list.component.html',
   styleUrl: './controller-list.component.scss',
@@ -88,7 +85,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 export class ControllerListComponent implements OnInit, OnDestroy {
   private readonly api      = inject(ApiService);
   private readonly rolesApi = inject(AdminRolesApiService);
-  private readonly confirm  = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private readonly messages = inject(ToastService);
   private readonly t        = inject(TranslateService);
   private readonly fb       = inject(FormBuilder);
@@ -287,25 +284,20 @@ export class ControllerListComponent implements OnInit, OnDestroy {
 
   /* ── Delete ───────────────────────────────────────────────────── */
   askDelete(item: Controller): void {
-    this.confirm.confirm({
-      header:  this.t.instant('controllers_toasts.delete_title'),
+    void this.confirmDialog.ask({
+      title: this.t.instant('controllers_toasts.delete_title'),
       message: this.t.instant('confirm.delete_message_title', { title: item.name }),
-      icon:    'pi pi-exclamation-triangle',
-      acceptLabel: this.t.instant('common.yes_delete'),
-      rejectLabel: this.t.instant('common.cancel'),
-      acceptButtonStyleClass: 'ctrl-btn ctrl-btn--danger',
-      rejectButtonStyleClass: 'ctrl-btn ctrl-btn--ghost',
-      accept: () => {
-        this.api.delete(`${API.ADMIN_CONTROLLERS}/${item.id}`).pipe(takeUntil(this.destroy$)).subscribe({
-          next: () => {
-            this.messages.success('controllers_toasts.removed', { title: 'common.deleted', params: { name: item.name } });
-            this.refresh();
-          },
-          error: () => {
-            this.messages.error('controllers_toasts.delete_failed');
-          },
-        });
-      },
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.delete(`${API.ADMIN_CONTROLLERS}/${item.id}`).pipe(takeUntil(this.destroy$)).subscribe({
+        next: () => {
+          this.messages.success('controllers_toasts.removed', { title: 'common.deleted', params: { name: item.name } });
+          this.refresh();
+        },
+        error: () => {
+          this.messages.error('controllers_toasts.delete_failed');
+        },
+      });
     });
   }
 

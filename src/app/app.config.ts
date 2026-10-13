@@ -5,7 +5,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { BundledTranslateLoader } from './core/i18n/bundled-translate.loader';
 import { LocaleService } from './core/services/locale.service';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { NasMessageService } from './core/services/toast.service';
 import { firstValueFrom } from 'rxjs';
 
@@ -41,8 +41,7 @@ export const appConfig: ApplicationConfig = {
       })
     ),
     // One MessageService for the whole app; it normalises every toast (D-072).
-    { provide: MessageService, useClass: NasMessageService },
-    ConfirmationService,
+    { provide: MessageService, useClass: NasMessageService },
     {
       // Load the active locale's translations BEFORE anything renders.
       //

@@ -1,8 +1,7 @@
+import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
@@ -26,14 +25,14 @@ interface Article {
 @Component({
   selector: 'app-article-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, ConfirmDialogModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './article-list.component.html',
   styleUrl: './article-list.component.scss',
 })
 export class ArticleListComponent implements OnInit {
   private api            = inject(ApiService);
-  private confirmService = inject(ConfirmationService);
+  private readonly confirmDialog = inject(NasConfirmService);
   private messageService = inject(ToastService);
   private t              = inject(TranslateService);
 
@@ -72,18 +71,17 @@ export class ArticleListComponent implements OnInit {
   onSearch(term: string): void { this.search$.next(term); }
 
   confirmDelete(item: Article): void {
-    this.confirmService.confirm({
-      message: `${this.t.instant('confirm.delete_message')} (${item.title})`,
-      header:  this.t.instant('articles.confirm_delete'),
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.api.delete(`${API.ARTICLES}/${item.id}`).subscribe({
-          next: () => {
-            this.messageService.success('articles.deleted');
-            this.load();
-          },
-        });
-      },
+    void this.confirmDialog.ask({
+      title: this.t.instant('articles.confirm_delete'),
+      message: this.t.instant('confirm.delete_message_title', { title: item.title }),
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.delete(`${API.ARTICLES}/${item.id}`).subscribe({
+        next: () => {
+          this.messageService.success('articles.deleted');
+          this.load();
+        },
+      });
     });
   }
 }

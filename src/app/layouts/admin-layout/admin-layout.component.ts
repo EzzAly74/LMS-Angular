@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { NasConfirmHostComponent } from '../../shared/nas/nas-confirm-modal/nas-confirm-host.component';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { LocaleService } from '../../core/services/locale.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -26,7 +26,7 @@ import { withLocaleReload } from '../../core/utils/with-locale-reload';
     RouterModule,
     TranslateModule,
     FormsModule,
-    ConfirmDialogModule,
+    NasConfirmHostComponent,
     OverlayPanelModule,
     NasConfirmModalComponent,
     NasIconComponent,

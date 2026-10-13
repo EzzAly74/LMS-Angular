@@ -172,8 +172,27 @@
   background: #15363a;
 }
 
-/* RTL — keep buttons end-aligned, gap stays */
-:host-context([dir='rtl']) .nas-confirm-card__foot {
-  justify-content: flex-end;
-  flex-direction: row-reverse;
+/* Keyboard focus is always visible. */
+.nas-confirm-btn:focus-visible,
+.nas-confirm-card__close:focus-visible {
+  outline: 2px solid var(--nas-teal-600, #339699);
+  outline-offset: 2px;
+}
+
+/* RTL: the footer mirrors on its own (flex follows the direction); the
+   Arabic face for the text. */
+:host-context([dir='rtl']) .nas-confirm-card__title,
+:host-context([dir='rtl']) .nas-confirm-card__message,
+:host-context([dir='rtl']) .nas-confirm-btn {
+  font-family: var(--nas-font-ar, 'Almarai', system-ui, sans-serif);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nas-confirm-backdrop,
+  .nas-confirm-card { animation: none; }
+}
+
+@media (max-width: 479px) {
+  .nas-confirm-card__foot { flex-wrap: wrap; }
+  .nas-confirm-btn { flex: 1 1 100%; }
 }
