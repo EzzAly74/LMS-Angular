@@ -1,3 +1,5 @@
+import { NasHrSyncButtonComponent } from '../../../../shared/nas/nas-hr-sync-button/nas-hr-sync-button.component';
+import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -68,6 +70,7 @@ interface Query extends PagedQuery {
   imports: [
     RouterLink, TranslateModule, NasFilterDialogComponent, NasPagerComponent,
     NasListToolbarComponent, NasListStateComponent, NasSkeletonComponent,
+    NasHrSyncButtonComponent, NasCanDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-title-list.component.html',
@@ -79,6 +82,9 @@ export class JobTitleListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly skeletons = [0, 1, 2, 3, 4, 5] as const;
+
+  /** "Update Job titles" (D-088). */
+  readonly hrSyncUrl = `${API.ADMIN_JOB_TITLES}/hr-sync`;
 
   readonly list = createPagedList<Query, JobTitleCard>({
     // 12 = four rows of three cards.

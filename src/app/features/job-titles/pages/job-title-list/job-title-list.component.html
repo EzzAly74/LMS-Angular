@@ -6,6 +6,8 @@
       <h1 class="cl-title">{{ 'job_titles.title' | translate }}</h1>
       <p class="cl-subtitle">{{ 'job_titles.subtitle' | translate }}</p>
     </div>
+    <!-- Figma 2746:88341: pull new job titles from HR now (NEW2B-6184, D-088). -->
+    <nas-hr-sync-button *nasCan="'edit-job-titles'" [endpoint]="hrSyncUrl" label="job_titles.update_button" (done)="list.reload()" />
   </header>
 
   <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"

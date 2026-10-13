@@ -1,4 +1,5 @@
 {
+  "hr_sync": {"not_configured": "The connection to HR is not set up on the server (HR address and account). Ask the system administrator.", "running": "Updating…", "done": "Updated from HR: {{employees}} employees ({{created}} new, {{updated}} updated).", "failed": "The update from HR did not finish. Try again later."},
   "app": {
     "title": "2B Academy",
     "loading": "Loading..."
@@ -893,6 +894,7 @@
     "pending": "Pending Answer"
   },
   "job_titles": {
+    "update_button": "Update Job titles",
     "title": "Job Titles",
     "subtitle": "Assign qualification requirements to each job title",
     "employee": "Employee",
@@ -1989,6 +1991,7 @@
     "replace_photo": "Replace Photo"
   },
   "learners": {
+    "update_button": "Update Learners",
     "filter_learner_type": "Learner type",
     "select_learner_type": "Select learner type",
     "title": "Learners",

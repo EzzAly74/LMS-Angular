@@ -28,6 +28,7 @@ import {
 } from '../../../../shared/list/filter-values';
 import { NasDatePipe, NasRelativeTimePipe } from '../../../../shared/pipes/nas-date.pipes';
 import { AssignQualificationDialogComponent } from '../../components/assign-qualification-dialog/assign-qualification-dialog.component';
+import { NasHrSyncButtonComponent } from '../../../../shared/nas/nas-hr-sync-button/nas-hr-sync-button.component';
 import { LEARNER_TYPES, LearnerRow, LearnerType } from '../../models/learner.model';
 
 interface Query extends PagedQuery {
@@ -58,6 +59,7 @@ interface LearnerView extends LearnerRow {
   selector: 'app-learner-list',
   standalone: true,
   imports: [
+    NasHrSyncButtonComponent,
     RouterLink,
     TranslateModule,
     NasIconComponent,
@@ -85,6 +87,8 @@ export class LearnerListComponent implements OnInit {
 
   /** UX only - POST admin/qualification-skills/{id}/learners enforces it. */
   readonly canAssign  = computed(() => this.auth.can('edit-qualifications'));
+  /** "Update Learners" (D-088). */
+  readonly hrSyncUrl  = `${API.ADMIN_LEARNERS}/hr-sync`;
   readonly assignOpen = signal(false);
 
   readonly skeletons = SKELETON_ROWS;

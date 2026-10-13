@@ -6,14 +6,18 @@
       <h1 class="cl-title">{{ 'learners.title' | translate }}</h1>
       <p class="cl-subtitle">{{ 'learners.subtitle' | translate }}</p>
     </div>
-    <!-- Figma 1983:44955. Shown only with view-qualifications, the permission
-         the bulk-grant API enforces. -->
-    @if (canAssign()) {
-      <button type="button" class="cl-primary" aria-haspopup="dialog" (click)="assignOpen.set(true)">
-        <nas-icon name="plus-circle" [size]="20" />
-        <span>{{ 'learners.assign.button' | translate }}</span>
-      </button>
-    }
+    <div class="cl-head__actions">
+      <!-- Figma 2746:88329: pull new employees and their photos from HR now (D-088). -->
+      <nas-hr-sync-button [endpoint]="hrSyncUrl" label="learners.update_button" (done)="list.reload()" />
+      <!-- Figma 1983:44955. Shown only with view-qualifications, the permission
+           the bulk-grant API enforces. -->
+      @if (canAssign()) {
+        <button type="button" class="cl-primary" aria-haspopup="dialog" (click)="assignOpen.set(true)">
+          <nas-icon name="plus-circle" [size]="20" />
+          <span>{{ 'learners.assign.button' | translate }}</span>
+        </button>
+      }
+    </div>
   </header>
 
   <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
