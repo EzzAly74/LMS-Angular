@@ -152,16 +152,18 @@ export class LearnerDetailComponent implements OnInit {
 
   // ── Cell helpers ─────────────────────────────────────────────────────
   /**
-   * The API reports a course as completed or active. Figma adds "Not
-   * started"; it labels completion "Certified", but a completed course is
-   * not proof a certificate was issued, so it says "Completed".
+   * The API's status: completed (the one completion rule), upcoming (the
+   * cohort has not started), ended (over without completing) or active.
+   * An active course with nothing attended and no progress yet reads "Not
+   * started" (Figma). Figma labels completion "Certified"; a completed
+   * course without a certificate exists, so it says "Completed".
    */
   courseStatus(row: LearnerCourseRow): { key: string; tone: NasStatusTone } {
     if (row.status === 'completed') return { key: 'learners.detail.status.completed', tone: 'success' };
     // The cohort has not started yet / is over without a pass (NEW2B-6228).
     if (row.status === 'upcoming') return { key: 'learners.detail.status.upcoming', tone: 'neutral' };
     if (row.status === 'ended') return { key: 'learners.detail.status.ended', tone: 'danger' };
-    if (row.attended === 0 && !row.progress_percent) return { key: 'learners.detail.status.not_started', tone: 'neutral' };
+    if (row.attended === 0 && (row.progress_percent ?? 0) === 0) return { key: 'learners.detail.status.not_started', tone: 'neutral' };
     return { key: 'learners.detail.status.in_progress', tone: 'info' };
   }
 
