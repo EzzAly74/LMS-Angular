@@ -12,13 +12,13 @@ test.skip(({ viewport }) => (viewport?.width ?? 0) < 1440, 'behaviour test: desk
 const LOCALE_KEY = '2b_locale';
 const LIST = '**/api/v1/admin/qualification-skills?**';
 
-const row = (id: number, name: string, extra: Partial<Record<string, number | null>> = {}) => ({
+const row = (id: number, name: string, extra: Record<string, unknown> = {}) => ({
   id, name, courses_count: 2, enrolled_count: 28, job_titles_count: 3, learners_count: 32,
   certified_count: 28, completion_percent: 90, created_at: '2026-09-26 10:00:00', ...extra,
 });
 
 const ROWS = [
-  row(1, 'Excel'),
+  row(1, 'Excel', { courses: [{ id: 11, title: 'Excel Basics' }, { id: 12, title: 'Excel Pivot Tables' }], can_delete: false }),
   row(2, 'Microsoft Office', { courses_count: 1, job_titles_count: 2, learners_count: 8, certified_count: 3, completion_percent: 41 }),
   row(3, 'Email Etiquette', { courses_count: 4, learners_count: 0, certified_count: 0, completion_percent: null }),
 ];
@@ -47,14 +47,14 @@ const dialog = (page: Page) => page.getByRole('dialog', { name: /Qualification/ 
 test('the list shows the Figma columns and every figure the API returns', async ({ page }) => {
   await setup(page);
 
+  // Figma 364:11514 (NEW2B-6007): six columns, the table fits the screen.
   await expect(page.locator('thead th')).toHaveText(
-    ['Qualification', 'Linked Courses', 'Enrolled', 'Certified', 'Completion', 'Job titles', 'Learners', 'Actions']);
+    ['Qualification', 'Linked Courses', 'Enrolled', 'Certified', 'Completion', 'Actions']);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   const first = page.locator('tbody tr').nth(0);
   await expect(first).toContainText('Excel');
   await expect(first).toContainText('2 Courses');
   await expect(first).toContainText('28/32');
-  await expect(first).toContainText('3 Titles');
-  await expect(first).toContainText('32 Learners');
   await expect(first.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '90');
 
   const second = page.locator('tbody tr').nth(1);
@@ -64,7 +64,47 @@ test('the list shows the Figma columns and every figure the API returns', async 
   // Nobody needs the third: a dash, not a 0% bar.
   const third = page.locator('tbody tr').nth(2);
   await expect(third.getByRole('progressbar')).toHaveCount(0);
-  await expect(third).toContainText('0 Learners');
+});
+
+test('a long name wraps instead of pushing the table sideways (6007)', async ({ page }) => {
+  const long = 'Understanding of software development and testing principles, strong attention to detail, analytical thinking and problem solving';
+  await setup(page, [row(1, long), ...ROWS.slice(1)]);
+  const name = page.locator('tbody tr').nth(0).locator('th');
+  await expect(name).toContainText('analytical thinking');
+  const box = (await name.boundingBox())!;
+  expect(box.height).toBeGreaterThan(30);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await expect(page.getByRole('button', { name: /Actions for Understanding/ })).toBeInViewport();
+});
+
+test('the Linked Courses chip lists the courses, each a link (5952)', async ({ page }) => {
+  await setup(page);
+  await page.getByRole('button', { name: 'Show the 2 courses linked to Excel' }).click();
+  const panel = page.locator('.ql-courses');
+  await expect(panel).toContainText('Excel');
+  await expect(panel.getByRole('link', { name: 'Excel Basics' })).toHaveAttribute('href', '/admin/courses/11');
+  await expect(panel.getByRole('link', { name: 'Excel Pivot Tables' })).toHaveAttribute('href', '/admin/courses/12');
+});
+
+test('a qualification courses use is not deleted; the reason is shown (6048)', async ({ page }) => {
+  await setup(page);
+  // Confirm as always; the server refuses with its own message, shown as an error toast.
+  const reason = 'This qualification is linked to 2 course(s). Remove it from those courses before deleting it.';
+  let deletes = 0;
+  await page.route('**/api/v1/admin/qualification-skills/1', r => {
+    if (r.request().method() !== 'DELETE') return r.fallback();
+    deletes++;
+    return r.fulfill({ status: 409, json: { status: 'error', message: reason, errors: [] } });
+  });
+  await page.getByRole('button', { name: 'Actions for Excel' }).click();
+  await page.getByRole('menuitem', { name: 'Delete' }).click();
+  const confirm = page.getByRole('alertdialog', { name: 'Delete Qualification' });
+  await expect(confirm).toContainText('Excel');
+  expect(deletes).toBe(0);
+  await confirm.getByRole('button', { name: 'Yes, Delete' }).click();
+  await expect(page.locator('.nt--error')).toContainText(reason);
+  await expect(confirm).toBeHidden();
+  expect(deletes).toBe(1);
 });
 
 test('New Qualification sends names, job titles and learners in one request', async ({ page }) => {
@@ -233,7 +273,7 @@ test('Delete asks first, then removes the row through the API', async ({ page })
 
   await page.getByRole('button', { name: 'Actions for Microsoft Office' }).click();
   await page.getByRole('menuitem', { name: 'Delete' }).click();
-  const confirm = page.getByRole('dialog', { name: 'Delete Qualification' });
+  const confirm = page.getByRole('alertdialog', { name: 'Delete Qualification' });
   await expect(confirm).toContainText('Microsoft Office');
   expect(deletes).toHaveLength(0);
 

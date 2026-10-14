@@ -12,6 +12,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { RouterLink } from '@angular/router';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { pluralKey } from '../../../../core/utils/plural-key';
@@ -66,7 +68,10 @@ interface QualificationListRow extends QualificationRow {
 @Component({
   selector: 'app-qualification-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [
+    NasCanDirective,
+    OverlayPanelModule,
+    RouterLink,
     TranslateModule,
     NasIconComponent,
     NasPagerComponent,
@@ -93,7 +98,7 @@ export class QualificationListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly skeletons = SKELETON_ROWS;
-  readonly skeletonCells: readonly NasSkeletonCell[] = ['title', 'pill', 'num', 'short', 'bar', 'pill', 'pill', 'action'];
+  readonly skeletonCells: readonly NasSkeletonCell[] = ['title', 'pill', 'num', 'short', 'bar', 'action'];
 
   readonly list = createPagedList<PagedQuery, QualificationListRow>({
     initial: { search: '', page: 1, perPage: 15 },
@@ -187,6 +192,15 @@ export class QualificationListComponent implements OnInit {
     else this.deleting.set(e.row);
   }
 
+  /** The courses linked to a row (NEW2B-5952). */
+  protected readonly coursesOf = signal<QualificationListRow | null>(null);
+  private readonly coursesPanel = viewChild<OverlayPanel>('coursesPanel');
+
+  showCourses(event: Event, row: QualificationListRow): void {
+    this.coursesOf.set(row);
+    this.coursesPanel()?.toggle(event);
+  }
+
   /** A new one lands on page 1 (newest first); an edit stays where it is. */
   onSaved(): void {
     if (this.editingId() === null) this.list.goTo(1);
@@ -207,8 +221,12 @@ export class QualificationListComponent implements OnInit {
         if (this.list.items().length === 1 && page > 1) this.list.goTo(page - 1);
         else this.list.reload();
       },
-      // The error interceptor toasts the reason.
-      error: () => this.deleteBusy.set(false),
+      // The error interceptor toasts the server's reason - e.g. a qualification
+      // courses use (409, NEW2B-6048) - and the confirmation closes.
+      error: () => {
+        this.deleteBusy.set(false);
+        this.deleting.set(null);
+      },
     });
   }
 

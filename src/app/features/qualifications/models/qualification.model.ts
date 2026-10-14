@@ -7,6 +7,10 @@ export interface QualificationRow {
   id: number;
   name: string;
   courses_count: number;
+  /** The linked courses themselves (NEW2B-5952). */
+  courses?: { id: number; title: string }[];
+  /** False while any course uses it (NEW2B-6048). */
+  can_delete?: boolean;
   /** Learners enrolled in any linked course. */
   enrolled_count: number;
   job_titles_count: number;
@@ -71,4 +75,5 @@ export interface QualificationImportReport {
 }
 
 /** Server limits, mirrored for UX only (AdminQualificationRequest). */
-export const NAME_MAX = 255;
+/** NEW2B-5961: at most 50 characters, in both languages. */
+export const NAME_MAX = 50;

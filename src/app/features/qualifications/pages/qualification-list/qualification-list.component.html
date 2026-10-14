@@ -32,7 +32,12 @@
     (searchChange)="list.search($event)" />
 
   <nas-table-card [label]="'qualifications.title' | translate" [busy]="list.state() === 'loading'">
+    <!-- Figma 364:11514; one screen, the name the widest column and wrapping (NEW2B-6007). -->
     <table class="cl-table ql__table">
+      <colgroup>
+        <col class="ql__col-name" /><col class="ql__col-courses" /><col class="ql__col-num" />
+        <col class="ql__col-num" /><col class="ql__col-completion" /><col class="ql__action" />
+      </colgroup>
       <thead>
         <tr>
           <th scope="col">{{ 'qualifications.col.qualification' | translate }}</th>
@@ -40,8 +45,6 @@
           <th scope="col">{{ 'qualifications.col.enrolled' | translate }}</th>
           <th scope="col">{{ 'qualifications.col.certified' | translate }}</th>
           <th scope="col">{{ 'qualifications.col.completion' | translate }}</th>
-          <th scope="col">{{ 'qualifications.col.job_titles' | translate }}</th>
-          <th scope="col">{{ 'qualifications.col.learners' | translate }}</th>
           <th scope="col" class="ql__action"><span class="cl-sr-only">{{ 'qualifications.col.actions' | translate }}</span></th>
         </tr>
       </thead>
@@ -51,7 +54,7 @@
             @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
           }
           @case ('error') {
-            <tr><td colspan="8">
+            <tr><td colspan="6">
               <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
             </td></tr>
           }
@@ -59,7 +62,18 @@
             @for (q of list.items(); track q.id) {
               <tr class="ql__row">
                 <th scope="row" class="ql__name"><bdi>{{ q.name }}</bdi></th>
-                <td><span class="ql__chip">{{ q.coursesKey | translate: { count: q.courses_count } }}</span></td>
+                <td>
+                  <!-- Which courses (NEW2B-5952): the chip opens their list. -->
+                  @if (q.courses_count > 0) {
+                    <button type="button" class="ql__chip ql__chip--button" aria-haspopup="dialog"
+                      [attr.aria-label]="'qualifications.show_courses' | translate: { name: q.name, count: q.courses_count }"
+                      (click)="showCourses($event, q)">
+                      {{ q.coursesKey | translate: { count: q.courses_count } }}
+                    </button>
+                  } @else {
+                    <span class="ql__chip">{{ q.coursesKey | translate: { count: q.courses_count } }}</span>
+                  }
+                </td>
                 <td class="cl-strong">{{ q.enrolled_count }}</td>
                 <td class="cl-strong"><bdi dir="ltr">{{ q.certified_count }}/{{ q.learners_count }}</bdi></td>
                 <td>
@@ -75,8 +89,6 @@
                     </span>
                   }
                 </td>
-                <td><span class="ql__chip">{{ q.titlesKey | translate: { count: q.job_titles_count } }}</span></td>
-                <td><span class="ql__chip">{{ q.learnersKey | translate: { count: q.learners_count } }}</span></td>
                 <td class="cl-end">
                   <button *nasCan="['edit-qualifications', 'delete-qualifications']" type="button" class="cl-more" aria-haspopup="menu"
                     [attr.aria-label]="'qualifications.actions_for' | translate: { name: q.name }"
@@ -86,7 +98,7 @@
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="8">
+              <tr><td colspan="6">
                 <nas-list-state [message]="(list.query().search ? 'qualifications.no_results' : 'qualifications.empty') | translate" />
               </td></tr>
             }
@@ -102,6 +114,19 @@
 </div>
 
 <nas-row-menu #rowMenu [actions]="rowActions" (picked)="onRowAction($event)" />
+
+<p-overlayPanel #coursesPanel styleClass="ql-courses" [showCloseIcon]="false" (onHide)="coursesOf.set(null)">
+  <ng-template pTemplate>
+    @if (coursesOf(); as q) {
+      <p class="ql-courses__title" id="ql-courses-title"><bdi>{{ q.name }}</bdi></p>
+      <ul class="ql-courses__list" aria-labelledby="ql-courses-title">
+        @for (c of q.courses ?? []; track c.id) {
+          <li><a class="ql-courses__link" [routerLink]="['/admin/courses', c.id]" (click)="coursesPanel.hide()"><bdi>{{ c.title }}</bdi></a></li>
+        }
+      </ul>
+    }
+  </ng-template>
+</p-overlayPanel>
 
 <app-qualification-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
   [qualificationId]="editingId()" (saved)="onSaved()" />

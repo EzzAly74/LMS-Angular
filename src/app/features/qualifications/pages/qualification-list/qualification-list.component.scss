@@ -3,15 +3,51 @@
 // components (D-070). This file adds the qualification-specific cells.
 @use '../../../../shared/styles/list';
 
+// One screen (NEW2B-6007): fixed column shares, the name widest and
+// wrapping, so a long name never pushes the table sideways.
 .ql__table {
-  min-inline-size: 1060px;
+  table-layout: fixed;
+  inline-size: 100%;
+
+  @media (max-width: 767px) { min-inline-size: 680px; }
 
   td { white-space: nowrap; }
 
-  tbody th.ql__name { max-inline-size: 260px; overflow: hidden; text-overflow: ellipsis; }
+  tbody th.ql__name { white-space: normal; overflow-wrap: anywhere; }
 }
 
+.ql__col-name { inline-size: 36%; }
+.ql__col-courses { inline-size: 15%; }
+.ql__col-num { inline-size: 12%; }
+.ql__col-completion { inline-size: 19%; }
 .ql__action { inline-size: 72px; }
+
+.ql__chip--button {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--nas-size-2xs);
+  font-weight: var(--nas-weight-medium);
+
+  &:hover { background: var(--nas-sky-300, var(--nas-sky-200)); text-decoration: underline; }
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+}
+
+// The linked-courses popover (NEW2B-5952).
+:host ::ng-deep .p-overlaypanel.ql-courses .p-overlaypanel-content { padding: var(--nas-space-3) var(--nas-space-4); max-inline-size: 320px; }
+.ql-courses__title { margin: 0 0 var(--nas-space-2); font-weight: var(--nas-weight-medium); color: var(--nas-neutral-1000); overflow-wrap: anywhere; }
+.ql-courses__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--nas-space-1); max-block-size: 240px; overflow-y: auto; }
+.ql-courses__link {
+  display: block;
+  padding: 6px var(--nas-space-2);
+  border-radius: var(--nas-radius-sm);
+  color: var(--nas-teal-800);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+
+  &:hover { background: var(--nas-neutral-100); text-decoration: underline; }
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 1px; }
+}
 
 .ql__chip {
   display: inline-flex;

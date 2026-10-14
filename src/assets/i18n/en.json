@@ -979,6 +979,7 @@
     }
   },
   "qualifications": {
+    "show_courses": "Show the {{count}} courses linked to {{name}}",
     "title": "Qualifications",
     "subtitle": "Manage the qualification framework and linked courses",
     "new_qualification": "New Qualification",

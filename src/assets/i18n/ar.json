@@ -1011,6 +1011,7 @@
     }
   },
   "qualifications": {
+    "show_courses": "عرض الدورات المرتبطة بـ {{name}} ({{count}})",
     "title": "المؤهلات",
     "subtitle": "إدارة إطار المؤهلات والدورات المرتبطة بها",
     "new_qualification": "مؤهل جديد",
