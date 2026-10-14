@@ -147,7 +147,7 @@
             @for (row of items(); track row.id) {
               <tr class="al-row">
                 <td class="al-cell-muted">
-                  {{ row.created_at | date:'dd MMM yyyy, HH:mm:ss' }}
+                  {{ row.created_at | localDate: 'dateTimeSeconds' }}
                 </td>
                 <td>
                   <div class="al-actor-cell">

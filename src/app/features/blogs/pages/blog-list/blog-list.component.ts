@@ -15,10 +15,11 @@ import { BlogsApiService } from '../../services/blogs-api.service';
 import { BlogListItem } from '../../models/blog.types';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [LocalDatePipe, NasCanDirective, 
     CommonModule,
     RouterLink,
     SkeletonModule,

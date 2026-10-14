@@ -124,7 +124,7 @@
         <dt>{{ 'dashboard.passcode_date' | translate }}</dt>
         <dd>
           @if (session()?.date) {
-            <span class="passcode-modal__date">{{ session()!.date | date:'d MMM, y' }}</span>
+            <span class="passcode-modal__date">{{ session()!.date | localDate }}</span>
           } @else {
             <span class="passcode-modal__date">—</span>
           }

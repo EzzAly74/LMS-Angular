@@ -104,7 +104,7 @@
                   <div class="cad-row__text">
                     <h3 class="cad-row__title">{{ sessionTitle(s) }}</h3>
                     @if (s.date) {
-                      <p class="cad-row__sub">{{ s.date | date:'d MMMM, yyyy' }}</p>
+                      <p class="cad-row__sub">{{ s.date | localDate: 'long' }}</p>
                     }
                   </div>
 

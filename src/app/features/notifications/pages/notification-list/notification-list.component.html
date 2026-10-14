@@ -106,7 +106,7 @@
                     {{ (item.for_public ? 'notifications.all_users' : 'notifications.targeted') | translate }}
                   </span>
                 </td>
-                <td>{{ item.created_at | date:'dd MMM yyyy' }}</td>
+                <td>{{ item.created_at | localDate }}</td>
                 <td class="nas-table__action">
                   <div class="row-actions">
                     <button type="button" class="row-action-btn row-action-btn--danger" [title]="'common.delete' | translate" (click)="confirmDelete(item)">

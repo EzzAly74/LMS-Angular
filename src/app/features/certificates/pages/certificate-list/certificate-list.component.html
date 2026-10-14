@@ -47,7 +47,7 @@
           <div class="cert-stat">
             <div class="cert-stat__value">
               @if (stats().last_issued_at) {
-                {{ stats().last_issued_at | date:'d, MMM yyyy' }}
+                {{ stats().last_issued_at | localDate }}
               } @else {
                 —
               }

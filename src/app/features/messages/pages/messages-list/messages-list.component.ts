@@ -10,7 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -33,6 +33,7 @@ import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.co
 import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { createPagedList, type PagedQuery } from '../../../../shared/list/paged-list';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 /* ── Models (unified conversation store) ─────────────────────────────── */
 
 interface Counterpart { name: string; image: string | null; role: string; }
@@ -66,13 +67,12 @@ const BODY_MAX = 5000;
 @Component({
   selector: 'app-messages-list',
   standalone: true,
-  imports: [
+  imports: [LocalDatePipe, 
     NasCanDirective,
     CommonModule,
     TranslateModule,
     FormsModule,
     ReactiveFormsModule,
-    DatePipe,
     DialogModule,
     CheckboxModule,
     NasPageHeaderComponent,

@@ -8,6 +8,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 type ReportFormat = 'csv' | 'xlsx';
 
 interface ReportCard {
@@ -39,7 +40,7 @@ const ICON_MAP: Record<string, string> = {
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent],
+  imports: [LocalDatePipe, CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.scss',

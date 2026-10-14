@@ -61,7 +61,7 @@
               {{ 'blogs.added_by' | translate }}
               <strong>{{ item.added_by || item.author.name }}</strong>
               @if (item.published_at) {
-                &nbsp;&middot;&nbsp;{{ item.published_at | date:'dd MMM yyyy' }}
+                &nbsp;&middot;&nbsp;{{ item.published_at | localDate }}
               }
             </p>
           </div>

@@ -9,7 +9,7 @@ import {
   model,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarModule } from 'primeng/sidebar';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -24,6 +24,7 @@ import type {
   CohortAttendanceSession,
 } from '../../../core/models/course.types';
 
+import { LocalDatePipe } from '../../pipes/local-date.pipe';
 type AttendanceTab    = 'sessions' | 'learners';
 type AttendanceFilter = 'all' | 'presence' | 'absence';
 
@@ -46,10 +47,9 @@ type AttendanceFilter = 'all' | 'presence' | 'absence';
 @Component({
   selector: 'nas-cohort-attendance-drawer',
   standalone: true,
-  imports: [
+  imports: [LocalDatePipe, 
     CommonModule,
     FormsModule,
-    DatePipe,
     SidebarModule,
     SkeletonModule,
     TranslateModule,

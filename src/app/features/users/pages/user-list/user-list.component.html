@@ -301,7 +301,7 @@
       </div>
       <div class="ul-drawer__row">
         <dt>{{ 'users.last_active' | translate }}</dt>
-        <dd>{{ profile()!.last_active_at ? (profile()!.last_active_at | date:'dd MMM') : '—' }}</dd>
+        <dd>{{ profile()!.last_active_at ? (profile()!.last_active_at | localDate: 'dayMonth') : '—' }}</dd>
       </div>
       <div class="ul-drawer__row">
         <dt>{{ 'users.status' | translate }}</dt>
@@ -484,7 +484,7 @@
                     {{ statusLabel(user.status) }}
                   </span>
                 </td>
-                <td class="ul-cell-muted">{{ user.last_active_at ? (user.last_active_at | date:'dd MMM') : '—' }}</td>
+                <td class="ul-cell-muted">{{ user.last_active_at ? (user.last_active_at | localDate: 'dayMonth') : '—' }}</td>
                 <td class="ul-table__action" (click)="$event.stopPropagation()">
                   <button type="button" class="ul-icon-btn" [attr.aria-label]="'common.actions' | translate" (click)="toggleMenu(user.composite_id, $event)">
                     <i class="pi pi-ellipsis-h" aria-hidden="true"></i>

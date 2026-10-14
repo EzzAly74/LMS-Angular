@@ -42,7 +42,7 @@
         }
         @if (d.submitted_at) {
           <span class="asd-subtitle__sep">·</span>
-          <span>{{ 'quizzes.updated' | translate }} {{ d.submitted_at | date:'dd MMM yyyy' }}</span>
+          <span>{{ 'quizzes.updated' | translate }} {{ d.submitted_at | localDate }}</span>
         }
       </p>
     </div>

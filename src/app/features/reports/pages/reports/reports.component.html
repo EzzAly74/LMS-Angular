@@ -42,7 +42,7 @@
 
           <div class="rp-card__meta">
             {{ 'reports.last_generated' | translate }}:
-            <strong>{{ card.last_generated_at ? (card.last_generated_at | date:'dd MMM yyyy') : '—' }}</strong>
+            <strong>{{ card.last_generated_at ? (card.last_generated_at | localDate) : '—' }}</strong>
           </div>
 
           <div class="rp-card__actions">

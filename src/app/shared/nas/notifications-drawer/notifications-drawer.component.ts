@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarModule } from 'primeng/sidebar';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -26,6 +26,7 @@ import {
 import { ToastService } from '../../../core/services/toast.service';
 import { NasCanDirective } from '../nas-can/nas-can.directive';
 
+import { LocalDatePipe } from '../../pipes/local-date.pipe';
 interface RecipientUser {
   id: number;
   name: string;
@@ -57,10 +58,9 @@ type RecipientRole = 'learner' | 'instructor';
 @Component({
   selector: 'nas-notifications-drawer',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [LocalDatePipe, NasCanDirective, 
     CommonModule,
     FormsModule,
-    DatePipe,
     SidebarModule,
     SkeletonModule,
     TranslateModule,

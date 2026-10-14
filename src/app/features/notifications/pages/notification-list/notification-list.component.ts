@@ -14,6 +14,7 @@ import { LocaleService } from '../../../../core/services/locale.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface Notification {
   id: number;
   title: MaybeLocalized;
@@ -25,7 +26,7 @@ interface Notification {
 @Component({
   selector: 'app-notification-list',
   standalone: true,
-  imports: [
+  imports: [LocalDatePipe, 
     CommonModule, FormsModule, DialogModule, SkeletonModule, TranslateModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

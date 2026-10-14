@@ -44,7 +44,7 @@
                     {{ (item.active ? 'common.active' : 'common.inactive') | translate }}
                   </nas-status-badge>
                 </td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
+                <td class="nas-table__muted">{{ item.created_at | localDate }}</td>
                 <td class="nas-table__action">
                   <button type="button" class="row-action-btn" [title]="'common.delete' | translate" (click)="confirmDelete(item)">
                     <i class="pi pi-trash" aria-hidden="true"></i>

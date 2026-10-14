@@ -12,6 +12,7 @@ import { API, courseUrl } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface CourseOption { id: number; title: string; }
 interface Exam {
   id: number;
@@ -24,7 +25,7 @@ interface Exam {
 @Component({
   selector: 'app-exam-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, DropdownModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [LocalDatePipe, CommonModule, FormsModule, TranslateModule, DropdownModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exam-list.component.html',
   styleUrl: './exam-list.component.scss',

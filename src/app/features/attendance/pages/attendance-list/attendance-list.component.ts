@@ -9,6 +9,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface Attendance {
   id: number;
   user_machine_code: string;
@@ -23,7 +24,7 @@ interface Attendance {
 @Component({
   selector: 'app-attendance-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [LocalDatePipe, CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './attendance-list.component.html',
   styleUrl: './attendance-list.component.scss',

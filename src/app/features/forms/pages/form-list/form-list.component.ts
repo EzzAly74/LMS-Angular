@@ -11,6 +11,7 @@ import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface Form {
   id: number;
   uuid: string;
@@ -24,7 +25,7 @@ interface Form {
 @Component({
   selector: 'app-form-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './form-list.component.html',
   styleUrl: './form-list.component.scss',

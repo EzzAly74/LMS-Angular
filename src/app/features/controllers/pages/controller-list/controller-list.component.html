@@ -242,7 +242,7 @@
                 </td>
 
                 <td class="ctrl-table__muted">
-                  {{ item.created_at ? (item.created_at | date:'dd MMM yyyy') : '—' }}
+                  {{ item.created_at ? (item.created_at | localDate) : '—' }}
                 </td>
 
                 <td class="ctrl-table__actions">

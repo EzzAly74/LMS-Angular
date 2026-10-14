@@ -53,7 +53,7 @@
                   {{ c.last_message.body }}
                 }
               </p>
-              <span class="inbox-item__time">{{ c.last_message_at | date:'dd MMM yyyy, HH:mm' }}</span>
+              <span class="inbox-item__time">{{ c.last_message_at | localDate: 'dateTime' }}</span>
             </div>
           </div>
           @if (c.unread_count > 0) {
@@ -92,7 +92,7 @@
           @for (m of t.messages; track m.id) {
             <div class="thread__bubble" [class.is-mine]="m.mine">
               <p class="thread__body">{{ m.body }}</p>
-              <span class="thread__time">{{ m.created_at | date:'HH:mm' }}</span>
+              <span class="thread__time">{{ m.created_at | localDate: 'time' }}</span>
             </div>
           }
         }

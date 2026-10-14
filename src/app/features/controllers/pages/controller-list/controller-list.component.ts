@@ -34,6 +34,7 @@ import type {
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 /* ── Types ──────────────────────────────────────────────────────── */
 
 interface ControllerRoleChip {
@@ -74,7 +75,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-controller-list',
   standalone: true,
-  imports: [NasCanDirective, NasAvatarComponent,
+  imports: [LocalDatePipe, NasCanDirective, NasAvatarComponent,
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

@@ -25,6 +25,7 @@ import {
   PasscodeWidget,
 } from '../../services/passcode-api.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 /**
  * Instructor-dashboard "Passcode" widget (Figma 515:34995 / 515:37969 /
  * 515:35489). Lives in the greeting header, directly under the date.
@@ -42,7 +43,7 @@ type ModalPhase = 'pick' | 'result';
 @Component({
   selector: 'app-passcode-widget',
   standalone: true,
-  imports: [
+  imports: [LocalDatePipe, 
     CommonModule,
     FormsModule,
     TranslateModule,

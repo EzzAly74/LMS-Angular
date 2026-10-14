@@ -152,7 +152,7 @@
               }
             </div>
             <time class="nd-list-item__time">
-              {{ note.created_at | date:'shortTime' }}
+              {{ note.created_at | localDate: 'time' }}
             </time>
           </article>
         }

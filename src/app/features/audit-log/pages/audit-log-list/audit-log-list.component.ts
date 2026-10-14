@@ -27,12 +27,13 @@ import type {
 } from '../../models/audit-log.types';
 import { ToastService } from '../../../../core/services/toast.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 type RoleTab = 'all' | 'admin' | 'instructor';
 
 @Component({
   selector: 'app-audit-log-list',
   standalone: true,
-  imports: [
+  imports: [LocalDatePipe, 
     CommonModule,
     FormsModule,
     DialogModule,

@@ -33,6 +33,7 @@ import {
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_BYTES     = 8 * 1024 * 1024;
 /** Characters a file name may not hold on Windows / macOS. */
@@ -53,7 +54,7 @@ interface IssuedRow extends IssuedCertificate {
 @Component({
   selector: 'app-certificate-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [LocalDatePipe, NasCanDirective, 
     CommonModule,
     FormsModule,
     SkeletonModule,

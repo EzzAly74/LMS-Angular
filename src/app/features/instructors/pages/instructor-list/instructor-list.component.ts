@@ -11,6 +11,7 @@ import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface Instructor {
   id: number;
   name: string;
@@ -25,7 +26,7 @@ interface Instructor {
 @Component({
   selector: 'app-instructor-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasAvatarComponent],
+  imports: [LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './instructor-list.component.html',
   styleUrl: './instructor-list.component.scss',

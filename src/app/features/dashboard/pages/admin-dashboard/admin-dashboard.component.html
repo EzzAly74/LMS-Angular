@@ -6,7 +6,7 @@
       <h1 class="dashboard-greeting__title">
         {{ greeting() | translate }}, <span [attr.title]="adminName()">{{ adminName() | shortName }}</span>
       </h1>
-      <p class="dashboard-greeting__date">{{ today | date:'fullDate' }}</p>
+      <p class="dashboard-greeting__date">{{ today | localDate: 'full' }}</p>
       <app-passcode-widget />
     </div>
     <button *nasCan="'create-courses'" type="button" class="dashboard-add-btn" routerLink="/admin/courses/new">

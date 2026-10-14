@@ -43,7 +43,7 @@
                     {{ (item.is_manual ? 'attendance.manual' : 'attendance.auto') | translate }}
                   </nas-status-badge>
                 </td>
-                <td class="nas-table__muted">{{ item.created_at | date:'dd MMM yyyy' }}</td>
+                <td class="nas-table__muted">{{ item.created_at | localDate }}</td>
               </tr>
             }
             @if (!items().length) {

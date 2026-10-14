@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ChartModule } from 'primeng/chart';
@@ -36,6 +36,7 @@ import { NotificationsDrawerService } from '../../../../shared/nas/notifications
 import { PasscodeWidgetComponent } from '../../components/passcode-widget/passcode-widget.component';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface KpiStats {
   active_learners: number;
   active_learners_online: number;
@@ -66,14 +67,13 @@ type TrendRange = DashboardTrendRange;
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [ShortNamePipe, NasCanDirective, 
+  imports: [LocalDatePipe, ShortNamePipe, NasCanDirective, 
     CommonModule,
     RouterLink,
     TranslateModule,
     ChartModule,
     ButtonModule,
     SkeletonModule,
-    DatePipe,
     NasStatCardComponent,
     NasStatusBadgeComponent,
     NasProgressComponent,

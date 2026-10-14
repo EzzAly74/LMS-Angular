@@ -47,7 +47,7 @@
                 <td>
                   <nas-status-badge tone="neutral">{{ item.type | titlecase }}</nas-status-badge>
                 </td>
-                <td class="nas-table__muted">{{ item.date_publish | date:'dd MMM yyyy' }}</td>
+                <td class="nas-table__muted">{{ item.date_publish | localDate }}</td>
                 <td>
                   <nas-status-badge [tone]="item.is_home ? 'teal' : 'neutral'">
                     {{ (item.is_home ? 'common.yes' : 'common.no') | translate }}

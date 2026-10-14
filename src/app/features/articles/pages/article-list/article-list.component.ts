@@ -11,6 +11,7 @@ import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 
+import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 interface Article {
   id: number;
   title: string;
@@ -25,7 +26,7 @@ interface Article {
 @Component({
   selector: 'app-article-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './article-list.component.html',
   styleUrl: './article-list.component.scss',
