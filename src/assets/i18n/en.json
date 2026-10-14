@@ -72,7 +72,6 @@
     "invalid_credentials": "Invalid email or password.",
     "welcome_back": "Welcome back",
     "sign_in_to_continue": "Sign in to your LMS account to continue.",
-    "having_trouble": "Having trouble? Contact your system administrator.",
     "brand_line1": "Grow your team's skills.",
     "brand_line2": "Track what matters.",
     "brand_subtitle": "NAS Learning Management System"
@@ -85,6 +84,7 @@
     "close": "Dismiss notification"
   },
   "common": {
+    "language": "Language",
     "no_keep": "No, keep it",
     "list_separator": ", ",
     "search_learners": "Search learners...",

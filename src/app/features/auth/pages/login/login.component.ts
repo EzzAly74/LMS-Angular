@@ -21,6 +21,11 @@ export class LoginComponent {
   private router = inject(Router);
   readonly locale = inject(LocaleService);
 
+  /** Header language switch (NEW2B-5959). */
+  switchLocale(locale: 'en' | 'ar'): void {
+    if (this.locale.locale() !== locale) this.locale.switch(locale);
+  }
+
   readonly loading      = signal(false);
   readonly error        = signal<string | null>(null);
   readonly submitted    = signal(false);

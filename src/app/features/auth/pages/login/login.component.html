@@ -1,3 +1,14 @@
+<!-- Header (Figma 2320:84528 in Login 15:3): logo and language switch (NEW2B-5959). -->
+<header class="login-header">
+  <img class="login-header__logo" src="assets/images/nas-logo.png" width="116" height="38" [alt]="'app.title' | translate" />
+  <div class="login-lang" role="group" [attr.aria-label]="'common.language' | translate">
+    <button type="button" class="login-lang__tab" lang="en" [class.is-active]="locale.locale() === 'en'"
+      [attr.aria-pressed]="locale.locale() === 'en'" (click)="switchLocale('en')">English</button>
+    <button type="button" class="login-lang__tab" lang="ar" [class.is-active]="locale.locale() === 'ar'"
+      [attr.aria-pressed]="locale.locale() === 'ar'" (click)="switchLocale('ar')">العربية</button>
+  </div>
+</header>
+
 <div class="login-page" [class.is-rtl]="locale.isRtl">
 
   <!-- ── Form Panel (60 %) ───────────────────────────────────────────── -->
@@ -99,7 +110,6 @@
 
       </form>
 
-      <p class="form-footer">{{ 'auth.having_trouble' | translate }}</p>
 
     </div>
   </div>

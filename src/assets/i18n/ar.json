@@ -72,7 +72,6 @@
     "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "welcome_back": "مرحباً بعودتك",
     "sign_in_to_continue": "سجّل الدخول إلى حساب نظام إدارة التعلم للمتابعة.",
-    "having_trouble": "هل تواجه مشكلة؟ تواصل مع مسؤول النظام.",
     "brand_line1": "طوّر مهارات فريقك.",
     "brand_line2": "تتبّع ما يهم.",
     "brand_subtitle": "نظام إدارة التعلم NAS"
@@ -85,6 +84,7 @@
     "close": "إغلاق الإشعار"
   },
   "common": {
+    "language": "اللغة",
     "no_keep": "لا، احتفظ به",
     "list_separator": "، ",
     "search_learners": "ابحث في المتعلمين...",

@@ -6,6 +6,64 @@
   display: block;
 }
 
+// ── Header (Figma 2320:84528): over both panels, as drawn ─────────────────
+:host {
+  position: relative;
+}
+
+.login-header {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nas-space-4);
+  padding: 14px 24px;
+  background: var(--nas-essential-background);
+  border-bottom: 1px solid var(--nas-neutral-500);
+}
+
+.login-header__logo {
+  display: block;
+  width: auto;
+  height: 38px;
+}
+
+// English / العربية pill (Figma 2320:84533): the chosen language on teal-100.
+.login-lang {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: var(--nas-radius-full);
+  background: var(--nas-essential-background);
+  filter: drop-shadow(1.42px 1.42px 1.42px rgb(0 0 0 / 10%));
+  overflow: hidden;
+
+  &__tab {
+    width: 88px;
+    height: 34px;
+    border: none;
+    border-radius: var(--nas-radius-full);
+    background: transparent;
+    color: var(--nas-essential-text);
+    font-family: var(--nas-font-en);
+    font-size: var(--nas-size-xs);
+    line-height: var(--nas-height-xs);
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+
+    &[lang='ar'] { font-family: var(--nas-font-ar); }
+    &:hover:not(.is-active) { background: var(--nas-teal-50); }
+    &.is-active { background: var(--nas-teal-100); color: var(--nas-essential-additional); }
+    &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: -2px; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-lang__tab { transition: none; }
+}
+
 // ── Page layout ────────────────────────────────────────────────────────────
 .login-page {
   display: flex;
@@ -278,21 +336,6 @@ form {
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-// ── Footer text ────────────────────────────────────────────────────────────
-.form-footer {
-  margin: var(--nas-space-6) 0 0;
-  font-family: var(--nas-font-en);
-  font-size: var(--nas-size-xs);
-  line-height: var(--nas-height-xs);
-  font-weight: var(--nas-weight-regular);
-  color: var(--nas-color-text-subtle);
-  text-align: center;
-
-  :host-context([dir="rtl"]) & {
-    font-family: var(--nas-font-ar);
   }
 }
 
