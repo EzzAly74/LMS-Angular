@@ -154,7 +154,7 @@
             <div class="nas-profile__hello">
               {{ "nav.welcome_back" | translate }}
             </div>
-            <div class="nas-profile__name">{{ profileName() }}</div>
+            <div class="nas-profile__name" [attr.title]="profileName()">{{ profileName() | shortName }}</div>
           </div>
           <button
             class="nas-profile__logout"

@@ -1,3 +1,4 @@
+import { ShortNamePipe } from '../../../../shared/pipes/short-name.pipe';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -76,7 +77,7 @@ export function fullNameError(value: string): string | null {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [NasCanDirective, NasAvatarComponent,
+  imports: [ShortNamePipe, NasCanDirective, NasAvatarComponent,
     CommonModule,
     FormsModule,
     DialogModule,

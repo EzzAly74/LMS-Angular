@@ -1,3 +1,4 @@
+import { ShortNamePipe } from '../../../../shared/pipes/short-name.pipe';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -64,7 +65,7 @@ type TrendRange = DashboardTrendRange;
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [ShortNamePipe, NasCanDirective, 
     CommonModule,
     RouterLink,
     TranslateModule,

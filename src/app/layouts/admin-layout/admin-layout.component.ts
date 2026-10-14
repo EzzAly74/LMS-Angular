@@ -1,3 +1,4 @@
+import { ShortNamePipe } from '../../shared/pipes/short-name.pipe';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
@@ -22,7 +23,7 @@ import { withLocaleReload } from '../../core/utils/with-locale-reload';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [
+  imports: [ShortNamePipe, 
     CommonModule,
     RouterModule,
     TranslateModule,

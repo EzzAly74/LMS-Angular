@@ -13,7 +13,7 @@
     @let p = profile();
     <header class="ld__head">
       <h1 class="ld__title">
-        @if (p) { <bdi>{{ p.profile.name }}</bdi> } @else { <p-skeleton width="240px" height="28px" /> }
+        @if (p) { <bdi [attr.title]="p.profile.name">{{ p.profile.name | shortName }}</bdi> } @else { <p-skeleton width="240px" height="28px" /> }
       </h1>
       <p class="ld__subtitle">{{ 'learners.subtitle' | translate }}</p>
     </header>
@@ -44,7 +44,7 @@
             @if (p) {
               <nas-avatar class="ld__avatar" [name]="p.profile.name" [image]="p.profile.image_url" [size]="56" [eager]="true" />
               <div class="ld__who">
-                <h2 class="ld__name"><bdi>{{ p.profile.name }}</bdi></h2>
+                <h2 class="ld__name"><bdi [attr.title]="p.profile.name">{{ p.profile.name | shortName }}</bdi></h2>
                 @if (p.profile.job_title) {
                   <p class="ld__job"><bdi>{{ p.profile.job_title }}</bdi></p>
                 }

@@ -269,7 +269,7 @@
     <div class="ul-drawer__identity">
       <nas-avatar class="ul-avatar" size="lg" [name]="profile()!.name" [image]="profile()!.image" />
       <div>
-        <div class="ul-drawer__name">{{ profile()!.name }}</div>
+        <div class="ul-drawer__name" [attr.title]="profile()!.name">{{ profile()!.name | shortName }}</div>
         @if (profile()!.email) {
           <div class="ul-drawer__email">{{ profile()!.email }}</div>
         }
