@@ -30,6 +30,10 @@ import {
   YesNo,
   dateFromApi,
   dateToApi,
+  McqChoice,
+  mcqChoices,
+  mcqKeyIndex,
+  optionsPaired,
   reorderItems,
   yesNoFromKey,
   yesNoOptions,
@@ -66,6 +70,8 @@ interface QuestionGroup {
   options_ar: FormArray<FormControl<string>>;
   correct_answer_en: FormControl<string>;
   correct_answer_ar: FormControl<string>;
+  /** MCQ: the position of the correct option (NEW2B-6289). */
+  mcq_key: FormControl<number | null>;
   explanation_en: FormControl<string>;
   explanation_ar: FormControl<string>;
   /** File questions (D-064): the stored attachment, a file chosen but not yet uploaded, a removal. */
@@ -87,15 +93,19 @@ interface QuestionValue {
   options_ar: string[];
   correct_answer_en: string;
   correct_answer_ar: string;
+  mcq_key: number | null;
 }
 
 /** Options and answer key as the API stores them, per the Figma shape of each type (D-066). */
 function keyFields(q: QuestionValue): Pick<AssignmentSavePayload['questions'][number],
   'options_en' | 'options_ar' | 'correct_answer_en' | 'correct_answer_ar'> {
   switch (q.type) {
-    case 'mcq':
+    case 'mcq': {
+      // The key is a position: the same option in both languages (NEW2B-6289).
+      const at = (items: string[]): string | null => (q.mcq_key === null ? '' : items[q.mcq_key] ?? '').trim() || null;
       return { options_en: filled(q.options_en), options_ar: filled(q.options_ar),
-        correct_answer_en: q.correct_answer_en.trim() || null, correct_answer_ar: q.correct_answer_ar.trim() || null };
+        correct_answer_en: at(q.options_en), correct_answer_ar: at(q.options_ar) };
+    }
     case 'yes_no':
       return { options_en: yesNoOptions('en'), options_ar: yesNoOptions('ar'),
         correct_answer_en: q.correct_answer_en || null, correct_answer_ar: q.correct_answer_ar || null };
@@ -382,16 +392,11 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     group.controls.type.setValue(type);
 
     if (type === 'mcq' || type === 'reorder') {
-      const needSeedEn = group.controls.options_en.length === 0;
-      const needSeedAr = group.controls.options_ar.length === 0;
-      if (needSeedEn) {
-        group.controls.options_en.push(this.fb.nonNullable.control(''));
-        group.controls.options_en.push(this.fb.nonNullable.control(''));
-      }
-      if (needSeedAr) {
-        group.controls.options_ar.push(this.fb.nonNullable.control(''));
-        group.controls.options_ar.push(this.fb.nonNullable.control(''));
-      }
+      // Paired rows (NEW2B-6288): pad both lists to the same length, at least two.
+      const { options_en: en, options_ar: ar } = group.controls;
+      const rows = Math.max(2, en.length, ar.length);
+      while (en.length < rows) en.push(this.fb.nonNullable.control(''));
+      while (ar.length < rows) ar.push(this.fb.nonNullable.control(''));
     } else {
       group.controls.options_en.clear();
       group.controls.options_ar.clear();
@@ -399,21 +404,39 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
 
     group.controls.correct_answer_en.setValue('');
     group.controls.correct_answer_ar.setValue('');
+    group.controls.mcq_key.setValue(null);
   }
 
-  addOption(qIndex: number, lang: 'en' | 'ar'): void {
-    const arr = lang === 'en'
-      ? this.questions.at(qIndex).controls.options_en
-      : this.questions.at(qIndex).controls.options_ar;
-    arr.push(this.fb.nonNullable.control(''));
+  /** Adds a row in both languages: options are pairs (NEW2B-6288). */
+  addOption(qIndex: number): void {
+    const g = this.questions.at(qIndex).controls;
+    g.options_en.push(this.fb.nonNullable.control(''));
+    g.options_ar.push(this.fb.nonNullable.control(''));
   }
 
-  removeOption(qIndex: number, lang: 'en' | 'ar', optIndex: number): void {
-    const arr = lang === 'en'
-      ? this.questions.at(qIndex).controls.options_en
-      : this.questions.at(qIndex).controls.options_ar;
-    if (arr.length <= 2) return;
-    arr.removeAt(optIndex);
+  /** Removes the row in both languages and keeps the MCQ key on the same option. */
+  removeOption(qIndex: number, optIndex: number): void {
+    const g = this.questions.at(qIndex).controls;
+    if (g.options_en.length <= 2) return;
+    g.options_en.removeAt(optIndex);
+    if (optIndex < g.options_ar.length) g.options_ar.removeAt(optIndex);
+    const key = g.mcq_key.value;
+    if (key === optIndex) g.mcq_key.setValue(null);
+    else if (key !== null && key > optIndex) g.mcq_key.setValue(key - 1);
+  }
+
+  /** English and Arabic options that do not line up row by row (NEW2B-6288). */
+  unpaired(index: number): boolean {
+    this.formValue();
+    const q = this.questions.at(index).getRawValue();
+    return (q.type === 'mcq' || q.type === 'reorder') && !optionsPaired(q.options_en, q.options_ar);
+  }
+
+  /** The MCQ key dropdown: the filled options, in the reader's language (NEW2B-6289). */
+  keyChoices(index: number): McqChoice[] {
+    this.formValue();
+    const q = this.questions.at(index).getRawValue();
+    return mcqChoices(q.options_en, q.options_ar, this.t.currentLang);
   }
 
   /* ── Submit ──────────────────────────────────────────────────── */
@@ -446,8 +469,10 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       if (!q.type || !q.question_en.trim() || !q.question_ar.trim()) return false;
       if (q.type === 'mcq' || q.type === 'reorder') {
         if (filled(q.options_en).length < 2 || filled(q.options_ar).length < 2) return false;
+        if (!optionsPaired(q.options_en, q.options_ar)) return false;
       }
-      if (q.type === 'mcq' && (!q.correct_answer_en.trim() || !q.correct_answer_ar.trim())) return false;
+      // The key is a filled option in both languages (NEW2B-6289).
+      if (q.type === 'mcq' && (q.mcq_key === null || !q.options_en[q.mcq_key]?.trim() || !q.options_ar[q.mcq_key]?.trim())) return false;
       if (q.type === 'yes_no' && !yesNoFromKey(q.correct_answer_en)) return false;
       if (q.type === 'file' && !q.pending && (!q.attachment || q.dropAttachment)) return false;
     }
@@ -593,8 +618,12 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
     const reorder = q.type === 'reorder';
     const itemsEn = reorder ? reorderItems(q.options_en, q.correct_answer_en) : (q.options_en ?? []);
     const itemsAr = reorder ? reorderItems(q.options_ar, q.correct_answer_ar) : (q.options_ar ?? []);
-    const optsEn = (q.type === 'yes_no' ? [] : itemsEn).map(o => this.fb.nonNullable.control<string>(o ?? ''));
-    const optsAr = (q.type === 'yes_no' ? [] : itemsAr).map(o => this.fb.nonNullable.control<string>(o ?? ''));
+    // Rows are pairs (NEW2B-6288): an older question with fewer options in one language gets empty rows to fill.
+    const rows = q.type === 'yes_no' ? 0 : Math.max(itemsEn.length, itemsAr.length);
+    const pad = (items: string[]): string[] => Array.from({ length: rows }, (_, i) => items[i] ?? '');
+    const optsEn = pad(itemsEn).map(o => this.fb.nonNullable.control<string>(o));
+    const optsAr = pad(itemsAr).map(o => this.fb.nonNullable.control<string>(o));
+    const key = q.type === 'mcq' ? mcqKeyIndex(itemsEn, itemsAr, q.correct_answer_en, q.correct_answer_ar) : null;
 
     return this.fb.nonNullable.group<QuestionGroup>({
       type:              this.fb.nonNullable.control<AssignmentQuestionType>(q.type ?? 'mcq'),
@@ -605,6 +634,7 @@ export class AssignmentFormComponent implements OnInit, OnDestroy {
       options_ar:        this.fb.array<FormControl<string>>(optsAr),
       correct_answer_en: this.fb.nonNullable.control<string>(q.correct_answer_en ?? ''),
       correct_answer_ar: this.fb.nonNullable.control<string>(q.correct_answer_ar ?? ''),
+      mcq_key:           this.fb.control<number | null>(key),
       explanation_en:    this.fb.nonNullable.control<string>(q.explanation_en ?? ''),
       explanation_ar:    this.fb.nonNullable.control<string>(q.explanation_ar ?? ''),
       id:                this.fb.control<number | null>(q.id ?? null),

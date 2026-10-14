@@ -272,37 +272,43 @@
                     <span class="af-label" [id]="'af-opts-' + lang + '-' + i">{{ (base + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></span>
                     <div class="af-options" role="group" [attr.aria-labelledby]="'af-opts-' + lang + '-' + i">
                       @for (opt of items.controls; track opt; let j = $index) {
-                        <div class="af-option">
+                        <!-- dir on the row, so the remove button sits at the end of the Arabic text (NEW2B-6282). -->
+                        <div class="af-option" [attr.dir]="lang === 'ar' ? 'rtl' : null">
                           <input type="text" [formControlName]="j" class="af-input" [class.af-input--removable]="items.length > 2"
-                            [attr.dir]="lang === 'ar' ? 'rtl' : null"
                             [attr.aria-label]="itemWord + ' ' + (j + 1)" [placeholder]="itemWord + ' ' + (j + 1)" />
                           @if (items.length > 2) {
-                            <button type="button" class="af-option__remove" (click)="removeOption(i, lang, j)"
+                            <button type="button" class="af-option__remove" (click)="removeOption(i, j)"
                               [attr.aria-label]="'assignments.form_remove_option' | translate: { label: itemWord + ' ' + (j + 1) }">
                               <nas-icon name="x" [size]="16" />
                             </button>
                           }
                         </div>
                       }
-                      <button type="button" class="af-btn af-btn--outline" (click)="addOption(i, lang)">
+                      <button type="button" class="af-btn af-btn--outline" (click)="addOption(i)">
                         <nas-icon name="plus-circle" [size]="20" />
                         {{ (type === 'mcq' ? 'assignments.form_add_option' : 'assignments.form_add') | translate }}
                       </button>
                     </div>
                   </div>
                 }
+                <p class="af-hint" [class.af-hint--error]="unpaired(i)" aria-live="polite">
+                  {{ (unpaired(i) ? 'assignments.form_options_unpaired' : 'assignments.form_options_paired_hint') | translate }}
+                </p>
               }
 
               <!-- ── Correct answer / grading key ── -->
               @if (type === 'mcq') {
-                @for (lang of langs; track lang) {
-                  <div class="af-field">
-                    <label class="af-label" [for]="'af-key-' + lang + '-' + i">{{ ('assignments.form_correct_answer_' + lang) | translate }} <span class="af-req" aria-hidden="true">*</span></label>
-                    <input [id]="'af-key-' + lang + '-' + i" type="text" class="af-input" aria-required="true"
-                      [formControlName]="'correct_answer_' + lang" [attr.dir]="lang === 'ar' ? 'rtl' : null"
-                      [placeholder]="'assignments.form_answer_placeholder' | translate" />
-                  </div>
-                }
+                <div class="af-field">
+                  <label class="af-label" [id]="'af-key-' + i">{{ 'assignments.form_correct_answer' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+                  <p-dropdown [options]="keyChoices(i)" optionLabel="label" optionValue="value" formControlName="mcq_key"
+                    [ariaLabelledBy]="'af-key-' + i" [placeholder]="'assignments.form_select_answer' | translate"
+                    [emptyMessage]="'assignments.form_key_no_options' | translate"
+                    appendTo="body" styleClass="af-dropdown af-dropdown--tall">
+                    <ng-template pTemplate="dropdownicon">
+                      <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+                    </ng-template>
+                  </p-dropdown>
+                </div>
               } @else if (type === 'yes_no') {
                 <div class="af-field">
                   <label class="af-label" [id]="'af-key-' + i">{{ 'assignments.form_correct_answer' | translate }} <span class="af-req" aria-hidden="true">*</span></label>

@@ -33,4 +33,7 @@ export interface AuthAdmin {
 
   /** Whether this account is limited to the courses it teaches (D-074). */
   course_scope?: CourseScope;
+
+  /** The instructor this account teaches as, when it is linked to one. */
+  instructor_id?: number | null;
 }

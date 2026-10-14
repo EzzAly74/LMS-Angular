@@ -49,6 +49,9 @@ export class AuthService {
   /** True when the account sees only the courses it teaches (D-074). */
   readonly isCourseScoped = computed(() => this._admin()?.course_scope === 'assigned');
 
+  /** The instructor a scoped account teaches as (NEW2B-5804), or null. */
+  readonly ownInstructorId = computed(() => this._admin()?.instructor_id ?? null);
+
   /**
    * May the admin perform this permission (`edit-courses`)? UX only: it
    * hides controls the server would refuse anyway. Super admins pass.

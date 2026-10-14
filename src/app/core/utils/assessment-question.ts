@@ -48,6 +48,41 @@ export function reorderItems(options: string[] | null | undefined, key: string |
   return options ?? [];
 }
 
+/**
+ * MCQ and reorder options are pairs: option N in English is option N in
+ * Arabic (NEW2B-6288). Both lists grow and shrink together, and a row is
+ * filled in both languages or in neither.
+ */
+export function optionsPaired(en: readonly string[], ar: readonly string[]): boolean {
+  return en.length === ar.length && en.every((e, i) => !!e.trim() === !!(ar[i] ?? '').trim());
+}
+
+/** Where a stored MCQ key sits among the options (English first, then Arabic), or null. */
+export function mcqKeyIndex(
+  en: readonly string[], ar: readonly string[],
+  keyEn: string | null | undefined, keyAr: string | null | undefined,
+): number | null {
+  const find = (items: readonly string[], key: string | null | undefined): number => {
+    const k = (key ?? '').trim();
+    return k ? items.findIndex(o => (o ?? '').trim() === k) : -1;
+  };
+  const byEn = find(en, keyEn);
+  if (byEn >= 0) return byEn;
+  const byAr = find(ar, keyAr);
+  return byAr >= 0 ? byAr : null;
+}
+
+export interface McqChoice { value: number; label: string; }
+
+/** The MCQ key dropdown (NEW2B-6289): one choice per filled option, in the reader's language. */
+export function mcqChoices(en: readonly string[], ar: readonly string[], lang: string): McqChoice[] {
+  return en.flatMap((e, i) => {
+    const first = ((lang === 'ar' ? ar[i] : e) ?? '').trim();
+    const text = first || ((lang === 'ar' ? e : ar[i]) ?? '').trim();
+    return text ? [{ value: i, label: `${i + 1}. ${text}` }] : [];
+  });
+}
+
 /** 'YYYY-MM-DD' (or a datetime) from the API into a local date for the picker. */
 export function dateFromApi(value: string | null | undefined): Date | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? '');

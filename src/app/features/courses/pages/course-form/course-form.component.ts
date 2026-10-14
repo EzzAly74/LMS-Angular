@@ -50,6 +50,7 @@ import { CoursesApiService } from '../../services/courses-api.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 import { LocaleService } from '../../../../core/services/locale.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 /** The bullet lists: one input per point, added and removed by the admin. */
@@ -106,6 +107,7 @@ function text(v: Localized | string | null | undefined, locale: 'en' | 'ar'): st
   styleUrl: './course-form.component.scss',
 })
 export class CourseFormComponent {
+  private readonly auth = inject(AuthService);
   private readonly api        = inject(ApiService);
   private readonly courses    = inject(CoursesApiService);
   private readonly enums      = inject(EnumsService);
@@ -206,6 +208,8 @@ export class CourseFormComponent {
     const lang = this.locale() === 'ar' ? 'ar' : 'en';
     return text(this.savedTitle(), lang) || text(this.savedTitle(), lang === 'ar' ? 'en' : 'ar');
   });
+  /** NEW2B-5804: an instructor's courses are their own; only an administrator picks someone else. */
+  protected readonly ownInstructorOnly = computed(() => this.auth.isCourseScoped());
   protected readonly typeLocked = computed(() => this.locked().has('course_type'));
   protected readonly ruleLocked = computed(() => this.locked().has('certificate_rule'));
   protected readonly qualificationsLocked = computed(() => this.locked().has('qualification_skill_ids'));
@@ -457,6 +461,11 @@ export class CourseFormComponent {
           this.instructors.set(l.instructors.result ?? []);
           this.qualifications.set(l.qualifications.result ?? []);
           if (detail) this.fill(detail);
+          if (this.ownInstructorOnly()) {
+            const own = this.form.controls.instructor_id;
+            if (!detail) own.setValue(this.auth.ownInstructorId());
+            own.disable({ emitEvent: false });
+          }
           this.state.set('ready');
         },
         error: () => this.state.set('error'),

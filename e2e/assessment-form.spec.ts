@@ -118,12 +118,49 @@ test.describe('behaviour', () => {
     await ar.getByLabel('Order 2', { exact: true }).fill('احتوِ');
     await page.getByRole('spinbutton', { name: 'Score', exact: true }).fill('20');
 
+    // NEW2B-6288: Add made row 3 in both languages; an empty Arabic row 3 blocks the save.
+    await expect(ar.getByLabel('Order 3', { exact: true })).toBeVisible();
+    await expect(page.getByText('Fill every option in both English and Arabic, row by row.')).toBeVisible();
+    await ar.getByLabel('Order 3', { exact: true }).fill('أبلغ');
+    await expect(page.getByText('Options are pairs: option 1 in English is option 1 in Arabic.')).toBeVisible();
+
     await page.getByRole('button', { name: 'Save Changes' }).click();
     await expect.poll(() => saves.length).toBe(1);
     const q = (saves[0].postDataJSON() as { questions: Record<string, unknown>[] }).questions[0];
     expect(q).toMatchObject({
-      type: 'reorder', options_en: ['Assess', 'Contain', 'Report'], options_ar: ['قيّم', 'احتوِ'],
-      correct_answer_en: JSON.stringify(['Assess', 'Contain', 'Report']), correct_answer_ar: JSON.stringify(['قيّم', 'احتوِ']),
+      type: 'reorder', options_en: ['Assess', 'Contain', 'Report'], options_ar: ['قيّم', 'احتوِ', 'أبلغ'],
+      correct_answer_en: JSON.stringify(['Assess', 'Contain', 'Report']), correct_answer_ar: JSON.stringify(['قيّم', 'احتوِ', 'أبلغ']),
+    });
+  });
+
+  test('assignment: the MCQ key is one dropdown over the paired options (NEW2B-6289)', async ({ page }) => {
+    const saves = await interceptSave(page, 'assignments');
+    await page.goto('/admin/assignments/new');
+    await ready(page);
+
+    await page.getByLabel('Assignment title (English)').fill('Safety basics');
+    await page.getByLabel('Assignment title (Arabic)').fill('أساسيات السلامة');
+    await pick(page, 'Course', 'Management Course');
+    await page.getByLabel('Mid-course').check();
+    await page.getByLabel('Question (English)').fill('Which colour means stop?');
+    await page.getByLabel('Question (Arabic)').fill('أي لون يعني توقف؟');
+    // A new question starts as MCQ.
+
+    const en = page.getByRole('group', { name: 'MCQ Options (English)' });
+    const ar = page.getByRole('group', { name: 'MCQ Options (Arabic)' });
+    await en.getByLabel('Option 1', { exact: true }).fill('Green');
+    await en.getByLabel('Option 2', { exact: true }).fill('Red');
+    await ar.getByLabel('Option 1', { exact: true }).fill('أخضر');
+    await ar.getByLabel('Option 2', { exact: true }).fill('أحمر');
+    await expect(page.getByRole('textbox', { name: /grading key/ })).toHaveCount(0);
+    await pick(page, 'Correct answer / grading key', '2. Red');
+    await page.getByRole('button', { name: 'Increase score' }).click();
+
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await expect.poll(() => saves.length).toBe(1);
+    const q = (saves[0].postDataJSON() as { questions: Record<string, unknown>[] }).questions[0];
+    expect(q).toMatchObject({
+      type: 'mcq', options_en: ['Green', 'Red'], options_ar: ['أخضر', 'أحمر'], correct_answer_en: 'Red', correct_answer_ar: 'أحمر',
     });
   });
 });

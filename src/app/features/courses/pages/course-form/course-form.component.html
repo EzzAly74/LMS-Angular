@@ -117,13 +117,14 @@
                   {{ 'course_form.instructor' | translate }} <span class="cf__required" aria-hidden="true">*</span>
                 </label>
                 <p-dropdown [inputId]="uid + '-instructor'" [ariaLabelledBy]="uid + '-instructor-label'" formControlName="instructor_id" [options]="instructors()" optionLabel="name"
-                  optionValue="id" [filter]="instructors().length > 8" filterBy="name"
+                  optionValue="id" [filter]="true" filterBy="name" [resetFilterOnHide]="true"
                   [placeholder]="'course_form.select_instructor' | translate" appendTo="body" styleClass="cf__dropdown"
                   [class.cf__dropdown--error]="invalid('instructor_id')" (onChange)="clearFieldError('instructor_id')" />
                 @if (invalid('instructor_id')) {
                   <p class="cf__error" role="alert">{{ fieldErrors().instructor_id ?? ('errors.required' | translate) }}</p>
                 }
-                @if (!instructors().length) { <p class="cf__hint">{{ 'course_form.no_instructors' | translate }}</p> }
+                @if (ownInstructorOnly()) { <p class="cf__hint">{{ 'course_form.instructor_own_hint' | translate }}</p> }
+                @else if (!instructors().length) { <p class="cf__hint">{{ 'course_form.no_instructors' | translate }}</p> }
               </div>
               <div class="cf__field">
                 <label class="cf__label" [id]="uid + '-level-label'" [for]="uid + '-level'">
