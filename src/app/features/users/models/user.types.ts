@@ -44,6 +44,8 @@ export interface AdminUserListItem {
   title_ar?: string | null;
   brief_en: string | null;
   brief_ar: string | null;
+  /** Instructor LinkedIn profile (https linkedin.com), or null. */
+  linkedin_url?: string | null;
   email: string | null;
   phone: string | null;
   machine_code: string | null;
@@ -69,7 +71,15 @@ export interface AdminUserListItem {
   created_at: string | null;
 }
 
-export type AdminUserDetail = AdminUserListItem;
+export interface AdminUserCourse {
+  id: number;
+  title: string;
+}
+
+export interface AdminUserDetail extends AdminUserListItem {
+  /** Courses an instructor account teaches (NEW2B-5947); absent on list rows. */
+  courses?: AdminUserCourse[];
+}
 
 export interface AdminUserSummary {
   total_users: number;
@@ -112,6 +122,7 @@ export interface AdminUserStorePayload {
   /** Instructor "Brief" (bilingual). Only meaningful for the instructor role. */
   brief_en?: string | null;
   brief_ar?: string | null;
+  linkedin_url?: string | null;
   /** Instructor job title, shown under the name on the Website. */
   title_en?: string | null;
   title_ar?: string | null;

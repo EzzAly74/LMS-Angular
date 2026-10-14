@@ -171,8 +171,9 @@
       </div>
 
       <div class="ul-form__field">
-        <label>{{ 'users.brief_en' | translate }}</label>
+        <label for="ul-brief-en">{{ 'users.brief_en' | translate }}</label>
         <textarea
+          id="ul-brief-en"
           class="ul-input ul-textarea"
           rows="3"
           [placeholder]="'users.brief_placeholder' | translate"
@@ -182,8 +183,9 @@
       </div>
 
       <div class="ul-form__field">
-        <label>{{ 'users.brief_ar' | translate }}</label>
+        <label for="ul-brief-ar">{{ 'users.brief_ar' | translate }}</label>
         <textarea
+          id="ul-brief-ar"
           class="ul-input ul-textarea"
           rows="3"
           dir="rtl"
@@ -191,6 +193,16 @@
           [ngModel]="form().brief_ar"
           (ngModelChange)="updateForm('brief_ar', $event)"
           name="brief_ar"></textarea>
+      </div>
+
+      <div class="ul-form__field">
+        <label for="ul-linkedin">{{ 'users.linkedin_profile' | translate }}</label>
+        <input id="ul-linkedin" class="ul-input ul-input--compact" type="url" maxlength="255" dir="ltr"
+          inputmode="url" autocomplete="url"
+          [placeholder]="'users.link' | translate"
+          [ngModel]="form().linkedin_url"
+          (ngModelChange)="updateForm('linkedin_url', $event)"
+          name="linkedin_url" />
       </div>
     }
   </form>
@@ -300,10 +312,33 @@
         </dd>
       </div>
 
-      @if (profile()!.source === 'instructor') {
+      <!-- Instructor accounts only (NEW2B-5947): LinkedIn, the courses they teach, and their bio. -->
+      @if (profile()!.instructor_id) {
+        <div class="ul-drawer__row">
+          <dt>{{ 'users.link' | translate }}</dt>
+          <dd>
+            @if (profile()!.linkedin_url; as url) {
+              <a class="ul-drawer__link" [href]="url" target="_blank" rel="noopener noreferrer">{{ 'users.linkedin' | translate }}</a>
+            } @else { — }
+          </dd>
+        </div>
+        <div class="ul-drawer__row ul-drawer__row--top">
+          <dt>{{ 'users.assigned_courses' | translate }}</dt>
+          <dd class="ul-drawer__courses">
+            @for (c of visibleCourses(); track c.id) {
+              <a class="ul-drawer__link ul-drawer__course" [routerLink]="['/admin/courses', c.id]" [attr.title]="c.title" dir="auto">{{ c.title }}</a>
+            } @empty { — }
+            @if (hiddenCourseCount() > 0) {
+              <button type="button" class="ul-drawer__more" [attr.aria-expanded]="coursesExpanded()" (click)="coursesExpanded.set(!coursesExpanded())">
+                {{ (coursesExpanded() ? 'users.show_less' : 'users.more_courses') | translate:{ count: hiddenCourseCount() } }}
+                <i class="pi" [class.pi-chevron-down]="!coursesExpanded()" [class.pi-chevron-up]="coursesExpanded()" aria-hidden="true"></i>
+              </button>
+            }
+          </dd>
+        </div>
         <div class="ul-drawer__row ul-drawer__row--stacked">
-          <dt>{{ 'users.brief' | translate }}</dt>
-          <dd>{{ profile()!.brief || '—' }}</dd>
+          <dt>{{ 'users.about_user' | translate }}</dt>
+          <dd dir="auto">{{ profile()!.brief || '—' }}</dd>
         </div>
       }
     </dl>

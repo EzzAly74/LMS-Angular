@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
@@ -32,6 +33,9 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 import { AuthService } from '../../../../core/services/auth.service';
 
+/** Assigned Courses rows shown before "+N more" (Figma 715:57123). */
+const PROFILE_COURSES_SHOWN = 3;
+
 interface UserFormState {
   id: number | null;
   source: AdminUserSource | null;
@@ -42,6 +46,8 @@ interface UserFormState {
   title_ar: string;
   brief_en: string;
   brief_ar: string;
+  /** Instructor LinkedIn profile (Figma 1532:63886). */
+  linkedin_url: string;
   email: string;
   role: AdminUserRoleKey | '';
   /** Plain-text password (hashed server-side). Required on create. */
@@ -77,7 +83,7 @@ export function fullNameError(value: string): string | null {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [ShortNamePipe, NasCanDirective, NasAvatarComponent,
+  imports: [ShortNamePipe, NasCanDirective, NasAvatarComponent, RouterLink,
     CommonModule,
     FormsModule,
     DialogModule,
@@ -144,6 +150,13 @@ export class UserListComponent implements OnInit, OnDestroy {
   /* ── Profile drawer ──────────────────────────────────────────── */
   readonly profile        = signal<AdminUserDetail | null>(null);
   readonly profileLoading = signal(false);
+  /** Assigned Courses shows three, then "+N more" (Figma 715:57123). */
+  readonly coursesExpanded = signal(false);
+  readonly visibleCourses = computed(() => {
+    const courses = this.profile()?.courses ?? [];
+    return this.coursesExpanded() ? courses : courses.slice(0, PROFILE_COURSES_SHOWN);
+  });
+  readonly hiddenCourseCount = computed(() => Math.max(0, (this.profile()?.courses?.length ?? 0) - PROFILE_COURSES_SHOWN));
 
   /* ── Add / Edit modal ────────────────────────────────────────── */
   readonly formOpen    = signal(false);
@@ -291,7 +304,8 @@ export class UserListComponent implements OnInit, OnDestroy {
   openProfile(user: AdminUserListItem): void {
     this.closeMenu();
     this.profileLoading.set(true);
-    this.profile.set(user as unknown as AdminUserDetail);
+    this.coursesExpanded.set(false);
+    this.profile.set(user);
     this.api.show(user.source, user.id).subscribe({
       next: res => {
         this.profile.set(res.result);
@@ -337,6 +351,7 @@ export class UserListComponent implements OnInit, OnDestroy {
       title_ar:  user.title_ar ?? '',
       brief_en:  user.brief_en ?? '',
       brief_ar:  user.brief_ar ?? '',
+      linkedin_url: user.linkedin_url ?? '',
       email:     user.email ?? '',
       // Prefer the real Spatie role so the dropdown reflects e.g. "Reports
       // Viewer" rather than the bucket; fall back to the bucket key.
@@ -372,7 +387,10 @@ export class UserListComponent implements OnInit, OnDestroy {
       // Brief (instructor bio) — only relevant for the instructor role, so
       // only send it then. Empty strings are allowed (clears the brief).
       ...(f.role === 'instructor'
-        ? { title_en: f.title_en.trim(), title_ar: f.title_ar.trim(), brief_en: f.brief_en.trim(), brief_ar: f.brief_ar.trim() }
+        ? {
+            title_en: f.title_en.trim(), title_ar: f.title_ar.trim(), brief_en: f.brief_en.trim(), brief_ar: f.brief_ar.trim(),
+            linkedin_url: f.linkedin_url.trim() || null,
+          }
         : {}),
       // Send the password only when one was entered. On create it is
       // required (enforced by `formValid`); on edit it is optional and a
@@ -531,7 +549,7 @@ export class UserListComponent implements OnInit, OnDestroy {
   /* ── Internals ──────────────────────────────────────────────── */
   private emptyForm(): UserFormState {
     return {
-      id: null, source: null, name_en: '', name_ar: '', title_en: '', title_ar: '', brief_en: '', brief_ar: '', email: '',
+      id: null, source: null, name_en: '', name_ar: '', title_en: '', title_ar: '', brief_en: '', brief_ar: '', linkedin_url: '', email: '',
       role: '', password: '', password_confirmation: '',
       image: null, imagePreview: null, removeImage: false,
     };

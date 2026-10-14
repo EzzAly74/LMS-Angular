@@ -466,9 +466,16 @@
 
 /* Multi-line variant for the instructor "Brief" — overrides the fixed
    single-line height so the textarea can grow. */
+/* LinkedIn Profile input (Figma 1532:63886): 37px, 10/14 padding. */
+.ul-input--compact {
+  height: 37px;
+  padding: 10px 14px;
+}
+
 .ul-textarea {
   height: auto;
-  min-height: 92px;
+  /* "About this User" fields (Figma 1532:63886). */
+  min-height: 80px;
   padding: var(--nas-space-3) var(--nas-space-4);
   line-height: 1.5;
   resize: vertical;
@@ -668,7 +675,8 @@
   top: 0;
   bottom: 0;
   inset-inline-end: 0;
-  width: 380px;
+  /* Figma 715:57123: a 512px panel. */
+  width: 512px;
   max-width: 100vw;
   background: var(--nas-color-bg-surface);
   z-index: 1001;
@@ -710,11 +718,72 @@
     margin-top: 2px;
   }
 
+  /* The fields sit in one bordered card (Figma 715:57263). */
   &__fields {
-    padding: 0 var(--nas-space-5);
-    margin: 0;
-    flex: 1;
+    margin: 0 var(--nas-space-5) var(--nas-space-5);
+    padding: 0 16px;
+    border: 1px solid var(--nas-neutral-400, #e6e7e8);
+    border-radius: 12px;
     overflow-y: auto;
+    min-height: 0;
+  }
+
+  /* Underlined teal links: LinkedIn and each assigned course. */
+  &__link {
+    color: var(--nas-teal-700);
+    font-size: var(--nas-size-xs, 14px);
+    font-weight: var(--nas-weight-medium);
+    line-height: 16.8px;
+    text-decoration: underline;
+    text-underline-position: from-font;
+
+    &:hover { color: var(--nas-teal-800); }
+    &:focus-visible {
+      outline: 2px solid var(--nas-teal-700);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+  }
+
+  &__courses {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    min-width: 0;
+    max-inline-size: 235px;
+  }
+
+  &__course {
+    display: block;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-block-size: 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--nas-neutral-800, #595959);
+    font: inherit;
+    font-size: var(--nas-size-xs, 14px);
+    font-weight: var(--nas-weight-medium);
+    text-decoration: underline;
+    text-underline-position: from-font;
+    cursor: pointer;
+
+    i { font-size: 12px; text-decoration: none; }
+    &:focus-visible {
+      outline: 2px solid var(--nas-teal-700);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
   }
 
   &__row {
@@ -722,22 +791,31 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--nas-space-3);
-    padding: var(--nas-space-4) 0;
-    border-bottom: 1px solid var(--nas-neutral-200);
+    padding: 16px 0 12px;
+    border-bottom: 1px solid var(--nas-neutral-400, #e6e7e8);
 
-    &:last-child { border-bottom: none; }
+    &:last-child { border-bottom: none; padding-block-end: 16px; }
 
+    /* Label: Subtitle Regular 16/19.2; value: Body Small Medium 14/16.8. */
     dt {
-      font-size: var(--nas-size-xs);
-      color: var(--nas-color-text-body);
+      flex-shrink: 0;
+      font-size: var(--nas-size-s, 16px);
+      line-height: 19.2px;
+      color: var(--nas-color-text-strong, #171819);
       margin: 0;
     }
     dd {
       margin: 0;
-      font-size: var(--nas-size-xs);
-      color: var(--nas-color-text-strong);
+      min-width: 0;
+      font-size: var(--nas-size-xs, 14px);
+      line-height: 16.8px;
+      color: var(--nas-neutral-700, #8c8c8c);
       font-weight: var(--nas-weight-medium);
+      text-align: end;
+      overflow-wrap: anywhere;
     }
+
+    &--top { align-items: flex-start; }
 
     /* Long-form value (instructor Brief): stack the label over a wrapped,
        left-aligned paragraph instead of the single-line key/value row. */
@@ -747,9 +825,7 @@
       gap: var(--nas-space-2);
 
       dd {
-        font-weight: var(--nas-weight-regular, 400);
-        color: var(--nas-color-text-body);
-        line-height: 1.6;
+        text-align: start;
         white-space: pre-wrap;
       }
     }
@@ -759,6 +835,7 @@
     display: flex;
     gap: var(--nas-space-3);
     padding: var(--nas-space-4) var(--nas-space-5);
+    margin-block-start: auto;
     border-top: 1px solid var(--nas-color-border);
 
     .ul-btn { flex: 1; justify-content: center; }
