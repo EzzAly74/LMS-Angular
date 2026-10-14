@@ -39,6 +39,7 @@ import {
   yesNoText,
 } from '../../../../core/utils/assessment-question';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasOrderEditorComponent } from '../../../../shared/nas/nas-order-editor/nas-order-editor.component';
 import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
 import { QuizzesApiService } from '../../services/quizzes-api.service';
 import { CoursesApiService } from '../../../courses/services/courses-api.service';
@@ -119,7 +120,7 @@ interface QuestionGroup {
     PrimeTemplate,
     SkeletonModule,
     TranslateModule,
-    NasIconComponent,
+    NasIconComponent, NasOrderEditorComponent,
     NasDatepickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

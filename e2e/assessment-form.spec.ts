@@ -92,7 +92,7 @@ test.describe('behaviour', () => {
     });
   });
 
-  test('quiz: reorder items are the key, typed in order', async ({ page }) => {
+  test('quiz: reorder items are typed in any order and dragged into the key', async ({ page }) => {
     const saves = await interceptSave(page, 'quizzes');
     await page.goto('/admin/quizzes/new');
     await ready(page);
@@ -106,24 +106,43 @@ test.describe('behaviour', () => {
     await page.getByLabel('Question (English)').fill('Put the steps in order');
     await page.getByLabel('Question (Arabic)').fill('رتب الخطوات');
     await pick(page, /^Type/, 'Reorder');
-    await expect(page.getByText('Correct order / grading key (English)')).toBeVisible();
 
-    const en = page.getByRole('group', { name: 'Correct order / grading key (English)' });
-    const ar = page.getByRole('group', { name: 'Correct order / grading key (Arabic)' });
-    await en.getByRole('button', { name: 'Add' }).click();
-    await en.getByLabel('Order 1', { exact: true }).fill('Assess');
-    await en.getByLabel('Order 2', { exact: true }).fill('Contain');
-    await en.getByLabel('Order 3', { exact: true }).fill('Report');
-    await ar.getByLabel('Order 1', { exact: true }).fill('قيّم');
-    await ar.getByLabel('Order 2', { exact: true }).fill('احتوِ');
+    // One card per item, English and Arabic side by side; typed out of order.
+    const editor = page.getByRole('group', { name: 'Items and their correct order' });
+    await editor.getByRole('button', { name: 'Add item' }).click();
+    await expect(editor.getByLabel('Item 3 (English)')).toBeFocused();
+    const typed = [['Report', 'أبلغ'], ['Assess', 'قيّم'], ['Contain', 'احتوِ']];
+    for (const [n, [en, ar]] of typed.entries()) {
+      await editor.getByLabel(`Item ${n + 1} (English)`).fill(en);
+      await editor.getByLabel(`Item ${n + 1} (Arabic)`).fill(ar);
+    }
+
+    // Keyboard: "Report" goes from 1st to last with Arrow Down on its handle.
+    const handle1 = editor.getByRole('button', { name: 'Move item 1 of 3' });
+    await handle1.focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(editor.getByRole('button', { name: 'Move item 2 of 3' })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(editor.getByLabel('Item 3 (English)')).toHaveValue('Report');
+    await expect(editor.getByLabel('Item 3 (Arabic)')).toHaveValue('أبلغ');
+    await expect(page.getByText('Moved to position 3 of 3')).toBeAttached();
+
+    // Mouse: drag "Contain" (2nd) above "Assess" (1st), then back.
+    const drag = async (from: number, to: number) => {
+      const a = (await editor.getByRole('button', { name: `Move item ${from} of 3` }).boundingBox())!;
+      const b = (await editor.getByRole('button', { name: `Move item ${to} of 3` }).boundingBox())!;
+      await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2 + (to > from ? 8 : -8), { steps: 4 });
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2 + (to > from ? 12 : -12), { steps: 12 });
+      await page.mouse.up();
+    };
+    await drag(2, 1);
+    await expect(editor.getByLabel('Item 1 (English)')).toHaveValue('Contain');
+    await drag(1, 2);
+    await expect(editor.getByLabel('Item 1 (English)')).toHaveValue('Assess');
+
     await page.getByRole('spinbutton', { name: 'Score', exact: true }).fill('20');
-
-    // NEW2B-6288: Add made row 3 in both languages; an empty Arabic row 3 blocks the save.
-    await expect(ar.getByLabel('Order 3', { exact: true })).toBeVisible();
-    await expect(page.getByText('Fill every option in both English and Arabic, row by row.')).toBeVisible();
-    await ar.getByLabel('Order 3', { exact: true }).fill('أبلغ');
-    await expect(page.getByText('Options are pairs: option 1 in English is option 1 in Arabic.')).toBeVisible();
-
     await page.getByRole('button', { name: 'Save Changes' }).click();
     await expect.poll(() => saves.length).toBe(1);
     const q = (saves[0].postDataJSON() as { questions: Record<string, unknown>[] }).questions[0];
@@ -187,4 +206,26 @@ for (const kind of ['assignments', 'quizzes'] as const) {
       expect(errors).toEqual([]);
     });
   }
+}
+
+for (const locale of ['en', 'ar'] as const) {
+  test(`reorder editor fits and reads ${locale}`, async ({ page }, info) => {
+    await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
+    await page.goto('/admin/quizzes/new');
+    await ready(page);
+    await page.getByRole('combobox', { name: locale === 'en' ? /^Type/ : /^النوع/ }).click();
+    await page.getByRole('option', { name: locale === 'en' ? 'Reorder' : /ترتيب/ }).click();
+
+    const editor = page.locator('nas-order-editor');
+    await expect(editor.locator('.oe__card')).toHaveCount(2);
+    await editor.locator('.oe__add').click();
+    await expect(editor.locator('.oe__card')).toHaveCount(3);
+    await expect(editor.locator('.oe__connector')).toHaveCount(2);
+    const text = await editor.innerText();
+    expect(text.match(/\border_editor\.[a-z_]+/g) ?? []).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+
+    mkdirSync(ARTIFACTS, { recursive: true });
+    await editor.screenshot({ path: resolve(ARTIFACTS, `reorder-editor-${info.project.name}-${locale}.png`) });
+  });
 }

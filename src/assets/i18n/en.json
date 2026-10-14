@@ -83,6 +83,19 @@
     "error": "Something went wrong",
     "close": "Dismiss notification"
   },
+  "order_editor": {
+    "label": "Items and their correct order",
+    "hint": "Type the items in any order, then drag each one into its correct place. Learners see them shuffled. On a handle, the arrow keys move the item.",
+    "list": "Items, in the correct order",
+    "handle": "Move item {{position}} of {{count}}",
+    "moved": "Moved to position {{position}} of {{count}}",
+    "item_en": "Item {{position}} (English)",
+    "item_ar": "Item {{position}} (Arabic)",
+    "placeholder_en": "Item {{position}} in English",
+    "placeholder_ar": "Item {{position}} in Arabic",
+    "remove": "Remove item {{position}}",
+    "add": "Add item"
+  },
   "common": {
     "language": "Language",
     "no_keep": "No, keep it",

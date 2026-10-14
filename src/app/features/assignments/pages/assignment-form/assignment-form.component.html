@@ -263,7 +263,7 @@
               }
 
               <!-- ── MCQ options / reorder items (1982:42048, 1982:42222) ── -->
-              @if (type === 'mcq' || type === 'reorder') {
+              @if (type === 'mcq') {
                 @for (lang of langs; track lang) {
                   @let items = lang === 'en' ? optionsEn(i) : optionsAr(i);
                   @let base = type === 'mcq' ? 'assignments.form_mcq_options_' : 'assignments.form_correct_order_';
@@ -294,6 +294,16 @@
                 <p class="af-hint" [class.af-hint--error]="unpaired(i)" aria-live="polite">
                   {{ (unpaired(i) ? 'assignments.form_options_unpaired' : 'assignments.form_options_paired_hint') | translate }}
                 </p>
+              } @else if (type === 'reorder') {
+                <!-- Reorder: type the items in any order, drag them into the correct one. -->
+                <div class="af-field">
+                  <span class="af-label" [id]="'af-order-' + i">{{ 'order_editor.label' | translate }} <span class="af-req" aria-hidden="true">*</span></span>
+                  <nas-order-editor role="group" [attr.aria-labelledby]="'af-order-' + i"
+                    [en]="optionsEn(i)" [ar]="optionsAr(i)" [uid]="'af-order-' + i" />
+                  @if (unpaired(i)) {
+                    <p class="af-hint af-hint--error" role="alert">{{ 'assignments.form_options_unpaired' | translate }}</p>
+                  }
+                </div>
               }
 
               <!-- ── Correct answer / grading key ── -->

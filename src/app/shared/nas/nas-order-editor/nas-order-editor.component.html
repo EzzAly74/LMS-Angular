@@ -1,0 +1,47 @@
+<p class="oe__hint" [id]="uid() + '-help'">{{ 'order_editor.hint' | translate }}</p>
+
+<ol class="oe__list" cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="dropped($event)"
+  [attr.aria-label]="'order_editor.list' | translate">
+  @for (i of rows(); track en().at(i); let first = $first) {
+    <li class="oe__item" cdkDrag cdkDragBoundary=".oe__list">
+      @if (!first) {
+        <span class="oe__connector" aria-hidden="true"><nas-icon name="arrow-down" [size]="16" /></span>
+      }
+      <div class="oe__card" [class.oe__card--half]="half(i)">
+        <button type="button" class="oe__handle" cdkDragHandle [id]="uid() + '-handle-' + i"
+          [attr.aria-label]="'order_editor.handle' | translate: { position: i + 1, count: rows().length }"
+          [attr.aria-describedby]="uid() + '-help'" (keydown)="onHandleKey($event, i)">
+          <nas-icon name="dots-six-vertical" [size]="20" />
+        </button>
+
+        <span class="oe__badge" aria-hidden="true">{{ i + 1 }}</span>
+
+        <div class="oe__fields">
+          <input type="text" class="oe__input" [id]="uid() + '-en-' + i" [formControl]="en().at(i)" dir="ltr" lang="en"
+            [attr.aria-label]="'order_editor.item_en' | translate: { position: i + 1 }"
+            [attr.aria-invalid]="half(i) && !en().at(i).value.trim() ? true : null"
+            [placeholder]="'order_editor.placeholder_en' | translate: { position: i + 1 }" />
+          <input type="text" class="oe__input" [id]="uid() + '-ar-' + i" [formControl]="ar().at(i)" dir="rtl" lang="ar"
+            [attr.aria-label]="'order_editor.item_ar' | translate: { position: i + 1 }"
+            [attr.aria-invalid]="half(i) && !ar().at(i).value.trim() ? true : null"
+            [placeholder]="'order_editor.placeholder_ar' | translate: { position: i + 1 }" />
+        </div>
+
+        @if (rows().length > min()) {
+          <button type="button" class="oe__remove" (click)="remove(i)"
+            [attr.aria-label]="'order_editor.remove' | translate: { position: i + 1 }">
+            <nas-icon name="x" [size]="16" />
+          </button>
+        }
+      </div>
+      <div class="oe__placeholder" *cdkDragPlaceholder></div>
+    </li>
+  }
+</ol>
+
+<button type="button" class="oe__add" (click)="add()">
+  <nas-icon name="plus-circle" [size]="20" />
+  {{ 'order_editor.add' | translate }}
+</button>
+
+<p class="oe__sr" aria-live="polite">{{ announcement() }}</p>

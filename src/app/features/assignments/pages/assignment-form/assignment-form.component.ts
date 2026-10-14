@@ -24,6 +24,7 @@ import { Observable, Subject, combineLatest, forkJoin, map, of, switchMap, takeU
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasFileCardComponent } from '../../../../shared/nas/nas-file-card/nas-file-card.component';
 import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasOrderEditorComponent } from '../../../../shared/nas/nas-order-editor/nas-order-editor.component';
 import { NasDatepickerComponent } from '../../../../shared/nas/nas-datepicker/nas-datepicker.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import {
@@ -133,7 +134,7 @@ function keyFields(q: QuestionValue): Pick<AssignmentSavePayload['questions'][nu
     SkeletonModule,
     TranslateModule,
     NasFileCardComponent,
-    NasIconComponent,
+    NasIconComponent, NasOrderEditorComponent,
     NasDatepickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
