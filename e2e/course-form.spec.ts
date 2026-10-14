@@ -344,3 +344,19 @@ test('each language field hints in its own language (NEW2B-5869)', async ({ page
   await expect(page.getByRole('group', { name: 'What Students Will Learn (Arabic)' }).getByRole('textbox').first())
     .toHaveAttribute('placeholder', 'اكتب نقطة');
 });
+
+test('NEW2B-5975: in Arabic, required marks and errors are red and in Arabic', async ({ page }, info) => {
+  await setup(page);
+  await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), [LOCALE_KEY, 'ar'] as const);
+  await page.goto('/admin/courses/new');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await page.locator('.cf__actions .nas-btn--primary, button[type="submit"]').last().click();
+
+  const errors = page.locator('.cf__error');
+  await expect(errors.first()).toBeVisible();
+  await expect(errors.first()).toHaveText('هذا الحقل مطلوب.');
+  await expect(errors.first()).toHaveCSS('color', 'rgb(180, 35, 24)');
+  // The asterisk is Figma's red-500 (#f14437); error text is red-700 for 4.5:1 contrast (A11Y-02).
+  await expect(page.locator('.cf__required').first()).toHaveCSS('color', 'rgb(241, 68, 55)');
+  await page.screenshot({ path: `e2e-artifacts/course-form-errors-ar-${info.project.name}.png`, fullPage: true });
+});
