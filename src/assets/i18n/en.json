@@ -2240,7 +2240,8 @@
     "section_basics": "Basic information",
     "section_overview": "Course overview",
     "section_certificate": "Certificate",
-    "locked_notice": "Learners are enrolled in this course, so its type, certificate rule and qualifications stay as they were when they enrolled. Everything else can still be edited.",
-    "locked_hint": "Can't be changed: learners are enrolled."
+    "locked_notice": "Learners are enrolled in this course, so its type and certificate rule stay as they were when they enrolled. Qualification changes apply from the next cohort. Everything else can still be edited.",
+    "locked_hint": "Can't be changed: learners are enrolled.",
+    "qualifications_next_cohort": "Learners are enrolled: a change applies from the next cohort. Cohorts already running keep their qualifications."
   }
 }

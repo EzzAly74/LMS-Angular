@@ -213,6 +213,8 @@ export class CourseFormComponent {
   protected readonly typeLocked = computed(() => this.locked().has('course_type'));
   protected readonly ruleLocked = computed(() => this.locked().has('certificate_rule'));
   protected readonly qualificationsLocked = computed(() => this.locked().has('qualification_skill_ids'));
+  /** Learners are enrolled (the server locks other fields): a qualification change applies from the next cohort (D-106). */
+  protected readonly hasLearners = computed(() => this.locked().size > 0);
   protected readonly showsAttendance = computed(() => {
     const v = this.formValue();
     return !v.general_rule && v.rule !== 'score';

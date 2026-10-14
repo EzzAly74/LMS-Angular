@@ -316,6 +316,7 @@
                 }
               </ul>
               @if (qualificationsLocked()) { <p class="cf__hint cf__hint--locked">{{ 'course_form.locked_hint' | translate }}</p> }
+              @else if (hasLearners()) { <p class="cf__hint">{{ 'course_form.qualifications_next_cohort' | translate }}</p> }
               @if (fieldErrors().qualifications; as msg) { <p class="cf__error" role="alert">{{ msg }}</p> }
             </fieldset>
           </section>

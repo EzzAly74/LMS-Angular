@@ -290,6 +290,22 @@ test('D-095: with learners enrolled, type, certificate rule and qualifications a
   expect(fields(body, 'qualification_skill_ids[]')).toEqual([]);
 });
 
+test('NEW2B-6049: with learners enrolled, qualifications stay editable and apply from the next cohort', async ({ page }) => {
+  const puts = await setup(page, { locked_fields: ['course_type', 'certificate_rule'] });
+  await page.goto('/admin/courses/5/edit');
+
+  await expect(page.getByRole('note')).toContainText('Qualification changes apply from the next cohort');
+  const box = page.getByRole('checkbox', { name: 'Fire Safety Level 2' });
+  await expect(box).toBeEnabled();
+  await expect(page.getByText('a change applies from the next cohort')).toBeVisible();
+
+  await box.uncheck();
+  await page.getByRole('button', { name: 'Save Changes' }).click();
+  await expect(page).toHaveURL(/\/admin\/courses\/5$/);
+  expect(fields(puts[0].postData() ?? '', 'qualification_skill_ids[]')).toEqual([]);
+  expect(field(puts[0].postData() ?? '', 'qualification_skill_ids')).toBe('');
+});
+
 test('a lock refused by the server is shown on its field', async ({ page }) => {
   // Another admin enrolled a learner while the form was open.
   await setup(page);
