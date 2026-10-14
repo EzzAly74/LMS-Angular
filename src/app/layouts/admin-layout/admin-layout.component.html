@@ -148,7 +148,7 @@
     <!-- Footer profile -->
     <div class="nas-sidebar__footer">
       <div class="nas-profile">
-        <div class="nas-profile__avatar">{{ profileInitial() }}</div>
+        <nas-avatar class="nas-profile__avatar" [name]="profileName()" [image]="profileImage()" [eager]="true" />
         @if (!effectiveCollapsed()) {
           <div class="nas-profile__meta">
             <div class="nas-profile__hello">

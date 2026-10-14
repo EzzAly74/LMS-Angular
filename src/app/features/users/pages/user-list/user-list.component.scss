@@ -224,32 +224,8 @@
 }
 
 .ul-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--nas-teal-700);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-semibold);
-  flex-shrink: 0;
-  overflow: hidden;
-
-  &--lg {
-    width: 48px;
-    height: 48px;
-    font-size: var(--nas-size-m);
-  }
-
-  // When the row has a server-side image we render it inside the same
-  // circle so the table layout never shifts between text-initial rows
-  // and photo rows.
-  &--photo {
-    background: transparent;
-    object-fit: cover;
-  }
+  --nas-avatar-bg: var(--nas-teal-700);
+  --nas-avatar-fg: #fff;
 }
 
 .ul-cell-muted { color: var(--nas-color-text-muted); }

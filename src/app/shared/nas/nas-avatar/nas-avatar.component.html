@@ -1,7 +1,10 @@
-<span class="nas-avatar" [attr.data-size]="size" [style.background]="bg()">
-  @if (src) {
-    <img [src]="src" [alt]="displayName() ?? 'avatar'" />
+<span class="nas-avatar"
+      [style.--nas-avatar-auto-bg]="bg()"
+      [style.width.px]="px()" [style.height.px]="px()" [style.font-size.px]="fontPx()">
+  @if (src(); as url) {
+    <img [src]="url" [attr.width]="px()" [attr.height]="px()" [alt]="alt()"
+         [attr.loading]="eager ? 'eager' : 'lazy'" decoding="async" (error)="onError()" />
   } @else {
-    <span>{{ initials() }}</span>
+    <span class="nas-avatar__initial" [attr.aria-hidden]="decorative ? 'true' : null">{{ initial() }}</span>
   }
 </span>

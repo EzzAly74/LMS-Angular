@@ -42,7 +42,7 @@
         <section class="ld__card ld__profile" [attr.aria-busy]="!p">
           <div class="ld__banner">
             @if (p) {
-              <nas-avatar class="ld__avatar" [name]="p.profile.name" [src]="p.profile.image_url" size="lg" />
+              <nas-avatar class="ld__avatar" [name]="p.profile.name" [image]="p.profile.image_url" [size]="56" [eager]="true" />
               <div class="ld__who">
                 <h2 class="ld__name"><bdi>{{ p.profile.name }}</bdi></h2>
                 @if (p.profile.job_title) {

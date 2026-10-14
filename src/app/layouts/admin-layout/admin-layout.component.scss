@@ -310,16 +310,7 @@
   }
 
   &__avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--nas-radius-full);
-    background: var(--nas-teal-600);
-    color: var(--nas-color-text-onDark);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: var(--nas-weight-semibold);
-    flex-shrink: 0;
+    --nas-avatar-bg: var(--nas-teal-600);
   }
   &__meta {
     flex: 1;

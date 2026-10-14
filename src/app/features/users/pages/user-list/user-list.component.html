@@ -267,11 +267,7 @@
     </header>
 
     <div class="ul-drawer__identity">
-      @if (profile()!.image) {
-        <img class="ul-avatar ul-avatar--lg ul-avatar--photo" [src]="profile()!.image" alt="" />
-      } @else {
-        <div class="ul-avatar ul-avatar--lg">{{ profile()!.avatar_initial }}</div>
-      }
+      <nas-avatar class="ul-avatar" size="lg" [name]="profile()!.name" [image]="profile()!.image" />
       <div>
         <div class="ul-drawer__name">{{ profile()!.name }}</div>
         @if (profile()!.email) {
@@ -438,11 +434,7 @@
               <tr class="ul-row" (click)="openProfile(user)">
                 <td>
                   <div class="ul-name-cell">
-                    @if (user.image) {
-                      <img class="ul-avatar ul-avatar--photo" [src]="user.image" alt="" />
-                    } @else {
-                      <div class="ul-avatar">{{ user.avatar_initial }}</div>
-                    }
+                    <nas-avatar class="ul-avatar" [size]="32" [name]="user.name" [image]="user.image" />
                     <div>
                       <div class="ul-name-cell__title">{{ user.name }}</div>
                       <div class="ul-name-cell__email">{{ user.email || user.machine_code || '—' }}</div>

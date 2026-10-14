@@ -14,6 +14,7 @@ import { filter } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NasConfirmModalComponent } from '../../shared/nas/nas-confirm-modal/nas-confirm-modal.component';
 import { NasIconComponent } from '../../shared/nas/nas-icon/nas-icon.component';
+import { NasAvatarComponent } from '../../shared/nas/nas-avatar/nas-avatar.component';
 import { NotificationsDrawerComponent } from '../../shared/nas/notifications-drawer/notifications-drawer.component';
 import { NotificationsDrawerService } from '../../shared/nas/notifications-drawer/notifications-drawer.service';
 import { withLocaleReload } from '../../core/utils/with-locale-reload';
@@ -30,6 +31,7 @@ import { withLocaleReload } from '../../core/utils/with-locale-reload';
     OverlayPanelModule,
     NasConfirmModalComponent,
     NasIconComponent,
+    NasAvatarComponent,
     NotificationsDrawerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -221,14 +223,11 @@ export class AdminLayoutComponent {
     if (this.locale.locale() !== locale) this.locale.switch(locale);
   }
 
-  /** First initial of the signed-in admin, used by the avatar bubble. */
-  profileInitial = computed(() => {
-    const name = this.auth.currentAdmin()?.name?.trim();
-    return (name?.[0] ?? 'A').toUpperCase();
-  });
+  /** The signed-in admin's photo, when the account has one. */
+  profileImage = computed(() => this.auth.currentAdmin()?.image ?? null);
 
   /** Display name shown beneath "Welcome back". */
-  profileName = computed(() => this.auth.currentAdmin()?.name ?? 'Admin');
+  profileName = computed(() => this.auth.displayName() || 'Admin');
 
   /** Open the Figma logout-confirmation dialog instead of signing out directly. */
   requestLogout(): void {

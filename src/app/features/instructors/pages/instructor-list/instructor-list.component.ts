@@ -5,6 +5,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
+import { NasAvatarComponent } from '../../../../shared/nas/nas-avatar/nas-avatar.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -24,7 +25,7 @@ interface Instructor {
 @Component({
   selector: 'app-instructor-list',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent],
+  imports: [CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './instructor-list.component.html',
   styleUrl: './instructor-list.component.scss',

@@ -98,25 +98,8 @@
 }
 
 .inst-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--nas-neutral-300);
-}
-
-.inst-avatar-fallback {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--nas-teal-100);
-  color: var(--nas-teal-800);
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-semibold);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  --nas-avatar-bg: var(--nas-teal-100);
+  --nas-avatar-fg: var(--nas-teal-800);
 }
 
 .inst-name-cell {

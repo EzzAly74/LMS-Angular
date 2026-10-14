@@ -52,7 +52,7 @@
               <tr class="ll__row">
                 <td>
                   <span class="ll__who">
-                    <nas-avatar [name]="row.name" [src]="row.image" size="sm" />
+                    <nas-avatar [name]="row.name" [image]="row.image" size="sm" />
                     <span class="ll__who-text">
                       <a class="ll__name" dir="auto" [attr.title]="row.name" [routerLink]="[row.id]">{{ row.name }}</a>
                       @if (row.job_title) {

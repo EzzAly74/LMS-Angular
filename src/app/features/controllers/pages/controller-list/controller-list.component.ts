@@ -22,7 +22,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
-import { NasPageHeaderComponent } from '../../../../shared/nas';
+import { NasAvatarComponent, NasPageHeaderComponent } from '../../../../shared/nas';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -48,7 +48,12 @@ interface ControllerRoleChip {
 
 interface Controller {
   id: number;
+  /** The stored (English / main) name, which the edit dialog changes. */
   name: string;
+  /** The name to show, in the UI language. */
+  display_name?: string;
+  /** Absolute photo URL, or null when the account has none. */
+  image?: string | null;
   email: string;
   roles?: string[];
   /** New rich chip emitted by AdminResource. */
@@ -69,7 +74,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-controller-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [NasCanDirective, NasAvatarComponent,
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
@@ -286,12 +291,12 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   askDelete(item: Controller): void {
     void this.confirmDialog.ask({
       title: this.t.instant('controllers_toasts.delete_title'),
-      message: this.t.instant('confirm.delete_message_title', { title: item.name }),
+      message: this.t.instant('confirm.delete_message_title', { title: this.displayName(item) }),
     }).then(confirmed => {
       if (!confirmed) return;
       this.api.delete(`${API.ADMIN_CONTROLLERS}/${item.id}`).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
-          this.messages.success('controllers_toasts.removed', { title: 'common.deleted', params: { name: item.name } });
+          this.messages.success('controllers_toasts.removed', { title: 'common.deleted', params: { name: this.displayName(item) } });
           this.refresh();
         },
         error: () => {
@@ -302,8 +307,9 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   }
 
   /* ── Visual helpers ───────────────────────────────────────────── */
-  initial(name: string | undefined | null): string {
-    return (name ?? '').trim().charAt(0).toUpperCase() || '?';
+  /** The avatar bubble takes its role badge's tint. */
+  avatarTintClass(color: string | undefined): string {
+    return this.badgeColorClass(color).replace('ctrl-badge--', 'ctrl-avatar--');
   }
 
   badgeColorClass(color: string | undefined): string {
@@ -314,6 +320,11 @@ export class ControllerListComponent implements OnInit, OnDestroy {
       case 'blue':   return 'ctrl-badge--blue';
       default:       return 'ctrl-badge--teal';
     }
+  }
+
+  /** The name to show for a row: the localized one when the API sent it. */
+  displayName(item: Controller): string {
+    return item.display_name || item.name;
   }
 
   roleLabel(opt: AdminRoleListItem): string {

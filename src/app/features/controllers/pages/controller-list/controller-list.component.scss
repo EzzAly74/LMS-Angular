@@ -131,17 +131,6 @@
   align-items: center;
   gap: var(--nas-space-3);
 
-  &__avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: var(--nas-weight-semibold);
-    font-size: var(--nas-size-xs);
-    flex-shrink: 0;
-  }
-
   &__col {
     display: flex;
     flex-direction: column;
@@ -210,11 +199,11 @@
 }
 
 /* Avatar tints follow the badge palette. */
-.ctrl-user-cell__avatar.ctrl-badge--teal   { background: var(--nas-teal-100,        #d1f2ec); color: var(--nas-teal-800,         #0c4a44); }
-.ctrl-user-cell__avatar.ctrl-badge--green  { background: var(--nas-status-green-50, #ecfdf5); color: var(--nas-status-green-700, #15803d); }
-.ctrl-user-cell__avatar.ctrl-badge--orange { background: var(--nas-status-amber-50, #fff7ed); color: var(--nas-status-amber-700, #c2410c); }
-.ctrl-user-cell__avatar.ctrl-badge--red    { background: var(--nas-status-red-50,   #fef2f2); color: var(--nas-status-red-600,   #dc2626); }
-.ctrl-user-cell__avatar.ctrl-badge--blue   { background: rgba(59, 130, 246, 0.12);            color: #1d4ed8; }
+.ctrl-avatar--teal   { --nas-avatar-bg: var(--nas-teal-100,        #d1f2ec); --nas-avatar-fg: var(--nas-teal-800,         #0c4a44); }
+.ctrl-avatar--green  { --nas-avatar-bg: var(--nas-status-green-50, #ecfdf5); --nas-avatar-fg: var(--nas-status-green-700, #15803d); }
+.ctrl-avatar--orange { --nas-avatar-bg: var(--nas-status-amber-50, #fff7ed); --nas-avatar-fg: var(--nas-status-amber-700, #c2410c); }
+.ctrl-avatar--red    { --nas-avatar-bg: var(--nas-status-red-50,   #fef2f2); --nas-avatar-fg: var(--nas-status-red-600,   #dc2626); }
+.ctrl-avatar--blue   { --nas-avatar-bg: rgba(59, 130, 246, 0.12);            --nas-avatar-fg: #1d4ed8; }
 
 /* ── Row icon-buttons ─────────────────────────────────────── */
 .ctrl-icon-btn {

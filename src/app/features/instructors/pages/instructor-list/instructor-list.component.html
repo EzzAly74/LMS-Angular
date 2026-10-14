@@ -44,11 +44,7 @@
               <tr class="nas-table__row">
                 <td>
                   <div class="inst-name-cell">
-                    @if (item.image) {
-                      <img class="inst-avatar" [src]="item.image" [alt]="item.name" />
-                    } @else {
-                      <span class="inst-avatar-fallback">{{ item.name.charAt(0).toUpperCase() }}</span>
-                    }
+                    <nas-avatar class="inst-avatar" [name]="item.name" [image]="item.image" />
                     <span class="nas-table__primary">{{ item.name }}</span>
                   </div>
                 </td>

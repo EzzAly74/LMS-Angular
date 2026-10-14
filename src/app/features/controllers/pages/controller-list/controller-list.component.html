@@ -217,12 +217,10 @@
               <tr class="ctrl-table__row">
                 <td>
                   <div class="ctrl-user-cell">
-                    <span class="ctrl-user-cell__avatar"
-                          [ngClass]="badgeColorClass(item.role_chip?.color)">
-                      {{ initial(item.name) }}
-                    </span>
+                    <nas-avatar [ngClass]="avatarTintClass(item.role_chip?.color)"
+                                [name]="displayName(item)" [image]="item.image" />
                     <div class="ctrl-user-cell__col">
-                      <span class="ctrl-user-cell__name">{{ item.name }}</span>
+                      <span class="ctrl-user-cell__name">{{ displayName(item) }}</span>
                       <span class="ctrl-user-cell__email">{{ item.email }}</span>
                     </div>
                   </div>

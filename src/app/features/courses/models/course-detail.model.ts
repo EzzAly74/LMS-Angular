@@ -26,7 +26,7 @@ export interface CohortScheduleUpdate {
 
 export interface CourseLearnerRow {
   id: number;
-  user: { id: number; name: string; employee_id: string | null; active: boolean } | null;
+  user: { id: number; name: string; employee_id: string | null; active: boolean; image?: string | null } | null;
   cohort: IdName | null;
   progress: number;
   status: LearnerProgressStatus;

@@ -98,7 +98,7 @@ export class AdminDashboardComponent implements OnInit {
    * back to the generic "Admin" label until the profile resolves.
    */
   adminName = computed(
-    () => this.auth.currentAdmin()?.name?.trim() || this.t.instant('dashboard.admin'),
+    () => this.auth.displayName() || this.t.instant('dashboard.admin'),
   );
 
   loading      = signal(true);

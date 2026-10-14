@@ -14,7 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NasPageHeaderComponent } from '../../../../shared/nas';
+import { NasAvatarComponent, NasPageHeaderComponent } from '../../../../shared/nas';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminUsersApiService } from '../../services/admin-users-api.service';
 import type {
@@ -76,7 +76,7 @@ export function fullNameError(value: string): string | null {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [NasCanDirective, NasAvatarComponent,
     CommonModule,
     FormsModule,
     DialogModule,

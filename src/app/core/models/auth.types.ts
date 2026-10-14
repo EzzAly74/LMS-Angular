@@ -6,7 +6,12 @@ export type CourseScope = 'all' | 'assigned';
 
 export interface AuthAdmin {
   id: number;
+  /** The stored (English / main) name, as the account forms edit it. */
   name: string;
+  /** The name to show, in the language of the request that read it. */
+  display_name?: string;
+  /** Absolute photo URL, or null when the account has none. */
+  image?: string | null;
   email: string;
   roles?: string[];
 

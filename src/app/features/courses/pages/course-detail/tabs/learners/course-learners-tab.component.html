@@ -30,7 +30,7 @@
               <td>
                 <span class="lt-learner">
                   <span class="lt-avatar">
-                    <nas-avatar size="sm" [name]="row.user?.name ?? ''" />
+                    <nas-avatar size="sm" [name]="row.user?.name ?? ''" [image]="row.user?.image" />
                     <span class="lt-dot" [class.lt-dot--on]="row.user?.active" aria-hidden="true"></span>
                   </span>
                   <span class="cl-strong"><bdi>{{ row.user?.name ?? '-' }}</bdi></span>

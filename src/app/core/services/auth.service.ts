@@ -2,9 +2,11 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, of, map, retry, throwError, timer } from 'rxjs';
 import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { API } from '../constants/api.constants';
 import { ApiResponse } from '../models/api-response.model';
 import type { AuthAdmin, PermissionAction } from '../models/auth.types';
+import { LocaleService } from './locale.service';
 
 const TOKEN_KEY = '2b_token';
 
@@ -29,6 +31,20 @@ export class AuthService {
   readonly token           = this._token.asReadonly();
   readonly currentAdmin    = this._admin.asReadonly();
   readonly isAuthenticated = computed(() => !!this._token());
+
+  /** The signed-in admin's name in the UI language ('' until /me resolves). */
+  readonly displayName = computed(() => {
+    const admin = this._admin();
+    return admin?.display_name?.trim() || admin?.name?.trim() || '';
+  });
+
+  constructor() {
+    // display_name is resolved for the request's language, so the cached
+    // profile goes stale on a language switch: re-read /me.
+    inject(LocaleService).changes$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.refreshPermissions(true));
+  }
 
   /**
    * Distinct `view-*` permission keys the current admin holds.
