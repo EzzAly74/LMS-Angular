@@ -16,14 +16,14 @@
   </header>
 
   @if (loading()) {
-  <div class="kpi-row">
+  <div class="kpi-row" [class.kpi-row--three]="scoped()">
     @for (i of kpiSkeletons(); track i) {
     <p-skeleton height="120px" borderRadius="12px" />
     }
   </div>
   } @else {
   <!-- ── KPI Row ─────────────────────────────────────────────────── -->
-  <section class="kpi-row">
+  <section class="kpi-row" [class.kpi-row--three]="scoped()">
     <nas-stat-card icon="pi pi-users" iconTone="purple" [label]="'dashboard.active_learners' | translate"
       [value]="data()?.statistics?.active_learners ?? 0">
       <div subline class="kpi-subline">
@@ -62,9 +62,6 @@
         <div>
           <div class="chart-card__title-row">
             <h2 class="chart-card__title">{{ 'dashboard.enrollment_trend' | translate }}</h2>
-            <span class="chart-card__delta">
-              <i class="pi pi-arrow-up" aria-hidden="true"></i> {{ 'dashboard.delta_up' | translate:{ pct: '5' } }}
-            </span>
           </div>
           <p class="chart-card__sub">{{ trendTotalEnrollments() }} {{ 'dashboard.enrollments' | translate }}</p>
         </div>

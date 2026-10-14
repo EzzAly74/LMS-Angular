@@ -47,6 +47,14 @@
 
   @media (max-width: 1100px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (max-width: 640px)  { grid-template-columns: 1fr; }
+
+  /* Three cards (course-scoped instructor, NEW2B-5960) share the full width. */
+  &--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 640px)  { grid-template-columns: 1fr; }
+  }
 }
 
 .kpi-subline {
@@ -109,15 +117,6 @@
     font-weight: var(--nas-weight-semibold);
     color: var(--nas-color-text-strong);
     margin: 0;
-  }
-  &__delta {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    color: var(--nas-status-green-500);
-    font-size: var(--nas-size-2xs);
-    font-weight: var(--nas-weight-medium);
-    i { font-size: 10px; }
   }
   &__sub {
     color: var(--nas-color-text-muted);
