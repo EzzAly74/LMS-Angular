@@ -1,6 +1,6 @@
 <!-- Header (Figma 2320:84528 in Login 15:3): logo and language switch (NEW2B-5959). -->
 <header class="login-header">
-  <img class="login-header__logo" src="assets/images/nas-logo.png" width="116" height="38" [alt]="'app.title' | translate" />
+  <img class="login-header__logo" src="assets/images/nas-logo-on-light.svg" width="116" height="38" [alt]="'app.title' | translate" />
   <div class="login-lang" role="group" [attr.aria-label]="'common.language' | translate">
     <button type="button" class="login-lang__tab" lang="en" [class.is-active]="locale.locale() === 'en'"
       [attr.aria-pressed]="locale.locale() === 'en'" (click)="switchLocale('en')">English</button>

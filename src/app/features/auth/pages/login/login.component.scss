@@ -25,10 +25,12 @@
   border-bottom: 1px solid var(--nas-neutral-500);
 }
 
+// Figma "Nas Logo - Primary Logo-02" (I2320:84530): the on-light logo, 115.8 x 37.6 in a 48 px row.
 .login-header__logo {
   display: block;
-  width: auto;
-  height: 38px;
+  width: 116px;
+  height: auto;
+  margin-block: 5px;
 }
 
 // English / العربية pill (Figma 2320:84533): the chosen language on teal-100.
