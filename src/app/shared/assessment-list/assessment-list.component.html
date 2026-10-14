@@ -29,8 +29,8 @@
       @for (item of viewAllItems(); track item.id) {
         <label class="ql-modal-row" [class.ql-modal-row--selected]="viewAllSelected() === item.id">
           <input type="checkbox" [checked]="viewAllSelected() === item.id" (change)="selectViewAllItem(item)" />
-          <span>{{ item.title }}</span>
-          @if (item.course_title) { <span class="ql-modal-row__course">{{ item.course_title }}</span> }
+          <!-- The name only, wrapping (NEW2B-6325). -->
+          <span class="ql-modal-row__name">{{ item.title }}</span>
         </label>
       }
     }
@@ -98,12 +98,25 @@
             @default {
               @for (item of items.items(); track item.id) {
                 <tr class="cl-row" [class.cl-row--static]="!canEdit()" (click)="editItem(item)">
-                  <td class="cl-strong">{{ item.title }}</td>
+                  <td class="cl-strong ql-title-cell"><span class="ql-title" [attr.title]="item.title">{{ item.title }}</span></td>
                   <td>{{ item.course_title ?? '—' }}</td>
                   <td>
-                    <span class="ql-pill" [class.ql-pill--all]="item.cohort_scope === 'all'" [class.ql-pill--specific]="item.cohort_scope !== 'all'">
-                      {{ item.cohortLabel }}
-                    </span>
+                    <!-- Every chosen cohort is reachable: two pills, then "+N" (NEW2B-6327). -->
+                    @if (item.cohortNames.length) {
+                      <span class="ql-pills" [attr.title]="item.cohortLabel">
+                        @for (name of item.cohortNames.slice(0, 2); track $index) {
+                          <span class="ql-pill ql-pill--specific" aria-hidden="true">{{ name }}</span>
+                        }
+                        @if (item.cohortNames.length > 2) {
+                          <span class="ql-pill ql-pill--more" aria-hidden="true">+{{ item.cohortNames.length - 2 }}</span>
+                        }
+                        <span class="cl-sr-only">{{ item.cohortLabel }}</span>
+                      </span>
+                    } @else {
+                      <span class="ql-pill" [class.ql-pill--all]="item.cohort_scope === 'all'" [class.ql-pill--specific]="item.cohort_scope !== 'all'">
+                        {{ item.cohortLabel }}
+                      </span>
+                    }
                   </td>
                   <td>{{ item.questions_count }}</td>
                   <td class="ql-strong">{{ item.total_score }}</td>
@@ -171,7 +184,7 @@
                   <td class="cl-strong">{{ sub.user?.name ?? '—' }}</td>
                   <td>{{ sub.course_title ?? '—' }}</td>
                   <td>{{ sub.instructor_name ?? '—' }}</td>
-                  <td>{{ sub.item_title ?? '—' }}</td>
+                  <td class="ql-title-cell"><span class="ql-title" [attr.title]="sub.item_title">{{ sub.item_title ?? '—' }}</span></td>
                   <td class="cl-small">{{ sub.submitted | nasDate: locale() }}</td>
                   <td>
                     @if (sub.status === 'pending') {

@@ -41,6 +41,19 @@
 
 .ql-strong { font-weight: var(--nas-weight-bold); }
 
+// A long name wraps to two lines, then an ellipsis; the full name is its title.
+.ql-table td.ql-title-cell { min-inline-size: 200px; max-inline-size: 420px; white-space: normal; }
+.ql-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.ql-pills { display: inline-flex; flex-wrap: wrap; gap: 4px; max-inline-size: 260px; }
+
 .ql-actions { inline-size: 1%; padding-inline: 20px 24px !important; text-align: end; }
 .ql-actions__inner { display: inline-flex; gap: var(--nas-space-1); }
 
@@ -80,6 +93,7 @@
   white-space: nowrap;
 
   &--all { background: var(--nas-teal-200); color: var(--nas-teal-800); }
+  &--more { background: var(--nas-neutral-300); color: var(--nas-neutral-1000); }
   &--specific, &--pending { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
 }
 
@@ -132,7 +146,7 @@
 
   &:hover, &--selected { background: var(--nas-teal-50); }
   input { inline-size: 16px; block-size: 16px; margin: 0; accent-color: var(--nas-teal-1000); }
-  &__course { margin-inline-start: auto; font-size: var(--nas-size-2xs); color: var(--nas-neutral-750); }
+  &__name { flex: 1; min-inline-size: 0; overflow-wrap: anywhere; }
 }
 
 .ql-modal-empty { margin: 0; padding: var(--nas-space-4) var(--nas-space-3); font-size: var(--nas-size-xs); color: var(--nas-neutral-750); }

@@ -48,6 +48,8 @@ interface AttemptsQuery extends PagedQuery {
 
 interface ItemView extends AssessmentItemRow {
   readonly cohortLabel: string;
+  /** The chosen cohorts, all of them (NEW2B-6327); empty for "All cohorts". */
+  readonly cohortNames: readonly string[];
 }
 
 interface AttemptView extends AssessmentAttemptRow {
@@ -358,12 +360,13 @@ export class AssessmentListComponent implements OnInit {
   /* ── Rows ──────────────────────────────────────────────────────── */
   private toItem(r: AssessmentItemRow): ItemView {
     let cohortLabel: string;
+    let cohortNames: string[] = [];
     if (r.cohort_scope === 'all') cohortLabel = this.t.instant(SHARED_KEYS.scopeAll);
     else {
-      const titles = r.cohorts.map(c => c.title).filter((x): x is string => !!x);
-      cohortLabel = titles.length ? titles.join(', ') : this.t.instant(SHARED_KEYS.scopeSpecific);
+      cohortNames = r.cohorts.map(c => c.title).filter((x): x is string => !!x);
+      cohortLabel = cohortNames.length ? cohortNames.join(', ') : this.t.instant(SHARED_KEYS.scopeSpecific);
     }
-    return { ...r, cohortLabel };
+    return { ...r, cohortLabel, cohortNames };
   }
 
   private toAttempt(r: AssessmentAttemptRow): AttemptView {
