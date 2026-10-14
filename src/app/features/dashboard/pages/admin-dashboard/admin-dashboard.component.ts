@@ -42,7 +42,8 @@ interface KpiStats {
   active_learners_offline: number;
   active_courses: number;
   awaiting_publish: number;
-  org_compliance_percent?: number;
+  /** Completed over all enrollments, 0-100 (NEW2B-5960). */
+  average_completion_percent?: number;
   courses: number;
   users: number;
   unanswered_questions: number;
@@ -104,6 +105,9 @@ export class AdminDashboardComponent implements OnInit {
 
   loading      = signal(true);
   data         = signal<DashboardData | null>(null);
+  /** Limited to its own courses (D-074): no Instructors card (NEW2B-5960). */
+  readonly scoped = computed(() => this.auth.isCourseScoped());
+  readonly kpiSkeletons = computed(() => (this.scoped() ? [1, 2, 3] : [1, 2, 3, 4]));
   today        = new Date();
 
   trendRange = signal<TrendRange>('month');

@@ -10,7 +10,8 @@ export interface DashboardStatistics {
   active_learners_offline: number;
   active_courses: number;
   awaiting_publish: number;
-  org_compliance_percent?: number;
+  /** Completed over all enrollments, 0-100 (NEW2B-5960). */
+  average_completion_percent?: number;
   courses: number;
   users: number;
   unanswered_questions: number;

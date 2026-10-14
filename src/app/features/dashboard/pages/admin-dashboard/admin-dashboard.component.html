@@ -17,7 +17,7 @@
 
   @if (loading()) {
   <div class="kpi-row">
-    @for (i of [1,2,3,4]; track i) {
+    @for (i of kpiSkeletons(); track i) {
     <p-skeleton height="120px" borderRadius="12px" />
     }
   </div>
@@ -25,8 +25,7 @@
   <!-- ── KPI Row ─────────────────────────────────────────────────── -->
   <section class="kpi-row">
     <nas-stat-card icon="pi pi-users" iconTone="purple" [label]="'dashboard.active_learners' | translate"
-      [value]="data()?.statistics?.active_learners ?? 0" [trend]="'dashboard.trend_up' | translate:{ pct: '12' }"
-      trendDirection="up">
+      [value]="data()?.statistics?.active_learners ?? 0">
       <div subline class="kpi-subline">
         <span class="kpi-pill kpi-pill--online">
           <span class="kpi-pill__dot"></span>
@@ -44,13 +43,15 @@
     </nas-stat-card>
 
     <nas-stat-card icon="pi pi-shield" iconTone="green" [label]="'dashboard.average_completion' | translate"
-      [value]="(data()?.statistics?.org_compliance_percent ?? 0) + '%'"
-      [trend]="'dashboard.trend_down' | translate:{ pct: '3' }" trendDirection="down">
+      [value]="(data()?.statistics?.average_completion_percent ?? 0) + '%'">
     </nas-stat-card>
 
-    <nas-stat-card icon="pi pi-users" iconTone="navy" [label]="'dashboard.instructors' | translate"
-      [value]="data()?.statistics?.instructors ?? 0">
-    </nas-stat-card>
+    <!-- An account limited to its own courses sees three cards, all about those courses (NEW2B-5960). -->
+    @if (!scoped()) {
+      <nas-stat-card icon="pi pi-users" iconTone="navy" [label]="'dashboard.instructors' | translate"
+        [value]="data()?.statistics?.instructors ?? 0">
+      </nas-stat-card>
+    }
   </section>
 
   <!-- ── Chart + Notifications row ───────────────────────────────── -->
