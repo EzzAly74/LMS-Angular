@@ -181,7 +181,7 @@ export class PasscodeWidgetComponent implements OnInit {
       !this.generating() &&
       !this.endingSession()
     ) {
-      this.regenerate();
+      this.regenerate(true);
     }
   }
 
@@ -245,10 +245,11 @@ export class PasscodeWidgetComponent implements OnInit {
    * session. Used by the manual "Regenerate" button and the rotating
    * auto-refresh. No-ops while a request is already in flight.
    */
-  regenerate(): void {
+  /** `auto`: the lapse-driven rotation, not the Regenerate button. */
+  regenerate(auto = false): void {
     if (this.regenerating()) return;
     this.regenerating.set(true);
-    this.api.regenerate().subscribe({
+    this.api.regenerate(auto).subscribe({
       next: (res) => {
         this.widget.set(res.result);
         this.regenerating.set(false);

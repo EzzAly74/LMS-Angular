@@ -105,8 +105,9 @@ export class PasscodeApiService {
    * rotating-passcode auto-refresh. The backend returns the read-only
    * current state when there is nothing live to rotate.
    */
-  regenerate(): Observable<ApiResponse<PasscodeWidget>> {
-    return this.api.post<PasscodeWidget>(API.DASHBOARD_PASSCODE_REGENERATE, {});
+  regenerate(auto = false): Observable<ApiResponse<PasscodeWidget>> {
+    // `auto`: the widget's own rotation, kept out of the audit log (NEW2B-6098).
+    return this.api.post<PasscodeWidget>(API.DASHBOARD_PASSCODE_REGENERATE, auto ? { auto: true } : {});
   }
 
   /**
