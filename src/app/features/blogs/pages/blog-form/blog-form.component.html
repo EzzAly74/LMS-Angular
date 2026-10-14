@@ -31,7 +31,7 @@
           <div class="bf-field">
             <label class="bf-field__label">{{ 'blogs.title_en' | translate }} <span
                 class="bf-field__req">*</span></label>
-            <input type="text" formControlName="title_en" class="bf-input"
+            <input type="text" formControlName="title_en" class="bf-input" [attr.maxlength]="LIMITS.name"
               [placeholder]="'blogs.title_placeholder' | translate"
               [class.bf-input--error]="form.controls.title_en.invalid && form.controls.title_en.touched" />
             @if (fieldError(form.controls.title_en); as err) {
@@ -43,7 +43,7 @@
           <div class="bf-field">
             <label class="bf-field__label">{{ 'blogs.title_ar' | translate }} <span
                 class="bf-field__req">*</span></label>
-            <input type="text" formControlName="title_ar" class="bf-input" dir="rtl"
+            <input type="text" formControlName="title_ar" class="bf-input" dir="rtl" [attr.maxlength]="LIMITS.name"
               [placeholder]="'blogs.title_placeholder' | translate"
               [class.bf-input--error]="form.controls.title_ar.invalid && form.controls.title_ar.touched" />
             @if (fieldError(form.controls.title_ar); as err) {
@@ -88,8 +88,11 @@
             <label class="bf-field__label">{{ 'blogs.image' | translate }} <span class="bf-field__req">*</span></label>
             <nas-photo-upload [value]="coverPreview()" ratio="16:9" [addLabel]="'blogs.upload_image' | translate"
               [replaceLabel]="'blogs.replace_image' | translate" (fileSelected)="onCoverSelected($event)"
+              formats="PNG, JPG, WEBP" maxLabel="common.max_file_size_2mb" accept="image/png,image/jpeg,image/webp"
               (cleared)="onCoverCleared()" />
-            @if (coverError()) {
+            @if (coverFileError(); as err) {
+            <span class="bf-field__error" role="alert">{{ err | translate }}</span>
+            } @else if (coverError()) {
             <span class="bf-field__error">{{ 'errors.required' | translate }}</span>
             }
           </div>
@@ -180,7 +183,11 @@
             <label class="bf-field__label">{{ 'blogs.section_image' | translate }}</label>
             <nas-photo-upload [value]="section.controls['image_preview'].value"
               [addLabel]="'blogs.upload_image' | translate" [replaceLabel]="'blogs.replace_image' | translate"
+              formats="PNG, JPG, WEBP" maxLabel="common.max_file_size_2mb" accept="image/png,image/jpeg,image/webp"
               (fileSelected)="onSectionImageSelected(i, $event)" (cleared)="onSectionImageCleared(i)" />
+            @if (section.controls['image_error'].value; as err) {
+            <span class="bf-field__error" role="alert">{{ err | translate }}</span>
+            }
           </div>
 
           <div class="bf-field">

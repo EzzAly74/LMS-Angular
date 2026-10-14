@@ -29,7 +29,19 @@ import { BlogsApiService } from '../../services/blogs-api.service';
 import { AdminBlog, AdminBlogSection, QualificationOption, UserOption } from '../../models/blog.types';
 
 /** The server's limits (BlogRequest); the form says them before it sends (NEW2B-5877 / 5878 / 5890). */
-export const BLOG_LIMITS = { title: 255, subtitle: 1000, quote: 1000, readMin: 1, readMax: 1000 } as const;
+/** Server limits (BlogRequest), mirrored for UX: the blog name 100 (NEW2B-5965), section titles 255. */
+export const BLOG_LIMITS = { name: 100, title: 255, subtitle: 1000, quote: 1000, readMin: 1, readMax: 1000 } as const;
+
+/** NEW2B-5950: covers and section images - PNG, JPG or WebP, at most 2 MB. */
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+
+/** The i18n key of what is wrong with a picked image, or null. */
+function imageProblem(file: File): string | null {
+  if (!IMAGE_TYPES.includes(file.type)) return 'blogs.image_type';
+  if (file.size > IMAGE_MAX_BYTES) return 'blogs.image_size';
+  return null;
+}
 
 /** A field's message: the translation key and its parameters. */
 export interface FieldError { key: string; params?: Record<string, unknown>; }
@@ -78,8 +90,8 @@ export class BlogFormComponent implements OnInit, OnDestroy {
   userOptions = signal<UserOption[]>([]);
 
   readonly form = this.fb.group({
-    title_en: ['', [Validators.required, Validators.maxLength(BLOG_LIMITS.title)]],
-    title_ar: ['', [Validators.required, Validators.maxLength(BLOG_LIMITS.title)]],
+    title_en: ['', [Validators.required, Validators.maxLength(BLOG_LIMITS.name)]],
+    title_ar: ['', [Validators.required, Validators.maxLength(BLOG_LIMITS.name)]],
     subtitle_en: ['', [Validators.maxLength(BLOG_LIMITS.subtitle)]],
     subtitle_ar: ['', [Validators.maxLength(BLOG_LIMITS.subtitle)]],
     level: [null as string | null, Validators.required],
@@ -218,6 +230,7 @@ export class BlogFormComponent implements OnInit, OnDestroy {
       quote_ar: [data?.quote?.ar ?? '', [Validators.maxLength(BLOG_LIMITS.quote)]],
       existing_image: [data?.image ?? null],
       image_file: [null as File | null],
+      image_error: [null as string | null],
       image_preview: [data?.image_url ?? null],
     });
   }
@@ -232,7 +245,13 @@ export class BlogFormComponent implements OnInit, OnDestroy {
 
   /* ── Image handling ───────────────────────────────────────────── */
 
+  /** A picked cover the server would refuse (NEW2B-5950). */
+  readonly coverFileError = signal<string | null>(null);
+
   onCoverSelected(file: File): void {
+    const problem = imageProblem(file);
+    this.coverFileError.set(problem);
+    if (problem) return;
     this.coverFile.set(file);
     this.coverError.set(false);
     this.readPreview(file).then((url) => this.coverPreview.set(url));
@@ -245,6 +264,9 @@ export class BlogFormComponent implements OnInit, OnDestroy {
 
   onSectionImageSelected(index: number, file: File): void {
     const group = this.sections.at(index);
+    const problem = imageProblem(file);
+    group.patchValue({ image_error: problem });
+    if (problem) return;
     group.patchValue({ image_file: file });
     this.readPreview(file).then((url) => group.patchValue({ image_preview: url }));
   }

@@ -1147,6 +1147,8 @@
     "sent_at": "Sent At"
   },
   "blogs": {
+    "image_size": "The image is larger than 2 MB. Choose a smaller one.",
+    "image_type": "Use a PNG, JPG or WebP image.",
     "title": "Blogs",
     "subtitle": "Learning materials and references available to all employees",
     "new_blog": "New Blog",
