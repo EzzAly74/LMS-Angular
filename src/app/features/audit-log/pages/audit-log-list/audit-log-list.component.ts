@@ -198,7 +198,8 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
   }
 
   private triggerDownload(blob: Blob): void {
-    const filename = `audit-log-${this.todayStamp()}.csv`;
+    // A name that says what and when (NEW2B-6097): NAS-LMS-Audit-Log_2026-10-14_15-30.csv
+    const filename = `NAS-LMS-Audit-Log_${this.exportStamp()}.csv`;
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -212,10 +213,11 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
     this.messages.success('audit_toasts.export_downloaded', { title: 'common.export_ready', params: { filename } });
   }
 
-  private todayStamp(): string {
+  /** The export day and time, local: 2026-10-14_15-30. */
+  private exportStamp(): string {
     const d = new Date();
     const pad = (n: number) => `${n}`.padStart(2, '0');
-    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
   }
 
   /* ── Instructors sub-filter modal ───────────────────────────── */
