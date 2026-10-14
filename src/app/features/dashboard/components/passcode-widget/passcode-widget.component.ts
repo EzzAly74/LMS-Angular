@@ -9,15 +9,19 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { NasIconComponent } from '../../../../shared/nas';
+import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
+import { LocaleService } from '../../../../core/services/locale.service';
 import {
   EligibleCohort,
   EligibleCourse,
   PasscodeApiService,
+  PasscodePlan,
   PasscodeWidget,
 } from '../../services/passcode-api.service';
 
@@ -45,6 +49,7 @@ type ModalPhase = 'pick' | 'result';
     DialogModule,
     DropdownModule,
     NasIconComponent,
+    NasDatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './passcode-widget.component.html',
@@ -53,6 +58,7 @@ type ModalPhase = 'pick' | 'result';
 export class PasscodeWidgetComponent implements OnInit {
   private readonly api = inject(PasscodeApiService);
   private readonly destroyRef = inject(DestroyRef);
+  protected readonly locale = inject(LocaleService).locale;
 
   readonly widget = signal<PasscodeWidget | null>(null);
   readonly generating = signal(false);
@@ -73,6 +79,20 @@ export class PasscodeWidgetComponent implements OnInit {
   readonly coursesLoading = signal(false);
   readonly selectedCourseId = signal<number | null>(null);
   readonly selectedCohortId = signal<number | null>(null);
+
+  /** The planned session the chosen cohort would open, and how it fits the schedule (D-105). */
+  readonly plan = signal<PasscodePlan | null>(null);
+  readonly planLoading = signal(false);
+  /** The Generate button says what will happen. */
+  readonly startLabelKey = computed(() => {
+    switch (this.plan()?.case) {
+      case 'early': return 'dashboard.passcode_start_early';
+      case 'late': return 'dashboard.passcode_start_late';
+      case 'moved': return 'dashboard.passcode_start_moved';
+      case 'live': return 'dashboard.passcode_show_live';
+      default: return 'dashboard.passcode_generate';
+    }
+  });
 
   readonly state = computed(() => this.widget()?.state ?? 'idle');
   readonly length = computed(() => this.widget()?.passcode_length ?? 5);
@@ -137,8 +157,11 @@ export class PasscodeWidgetComponent implements OnInit {
   readonly canStart = computed(
     () =>
       !this.generating() &&
+      !this.planLoading() &&
       this.selectedCourseId() !== null &&
-      this.selectedCohortId() !== null,
+      this.selectedCohortId() !== null &&
+      this.plan() !== null &&
+      this.plan()!.case !== 'none',
   );
 
   /** Fixed-length digit cells, padded so the boxes render even mid-fill. */
@@ -212,6 +235,7 @@ export class PasscodeWidgetComponent implements OnInit {
   openPicker(): void {
     this.selectedCourseId.set(null);
     this.selectedCohortId.set(null);
+    this.plan.set(null);
     this.phase.set('pick');
     this.modalOpen.set(true);
   }
@@ -220,6 +244,28 @@ export class PasscodeWidgetComponent implements OnInit {
   onCourseChange(): void {
     const cohorts = this.cohortsForSelected();
     this.selectedCohortId.set(cohorts.length === 1 ? cohorts[0].id : null);
+    this.loadPlan();
+  }
+
+  onCohortChange(): void {
+    this.loadPlan();
+  }
+
+  /** Ask the server which planned session this cohort would open. */
+  private loadPlan(): void {
+    const courseId = this.selectedCourseId();
+    const cohortId = this.selectedCohortId();
+    this.plan.set(null);
+    if (courseId === null || cohortId === null) return;
+    this.planLoading.set(true);
+    this.api.plan(courseId, cohortId).subscribe({
+      next: (res) => {
+        // Ignore a late answer for a cohort no longer selected.
+        if (this.selectedCohortId() === cohortId) this.plan.set(res.result);
+        this.planLoading.set(false);
+      },
+      error: () => this.planLoading.set(false),
+    });
   }
 
   /** Start the session for the chosen course + cohort, then show the code. */
@@ -228,15 +274,20 @@ export class PasscodeWidgetComponent implements OnInit {
     const courseId = this.selectedCourseId()!;
     const cohortId = this.selectedCohortId()!;
     this.generating.set(true);
-    this.api.start(courseId, cohortId).subscribe({
+    this.api.start(courseId, cohortId, this.plan()?.session?.id ?? null).subscribe({
       next: (res) => {
         this.widget.set(res.result);
         this.generating.set(false);
         this.phase.set('result');
       },
-      // The global errorInterceptor already surfaces the backend message
-      // (e.g. the 422 "cohort unavailable" warning) as a toast.
-      error: () => this.generating.set(false),
+      // The global errorInterceptor surfaces the backend message as a toast.
+      // A changed schedule (409) or no session left (422) returns the
+      // current plan, shown here so the instructor confirms it again.
+      error: (err: HttpErrorResponse) => {
+        this.generating.set(false);
+        const fresh = (err.error as { errors?: { plan?: PasscodePlan } } | null)?.errors?.plan;
+        if (fresh) this.plan.set(fresh);
+      },
     });
   }
 

@@ -132,3 +132,18 @@
   line-height: 16.8px;
   white-space: nowrap;
 }
+
+/* Plan notice under the pickers (D-105). */
+.passcode-modal__plan { min-block-size: 20px; }
+.passcode-modal__plan-text {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--nas-neutral-100, #f4f5f5);
+  color: var(--nas-color-text-body);
+  font-size: var(--nas-size-xs, 14px);
+  line-height: 1.5;
+
+  &--warn { background: var(--nas-status-orange-50, #fff6ed); color: var(--nas-status-orange-700, #b54708); }
+  &--error { background: var(--nas-status-red-50, #fef3f2); color: var(--nas-status-red-700, #b42318); }
+}

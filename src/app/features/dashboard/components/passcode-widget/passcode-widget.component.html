@@ -80,7 +80,31 @@
           [(ngModel)]="selectedCohortId" optionLabel="name" optionValue="id"
           [placeholder]="'dashboard.passcode_select_cohort' | translate"
           [disabled]="selectedCourseId() === null"
+          (onChange)="onCohortChange()"
           appendTo="body" styleClass="nas-dropdown" panelStyleClass="passcode-dd-panel" />
+      </div>
+
+      <!-- Which planned session starts, and how it fits the schedule (D-105). -->
+      <div class="passcode-modal__plan" role="status" aria-live="polite">
+        @if (planLoading()) {
+          <p class="passcode-modal__plan-text">{{ 'dashboard.passcode_plan_loading' | translate }}</p>
+        } @else if (plan()) {
+          @let p = plan()!;
+          @let s = p.session;
+          <p class="passcode-modal__plan-text"
+             [class.passcode-modal__plan-text--warn]="p.case === 'early' || p.case === 'late' || p.case === 'moved' || p.case === 'unscheduled'"
+             [class.passcode-modal__plan-text--error]="p.case === 'none'">
+            @switch (p.case) {
+              @case ('live') { {{ 'dashboard.passcode_plan_live' | translate: { n: s?.number } }} }
+              @case ('on_time') { {{ 'dashboard.passcode_plan_on_time' | translate: { n: s?.number, from: s?.time_from ?? '', to: s?.time_to ?? '' } }} }
+              @case ('early') { {{ 'dashboard.passcode_plan_early' | translate: { n: s?.number, from: s?.time_from ?? '', to: s?.time_to ?? '' } }} }
+              @case ('late') { {{ 'dashboard.passcode_plan_late' | translate: { n: s?.number, from: s?.time_from ?? '', to: s?.time_to ?? '' } }} }
+              @case ('moved') { {{ 'dashboard.passcode_plan_moved' | translate: { n: s?.number, date: s?.date | nasDate: locale(), from: s?.time_from ?? '' } }} }
+              @case ('unscheduled') { {{ 'dashboard.passcode_plan_unscheduled' | translate }} }
+              @case ('none') { {{ 'dashboard.passcode_plan_none' | translate }} }
+            }
+          </p>
+        }
       </div>
     </div>
   } @else if (passcode()) {
@@ -129,7 +153,7 @@
         class="passcode-modal__done"
         [disabled]="!canStart()"
         (click)="start()">
-        {{ 'dashboard.passcode_generate' | translate }}
+        {{ startLabelKey() | translate: { n: plan()?.session?.number } }}
       </button>
     } @else {
       @if (state() === 'live') {

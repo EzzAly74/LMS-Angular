@@ -55,6 +55,26 @@ export interface PasscodeWidget {
   passcode: PasscodeCode | null;
 }
 
+/**
+ * What "Generate Passcode" will do for a cohort (D-105): the planned session
+ * it opens and how that relates to the schedule.
+ */
+export type PasscodePlanCase = 'live' | 'on_time' | 'early' | 'late' | 'moved' | 'unscheduled' | 'none';
+
+export interface PasscodePlanSession {
+  id: number;
+  number: number;
+  title: string | null;
+  date: string | null;
+  time_from: string | null;
+  time_to: string | null;
+}
+
+export interface PasscodePlan {
+  case: PasscodePlanCase;
+  session: PasscodePlanSession | null;
+}
+
 /** A cohort the instructor can start a session for (not yet ended). */
 export interface EligibleCohort {
   id: number;
@@ -92,11 +112,18 @@ export class PasscodeApiService {
    * and issue its passcode. The backend returns a 422 (with a localized
    * message) when the cohort isn't a valid target — surfaced as a toast.
    */
-  start(courseId: number, cohortId: number): Observable<ApiResponse<PasscodeWidget>> {
+  start(courseId: number, cohortId: number, sessionId: number | null): Observable<ApiResponse<PasscodeWidget>> {
     return this.api.post<PasscodeWidget>(API.DASHBOARD_PASSCODE, {
       course_id: courseId,
       cohort_id: cohortId,
+      // The planned session the instructor confirmed (D-105).
+      ...(sessionId !== null ? { session_id: sessionId } : {}),
     });
+  }
+
+  /** Which planned session Generate would open for the cohort (D-105). */
+  plan(courseId: number, cohortId: number): Observable<ApiResponse<PasscodePlan>> {
+    return this.api.get<PasscodePlan>(API.DASHBOARD_PASSCODE_PLAN, { course_id: courseId, cohort_id: cohortId });
   }
 
   /**

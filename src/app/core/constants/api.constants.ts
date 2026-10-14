@@ -28,6 +28,7 @@ export const API = {
   DASHBOARD:      `${API_BASE}/dashboard`,
   DASHBOARD_PASSCODE: `${API_BASE}/dashboard/passcode`,
   DASHBOARD_PASSCODE_COURSES: `${API_BASE}/dashboard/passcode/courses`,
+  DASHBOARD_PASSCODE_PLAN: `${API_BASE}/dashboard/passcode/plan`,
   DASHBOARD_PASSCODE_REGENERATE: `${API_BASE}/dashboard/passcode/regenerate`,
   DASHBOARD_PASSCODE_END: `${API_BASE}/dashboard/passcode/end`,
   JOB_TITLES:     `${API_BASE}/job-titles`,
