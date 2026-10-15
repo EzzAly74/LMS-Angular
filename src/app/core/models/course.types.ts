@@ -179,6 +179,24 @@ export type ModuleContentType = 'video' | 'document' | 'article' | 'link';
  * `title` / `instructions` arrive as bilingual JSON so the edit dialog can
  * pre-fill both languages without a second request.
  */
+/**
+ * One row of the course Content tab (GET courses/{id}/content, D-109,
+ * Figma 342:11813): a module, a quiz or an assignment. `code` is what the
+ * cohort schedule sheet's "content" column takes (12, Q5, A3).
+ */
+export interface CourseContentItem {
+  kind: 'lecture' | 'quiz' | 'assignment';
+  id: number;
+  code: string;
+  title: string;
+  /** The module's type; null for quizzes and assignments. */
+  content_type: ModuleContentType | null;
+  duration_minutes: number | null;
+  /** 'draft' | 'active' for quizzes and assignments; null for modules. */
+  status: string | null;
+  due_date: string | null;
+}
+
 export interface CourseModule {
   id: number;
   course_id: number;

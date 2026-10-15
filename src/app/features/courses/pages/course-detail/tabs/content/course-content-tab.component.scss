@@ -628,6 +628,10 @@
   &--link { background: var(--nas-status-operational-2); color: var(--nas-neutral-100); }
   &--document { background: var(--nas-status-operational-10); color: var(--nas-status-operational); }
   &--article { background: var(--nas-sky-300); color: var(--nas-neutral-1000); }
+  // Figma 342:11813 (D-109).
+  &--quiz { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
+  &--assignment { background: var(--nas-badge-assignment-bg); color: var(--nas-badge-assignment-fg); }
+  &--draft { background: var(--nas-neutral-400); color: var(--nas-neutral-900); }
 }
 
 @media (max-width: 767px) {

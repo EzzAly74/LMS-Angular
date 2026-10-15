@@ -119,6 +119,8 @@ export const courseUrl = {
   cohortAttendance: (courseId: number, cohortId: number) =>
     `${API.COURSES}/${courseId}/cohorts/${cohortId}/attendance`,
   modules:     (id: number) => `${API.COURSES}/${id}/modules`,
+  /** Content tab: modules, quizzes and assignments in one list (D-109). */
+  content:     (id: number) => `${API.COURSES}/${id}/content`,
   lectures:    (id: number) => `${API.COURSES}/${id}/lectures`,
   lecture:     (courseId: number, lectureId: number) =>
     `${API.COURSES}/${courseId}/lectures/${lectureId}`,

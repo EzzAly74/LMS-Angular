@@ -5,7 +5,7 @@ import { API, API_BASE, courseUrl } from '../../../core/constants/api.constants'
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
 import type {
   Course, CourseSession, CreateCoursePayload,
-  CourseModule, ModulePayload, ModuleUploadResult, CohortAttendance,
+  CourseModule, CourseContentItem, ModulePayload, ModuleUploadResult, CohortAttendance,
   Cohort, CohortPayload,
 } from '../../../core/models/course.types';
 import { saveBlob } from '../../../core/utils/save-blob';
@@ -142,6 +142,11 @@ export class CoursesApiService {
   /** Flat list of every module belonging to a course, ordered by creation. */
   listModules(courseId: number): Observable<ApiResponse<CourseModule[]>> {
     return this.api.get<CourseModule[]>(courseUrl.modules(courseId));
+  }
+
+  /** The Content tab's list: modules, quizzes and assignments (D-109). */
+  listContent(courseId: number): Observable<ApiResponse<CourseContentItem[]>> {
+    return this.api.get<CourseContentItem[]>(courseUrl.content(courseId));
   }
 
   /** Multipart upload for a module's video (mp4 …) or document attachment. */

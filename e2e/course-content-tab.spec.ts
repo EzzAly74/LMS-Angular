@@ -19,10 +19,22 @@ const MODULES = [
   { id: 6, title: { en: 'Long Workshop', ar: 'ورشة طويلة' }, content_type: 'document', duration_minutes: 75, type: 'file', video: 'w.pdf' },
 ].map(m => ({ course_id: 10, section_id: 0, ...m }));
 
-async function open(page: Page, locale: 'en' | 'ar' = 'en'): Promise<void> {
+/** The Content tab's list (GET courses/{id}/content, D-109): the modules as rows, plus any quizzes / assignments. */
+type ContentRow = { kind: 'lecture' | 'quiz' | 'assignment'; id: number; code: string; title: string;
+  content_type: string | null; duration_minutes: number | null; status: string | null; due_date: string | null };
+function contentOf(locale: 'en' | 'ar', extra: ContentRow[] = []): ContentRow[] {
+  return [
+    ...MODULES.map(m => ({ kind: 'lecture' as const, id: m.id, code: String(m.id), title: m.title[locale],
+      content_type: m.content_type, duration_minutes: m.duration_minutes, status: null, due_date: null })),
+    ...extra,
+  ];
+}
+
+async function open(page: Page, locale: 'en' | 'ar' = 'en', extra: ContentRow[] = []): Promise<void> {
   await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
   await mockCourse(page, { modules_count: MODULES.length });
   await page.route('**/api/v1/courses/10/modules**', r => r.fulfill({ json: ok(MODULES) }));
+  await page.route('**/api/v1/courses/10/content**', r => r.fulfill({ json: ok(contentOf(locale, extra)) }));
   // The type names as EnumRegistry serves them (resources/lang/*/enums.php).
   const names = locale === 'ar'
     ? { video: 'فيديو', document: 'مستند', article: 'مقال', link: 'رابط خارجي' }
@@ -31,7 +43,7 @@ async function open(page: Page, locale: 'en' | 'ar' = 'en'): Promise<void> {
     (['video', 'document', 'article', 'link'] as const).map((code, i) => ({ id: i + 1, code, value: names[code] })),
   ) }));
   await page.goto('/admin/courses/10?tab=content');
-  await expect(page.locator('.module-row')).toHaveCount(MODULES.length);
+  await expect(page.locator('.module-row')).toHaveCount(MODULES.length + extra.length);
 }
 
 test.describe('behaviour', () => {
@@ -72,6 +84,34 @@ test.describe('behaviour', () => {
 
     const card = await page.locator('.modules-list').evaluate(el => [getComputedStyle(el).borderRadius, getComputedStyle(el).borderTopColor]);
     expect(card).toEqual(['16px', 'rgb(230, 231, 232)']);
+  });
+
+  test('quizzes and assignments are numbered with the modules, with their badges, and edit in their own forms (D-109, Figma 342:11813)', async ({ page }) => {
+    await open(page, 'en', [
+      { kind: 'quiz', id: 7, code: 'Q7', title: 'Knowledge Check Quiz', content_type: null, duration_minutes: 20, status: 'active', due_date: null },
+      { kind: 'assignment', id: 3, code: 'A3', title: 'Practical Assessment', content_type: null, duration_minutes: null, status: 'draft', due_date: '2026-10-20' },
+    ]);
+    await expect(page.locator('.modules-tab__count')).toHaveText('8 modules · 385 min estimated learner time');
+
+    const quiz = page.locator('.module-row').nth(6);
+    await expect(quiz.locator('.module-row__index')).toHaveText('7');
+    await expect(quiz.locator('.module-type')).toHaveText('Quiz');
+    expect(await quiz.locator('.module-type').evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]))
+      .toEqual(['rgb(254, 244, 230)', 'rgb(168, 94, 5)']);
+    await expect(quiz.locator('.module-row__sub')).toHaveText('20 min');
+    await expect(quiz.getByRole('link', { name: 'Edit Knowledge Check Quiz' })).toHaveAttribute('href', '/admin/quizzes/7/edit');
+    await expect(quiz.getByRole('button')).toHaveCount(0);
+
+    const assignment = page.locator('.module-row').nth(7);
+    await expect(assignment.locator('.module-type')).toHaveText(['Assignment', 'Draft']);
+    expect(await assignment.locator('.module-type').first().evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]))
+      .toEqual(['rgb(254, 236, 235)', 'rgb(176, 42, 33)']);
+    await expect(assignment.locator('.module-row__sub')).toHaveText('Due 20 Oct 2026');
+    await expect(assignment.getByRole('link', { name: 'Edit Practical Assessment' })).toHaveAttribute('href', '/admin/assignments/3/edit');
+
+    // The type chips are module types: a quiz shows under All only.
+    await page.getByRole('checkbox', { name: 'Videos' }).check();
+    await expect(page.locator('.module-row')).toHaveCount(2);
   });
 
   test('type filters narrow the list and All resets it', async ({ page }) => {

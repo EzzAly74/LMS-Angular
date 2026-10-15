@@ -10,6 +10,8 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
@@ -21,6 +23,7 @@ import { CoursesApiService } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
 import type {
+  CourseContentItem,
   CourseModule,
   ModuleContentType,
   ModulePayload,
@@ -31,6 +34,7 @@ import { pluralKey } from '../../../../../../core/utils/plural-key';
 import { withLocaleReload } from '../../../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../../../shared/nas/nas-can/nas-can.directive';
+import { LocalDatePipe } from '../../../../../../shared/pipes/local-date.pipe';
 
 /** Multi-select filter chips on the Content tab. `all` is mutually exclusive. */
 type ModuleFilter = 'all' | ModuleContentType;
@@ -55,7 +59,7 @@ interface ModuleFileInfo {
 @Component({
   selector: 'app-course-content-tab',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [NasCanDirective, RouterLink, LocalDatePipe, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
@@ -79,7 +83,7 @@ export class CourseContentTabComponent implements OnInit {
   private readonly locale = inject(LocaleService).locale;
 
   readonly courseId = input.required<number>();
-  /** The module count after each load, for the tab pill. */
+  /** The count of modules, quizzes and assignments after each load, for the tab pill. */
   readonly countChange = output<number>();
 
   constructor() {
@@ -94,6 +98,12 @@ export class CourseContentTabComponent implements OnInit {
 
   /* ── Content tab — modules state ──────────────────────────────────── */
   modules = signal<CourseModule[]>([]);
+  /**
+   * The list the tab shows: modules, quizzes and assignments in the order they
+   * were added (Figma 342:11813, D-109). `modules` still backs the module
+   * dialog.
+   */
+  content = signal<CourseContentItem[]>([]);
   modulesLoading = signal(false);
   /** Active filter chips. Mutating this signal recomputes `filteredModules()`. */
   moduleFilters = signal<Set<ModuleFilter>>(new Set<ModuleFilter>(['all']));
@@ -205,17 +215,17 @@ export class CourseContentTabComponent implements OnInit {
     );
   }
 
-  /** Filtered list — driven by the chip selection. */
-  filteredModules = computed(() => {
+  /** Filtered list — driven by the chip selection; the type chips are module types. */
+  filteredContent = computed(() => {
     const filters = this.moduleFilters();
-    const list = this.modules();
+    const list = this.content();
     if (filters.has('all') || filters.size === 0) return list;
-    return list.filter((m) => filters.has(m.content_type));
+    return list.filter((c) => c.kind === 'lecture' && c.content_type !== null && filters.has(c.content_type));
   });
 
-  /** "12 modules · 310 min estimated learner time" header text. */
+  /** "12 modules · 310 min estimated learner time" header text (quizzes' time allowed included). */
   modulesHeader = computed(() => {
-    const list = this.modules();
+    const list = this.content();
     const totalMin = list.reduce(
       (sum, m) => sum + (m.duration_minutes ?? 0),
       0,
@@ -230,11 +240,12 @@ export class CourseContentTabComponent implements OnInit {
   /* ── Content tab — modules CRUD ───────────────────────────────────── */
   loadModules(courseId: number): void {
     this.modulesLoading.set(true);
-    this.coursesApi.listModules(courseId).subscribe({
-      next: (res) => {
-        this.modules.set(Array.isArray(res.result) ? res.result : []);
+    forkJoin({ modules: this.coursesApi.listModules(courseId), content: this.coursesApi.listContent(courseId) }).subscribe({
+      next: ({ modules, content }) => {
+        this.modules.set(Array.isArray(modules.result) ? modules.result : []);
+        this.content.set(Array.isArray(content.result) ? content.result : []);
         this.modulesLoading.set(false);
-        this.countChange.emit(this.modules().length);
+        this.countChange.emit(this.content().length);
       },
       error: () => this.modulesLoading.set(false),
     });
@@ -263,7 +274,7 @@ export class CourseContentTabComponent implements OnInit {
   }
 
   /** "30 min", "1 hr", "2 hrs", "1 hr 15 min" (Figma 2486:139920), in the UI language. */
-  moduleDurationLabel(m: CourseModule): string {
+  moduleDurationLabel(m: { duration_minutes?: number | null }): string {
     const min = m.duration_minutes ?? 0;
     if (min <= 0) return '';
     if (min < 60) return this.t.instant('course_detail.duration_min', { count: min });
@@ -613,7 +624,24 @@ export class CourseContentTabComponent implements OnInit {
   }
 
   /** "30 min" subline shown under each module title in tight rows. */
-  moduleSubline(m: CourseModule): string {
+  moduleSubline(m: { duration_minutes?: number | null }): string {
     return this.moduleDurationLabel(m) ?? '';
+  }
+
+  /** The module behind a content row, for its Edit / Delete. */
+  moduleOf(item: CourseContentItem): CourseModule | null {
+    return item.kind === 'lecture' ? this.modules().find((m) => m.id === item.id) ?? null : null;
+  }
+
+  /** Badge text: the module's type, or Quiz / Assignment. */
+  kindLabel(item: CourseContentItem): string {
+    return item.kind === 'lecture'
+      ? this.enumValueFromCode('module_content_type', item.content_type)
+      : this.t.instant('course_detail.content_kind.' + item.kind);
+  }
+
+  /** Where a quiz or assignment is edited (its own form). */
+  editLink(item: CourseContentItem): (string | number)[] {
+    return ['/admin', item.kind === 'quiz' ? 'quizzes' : 'assignments', item.id, 'edit'];
   }
 }

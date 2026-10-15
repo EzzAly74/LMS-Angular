@@ -1594,7 +1594,7 @@
       "step2": "Step 2 · Upload completed schedule",
       "download_title": "Download schedule template",
       "formats_hint": "Dates as YYYY-MM-DD (2026-10-05); start_time and end_time in 24-hour HH:MM (09:30).",
-      "download_desc": "Use the generated sheet to plan dates, times, optional location and each session's content (module IDs from the modules sheet) before upload.",
+      "download_desc": "Use the generated sheet to plan dates, times, optional location and each session's content (the numbers shown in the Content tab, for modules, quizzes and assignments alike; the modules sheet lists them) before upload.",
       "download_button": "Download Schedule Template",
       "download_failed": "The template could not be downloaded. Please retry.",
       "upload_title": "Upload completed schedule",
@@ -1848,7 +1848,7 @@
       "article": "Articles",
       "link": "Links"
     },
-    "edit_module_named": "Edit {{name}}",
+    "content_kind": {"quiz": "Quiz", "assignment": "Assignment"}, "content_draft": "Draft", "content_due": "Due {{date}}", "edit_module_named": "Edit {{name}}",
     "delete_module_named": "Delete {{name}}",
     "duration_min": "{{count}} min",
     "duration_hours": {

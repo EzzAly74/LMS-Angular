@@ -39,39 +39,55 @@
           </li>
         }
       </ol>
-    } @else if (!filteredModules().length) {
+    } @else if (!filteredContent().length) {
       <article class="nas-card placeholder-tab placeholder-tab--soft modules-empty">
         <i class="pi pi-folder-open" aria-hidden="true"></i>
         <h3>{{ 'course_detail.no_modules' | translate }}</h3>
         <p>{{ 'course_detail.no_modules_hint' | translate }}</p>
       </article>
     } @else {
+      <!-- Modules, quizzes and assignments in one numbered list (Figma 342:11813, D-109). -->
       <ol class="modules-list">
-        @for (m of filteredModules(); track m.id; let idx = $index) {
+        @for (c of filteredContent(); track c.kind + '-' + c.id; let idx = $index) {
+          @let m = moduleOf(c);
           <li class="module-row">
             <span class="module-row__index" aria-hidden="true">{{ idx + 1 }}</span>
             <div class="module-row__body">
               <div class="module-row__title-line">
-                <span class="module-row__title" dir="auto">{{ moduleTitle(m) }}</span>
-                <span class="module-type" [class]="'module-type module-type--' + m.content_type">
-                  {{ enumValueFromCode('module_content_type', m.content_type) }}
-                </span>
+                <span class="module-row__title" dir="auto">{{ m ? moduleTitle(m) : c.title }}</span>
+                <span [class]="'module-type module-type--' + (c.kind === 'lecture' ? c.content_type : c.kind)">{{ kindLabel(c) }}</span>
+                @if (c.status === 'draft') { <span class="module-type module-type--draft">{{ 'course_detail.content_draft' | translate }}</span> }
               </div>
-              @if (moduleSubline(m); as sub) { <span class="module-row__sub">{{ sub }}</span> }
+              @if (c.kind === 'assignment') {
+                @if (c.due_date) { <span class="module-row__sub">{{ 'course_detail.content_due' | translate: { date: (c.due_date | localDate) } }}</span> }
+              } @else {
+                @let sub = moduleSubline(c);
+                @if (sub) { <span class="module-row__sub">{{ sub }}</span> }
+              }
             </div>
-            <div *nasCan="'edit-courses'" class="module-row__actions">
-              <button type="button" class="module-row__action"
-                      [attr.aria-label]="'course_detail.edit_module_named' | translate: { name: moduleTitle(m) }"
-                      (click)="openEditModule(m)">
-                <img src="assets/icons/figma/pencil-simple-neutral-20.svg" width="20" height="20" alt="" />
-              </button>
-              <!-- Delete beside Edit (human, 2026-10-13); asks before deleting. -->
-              <button type="button" class="module-row__action module-row__action--danger"
-                      [attr.aria-label]="'course_detail.delete_module_named' | translate: { name: moduleTitle(m) }"
-                      (click)="confirmDeleteModule(m)">
-                <nas-icon name="trash" [size]="20" />
-              </button>
-            </div>
+            @if (m) {
+              <div *nasCan="'edit-courses'" class="module-row__actions">
+                <button type="button" class="module-row__action"
+                        [attr.aria-label]="'course_detail.edit_module_named' | translate: { name: moduleTitle(m) }"
+                        (click)="openEditModule(m)">
+                  <img src="assets/icons/figma/pencil-simple-neutral-20.svg" width="20" height="20" alt="" />
+                </button>
+                <!-- Delete beside Edit (human, 2026-10-13); asks before deleting. -->
+                <button type="button" class="module-row__action module-row__action--danger"
+                        [attr.aria-label]="'course_detail.delete_module_named' | translate: { name: moduleTitle(m) }"
+                        (click)="confirmDeleteModule(m)">
+                  <nas-icon name="trash" [size]="20" />
+                </button>
+              </div>
+            } @else if (c.kind !== 'lecture') {
+              <!-- A quiz or assignment is edited (and deleted) in its own form. -->
+              <div *nasCan="c.kind === 'quiz' ? 'edit-quizzes' : 'edit-assignments'" class="module-row__actions">
+                <a class="module-row__action" [routerLink]="editLink(c)"
+                   [attr.aria-label]="'course_detail.edit_module_named' | translate: { name: c.title }">
+                  <img src="assets/icons/figma/pencil-simple-neutral-20.svg" width="20" height="20" alt="" />
+                </a>
+              </div>
+            }
           </li>
         }
       </ol>

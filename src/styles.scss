@@ -105,6 +105,9 @@
   --nas-status-amber-500-16: rgba(247, 144, 8, 0.16);
   /* Text on amber-50 badges (Figma "N Responses", 2009:88432); 5.6:1 on #fef4e6. */
   --nas-status-amber-800: #a85e05;
+  /* "Assignment" badge on the course Content tab (Figma 342:11813); 6.0:1. */
+  --nas-badge-assignment-bg: #feeceb;
+  --nas-badge-assignment-fg: #b02a21;
 
   /* Mid-range progress (Figma colors/status/operational-2, learners list) */
   --nas-status-operational-2: #496e91;
