@@ -1756,7 +1756,7 @@
     "attendance_session_n": "الجلسة {{n}}",
     "attendance_sessions_count": "{{count}} جلسة",
     "attendance_absence_heading": "الغياب",
-    "attendance_no_data": "لا توجد سجلات حضور لهذه المجموعة بعد.",
+    "attendance_load_failed": "تعذر تحميل سجل الحضور.", "attendance_upcoming": "قادمة", "attendance_live": "مباشرة الآن", "attendance_no_data": "لا توجد سجلات حضور لهذه المجموعة بعد.",
     "attendance_no_results": "لا توجد نتائج مطابقة.",
     "up_coming": "قادمة",
     "no_modules": "لا توجد وحدات بعد",

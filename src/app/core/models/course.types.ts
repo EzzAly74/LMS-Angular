@@ -243,6 +243,8 @@ export interface CohortAttendanceSession {
   time_from: string | null;
   time_to: string | null;
   location: string | null;
+  /** Only a held (ended) session has absentees; upcoming / live do not. */
+  status?: 'upcoming' | 'live' | 'held';
   attended_count: number;
   absent_count: number;
   total: number;
@@ -267,6 +269,8 @@ export interface CohortAttendanceLearner {
   total_sessions: number;
   attended_count: number;
   absent_count: number;
+  /** Sessions not held yet (not missed). */
+  upcoming_count?: number;
   absent_sessions: CohortAttendanceSessionRef[];
 }
 

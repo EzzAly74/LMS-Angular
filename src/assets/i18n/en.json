@@ -1712,7 +1712,7 @@
     "attendance_session_n": "Session {{n}}",
     "attendance_sessions_count": "{{count}} Sessions",
     "attendance_absence_heading": "ABSENCE",
-    "attendance_no_data": "No attendance records for this cohort yet.",
+    "attendance_load_failed": "The attendance could not be loaded.", "attendance_upcoming": "Upcoming", "attendance_live": "Live now", "attendance_no_data": "No attendance records for this cohort yet.",
     "attendance_no_results": "Nothing matches your search.",
     "up_coming": "Up Coming",
     "no_modules": "No modules yet",

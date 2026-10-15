@@ -231,16 +231,23 @@ export class CohortAttendanceDrawerComponent implements OnDestroy {
         this.loading.set(false);
       },
       error: () => {
-        // The user already sees a 4xx/5xx via the global toast; here we
-        // just downgrade the drawer to its empty-state.
+        // A failure is not "no records": a refused read (403) has no toast,
+        // and the drawer used to say the cohort had no attendance. Say it
+        // could not load, with Retry.
         this.data.set(null);
         this.loading.set(false);
-        this.errorMsg.set(this.t.instant('course_detail.attendance_no_data'));
+        this.errorMsg.set(this.t.instant('course_detail.attendance_load_failed'));
       },
     });
   }
 
   /* ── UI handlers ───────────────────────────────────────────────────── */
+
+  retry(): void {
+    const courseId = this.courseId();
+    const cohortId = this.cohortId();
+    if (courseId !== null && cohortId !== null) this.load(courseId, cohortId);
+  }
 
   onVisibleChange(open: boolean): void {
     this.visible.set(open);

@@ -268,6 +268,9 @@
 .cad-pill--ok   { background: #e9f7ec; color: #1f7a3a; }
 .cad-pill--bad  { background: #fdecec; color: #c73838; }
 .cad-pill--full { background: #e9f7ec; color: #1f7a3a; }
+/* Not ended yet: nobody is absent (human, 2026-10-15). */
+.cad-pill--upcoming { background: var(--nas-neutral-400); color: var(--nas-neutral-900); }
+.cad-pill--live { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
 
 /* Caret reactor — rotates 180° when the parent row is expanded, so we
    don't depend on swapping SVG `name` (which can flash on first paint).
@@ -344,3 +347,12 @@
   font-size: 13px;
   line-height: 18px;
 }
+
+// The rollup could not load: say so, with Retry (not "no records").
+.cad-empty--error p { color: var(--nas-status-red-700); }
+.cad-retry {
+  padding: 6px 14px; border: 1px solid var(--nas-teal-1000); border-radius: var(--nas-radius-md);
+  background: transparent; color: var(--nas-teal-1000); font: inherit; font-size: 13px; cursor: pointer;
+}
+.cad-retry:hover { background: var(--nas-neutral-300); }
+.cad-retry:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
