@@ -129,3 +129,25 @@ test('Arabic: translated headings, filter fields and learner types', async ({ pa
   await expect(d.locator('.fd__label').nth(1)).toHaveText('نوع المتعلم');
   await expect(page.locator('.fd-ms-panel [role=option]')).toHaveText(['عن بُعد', 'حضوري', 'مدمج']);
 });
+
+test('the Update Learners button says when HR last updated and warns when the 24-hour sync is overdue (D-108)', async ({ page }) => {
+  const status = (overdue: boolean) => ({
+    success: true, message: 'ok',
+    result: { state: 'idle', last_success_at: '2026-10-14T02:00:00+03:00', auto_every_hours: 24, overdue },
+  });
+  await page.route(/\/api\/v1\/admin\/learners\/hr-sync$/, (r) => r.request().method() === 'GET'
+    ? r.fulfill({ json: status(false) }) : r.continue());
+  await open(page);
+
+  const button = page.locator('nas-hr-sync-button button');
+  await expect(button).toHaveAttribute('title', /automatically every 24 hours\. Last update: 14 Oct 2026, 0[0-9]:00\./);
+  await expect(button).toHaveAccessibleDescription(/every 24 hours/);
+  await expect(page.locator('.nas-hr-sync__overdue')).toHaveCount(0);
+
+  await page.unroute(/\/api\/v1\/admin\/learners\/hr-sync$/);
+  await page.route(/\/api\/v1\/admin\/learners\/hr-sync$/, (r) => r.request().method() === 'GET'
+    ? r.fulfill({ json: status(true) }) : r.continue());
+  await open(page, 'ar');
+  await expect(page.locator('nas-hr-sync-button button')).toHaveAttribute('title', /لم يتم التحديث .* ١٤ أكتوبر ٢٠٢٦/);
+  await expect(page.locator('.nas-hr-sync__overdue')).toBeVisible();
+});
