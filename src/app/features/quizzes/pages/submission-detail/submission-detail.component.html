@@ -139,8 +139,10 @@
             <label class="asd-open__label">{{ 'quizzes.answer_key' | translate }}</label>
             <div class="asd-open__key">{{ row.answer.question?.correct_answer_en || '—' }}</div>
 
+            <!-- Not scored yet: "Put"; scored: "Update" (NEW2B-6361). -->
+            @let scored = row.answer.awarded_score !== null && row.answer.awarded_score !== undefined;
             @if (editingAnswerId() === row.answer.id) {
-              <a class="asd-open__edit-link">{{ 'quizzes.update_learner_score' | translate }}</a>
+              <a class="asd-open__edit-link">{{ (scored ? 'quizzes.update_learner_score' : 'quizzes.put_learner_score') | translate }}</a>
               <div class="asd-open__editor">
                 <input
                   type="number"
@@ -164,13 +166,13 @@
                     [disabled]="savingAnswerId() === row.answer.id"
                     (click)="saveEdit(row.answer)">
                     @if (savingAnswerId() === row.answer.id) { <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> }
-                    {{ 'quizzes.update' | translate }}
+                    {{ (scored ? 'quizzes.update' : 'quizzes.save_score') | translate }}
                   </button>
                 </div>
               </div>
             } @else {
               <button *nasCan="'edit-quizzes'" type="button" class="asd-open__edit-btn" (click)="startEdit(row.answer)">
-                <i class="pi pi-pen-to-square" aria-hidden="true"></i> {{ 'common.edit' | translate }}
+                <i class="pi pi-pen-to-square" aria-hidden="true"></i> {{ (scored ? 'common.edit' : 'quizzes.put_score') | translate }}
               </button>
               @if (row.answer.feedback) {
                 <div class="asd-open__feedback-shown">

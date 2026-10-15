@@ -374,6 +374,8 @@
     "select_to_view": "اختر دورة لعرض اختباراتها."
   },
   "assignments": {
+    "put_score": "إدخال الدرجة",
+    "save_score": "حفظ الدرجة",
     "filter_items": "التكليف",
     "search_items": "ابحث باسم التكليف أو الدورة",
     "search_attempts": "ابحث بالمتعلم أو التكليف أو الدورة",
@@ -1307,6 +1309,9 @@
     "reorder": "إعادة الترتيب"
   },
   "quizzes": {
+    "put_learner_score": "إدخال درجة المتدرب",
+    "put_score": "إدخال الدرجة",
+    "save_score": "حفظ الدرجة",
     "filter_items": "الاختبار",
     "search_items": "ابحث باسم الاختبار أو الدورة",
     "search_attempts": "ابحث بالمتعلم أو الاختبار أو الدورة",

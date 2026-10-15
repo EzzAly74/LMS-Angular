@@ -90,8 +90,9 @@ test.describe('behaviour', () => {
     expect(downloads.every(u => !u.includes('api.example'))).toBe(true);
 
     // Not scored: the Score form (2393:120281).
-    const score = page.getByLabel('Score', { exact: true });
-    const save = page.getByRole('button', { name: 'Save' });
+    // Not scored yet: "Put Score" / "Save score" (NEW2B-6361).
+    const score = page.getByLabel('Put Score', { exact: true });
+    const save = page.getByRole('button', { name: 'Save score' });
     await expect(save).toBeDisabled();
     await score.fill('25');
     await expect(page.getByRole('alert')).toHaveText('Enter a whole number from 0 to 20.');

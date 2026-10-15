@@ -374,6 +374,8 @@
     "select_to_view": "Select a course to view its exams."
   },
   "assignments": {
+    "put_score": "Put Score",
+    "save_score": "Save score",
     "filter_items": "Assignment",
     "search_items": "Search by assignment or course name",
     "search_attempts": "Search by learner, assignment or course",
@@ -1263,6 +1265,9 @@
     "reorder": "Reorder"
   },
   "quizzes": {
+    "put_learner_score": "Put learner score",
+    "put_score": "Put score",
+    "save_score": "Save score",
     "filter_items": "Quiz",
     "search_items": "Search by quiz or course name",
     "search_attempts": "Search by learner, quiz or course",

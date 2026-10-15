@@ -185,7 +185,8 @@
               <form class="asd-score" (ngSubmit)="save(a)" novalidate>
                 <div class="asd-score__field">
                   <label class="asd-score__label" [for]="'asd-score-' + a.id">
-                    {{ (editing ? 'assignments.update_score' : 'assignments.score') | translate }}
+                    <!-- Not scored yet: "Put score"; scored: "Update score" (NEW2B-6361). -->
+                    {{ (editing ? 'assignments.update_score' : 'assignments.put_score') | translate }}
                   </label>
                   <input class="asd-score__input" type="number" inputmode="numeric" min="0" [max]="q?.score ?? 0" step="1"
                     [id]="'asd-score-' + a.id" [name]="'score-' + a.id"
@@ -210,7 +211,7 @@
                   </button>
                   <button type="submit" class="asd-btn asd-btn--primary"
                     [disabled]="parsedScore(a) === null || saving() === a.id" [attr.aria-busy]="saving() === a.id">
-                    {{ (editing ? 'assignments.update' : 'assignments.save') | translate }}
+                    {{ (editing ? 'assignments.update' : 'assignments.save_score') | translate }}
                   </button>
                 </div>
               </form>
