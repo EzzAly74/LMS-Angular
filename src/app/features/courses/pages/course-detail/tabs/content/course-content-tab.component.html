@@ -243,10 +243,12 @@
           <span class="module-upload-progress__name">{{ slotUploadingName(lang) || (moduleIsVideo() ? ('course_detail.upload_video' | translate) : ('course_detail.upload_file' | translate)) }}</span>
           <span class="module-upload-progress__status">
             <span class="module-upload-progress__dot"></span>
-            {{ 'course_detail.uploading' | translate }}
+            {{ 'course_detail.uploading' | translate }}@if (slotUploadPercent(lang) > 0) { <bdi>{{ slotUploadPercent(lang) }}%</bdi> }
           </span>
-          <div class="module-upload-progress__track">
-            <span class="module-upload-progress__bar"></span>
+          <div class="module-upload-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+               [attr.aria-valuenow]="slotUploadPercent(lang)" [attr.aria-label]="'course_detail.uploading' | translate">
+            <span class="module-upload-progress__bar" [class.is-known]="slotUploadPercent(lang) > 0"
+                  [style.width.%]="slotUploadPercent(lang) > 0 ? slotUploadPercent(lang) : null"></span>
           </div>
         </div>
       </div>

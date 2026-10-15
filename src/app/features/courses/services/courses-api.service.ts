@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpContext, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Observable, map, of, switchMap, tap, throwError, timer, catchError, retry } from 'rxjs';
+import { QUIET_STATUSES } from '../../../core/interceptors/error.interceptor';
 import { ApiService, ApiParams } from '../../../core/services/api.service';
 import { API, API_BASE, courseUrl } from '../../../core/constants/api.constants';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.model';
@@ -13,9 +15,18 @@ import type { CourseFormSource } from '../models/course-form.model';
 import type { CohortScheduleUpdate, CourseEvaluationSummary, CourseLearnerRow, CourseSubmissionRow } from '../models/course-detail.model';
 import type { TemplateResults } from '../../evaluations/models/evaluation.model';
 
+/** A part of a module file could not be sent (after retries): the caller says so once. */
+export class ModuleUploadError extends Error {
+  constructor(readonly reason: unknown) {
+    super('Module upload failed');
+    this.name = 'ModuleUploadError';
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoursesApiService {
   private readonly api = inject(ApiService);
+  private readonly http = inject(HttpClient);
 
   list(params?: Record<string, string | number | boolean | null | undefined>): Observable<PaginatedResponse<Course>> {
     return this.api.getPaginated<Course>(API.COURSES, params);
@@ -150,10 +161,39 @@ export class CoursesApiService {
   }
 
   /** Multipart upload for a module's video (mp4 …) or document attachment. */
-  uploadModuleFile(courseId: number, file: File): Observable<ApiResponse<ModuleUploadResult>> {
-    const fd = new FormData();
-    fd.append('file', file);
-    return this.api.post<ModuleUploadResult>(`${courseUrl.lectures(courseId)}/upload`, fd);
+  /**
+   * A module file in parts (D-111): a lesson video is larger than one request
+   * may be. Start, send each part at its offset (a 409 says where to resume;
+   * a network or server error is retried three times), then complete, which
+   * answers as the one-request upload did. `progress` gets 0..1.
+   */
+  uploadModuleFile(courseId: number, file: File, progress?: (fraction: number) => void): Observable<ApiResponse<ModuleUploadResult>> {
+    const base = `${courseUrl.lectures(courseId)}/uploads`;
+    const quiet = new HttpContext().set(QUIET_STATUSES, [0, 409, 500, 502, 503, 504]);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/octet-stream' });
+
+    return this.api.post<{ id: string; chunk_size: number; received: number }>(base, { name: file.name, size: file.size }).pipe(
+      switchMap(start => {
+        const { id, chunk_size } = start.result;
+        const send = (offset: number): Observable<number> => offset >= file.size ? of(offset)
+          : this.http.put<ApiResponse<{ received: number }>>(`${base}/${id}`, file.slice(offset, offset + chunk_size), {
+              params: { offset }, headers, context: quiet,
+            }).pipe(
+              map(r => r.result.received),
+              // Out of step (a part arrived twice or not at all): resume where the server is.
+              catchError((e: unknown) => e instanceof HttpErrorResponse && e.status === 409 && typeof e.error?.result?.received === 'number'
+                ? of(e.error.result.received as number) : throwError(() => e)),
+              retry({ count: 3, delay: (e: unknown, n: number) => e instanceof HttpErrorResponse && e.status >= 400 && e.status < 500
+                ? throwError(() => e) : timer(1000 * n) }),
+              tap(received => progress?.(received / file.size)),
+              switchMap(received => send(received)),
+            );
+        return send(start.result.received).pipe(
+          catchError((e: unknown) => throwError(() => new ModuleUploadError(e))),
+          switchMap(() => this.api.post<ModuleUploadResult>(`${base}/${id}/complete`, {})),
+        );
+      }),
+    );
   }
 
   createModule(courseId: number, body: ModulePayload): Observable<ApiResponse<CourseModule>> {

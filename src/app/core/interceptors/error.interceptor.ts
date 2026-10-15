@@ -1,8 +1,14 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpInterceptorFn } from '@angular/common/http';
 import { inject, Injector } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
+
+/**
+ * Statuses the caller handles itself, with no toast: the parts of a chunked
+ * upload resume on 409 and retry network / server errors (D-111).
+ */
+export const QUIET_STATUSES = new HttpContextToken<readonly number[]>(() => []);
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const injector = inject(Injector);
@@ -15,7 +21,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       // 401 ends the session (auth interceptor). A refused read (403 on GET)
       // is a hidden section, not something the admin did; a refused action
       // (D-073) is, so it is reported below with the server's reason.
-      if (status === 401 || (status === 403 && req.method === 'GET')) {
+      if (status === 401 || (status === 403 && req.method === 'GET') || req.context.get(QUIET_STATUSES).includes(status)) {
         return throwError(() => err);
       }
 

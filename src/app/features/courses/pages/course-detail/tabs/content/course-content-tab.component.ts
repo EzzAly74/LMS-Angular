@@ -19,7 +19,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { NasRichTextComponent } from '../../../../../../shared/nas';
 import { NasIconComponent } from '../../../../../../shared/nas/nas-icon/nas-icon.component';
-import { CoursesApiService } from '../../../../services/courses-api.service';
+import { CoursesApiService, ModuleUploadError } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
 import type {
@@ -114,6 +114,9 @@ export class CourseContentTabComponent implements OnInit {
 
   /** True while a video/document upload is in flight for the module form. */
   moduleUploading = signal(false);
+  /** Upload progress 0..100 of the main / English file (D-111). */
+  moduleUploadPercent = signal(0);
+  moduleUploadPercentEn = signal(0);
   /** Name of the file currently being uploaded (shown in the progress card). */
   moduleUploadingName = signal<string | null>(null);
   /** Most recent successful upload (fresh file picked in the dialog). */
@@ -138,6 +141,9 @@ export class CourseContentTabComponent implements OnInit {
   /** The slot's state for the file-upload template ('main' or 'en'). */
   slotUploading(lang: FileSlot): boolean {
     return lang === 'en' ? this.moduleUploadingEn() : this.moduleUploading();
+  }
+  slotUploadPercent(lang: FileSlot): number {
+    return lang === 'en' ? this.moduleUploadPercentEn() : this.moduleUploadPercent();
   }
   slotUploadingName(lang: FileSlot): string | null {
     return lang === 'en' ? this.moduleUploadingNameEn() : this.moduleUploadingName();
@@ -421,7 +427,8 @@ export class CourseContentTabComponent implements OnInit {
     if (lang === 'en') {
       this.moduleUploadingNameEn.set(file.name);
       this.moduleUploadingEn.set(true);
-      this.coursesApi.uploadModuleFile(id, file).subscribe({
+      this.moduleUploadPercentEn.set(0);
+      this.coursesApi.uploadModuleFile(id, file, f => this.moduleUploadPercentEn.set(Math.floor(f * 100))).subscribe({
         next: (res) => {
           const r = res.result;
           if (r) {
@@ -432,9 +439,10 @@ export class CourseContentTabComponent implements OnInit {
           this.moduleUploadingEn.set(false);
           this.moduleUploadingNameEn.set(null);
         },
-        error: () => {
+        error: (e: unknown) => {
           this.moduleUploadingEn.set(false);
           this.moduleUploadingNameEn.set(null);
+          if (e instanceof ModuleUploadError) this.toast.error('course_detail.upload_failed');
         },
       });
       return;
@@ -442,7 +450,8 @@ export class CourseContentTabComponent implements OnInit {
 
     this.moduleUploadingName.set(file.name);
     this.moduleUploading.set(true);
-    this.coursesApi.uploadModuleFile(id, file).subscribe({
+    this.moduleUploadPercent.set(0);
+    this.coursesApi.uploadModuleFile(id, file, f => this.moduleUploadPercent.set(Math.floor(f * 100))).subscribe({
       next: (res) => {
         const r = res.result;
         if (r) {
@@ -454,9 +463,10 @@ export class CourseContentTabComponent implements OnInit {
         this.moduleUploading.set(false);
         this.moduleUploadingName.set(null);
       },
-      error: () => {
+      error: (e: unknown) => {
         this.moduleUploading.set(false);
         this.moduleUploadingName.set(null);
+        if (e instanceof ModuleUploadError) this.toast.error('course_detail.upload_failed');
       },
     });
   }

@@ -1776,7 +1776,7 @@
     "document": "مستند",
     "video": "فيديو",
     "upload_video": "رفع فيديو",
-    "uploading": "جارٍ الرفع…",
+    "upload_failed": "توقف الرفع (انقطع الاتصال). اختر الملف مرة أخرى للمحاولة.", "uploading": "جارٍ الرفع…",
     "existing_file": "ملف موجود",
     "module_url": "الرابط",
     "article": "مقال",

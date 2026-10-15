@@ -1732,7 +1732,7 @@
     "document": "Document",
     "video": "Video",
     "upload_video": "Upload Video",
-    "uploading": "Uploading…",
+    "upload_failed": "The upload stopped (connection lost). Choose the file again to retry.", "uploading": "Uploading…",
     "existing_file": "Existing file",
     "module_url": "URL",
     "article": "Article",
