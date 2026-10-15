@@ -38,6 +38,8 @@ async function mock(page: Page): Promise<Request[]> {
     items: [],
   }) }));
   await page.route(/\/api\/v1\/courses\?/, r => r.fulfill({ json: page1([{ id: 1, title: 'Workplace Safety Essentials' }]) }));
+  // The Assignment filter's choices (admin/assignments/list).
+  await page.route('**/api/v1/admin/assignments/list**', r => r.fulfill({ json: ok([{ id: 5, title: 'Practical Assessment', course_title: 'Workplace Safety Essentials' }]) }));
   return lists;
 }
 
@@ -87,16 +89,16 @@ test.describe('behaviour', () => {
     await page.getByRole('button', { name: 'Filter' }).click();
     await lookups;
     const d = page.getByRole('dialog', { name: 'Filter' });
-    await expect(d.locator('.fd__label')).toHaveText(['Courses', 'Instructors', 'Learners', 'Type', 'Result']);
+    await expect(d.locator('.fd__label')).toHaveText(['Courses', 'Assignment', 'Instructors', 'Learners', 'Type', 'Result']);
     await expect(d.getByRole('button', { name: 'Filter' })).toBeDisabled();
 
     // Instructors come from the kind's own instructors endpoint (not empty).
-    await d.locator('.p-multiselect').nth(1).click();
+    await d.locator('.p-multiselect').nth(2).click();
     await expect(page.locator('.fd-ms-panel li.p-multiselect-item')).toHaveText(['Nora Al-Fahad', 'Karim Mansour']);
     await closeList(page);
 
     // Type: several at once.
-    await d.locator('.p-multiselect').nth(3).click();
+    await d.locator('.p-multiselect').nth(4).click();
     await page.getByRole('option', { name: 'Pre-course' }).click();
     await page.getByRole('option', { name: 'Post-course' }).click();
     await closeList(page);
@@ -104,8 +106,12 @@ test.describe('behaviour', () => {
     await d.locator('.p-dropdown').first().click();
     await page.getByRole('option', { name: 'Passed' }).click();
     // Learner: the list comes from the filter options, across all courses.
-    await d.locator('.p-multiselect').nth(2).click();
+    await d.locator('.p-multiselect').nth(3).click();
     await page.getByRole('option', { name: 'Omar Al-Farsi' }).click();
+    await closeList(page);
+    // NEW2B-6357: the Assignment field, named with its course.
+    await d.locator('.p-multiselect').nth(1).click();
+    await page.getByRole('option', { name: 'Practical Assessment · Workplace Safety Essentials' }).click();
     await closeList(page);
 
     await d.getByRole('button', { name: 'Filter' }).click();
@@ -113,7 +119,8 @@ test.describe('behaviour', () => {
     const url = new URL(lists.at(-1)!.url());
     expect(url.searchParams.get('result')).toBe('passed');
     expect(url.searchParams.getAll('learner_ids[]')).toEqual(['102']);
-    await expect(page.locator('.nlt__badge')).toHaveText('3');
+    expect(url.searchParams.getAll('assignment_ids[]')).toEqual(['5']);
+    await expect(page.locator('.nlt__badge')).toHaveText('4');
 
     // Clear empties every field at once.
     await page.locator('.nlt__filter').click();

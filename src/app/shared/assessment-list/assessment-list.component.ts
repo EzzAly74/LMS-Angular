@@ -44,6 +44,8 @@ interface AttemptsQuery extends PagedQuery {
   readonly instructorIds: readonly number[];
   readonly learnerIds: readonly number[];
   readonly courseIds: readonly number[];
+  /** The Quiz / Assignment filter (NEW2B-6357). */
+  readonly itemIds: readonly number[];
 }
 
 interface ItemView extends AssessmentItemRow {
@@ -137,7 +139,7 @@ export class AssessmentListComponent implements OnInit {
   /* ── Attempts table ────────────────────────────────────────────── */
   readonly attempts = createPagedList<AttemptsQuery, AttemptView>({
     // Figma 1983:42584 draws ten rows a page.
-    initial: { search: '', page: 1, perPage: 10, result: null, types: [], instructorIds: [], learnerIds: [], courseIds: [] },
+    initial: { search: '', page: 1, perPage: 10, result: null, types: [], instructorIds: [], learnerIds: [], courseIds: [], itemIds: [] },
     load: q => this.source().attempts(this.attemptParams(q)).pipe(toPaged(r => this.toAttempt(r))),
   });
 
@@ -150,13 +152,18 @@ export class AssessmentListComponent implements OnInit {
     this.api.getPaginated<ApiCourseRaw>(API.COURSES, { per_page: 20, ...(term ? { search: term } : {}) }).pipe(
       map(res => res.result.data.map(c => ({ id: c.id, label: mapApiCourseListItem(c).title }))),
     ));
+  /** The Quiz / Assignment field searches by its name or its course's (NEW2B-6357). */
+  private readonly itemOptions = new RemoteFilterOptions(term =>
+    this.source().options(term || undefined).pipe(
+      map(list => list.map(i => ({ id: i.id, label: i.course_title ? `${i.title} · ${i.course_title}` : i.title }))),
+    ));
   private peopleLoaded = false;
   private readonly langTick = signal(0);
 
   readonly appliedFilters = computed<NasFilterValues>(() => {
     const q = this.attempts.query();
     return appliedValues({
-      course_ids: q.courseIds, instructor_ids: q.instructorIds, learner_ids: q.learnerIds, types: q.types, result: q.result,
+      course_ids: q.courseIds, item_ids: q.itemIds, instructor_ids: q.instructorIds, learner_ids: q.learnerIds, types: q.types, result: q.result,
     });
   });
   readonly activeFilters = computed(() => activeFilterCount(this.appliedFilters()));
@@ -172,6 +179,13 @@ export class AssessmentListComponent implements OnInit {
         placeholder: this.t.instant('courses_list.select_course'),
         searchPlaceholder: this.t.instant('courses_list.search_courses'),
         options: this.courseOptions.options(),
+      },
+      {
+        key: 'item_ids', multiple: true, remote: true,
+        label: this.t.instant(`${ns}.filter_items`),
+        placeholder: this.t.instant('common.select'),
+        searchPlaceholder: this.t.instant(`${ns}.search_items`),
+        options: this.itemOptions.options(),
       },
       {
         key: 'instructor_ids', multiple: true,
@@ -258,6 +272,7 @@ export class AssessmentListComponent implements OnInit {
     withList(p, 'instructor_ids', q.instructorIds);
     withList(p, 'learner_ids', q.learnerIds);
     withList(p, 'course_ids', q.courseIds);
+    withList(p, `${this.source().kind}_ids`, q.itemIds);
     return p;
   }
 
@@ -269,13 +284,17 @@ export class AssessmentListComponent implements OnInit {
 
   onFilterSearch(e: { key: string; term: string }): void {
     if (e.key === 'course_ids') this.courseOptions.search(e.term);
+    if (e.key === 'item_ids') this.itemOptions.search(e.term);
   }
 
   onFilter(v: NasFilterValues): void {
     const courseIds = filterNumbers(v['course_ids']);
     this.courseOptions.remember(courseIds);
+    const itemIds = filterNumbers(v['item_ids']);
+    this.itemOptions.remember(itemIds);
     this.attempts.patch({
       courseIds,
+      itemIds,
       instructorIds: filterNumbers(v['instructor_ids']),
       learnerIds: filterNumbers(v['learner_ids']),
       types: filterStrings(v['types'], this.source().types),
@@ -285,6 +304,7 @@ export class AssessmentListComponent implements OnInit {
 
   private loadLookups(): void {
     this.courseOptions.search('');
+    this.itemOptions.search('');
     if (this.peopleLoaded) return;
     this.peopleLoaded = true;
     forkJoin({

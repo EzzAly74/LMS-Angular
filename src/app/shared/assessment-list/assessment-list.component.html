@@ -15,8 +15,8 @@
   <div class="ql-modal-search">
     <nas-icon name="magnifying-glass" [size]="20" />
     <input #va type="search" class="ql-modal-search__input"
-      [attr.aria-label]="'common.quick_search' | translate"
-      [placeholder]="'common.quick_search' | translate"
+      [attr.aria-label]="source().ns + '.search_items' | translate"
+      [placeholder]="source().ns + '.search_items' | translate"
       (input)="onViewAllSearch(va.value)" />
   </div>
 
@@ -151,7 +151,7 @@
   <!-- All attempts -->
   <section class="ql-attempts" [attr.aria-label]="src.keys.subtitle | translate">
     <nas-list-toolbar [search]="attempts.query().search" [filterCount]="activeFilters()"
-      [label]="'common.quick_search' | translate" [placeholder]="'common.quick_search' | translate"
+      [label]="source().ns + '.search_attempts' | translate" [placeholder]="source().ns + '.search_attempts' | translate"
       (searchChange)="attempts.search($event)" (filter)="openFilter()" />
 
     <nas-table-card [label]="src.keys.subtitle | translate" [busy]="attempts.state() === 'loading'">

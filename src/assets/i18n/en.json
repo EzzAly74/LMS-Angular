@@ -374,6 +374,9 @@
     "select_to_view": "Select a course to view its exams."
   },
   "assignments": {
+    "filter_items": "Assignment",
+    "search_items": "Search by assignment or course name",
+    "search_attempts": "Search by learner, assignment or course",
     "col_assignments": "Assignments",
     "count_created": {"one":"{{count}} created assignment","other":"{{count}} created assignments"},
     "count_courses": {"one":"for {{count}} course","other":"for {{count}} courses"},
@@ -1260,6 +1263,9 @@
     "reorder": "Reorder"
   },
   "quizzes": {
+    "filter_items": "Quiz",
+    "search_items": "Search by quiz or course name",
+    "search_attempts": "Search by learner, quiz or course",
     "col_quizzes": "Quizzes",
     "count_created": {"one":"{{count}} created quiz","other":"{{count}} created quizzes"},
     "count_courses": {"one":"for {{count}} course","other":"for {{count}} courses"},
