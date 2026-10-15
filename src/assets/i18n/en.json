@@ -1617,9 +1617,8 @@
       "step2_edit": "Step 2 · Upload new sessions (optional)",
       "upload_title_edit": "Upload the updated schedule",
       "upload_desc_edit": "Upload the full sheet or only the new rows. Leave this out to change only the name or capacity.",
-      "edit_rules": "Only new sessions are added; sessions the sheet leaves out are kept. A new session must start in the future and must not overlap another. Sessions already held cannot be changed.",
+      "edit_rules": "A row with an existing session's number updates that session if it has not been held yet (date, time, location, content). Other rows add new sessions, which must start in the future and not overlap another. Sessions the sheet leaves out are kept. Sessions already held cannot be changed.",
       "capacity_enrolled": "Capacity cannot be less than the {{count}} learners already enrolled.",
-      "updated_with_removed": "Cohort updated · {{added}} sessions added, {{updated}} updated, {{removed}} removed",
       "updated_with_sessions": "Cohort updated · {{added}} sessions added, {{updated}} updated"
     },
     "tab_overview": "Overview",
