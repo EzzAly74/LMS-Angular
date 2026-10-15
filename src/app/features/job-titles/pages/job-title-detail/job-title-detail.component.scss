@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 // Job title detail - Figma 2459:137558 (D1b; first built from 2325:117118). Values are the design's, mapped to
 // the existing --nas-* tokens; layout uses logical properties so RTL needs
 // no duplicated rules beyond the two direction-bearing graphics (the bar
@@ -84,7 +86,8 @@
   inline-size: 100%;
   min-inline-size: 860px;
   border-collapse: collapse;
-  table-layout: fixed;
+  // Fixed layout on the colgroup's widths; the completion column takes the rest.
+  @include table-fit.fit;
 }
 
 .jtd__col-learner  { inline-size: 34%; }

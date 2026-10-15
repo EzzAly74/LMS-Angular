@@ -230,12 +230,12 @@
                 </header>
 
                 <div class="rf-matrix-wrap">
-                  <table class="rf-matrix" [attr.aria-labelledby]="'rf-group-' + g.group.key">
+                  <table class="rf-matrix" [attr.aria-labelledby]="'rf-group-' + g.group.key" [style.--rf-cols]="actions().length">
                     <thead>
                       <tr>
                         <th scope="col" class="rf-matrix__section">{{ 'roles.section_col' | translate }}</th>
                         @for (a of actions(); track a.key) {
-                          <th scope="col" class="rf-matrix__action">{{ a.label }}</th>
+                          <th scope="col" class="rf-matrix__action" [attr.title]="a.label">{{ a.label }}</th>
                         }
                       </tr>
                     </thead>
@@ -248,8 +248,8 @@
                                      [checked]="row.all" [indeterminate]="row.some" [disabled]="row.disabled"
                                      [attr.aria-label]="'roles.full_row' | translate:{ section: row.item.label }"
                                      (change)="toggleRow(row)" />
-                              <span class="rf-matrix__name">
-                                {{ row.item.label }}
+                              <span class="rf-matrix__name" [attr.title]="row.item.label">
+                                <span>{{ row.item.label }}</span>
                                 @if (row.scopeBlocked) {
                                   <small class="rf-matrix__note">{{ 'roles.org_wide_blocked' | translate }}</small>
                                 }

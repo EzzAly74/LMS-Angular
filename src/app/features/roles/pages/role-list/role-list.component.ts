@@ -16,6 +16,7 @@ import { DialogModule } from 'primeng/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminRolesApiService } from '../../services/admin-roles-api.service';
 import type {
@@ -38,6 +39,7 @@ import { AuthService } from '../../../../core/services/auth.service';
     DialogModule,
     TranslateModule,
     NasPageHeaderComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './role-list.component.html',
@@ -62,6 +64,11 @@ export class RoleListComponent implements OnInit, OnDestroy {
   /* ── Data ────────────────────────────────────────────────────── */
   readonly roles = signal<AdminRoleListItem[]>([]);
   readonly totalViews = signal(0);
+  /** Roles across every page (the pager's total). */
+  readonly total = signal(0);
+  /** Two cards per row: ten roles a page. */
+  readonly perPage = 10;
+  readonly page = signal(1);
   readonly catalog = signal<AdminRoleSectionCatalog | null>(null);
   readonly loading = signal(true);
 
@@ -110,9 +117,17 @@ export class RoleListComponent implements OnInit, OnDestroy {
   /* ── Loaders ─────────────────────────────────────────────────── */
   refresh(): void {
     this.loading.set(true);
-    this.api.list().subscribe({
+    this.api.list({ page: this.page(), per_page: this.perPage }).subscribe({
       next: (res) => {
-        this.roles.set(res.result.roles ?? []);
+        const roles = res.result.roles ?? [];
+        // A page emptied by a delete (or a shrinking list) steps back once.
+        if (!roles.length && this.page() > 1) {
+          this.page.update(p => p - 1);
+          this.refresh();
+          return;
+        }
+        this.roles.set(roles);
+        this.total.set(res.result.total ?? roles.length);
         this.totalViews.set(res.result.total_views ?? 0);
         this.loading.set(false);
       },
@@ -125,6 +140,13 @@ export class RoleListComponent implements OnInit, OnDestroy {
   }
 
   /* ── Interactions ────────────────────────────────────────────── */
+  onPage(p: number): void {
+    if (p < 1 || p === this.page()) return;
+    this.page.set(p);
+    this.closeMenu();
+    this.refresh();
+  }
+
   onSearch(v: string): void {
     this.search$.next(v);
   }

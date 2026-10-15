@@ -179,10 +179,10 @@
       <table class="ctrl-table">
         <thead>
           <tr>
-            <th>{{ 'controllers.col_name' | translate }}</th>
-            <th>{{ 'controllers.role' | translate }}</th>
-            <th>{{ 'controllers.date_added' | translate }}</th>
-            <th class="ctrl-table__th--actions"></th>
+            <th class="tf-w-fill">{{ 'controllers.col_name' | translate }}</th>
+            <th class="tf-w-lg">{{ 'controllers.role' | translate }}</th>
+            <th class="tf-w-date">{{ 'controllers.date_added' | translate }}</th>
+            <th class="ctrl-table__th--actions tf-w-actions"></th>
           </tr>
         </thead>
 
@@ -220,8 +220,8 @@
                     <nas-avatar [ngClass]="avatarTintClass(item.role_chip?.color)"
                                 [name]="displayName(item)" [image]="item.image" />
                     <div class="ctrl-user-cell__col">
-                      <span class="ctrl-user-cell__name">{{ displayName(item) }}</span>
-                      <span class="ctrl-user-cell__email">{{ item.email }}</span>
+                      <span class="ctrl-user-cell__name" [attr.title]="displayName(item)">{{ displayName(item) }}</span>
+                      <span class="ctrl-user-cell__email" [attr.title]="item.email">{{ item.email }}</span>
                     </div>
                   </div>
                 </td>
@@ -231,12 +231,12 @@
                     <span class="ctrl-badge"
                           [ngClass]="badgeColorClass(item.role_chip.color)">
                       <span class="ctrl-badge__dot"></span>
-                      {{ item.role_chip.name }}
+                      <span [attr.title]="item.role_chip.name">{{ item.role_chip.name }}</span>
                     </span>
                   } @else {
                     <span class="ctrl-badge ctrl-badge--muted">
                       <span class="ctrl-badge__dot"></span>
-                      {{ 'controllers.unassigned' | translate }}
+                      <span>{{ 'controllers.unassigned' | translate }}</span>
                     </span>
                   }
                 </td>
@@ -262,22 +262,8 @@
       </table>
     </div>
 
-    @if (total() > perPage) {
-      <div class="ctrl-pagination">
-        <span class="ctrl-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
-        </span>
-        <div class="ctrl-pagination__nav">
-          <button type="button" class="ctrl-icon-btn"
-                  [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left" aria-hidden="true"></i>
-          </button>
-          <button type="button" class="ctrl-icon-btn"
-                  [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
+    @if (!loading() && total() > 0) {
+      <nas-pager class="ctrl-pager" [page]="page" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
     }
   </div>
 </div>

@@ -22,6 +22,7 @@ import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 
 interface Category {
   id: number;
@@ -63,6 +64,7 @@ interface CategoryFormState {
     TranslateModule,
     NasIconComponent,
     NasConfirmModalComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './category-list.component.html',
@@ -106,10 +108,6 @@ export class CategoryListComponent implements OnInit, OnDestroy {
 
   /* ── Row action menu state ────────────────────────────────────────── */
   menuTarget = signal<Category | null>(null);
-
-  /* ── Derived ──────────────────────────────────────────────────────── */
-  rangeStart = computed(() => (this.page() - 1) * this.perPage + 1);
-  rangeEnd   = computed(() => Math.min(this.page() * this.perPage, this.total()));
 
   private readonly search$  = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
@@ -280,6 +278,8 @@ export class CategoryListComponent implements OnInit, OnDestroy {
         this.confirmDeleteOpen.set(false);
         this.deleteTarget.set(null);
         this.messages.success('categories_toasts.deleted', { title: 'common.deleted' });
+        // Step back a page when the last row of this one was removed.
+        if (this.items().length === 1 && this.page() > 1) this.page.update(p => p - 1);
         this.load();
       },
       error: () => this.deleteBusy.set(false),

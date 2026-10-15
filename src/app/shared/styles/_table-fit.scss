@@ -1,0 +1,84 @@
+// Fixed-width data tables - the project-wide rule for every Dashboard table.
+//
+// A table's columns take the widths its header cells give them (a `%` or px
+// `inline-size` per `th`, or a `<colgroup>`); content can no longer stretch a
+// column. Long text stays on one line and ends in "…"; the cell carries the
+// full value in a `title` so it can still be read. Columns that must not
+// truncate (actions, checkboxes, avatars, short pills) get a fixed width that
+// fits them. On a narrow screen the table keeps its own `min-inline-size` and
+// scrolls sideways inside its card; the page never does.
+//
+// Usage, in the component scss:
+//   @use '<path>/shared/styles/table-fit';
+//   .my-table { @include table-fit.fit; }
+//   @include table-fit.columns;   // the `tf-w-*` column widths below
+// `.cl-table` (shared/styles/_list.scss) already includes both.
+//
+// Column widths go on the header cell (`<th class="tf-w-date">`). Compact
+// columns take a fixed width that fits their content; text columns take a
+// share of the table, so they grow with the card and truncate when it is
+// narrow. A page with Figma widths keeps its own classes (`cc-w-*`, `ll__c-*`).
+
+// Widths that fit the cell content plus the 20 px cell padding on each side.
+@mixin columns {
+  .tf-w-check    { inline-size: 56px; }   // a checkbox
+  .tf-w-action   { inline-size: 76px; }   // one 32 px row button
+  .tf-w-action-lg { inline-size: 88px; }  // one 44 px button
+  .tf-w-actions  { inline-size: 120px; }  // two or three 32 px buttons
+  .tf-w-num      { inline-size: 104px; }  // a count / score / short code
+  .tf-w-date     { inline-size: 136px; }  // a date
+  .tf-w-datetime { inline-size: 176px; }  // a date and time
+  .tf-w-status   { inline-size: 152px; }  // a status pill
+  .tf-w-progress { inline-size: 220px; }  // a progress bar and value
+  // The table's main text column: whatever the others leave (fixed layout, so
+  // this is the table width minus the other columns - never its content).
+  .tf-w-fill { inline-size: auto; }
+  // Text columns: a share of the table.
+  .tf-w-xs { inline-size: 10%; }
+  .tf-w-sm { inline-size: 14%; }
+  .tf-w-md { inline-size: 18%; }
+  .tf-w-lg { inline-size: 24%; }
+  .tf-w-xl { inline-size: 32%; }
+}
+
+@mixin fit {
+  table-layout: fixed;
+
+  // One line per cell: text that does not fit ends in "…" and is clipped at
+  // the cell edge instead of widening the column.
+  :is(th, td) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // A cell that anchors its own popup (a row menu drawn inside the cell)
+  // must not clip it; its column still has a fixed width.
+  :is(th, td).tf-overflow-visible { overflow: visible; }
+
+  // Full-width rows (loading / empty / error states) wrap normally.
+  :is(th, td)[colspan] {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  // Text holders inside a cell (a name + sub-line, a title + pill, a flex
+  // row) shrink with the column and end in "…" too. In a cascade layer so
+  // any rule a page writes for its own cell parts (a min width, a visible
+  // overflow) still wins, whatever its specificity.
+  // Only text holders clip (no children but inline text markup such as a
+  // <bdi>), so an avatar's status dot or a wrapper's focus ring is never cut.
+  @layer table-fit {
+    // (Not empty ones: a status dot keeps its size.)
+    :is(th, td) :where(div, p, span, a, strong, small, bdi, b, em, time, label):not(:empty) {
+      min-inline-size: 0;
+      max-inline-size: 100%;
+    }
+
+    :is(th, td) :where(div, p, span, a, strong, small, bdi, b, em, time):not(:has(> :not(bdi, bdo, b, em, strong, small, time, abbr, br))) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

@@ -3,15 +3,18 @@
 // the 92 px learner rows and the learner / qualification cells.
 @use '../../../../shared/styles/list';
 
-.ll__table { min-inline-size: 1000px; }
+// The Figma widths on the 1130 px table; the name takes its 260 px as a share
+// so it is the column that gives when the card is narrower, and Last Activity
+// has its own width instead of whatever was left.
+.ll__table { min-inline-size: 1120px; }
 
-.ll__c-name   { inline-size: 260px; }
-.ll__c-id     { inline-size: 130px; }
-.ll__c-earned { inline-size: 160px; }
-.ll__c-qual   { inline-size: 160px; }
-.ll__c-cert   { inline-size: 181px; }
-
-.ll__c-actions { inline-size: 96px; }
+.ll__c-name     { inline-size: 23%; }
+.ll__c-id       { inline-size: 130px; }
+.ll__c-earned   { inline-size: 160px; }
+.ll__c-qual     { inline-size: 160px; }
+.ll__c-cert     { inline-size: 181px; }
+.ll__c-activity { inline-size: 140px; }
+.ll__c-actions  { inline-size: 96px; }
 
 .ll__row td { block-size: 92px; color: var(--nas-color-text-strong); white-space: nowrap; }
 

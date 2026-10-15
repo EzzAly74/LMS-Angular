@@ -19,6 +19,8 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { NasRichTextComponent } from '../../../../../../shared/nas';
 import { NasIconComponent } from '../../../../../../shared/nas/nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../../../../../../shared/nas/nas-pager/nas-pager.component';
+import { ClientPager } from '../../../../../../shared/list/client-pager';
 import { CoursesApiService, ModuleUploadError } from '../../../../services/courses-api.service';
 import { EnumsService } from '../../../../../../core/services/enums.service';
 import { LocaleService } from '../../../../../../core/services/locale.service';
@@ -68,6 +70,7 @@ interface ModuleFileInfo {
     CheckboxModule,
     NasRichTextComponent,
     NasIconComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-content-tab.component.html',
@@ -229,6 +232,13 @@ export class CourseContentTabComponent implements OnInit {
     return list.filter((c) => c.kind === 'lecture' && c.content_type !== null && filters.has(c.content_type));
   });
 
+  /**
+   * Ten rows a page. The content is loaded whole (the header counts and times
+   * all of it, and the rows are numbered across the course), so the tab pages
+   * through that list.
+   */
+  readonly pager = new ClientPager<CourseContentItem>(this.filteredContent, 10);
+
   /** "12 modules · 310 min estimated learner time" header text (quizzes' time allowed included). */
   modulesHeader = computed(() => {
     const list = this.content();
@@ -260,6 +270,7 @@ export class CourseContentTabComponent implements OnInit {
   /** Toggle a filter chip. `all` is mutually exclusive with the type chips. */
   toggleModuleFilter(filter: ModuleFilter): void {
     const current = new Set(this.moduleFilters());
+    this.pager.reset();
     if (filter === 'all') {
       this.moduleFilters.set(new Set<ModuleFilter>(['all']));
       return;

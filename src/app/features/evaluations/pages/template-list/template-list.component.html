@@ -166,14 +166,14 @@
                 <tr class="tl__row">
                   <td>
                     <span class="ev__cell-stack">
-                      <a class="ev__primary tl__link" [routerLink]="[t.id]"><bdi>{{ t.name }}</bdi></a>
+                      <a class="ev__primary tl__link" [routerLink]="[t.id]" [attr.title]="t.name"><bdi>{{ t.name }}</bdi></a>
                       <span class="ev__secondary">{{ 'evaluations.created_on' | translate: { date: (t.created_at | nasDate: locale()) } }}</span>
                     </span>
                   </td>
                   <td>
                     <span class="ev__cell-stack">
-                      <span class="ev__ellipsis cl-strong"><bdi>{{ t.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></span>
-                      @if (t.cohort) { <span class="ev__secondary"><bdi>{{ t.cohort.name }}</bdi></span> }
+                      <span class="ev__ellipsis cl-strong" [attr.title]="t.course?.name ?? null"><bdi>{{ t.course?.name ?? ('evaluations.scope_all_courses' | translate) }}</bdi></span>
+                      @if (t.cohort) { <span class="ev__secondary" [attr.title]="t.cohort.name"><bdi>{{ t.cohort.name }}</bdi></span> }
                     </span>
                   </td>
                   <td class="cl-center cl-strong">{{ t.questions }}</td>

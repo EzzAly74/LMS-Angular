@@ -161,6 +161,9 @@
             <nas-icon name="bell" [size]="32" />
             <p>{{ 'notifications.inbox.empty' | translate }}</p>
           </div>
+        } @else {
+          <!-- Older notifications are paged on the server (GET notifications/mine page/per_page). -->
+          <nas-pager class="nd-pager" [page]="feed.page()" [total]="feed.total()" [perPage]="feed.perPage()" (pageChange)="onFeedPage($event)" />
         }
       }
     </section>

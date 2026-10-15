@@ -120,11 +120,11 @@
       <table class="al-table">
         <thead>
           <tr>
-            <th>{{ 'audit_log.timestamp' | translate }}</th>
-            <th>{{ 'audit_log.actor' | translate }}</th>
-            <th>{{ 'audit_log.action' | translate }}</th>
-            <th>{{ 'audit_log.entity' | translate }}</th>
-            <th>{{ 'audit_log.ip' | translate }}</th>
+            <th class="al-w-time">{{ 'audit_log.timestamp' | translate }}</th>
+            <th class="tf-w-lg">{{ 'audit_log.actor' | translate }}</th>
+            <th class="tf-w-lg">{{ 'audit_log.action' | translate }}</th>
+            <th class="tf-w-fill">{{ 'audit_log.entity' | translate }}</th>
+            <th class="tf-w-date">{{ 'audit_log.ip' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -151,8 +151,8 @@
                 </td>
                 <td>
                   <div class="al-actor-cell">
-                    <span class="al-actor-cell__name">{{ row.actor_name }}</span>
-                    <span [class]="roleBadgeClass(row.actor_role)">
+                    <span class="al-actor-cell__name" [attr.title]="row.actor_name">{{ row.actor_name }}</span>
+                    <span [class]="roleBadgeClass(row.actor_role)" [attr.title]="row.actor_role_label">
                       {{ row.actor_role_label }}
                     </span>
                   </div>
@@ -167,8 +167,8 @@
                     <span class="al-action-chip__verb">{{ row.action_token || row.action_raw }}</span>
                   </span>
                 </td>
-                <td class="al-entity-cell">{{ row.entity || '—' }}</td>
-                <td class="al-cell-muted al-cell-mono">{{ row.ip_address || '—' }}</td>
+                <td class="al-entity-cell" [attr.title]="row.entity || null">{{ row.entity || '—' }}</td>
+                <td class="al-cell-muted al-cell-mono" [attr.title]="row.ip_address || null">{{ row.ip_address || '—' }}</td>
               </tr>
             }
           }
@@ -176,28 +176,8 @@
       </table>
     </div>
 
-    @if (total() > perPage) {
-      <div class="al-pagination">
-        <span class="al-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
-        </span>
-        <div class="al-pagination__nav">
-          <button
-            type="button"
-            class="al-pagination__btn"
-            [disabled]="page === 1"
-            (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="al-pagination__btn"
-            [disabled]="page * perPage >= total()"
-            (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
+    @if (!loading() && total() > 0) {
+      <nas-pager class="al-pager" [page]="page" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
     }
   </div>
 

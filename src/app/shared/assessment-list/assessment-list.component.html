@@ -35,6 +35,9 @@
       }
     }
   </div>
+  @if (!viewAllLoading() && viewAllTotal() > 0) {
+    <nas-pager class="ql-modal-pager" [page]="viewAllPage()" [total]="viewAllTotal()" [perPage]="viewAllPerPage" (pageChange)="onViewAllPage($event)" />
+  }
 
   <ng-template pTemplate="footer">
     <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">{{ 'common.cancel' | translate }}</button>
@@ -76,13 +79,13 @@
       <table class="cl-table ql-table">
         <thead>
           <tr>
-            <th scope="col">{{ src.keys.colItems | translate }}</th>
-            <th scope="col">{{ ns + '.col_course' | translate }}</th>
-            <th scope="col">{{ ns + '.col_cohort_scope' | translate }}</th>
-            <th scope="col">{{ ns + '.col_questions' | translate }}</th>
-            <th scope="col">{{ ns + '.col_total_score' | translate }}</th>
-            <th scope="col">{{ ns + '.col_due' | translate }}</th>
-            <th scope="col"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+            <th scope="col" class="ql-w-name">{{ src.keys.colItems | translate }}</th>
+            <th scope="col" class="ql-w-course">{{ ns + '.col_course' | translate }}</th>
+            <th scope="col" class="ql-w-scope">{{ ns + '.col_cohort_scope' | translate }}</th>
+            <th scope="col" class="tf-w-num">{{ ns + '.col_questions' | translate }}</th>
+            <th scope="col" class="tf-w-num">{{ ns + '.col_total_score' | translate }}</th>
+            <th scope="col" class="tf-w-date">{{ ns + '.col_due' | translate }}</th>
+            <th scope="col" class="ql-w-actions"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -99,7 +102,7 @@
               @for (item of items.items(); track item.id) {
                 <tr class="cl-row" [class.cl-row--static]="!canEdit()" (click)="editItem(item)">
                   <td class="cl-strong ql-title-cell"><span class="ql-title" [attr.title]="item.title">{{ item.title }}</span></td>
-                  <td>{{ item.course_title ?? '—' }}</td>
+                  <td [attr.title]="item.course_title ?? null">{{ item.course_title ?? '—' }}</td>
                   <td>
                     <!-- Every chosen cohort is reachable: two pills, then "+N" (NEW2B-6327). -->
                     @if (item.cohortNames.length) {
@@ -158,14 +161,14 @@
       <table class="cl-table ql-table ql-table--attempts">
         <thead>
           <tr>
-            <th scope="col">{{ ns + '.learner' | translate }}</th>
-            <th scope="col">{{ ns + '.col_course' | translate }}</th>
-            <th scope="col">{{ ns + '.sub_col_instructor' | translate }}</th>
-            <th scope="col">{{ src.keys.colItem | translate }}</th>
-            <th scope="col">{{ ns + '.sub_col_submitted' | translate }}</th>
-            <th scope="col">{{ ns + '.sub_col_score' | translate }}</th>
-            <th scope="col" class="cl-center">{{ ns + '.sub_col_type' | translate }}</th>
-            <th scope="col"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+            <th scope="col" class="tf-w-md">{{ ns + '.learner' | translate }}</th>
+            <th scope="col" class="tf-w-md">{{ ns + '.col_course' | translate }}</th>
+            <th scope="col" class="tf-w-sm">{{ ns + '.sub_col_instructor' | translate }}</th>
+            <th scope="col" class="tf-w-md">{{ src.keys.colItem | translate }}</th>
+            <th scope="col" class="tf-w-date">{{ ns + '.sub_col_submitted' | translate }}</th>
+            <th scope="col" class="tf-w-num">{{ ns + '.sub_col_score' | translate }}</th>
+            <th scope="col" class="cl-center tf-w-num">{{ ns + '.sub_col_type' | translate }}</th>
+            <th scope="col" class="tf-w-action-lg"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -181,9 +184,9 @@
             @default {
               @for (sub of attempts.items(); track sub.id) {
                 <tr class="cl-row" (click)="openAttempt(sub)">
-                  <td class="cl-strong">{{ sub.user?.name ?? '—' }}</td>
-                  <td>{{ sub.course_title ?? '—' }}</td>
-                  <td>{{ sub.instructor_name ?? '—' }}</td>
+                  <td class="cl-strong" [attr.title]="sub.user?.name ?? null">{{ sub.user?.name ?? '—' }}</td>
+                  <td [attr.title]="sub.course_title ?? null">{{ sub.course_title ?? '—' }}</td>
+                  <td [attr.title]="sub.instructor_name ?? null">{{ sub.instructor_name ?? '—' }}</td>
                   <td class="ql-title-cell"><span class="ql-title" [attr.title]="sub.item_title">{{ sub.item_title ?? '—' }}</span></td>
                   <td class="cl-small">{{ sub.submitted | nasDate: locale() }}</td>
                   <td>

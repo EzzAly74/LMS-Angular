@@ -13,11 +13,11 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'common.title' | translate }}</th>
-            <th>{{ 'exams.degree' | translate }}</th>
-            <th>{{ 'common.type' | translate }}</th>
-            <th>{{ 'common.created_at' | translate }}</th>
-            <th></th>
+            <th class="tf-w-xl">{{ 'common.title' | translate }}</th>
+            <th class="tf-w-num">{{ 'exams.degree' | translate }}</th>
+            <th class="tf-w-status">{{ 'common.type' | translate }}</th>
+            <th class="tf-w-date">{{ 'common.created_at' | translate }}</th>
+            <th class="tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -32,7 +32,7 @@
           } @else {
             @for (item of items(); track item.id) {
               <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.title }}</td>
+                <td class="nas-table__primary" [attr.title]="item.title">{{ item.title }}</td>
                 <td>{{ item.degree }}</td>
                 <td><nas-status-badge [tone]="item.is_final ? 'danger' : 'info'">{{ (item.is_final ? 'exams.final' : 'exams.not_final') | translate }}</nas-status-badge></td>
                 <td class="nas-table__muted">{{ item.created_at | localDate }}</td>

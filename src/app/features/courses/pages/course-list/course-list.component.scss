@@ -14,14 +14,14 @@
 }
 
 // Figma column widths on the 1130 px table (2556:151361); they scale with it.
-.cc-w-course     { inline-size: 24.4%; }
+.cc-w-course     { inline-size: 23.7%; }
 .cc-w-category   { inline-size: 10.8%; }
 .cc-w-instructor { inline-size: 13.4%; }
 .cc-w-cohorts    { inline-size: 7.9%; }
 .cc-w-enrolled   { inline-size: 8.5%; }
 .cc-w-completion { inline-size: 12.4%; }
 .cc-w-evaluation { inline-size: 8.8%; }
-.cc-w-status     { inline-size: 10.3%; }
+.cc-w-status     { inline-size: 11%; } // 10.3% in Figma: +0.7% (from Course) so "Up Coming" fits its pill
 .cc-w-actions    { inline-size: 6.4%; }
 
 .cc-strong { color: var(--nas-neutral-1000); }

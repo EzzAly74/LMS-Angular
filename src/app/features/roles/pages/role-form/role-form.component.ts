@@ -137,7 +137,9 @@ export class RoleFormComponent implements OnInit, OnDestroy {
             action,
             permission,
             supported,
-            checked: supported && f.selected.has(permission),
+            // A role limited to its own courses cannot hold an org-wide
+            // section, so it never shows as granted (D-074).
+            checked: supported && !scopeBlocked && f.selected.has(permission),
             disabled: !supported || readOnly || scopeBlocked || !this.grantable(permission),
           };
         });
@@ -251,15 +253,18 @@ export class RoleFormComponent implements OnInit, OnDestroy {
    */
   pickScope(scope: CourseScope): void {
     if (this.readOnly()) return;
-    this.form.update(f => {
-      const next = new Set(f.selected);
-      if (scope === 'assigned') {
-        for (const item of this.items()) {
-          if (item.org_wide) item.actions.forEach(a => next.delete(permissionOf(a, item.key)));
-        }
+    this.form.update(f => ({ ...f, courseScope: scope, selected: this.usable(f.selected, scope) }));
+  }
+
+  /** The permissions a role with this course access can use: "own courses" drops the org-wide sections. */
+  private usable(selected: ReadonlySet<string>, scope: CourseScope): Set<string> {
+    const next = new Set(selected);
+    if (scope === 'assigned') {
+      for (const item of this.items()) {
+        if (item.org_wide) item.actions.forEach(a => next.delete(permissionOf(a, item.key)));
       }
-      return { ...f, courseScope: scope, selected: next };
-    });
+    }
+    return next;
   }
 
   /* ── Matrix ──────────────────────────────────────────────────── */
@@ -331,7 +336,7 @@ export class RoleFormComponent implements OnInit, OnDestroy {
       description_ar: f.description_ar.trim() || null,
       color: f.color,
       course_scope: f.courseScope,
-      permissions: Array.from(f.selected),
+      permissions: Array.from(this.usable(f.selected, f.courseScope)),
     };
 
     const request$ = this.mode() === 'create' ? this.api.create(payload) : this.api.update(this.editingId()!, payload);

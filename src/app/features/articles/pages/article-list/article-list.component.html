@@ -23,12 +23,12 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'common.title' | translate }}</th>
-            <th>{{ 'common.type' | translate }}</th>
-            <th>{{ 'articles.published' | translate }}</th>
-            <th>{{ 'articles.homepage' | translate }}</th>
-            <th>{{ 'common.status' | translate }}</th>
-            <th></th>
+            <th class="tf-w-xl">{{ 'common.title' | translate }}</th>
+            <th class="tf-w-status">{{ 'common.type' | translate }}</th>
+            <th class="tf-w-date">{{ 'articles.published' | translate }}</th>
+            <th class="tf-w-num">{{ 'articles.homepage' | translate }}</th>
+            <th class="tf-w-status">{{ 'common.status' | translate }}</th>
+            <th class="tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -43,7 +43,7 @@
           } @else {
             @for (item of items(); track item.id) {
               <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.title }}</td>
+                <td class="nas-table__primary" [attr.title]="item.title">{{ item.title }}</td>
                 <td>
                   <nas-status-badge tone="neutral">{{ item.type | titlecase }}</nas-status-badge>
                 </td>

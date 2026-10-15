@@ -8,24 +8,24 @@
   <table class="cl-table">
     <thead>
       <tr>
-        <th scope="col">{{ 'course_detail.learner' | translate }}</th>
+        <th scope="col" class="tf-w-lg">{{ 'course_detail.learner' | translate }}</th>
         @if (quiz) {
-          <th scope="col">{{ 'course_detail.cohorts' | translate }}</th>
-          <th scope="col">{{ 'course_detail.instructor' | translate }}</th>
-          <th scope="col">{{ 'course_detail.quiz' | translate }}</th>
+          <th scope="col" class="tf-w-md">{{ 'course_detail.cohorts' | translate }}</th>
+          <th scope="col" class="tf-w-md">{{ 'course_detail.instructor' | translate }}</th>
+          <th scope="col" class="tf-w-lg">{{ 'course_detail.quiz' | translate }}</th>
         } @else {
-          <th scope="col">{{ 'course_detail.instructor' | translate }}</th>
-          <th scope="col">{{ 'course_detail.assignment' | translate }}</th>
-          <th scope="col">{{ 'course_detail.cohort' | translate }}</th>
+          <th scope="col" class="tf-w-md">{{ 'course_detail.instructor' | translate }}</th>
+          <th scope="col" class="tf-w-lg">{{ 'course_detail.assignment' | translate }}</th>
+          <th scope="col" class="tf-w-md">{{ 'course_detail.cohort' | translate }}</th>
         }
-        <th scope="col">{{ 'course_detail.submitted' | translate }}</th>
-        <th scope="col">{{ 'course_detail.score' | translate }}</th>
+        <th scope="col" class="tf-w-date">{{ 'course_detail.submitted' | translate }}</th>
+        <th scope="col" class="tf-w-num">{{ 'course_detail.score' | translate }}</th>
         @if (quiz) {
-          <th scope="col" class="cl-center">{{ 'course_detail.attempts' | translate }}</th>
+          <th scope="col" class="cl-center tf-w-num">{{ 'course_detail.attempts' | translate }}</th>
         } @else {
-          <th scope="col">{{ 'course_detail.status' | translate }}</th>
+          <th scope="col" class="tf-w-status">{{ 'course_detail.status' | translate }}</th>
         }
-        <th scope="col" class="cl-center">{{ 'common.actions' | translate }}</th>
+        <th scope="col" class="cl-center tf-w-action-lg">{{ 'common.actions' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -41,15 +41,15 @@
         @default {
           @for (row of list.items(); track row.id) {
             <tr>
-              <td class="cl-strong"><bdi>{{ row.user?.name ?? '-' }}</bdi></td>
+              <td class="cl-strong" [attr.title]="row.user?.name ?? null"><bdi>{{ row.user?.name ?? '-' }}</bdi></td>
               @if (quiz) {
-                <td><bdi>{{ row.learner_cohort?.name ?? '-' }}</bdi></td>
-                <td><bdi>{{ row.instructor_name ?? '-' }}</bdi></td>
-                <td><bdi>{{ row.title }}</bdi></td>
+                <td [attr.title]="row.learner_cohort?.name ?? null"><bdi>{{ row.learner_cohort?.name ?? '-' }}</bdi></td>
+                <td [attr.title]="row.instructor_name ?? null"><bdi>{{ row.instructor_name ?? '-' }}</bdi></td>
+                <td [attr.title]="row.title"><bdi>{{ row.title }}</bdi></td>
               } @else {
-                <td><bdi>{{ row.instructor_name ?? '-' }}</bdi></td>
-                <td><bdi>{{ row.title }}</bdi></td>
-                <td><bdi>{{ row.learner_cohort?.name ?? '-' }}</bdi></td>
+                <td [attr.title]="row.instructor_name ?? null"><bdi>{{ row.instructor_name ?? '-' }}</bdi></td>
+                <td [attr.title]="row.title"><bdi>{{ row.title }}</bdi></td>
+                <td [attr.title]="row.learner_cohort?.name ?? null"><bdi>{{ row.learner_cohort?.name ?? '-' }}</bdi></td>
               }
               <td class="cl-small">{{ row.submitted ? (row.submitted | nasDate: locale()) : '-' }}</td>
               <td>

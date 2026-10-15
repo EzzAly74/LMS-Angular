@@ -109,6 +109,9 @@
 }
 
 // ── The list: one white card, rows split by a 1px rule ─────────────────
+/* The shared pager under the module list. */
+.modules-pager { display: block; }
+
 .modules-list {
   display: flex;
   flex-direction: column;

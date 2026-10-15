@@ -35,6 +35,9 @@
   @media (max-width: 880px) { grid-template-columns: 1fr; }
 }
 
+/* The shared pager under the card grid. */
+.rl-pager { display: block; }
+
 /* ── Card ────────────────────────────────────────────────── */
 .rl-card {
   position: relative;

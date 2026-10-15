@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 // Learner detail - Figma 2181:115043. Names are wrapped in <bdi>, not given
 // dir="auto": that isolates their direction without flipping the block's
 // alignment, so an Arabic name in the English layout still starts on the left.
@@ -157,6 +159,7 @@
 .ld__table {
   inline-size: 100%;
   border-collapse: collapse;
+  @include table-fit.fit;
 
   th {
     block-size: 45.5px;
@@ -179,7 +182,7 @@
   }
 }
 
-.ld__table--courses { min-inline-size: 1080px; }
+.ld__table--courses { min-inline-size: 1100px; }
 .ld__table--performance { min-inline-size: 900px; }
 
 .ld__row { block-size: 92px; border-block-end: 1px solid var(--nas-color-border); }
@@ -194,8 +197,15 @@
 
 .ld__muted { color: var(--nas-color-text-muted); }
 
-// "Advanced Excel for Finance" wraps onto two lines in the design.
-.ld__table .ld__wrap { white-space: normal; max-inline-size: 173px; }
+// Column widths on the fixed-layout tables (table-fit); the first column
+// takes what is left. A long name ends in "…" with the full name in its title.
+.ld__w-share { inline-size: 12%; }
+.ld__w-course { inline-size: 18%; }
+.ld__w-num { inline-size: 96px; }
+.ld__w-status { inline-size: 140px; }
+.ld__w-progress { inline-size: 164px; }
+.ld__w-date { inline-size: 120px; }
+.ld__w-eye { inline-size: 92px; }
 
 .ld__table .ld__failed { color: var(--nas-status-red-500); }
 

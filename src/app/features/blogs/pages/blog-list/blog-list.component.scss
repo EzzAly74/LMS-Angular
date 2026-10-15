@@ -75,7 +75,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 500px;
+    max-width: 100%;
+    min-width: 0;
   }
 
   &__desc {
@@ -99,14 +100,20 @@
 }
 
 .blog-badge {
-  display: inline-flex;
-  align-items: center;
+  // One line, never wider than the row: a long qualification name ends in
+  // "…" (its full name is the title) instead of widening the page.
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+  min-width: 0;
   height: 18px;
   padding: 2px 8px;
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 14.4px;
 
   &--beginner     { background: #e6f6ee; color: #0f7a4d; }
@@ -192,34 +199,10 @@
   p { font-size: var(--nas-size-xs); margin: 0; }
 }
 
-.nas-table-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--nas-space-3) var(--nas-space-5);
-  border-top: 1px solid var(--nas-color-border);
-  font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-muted);
-  margin-top: 0;
-
-  &__nav { display: flex; gap: var(--nas-space-2); }
-
-  &__btn {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--nas-color-border);
-    border-radius: var(--nas-radius-sm);
-    background: transparent;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--nas-color-text-muted);
-    transition: background var(--transition-speed);
-    i { font-size: 12px; }
-    &:hover:not([disabled]) { background: var(--nas-neutral-300); color: var(--nas-color-text-strong); }
-    &[disabled] { opacity: 0.4; cursor: not-allowed; }
-  }
+/* The shared pager row closes the card, as on the table pages. */
+.blog-list-pager {
+  display: block;
+  border-block-start: 1px solid var(--nas-color-border);
 }
 
 /* ── Delete modal ─────────────────────────────────────────────── */

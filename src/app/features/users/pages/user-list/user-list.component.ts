@@ -29,6 +29,7 @@ import type {
   AdminUserSummary,
 } from '../../models/user.types';
 import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload/nas-photo-upload.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -93,6 +94,7 @@ export function fullNameError(value: string): string | null {
     TranslateModule,
     NasPageHeaderComponent,
     NasPhotoUploadComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './user-list.component.html',
@@ -108,7 +110,6 @@ export class UserListComponent implements OnInit, OnDestroy {
   private readonly search$  = new Subject<string>();
 
   readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
-  readonly min = Math.min;
 
   constructor() {
     // Reload primary table AND filter-modal lookups (instructors,

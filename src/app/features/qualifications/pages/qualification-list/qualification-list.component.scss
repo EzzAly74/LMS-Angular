@@ -3,17 +3,13 @@
 // components (D-070). This file adds the qualification-specific cells.
 @use '../../../../shared/styles/list';
 
-// One screen (NEW2B-6007): fixed column shares, the name widest and
-// wrapping, so a long name never pushes the table sideways.
+// One screen (NEW2B-6007): fixed column shares, the name widest. A long
+// name ends in "…" (table-fit) with the full name in its title, so it never
+// pushes the table sideways.
 .ql__table {
-  table-layout: fixed;
   inline-size: 100%;
 
   @media (max-width: 767px) { min-inline-size: 680px; }
-
-  td { white-space: nowrap; }
-
-  tbody th.ql__name { white-space: normal; overflow-wrap: anywhere; }
 }
 
 .ql__col-name { inline-size: 36%; }

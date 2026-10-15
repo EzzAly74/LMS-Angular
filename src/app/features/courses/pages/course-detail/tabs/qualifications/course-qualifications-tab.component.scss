@@ -3,6 +3,9 @@
 
 .qt-list { margin: 0; padding: 0; list-style: none; }
 
+// The shared pager row closes the card.
+.qt-pager { display: block; border-block-start: 1px solid var(--nas-color-border); }
+
 .qt-item {
   display: flex;
   align-items: center;

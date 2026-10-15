@@ -46,14 +46,14 @@
       <table class="etl__table">
         <thead>
           <tr>
-            <th scope="col">{{ 'external_training.col.learner' | translate }}</th>
-            <th scope="col">{{ 'external_training.col.course' | translate }}</th>
-            <th scope="col">{{ 'external_training.col.provider' | translate }}</th>
-            <th scope="col">{{ 'external_training.col.qualification' | translate }}</th>
-            <th scope="col">{{ 'external_training.col.submitted' | translate }}</th>
-            <th scope="col">{{ 'external_training.col.hours' | translate }}</th>
-            <th scope="col">{{ 'external_training.col.status' | translate }}</th>
-            <th scope="col"><span class="etl__sr-only">{{ 'external_training.col.actions' | translate }}</span></th>
+            <th scope="col" class="etl__w-learner">{{ 'external_training.col.learner' | translate }}</th>
+            <th scope="col" class="tf-w-fill">{{ 'external_training.col.course' | translate }}</th>
+            <th scope="col" class="etl__w-text">{{ 'external_training.col.provider' | translate }}</th>
+            <th scope="col" class="etl__w-text">{{ 'external_training.col.qualification' | translate }}</th>
+            <th scope="col" class="tf-w-date">{{ 'external_training.col.submitted' | translate }}</th>
+            <th scope="col" class="tf-w-num">{{ 'external_training.col.hours' | translate }}</th>
+            <th scope="col" class="tf-w-status">{{ 'external_training.col.status' | translate }}</th>
+            <th scope="col" class="tf-w-action-lg"><span class="etl__sr-only">{{ 'external_training.col.actions' | translate }}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -76,10 +76,10 @@
             @default {
               @for (r of rows(); track r.id) {
                 <tr>
-                  <th scope="row" class="etl__learner"><bdi>{{ r.learner?.name ?? '-' }}</bdi></th>
-                  <td class="etl__strong"><bdi>{{ courseOf(r) }}</bdi></td>
-                  <td class="etl__muted"><bdi>{{ r.provider }}</bdi></td>
-                  <td class="etl__muted"><bdi>{{ r.qualification?.name ?? '-' }}</bdi></td>
+                  <th scope="row" class="etl__learner" [attr.title]="r.learner?.name ?? null"><bdi>{{ r.learner?.name ?? '-' }}</bdi></th>
+                  <td class="etl__strong" [attr.title]="courseOf(r)"><bdi>{{ courseOf(r) }}</bdi></td>
+                  <td class="etl__muted" [attr.title]="r.provider"><bdi>{{ r.provider }}</bdi></td>
+                  <td class="etl__muted" [attr.title]="r.qualification?.name ?? null"><bdi>{{ r.qualification?.name ?? '-' }}</bdi></td>
                   <td class="etl__date">{{ r.submitted_at | nasDate: locale.locale() }}</td>
                   <td class="etl__hours">{{ 'external_training.hours_value' | translate: { hours: r.hours } }}</td>
                   <td><span class="etl__status etl__status--{{ r.status }}">{{ 'external_training.status.' + r.status | translate }}</span></td>

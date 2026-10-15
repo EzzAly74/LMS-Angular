@@ -441,11 +441,11 @@
       <table class="ul-table">
         <thead>
           <tr>
-            <th>{{ 'users.name' | translate }}</th>
-            <th>{{ 'users.role' | translate }}</th>
-            <th>{{ 'users.status' | translate }}</th>
-            <th>{{ 'users.last_active' | translate }}</th>
-            <th class="ul-table__action-head"></th>
+            <th class="tf-w-fill">{{ 'users.name' | translate }}</th>
+            <th class="tf-w-md">{{ 'users.role' | translate }}</th>
+            <th class="tf-w-status">{{ 'users.status' | translate }}</th>
+            <th class="tf-w-date">{{ 'users.last_active' | translate }}</th>
+            <th class="ul-table__action-head tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -471,13 +471,13 @@
                   <div class="ul-name-cell">
                     <nas-avatar class="ul-avatar" [size]="32" [name]="user.name" [image]="user.image" />
                     <div>
-                      <div class="ul-name-cell__title">{{ user.name }}</div>
-                      <div class="ul-name-cell__email">{{ user.email || user.machine_code || '—' }}</div>
+                      <div class="ul-name-cell__title" [attr.title]="user.name">{{ user.name }}</div>
+                      <div class="ul-name-cell__email" [attr.title]="user.email || user.machine_code || null">{{ user.email || user.machine_code || '—' }}</div>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <span [class]="roleBadgeClass(user.role_color)">{{ user.role }}</span>
+                  <span [class]="roleBadgeClass(user.role_color)" [attr.title]="user.role">{{ user.role }}</span>
                 </td>
                 <td>
                   <span class="u-status" [class]="statusTone(user.status)">
@@ -485,7 +485,7 @@
                   </span>
                 </td>
                 <td class="ul-cell-muted">{{ user.last_active_at ? (user.last_active_at | localDate: 'dayMonth') : '—' }}</td>
-                <td class="ul-table__action" (click)="$event.stopPropagation()">
+                <td class="ul-table__action tf-overflow-visible" (click)="$event.stopPropagation()">
                   <button type="button" class="ul-icon-btn" [attr.aria-label]="'common.actions' | translate" (click)="toggleMenu(user.composite_id, $event)">
                     <i class="pi pi-ellipsis-h" aria-hidden="true"></i>
                   </button>
@@ -510,20 +510,8 @@
       </table>
     </div>
 
-    @if (total() > perPage) {
-      <div class="ul-pagination">
-        <span class="ul-pagination__info">
-          {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
-        </span>
-        <div class="ul-pagination__nav">
-          <button type="button" class="ul-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-            <i class="pi pi-chevron-left" aria-hidden="true"></i>
-          </button>
-          <button type="button" class="ul-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-            <i class="pi pi-chevron-right" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
+    @if (!loading() && total() > 0) {
+      <nas-pager class="ul-pager" [page]="page" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
     }
   </div>
 

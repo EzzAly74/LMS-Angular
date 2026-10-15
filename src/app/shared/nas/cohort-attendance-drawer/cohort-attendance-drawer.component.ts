@@ -16,6 +16,8 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, takeUntil } from 'rxjs';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../nas-pager/nas-pager.component';
+import { ClientPager } from '../../list/client-pager';
 import { CoursesApiService } from '../../../features/courses/services/courses-api.service';
 import { LocaleService } from '../../../core/services/locale.service';
 import type {
@@ -54,6 +56,7 @@ type AttendanceFilter = 'all' | 'presence' | 'absence';
     SkeletonModule,
     TranslateModule,
     NasIconComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cohort-attendance-drawer.component.html',
@@ -163,6 +166,13 @@ export class CohortAttendanceDrawerComponent implements OnDestroy {
     });
   });
 
+  /**
+   * Ten rows a page on each tab. The cohort's attendance comes as one summary
+   * (totals, sessions and learners together), so the drawer pages through it.
+   */
+  readonly sessionPager = new ClientPager<CohortAttendanceSession>(this.filteredSessions, 10);
+  readonly learnerPager = new ClientPager<CohortAttendanceLearner>(this.filteredLearners, 10);
+
   /** Whether the "Attended" chip should render for the current filter. */
   showAttendedChip = computed(() => this.filter() !== 'absence');
   /** Whether the "Absent"   chip should render for the current filter. */
@@ -193,6 +203,7 @@ export class CohortAttendanceDrawerComponent implements OnDestroy {
         this.search.set('');
         this.filter.set('all');
         this.tab.set('sessions');
+        this.resetPages();
       }
     }, { allowSignalWrites: true });
 
@@ -261,6 +272,7 @@ export class CohortAttendanceDrawerComponent implements OnDestroy {
     if (this.tab() === t) return;
     this.tab.set(t);
     this.expanded.set(new Set());
+    this.resetPages();
   }
 
   /**
@@ -269,6 +281,17 @@ export class CohortAttendanceDrawerComponent implements OnDestroy {
    */
   setFilter(mode: AttendanceFilter): void {
     this.filter.set(this.filter() === mode ? 'all' : mode);
+    this.resetPages();
+  }
+
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.resetPages();
+  }
+
+  private resetPages(): void {
+    this.sessionPager.reset();
+    this.learnerPager.reset();
   }
 
   toggleExpand(id: number): void {

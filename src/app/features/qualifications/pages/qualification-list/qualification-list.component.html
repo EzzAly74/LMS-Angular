@@ -40,11 +40,11 @@
       </colgroup>
       <thead>
         <tr>
-          <th scope="col">{{ 'qualifications.col.qualification' | translate }}</th>
-          <th scope="col">{{ 'qualifications.col.linked_courses' | translate }}</th>
-          <th scope="col">{{ 'qualifications.col.enrolled' | translate }}</th>
-          <th scope="col">{{ 'qualifications.col.certified' | translate }}</th>
-          <th scope="col">{{ 'qualifications.col.completion' | translate }}</th>
+          <th scope="col" class="ql__col-name">{{ 'qualifications.col.qualification' | translate }}</th>
+          <th scope="col" class="ql__col-courses">{{ 'qualifications.col.linked_courses' | translate }}</th>
+          <th scope="col" class="ql__col-num">{{ 'qualifications.col.enrolled' | translate }}</th>
+          <th scope="col" class="ql__col-num">{{ 'qualifications.col.certified' | translate }}</th>
+          <th scope="col" class="ql__col-completion">{{ 'qualifications.col.completion' | translate }}</th>
           <th scope="col" class="ql__action"><span class="cl-sr-only">{{ 'qualifications.col.actions' | translate }}</span></th>
         </tr>
       </thead>
@@ -61,7 +61,7 @@
           @default {
             @for (q of list.items(); track q.id) {
               <tr class="ql__row">
-                <th scope="row" class="ql__name"><bdi>{{ q.name }}</bdi></th>
+                <th scope="row" class="ql__name" [attr.title]="q.name"><bdi>{{ q.name }}</bdi></th>
                 <td>
                   <!-- Which courses (NEW2B-5952): the chip opens their list. -->
                   @if (q.courses_count > 0) {

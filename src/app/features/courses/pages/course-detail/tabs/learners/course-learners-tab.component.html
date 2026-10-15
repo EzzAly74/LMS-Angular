@@ -6,12 +6,12 @@
   <table class="cl-table">
     <thead>
       <tr>
-        <th scope="col">{{ 'course_detail.learner' | translate }}</th>
-        <th scope="col">{{ 'course_detail.cohort' | translate }}</th>
-        <th scope="col">{{ 'course_detail.progress' | translate }}</th>
-        <th scope="col">{{ 'course_detail.status' | translate }}</th>
-        <th scope="col">{{ 'course_detail.enrolled' | translate }}</th>
-        @if (canOpenLearner()) { <th scope="col" class="cl-center">{{ 'course_detail.action' | translate }}</th> }
+        <th scope="col" class="tf-w-xl">{{ 'course_detail.learner' | translate }}</th>
+        <th scope="col" class="tf-w-md">{{ 'course_detail.cohort' | translate }}</th>
+        <th scope="col" class="tf-w-progress">{{ 'course_detail.progress' | translate }}</th>
+        <th scope="col" class="tf-w-status">{{ 'course_detail.status' | translate }}</th>
+        <th scope="col" class="tf-w-date">{{ 'course_detail.enrolled' | translate }}</th>
+        @if (canOpenLearner()) { <th scope="col" class="cl-center tf-w-action-lg">{{ 'course_detail.action' | translate }}</th> }
       </tr>
     </thead>
     <tbody>
@@ -33,13 +33,13 @@
                     <nas-avatar size="sm" [name]="row.user?.name ?? ''" [image]="row.user?.image" />
                     <span class="lt-dot" [class.lt-dot--on]="row.user?.active" aria-hidden="true"></span>
                   </span>
-                  <span class="cl-strong"><bdi>{{ row.user?.name ?? '-' }}</bdi></span>
+                  <span class="cl-strong" [attr.title]="row.user?.name ?? null"><bdi>{{ row.user?.name ?? '-' }}</bdi></span>
                   @if (row.user && !row.user.active) {
                     <span class="cl-sr-only">({{ 'course_detail.account_inactive' | translate }})</span>
                   }
                 </span>
               </td>
-              <td><bdi>{{ row.cohort?.name ?? '-' }}</bdi></td>
+              <td [attr.title]="row.cohort?.name ?? null"><bdi>{{ row.cohort?.name ?? '-' }}</bdi></td>
               <td>
                 <span class="cl-progress">
                   <span class="cl-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"

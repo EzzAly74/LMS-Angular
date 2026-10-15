@@ -216,30 +216,46 @@ export class AssessmentListComponent implements OnInit {
     ];
   });
 
-  /* ── "View All" dialog: a debounced, stale-safe search ─────────── */
+  /* ── "View All" dialog: a debounced, stale-safe, server-paged search ─ */
   readonly viewAllOpen     = signal(false);
   readonly viewAllLoading  = signal(false);
   readonly viewAllItems    = signal<readonly AssessmentOptionRow[]>([]);
   readonly viewAllSelected = signal<number | null>(null);
-  /** `now`: load at once (the dialog opening); otherwise after the typing pause. */
-  private readonly viewAll$ = new Subject<{ term: string; now: boolean }>();
+  /** The dialog pages through every item (GET admin/{kind} page/per_page/search). */
+  readonly viewAllPerPage  = 10;
+  readonly viewAllPage     = signal(1);
+  readonly viewAllTotal    = signal(0);
+  private viewAllTerm      = '';
+  /** `now`: load at once (opening, paging); otherwise after the typing pause. */
+  private readonly viewAll$ = new Subject<{ term: string; page: number; now: boolean }>();
 
   constructor() {
-    // One stream for the opening load and every search: a newer term cancels
-    // both the pending pause and the request in flight, so an older answer
-    // never replaces a newer one.
+    // One stream for the opening load, every search and every page: a newer
+    // request cancels both the pending pause and the request in flight, so an
+    // older answer never replaces a newer one.
     this.viewAll$
       .pipe(
         switchMap(e => timer(e.now ? 0 : 250).pipe(
           switchMap(() => {
             this.viewAllLoading.set(true);
-            return this.source().options(e.term || undefined).pipe(catchError(() => of<readonly AssessmentOptionRow[]>([])));
+            const params: ApiParams = { page: e.page, per_page: this.viewAllPerPage };
+            if (e.term) params['search'] = e.term;
+            return this.source().items(params).pipe(
+              map(res => ({
+                page: e.page,
+                total: res.result.total,
+                rows: res.result.data.map(r => ({ id: r.id, title: r.title, course_title: r.course_title })),
+              })),
+              catchError(() => of({ page: e.page, total: 0, rows: [] as AssessmentOptionRow[] })),
+            );
           }),
         )),
         takeUntilDestroyed(),
       )
-      .subscribe(list => {
-        this.viewAllItems.set(list);
+      .subscribe(res => {
+        this.viewAllItems.set(res.rows);
+        this.viewAllTotal.set(res.total);
+        this.viewAllPage.set(res.page);
         this.viewAllLoading.set(false);
       });
 
@@ -361,10 +377,19 @@ export class AssessmentListComponent implements OnInit {
   openViewAll(): void {
     this.viewAllSelected.set(null);
     this.viewAllOpen.set(true);
-    this.viewAll$.next({ term: '', now: true });
+    this.viewAllTerm = '';
+    this.viewAll$.next({ term: '', page: 1, now: true });
   }
 
-  onViewAllSearch(term: string): void { this.viewAll$.next({ term: term.trim(), now: false }); }
+  /** A new search starts again from the first page. */
+  onViewAllSearch(term: string): void {
+    this.viewAllTerm = term.trim();
+    this.viewAll$.next({ term: this.viewAllTerm, page: 1, now: false });
+  }
+
+  onViewAllPage(page: number): void {
+    this.viewAll$.next({ term: this.viewAllTerm, page, now: true });
+  }
 
   selectViewAllItem(row: AssessmentOptionRow): void {
     this.viewAllSelected.set(this.viewAllSelected() === row.id ? null : row.id);

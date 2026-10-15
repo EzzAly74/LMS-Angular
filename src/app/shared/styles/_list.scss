@@ -8,6 +8,8 @@
 // `cl-card` / `cl-state` rules below stay only until the last page moves to
 // those components.
 
+@use 'table-fit';
+
 // ── Page head (2556:151347): title, subtitle, primary action ──────────────
 .cl-head {
   display: flex;
@@ -105,6 +107,10 @@
 
 // A fixed-layout table whose columns take the Figma widths (`cl-w-*` per page).
 .cl-table--fixed { table-layout: fixed; }
+
+// Every `.cl-table` is fixed-layout with truncating cells (table-fit); its
+// header cells take a `tf-w-*` width or a page's own Figma width class.
+@include table-fit.columns;
 
 // No :host rule here: a page host holds its dialogs and toasts too, and a flex
 // gap on it put 16 px of empty space above the page for each of them. The
@@ -209,6 +215,7 @@
   min-inline-size: 760px;
   border-collapse: collapse;
   font-size: var(--nas-size-xs);
+  @include table-fit.fit;
 
   th {
     block-size: 45px;

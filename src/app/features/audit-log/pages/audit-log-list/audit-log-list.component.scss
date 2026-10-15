@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ──────────────────────────────────────────────────────────────
    Audit Log — 2026 redesign
    All classes are prefixed `al-` to stay isolated.
@@ -135,6 +137,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--nas-size-xs);
+  min-inline-size: 860px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -195,9 +199,10 @@
 .al-entity-cell {
   color: var(--nas-color-text-strong);
   font-size: var(--nas-size-xs);
-  max-width: 420px;
-  white-space: normal;
 }
+
+// A date, time and seconds in either locale.
+.al-w-time { inline-size: 210px; }
 
 /* ── Role badge ──────────────────────────────────────────── */
 .al-role-badge {
@@ -264,42 +269,11 @@
 [dir="rtl"] .al-action-chip__sep { transform: scaleX(-1); }
 
 /* ── Pagination ──────────────────────────────────────────── */
-.al-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--nas-space-4) var(--nas-space-5);
-  border-top: 1px solid var(--nas-color-border);
+/* The shared pager row closes the card. */
+.al-pager {
+  display: block;
+  border-block-start: 1px solid var(--nas-color-border);
   background: var(--nas-color-bg-surface);
-
-  &__info {
-    font-size: var(--nas-size-2xs);
-    color: var(--nas-color-text-muted);
-  }
-
-  &__nav { display: flex; gap: var(--nas-space-2); }
-
-  &__btn {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--nas-radius-sm);
-    border: 1px solid var(--nas-color-border);
-    background: var(--nas-color-bg-surface);
-    color: var(--nas-color-text-strong);
-    cursor: pointer;
-    transition: background var(--transition-speed), border-color var(--transition-speed);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    i { font-size: 11px; }
-
-    &:hover:not(:disabled) {
-      background: var(--nas-neutral-100);
-      border-color: var(--nas-color-text-muted);
-    }
-    &:disabled { opacity: 0.4; cursor: not-allowed; }
-  }
 }
 
 /* ── Immutable retention footnote ─────────────────────────── */
@@ -424,3 +398,6 @@
 
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

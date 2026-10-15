@@ -1,4 +1,4 @@
-:host { display: inline-flex; }
+:host { display: inline-flex; max-inline-size: 100%; vertical-align: middle; }
 
 .nas-badge {
   display: inline-flex;
@@ -11,10 +11,20 @@
   line-height: 14.4px;
   white-space: nowrap;
   letter-spacing: 0.01em;
+  // A pill never outgrows its cell or container: the label ends in "…".
+  max-inline-size: 100%;
+  min-inline-size: 0;
+
+  &__text {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   &__dot {
     width: 6px;
     height: 6px;
+    flex-shrink: 0;
     border-radius: 50%;
     background: currentColor;
   }

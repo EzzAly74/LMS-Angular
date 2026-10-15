@@ -30,15 +30,22 @@ export class NotificationFeedService {
   readonly items = signal<FeedNotification[]>([]);
   readonly unreadCount = signal(0);
   readonly loading = signal(false);
+  /** The loaded page and the feed's size across all pages (the drawer's pager). */
+  readonly page = signal(1);
+  readonly total = signal(0);
+  readonly perPage = signal(20);
 
-  /** Fetch the latest page of the feed + refresh the unread badge. */
-  load(perPage = 20): void {
+  /** Fetch one page of the feed (the newest by default) + refresh the unread badge. */
+  load(perPage = 20, page = 1): void {
     this.loading.set(true);
     this.api
-      .getPaginated<FeedNotification>(API.NOTIFICATIONS_MINE, { per_page: perPage, page: 1 })
+      .getPaginated<FeedNotification>(API.NOTIFICATIONS_MINE, { per_page: perPage, page })
       .subscribe({
         next: (res) => {
           this.items.set(res.result.data);
+          this.total.set(res.result.total);
+          this.page.set(page);
+          this.perPage.set(perPage);
           this.loading.set(false);
         },
         error: () => this.loading.set(false),

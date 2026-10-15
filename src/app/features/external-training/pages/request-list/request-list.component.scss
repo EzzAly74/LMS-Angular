@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 // External Training Requests - Figma 2181:116177.
 
 .etl { display: flex; flex-direction: column; gap: var(--nas-space-6); }
@@ -102,8 +104,9 @@
 
 .etl__table {
   inline-size: 100%;
-  min-inline-size: 1040px;
+  min-inline-size: 960px;
   border-collapse: collapse;
+  @include table-fit.fit;
 
   th,
   td {
@@ -135,7 +138,8 @@
 .etl__table td.etl__hours { font-size: var(--nas-size-s); line-height: 24px; }
 
 .etl__status {
-  display: inline-flex;
+  display: inline-block;
+  vertical-align: middle;
   padding: var(--nas-space-1) var(--nas-space-2);
   border-radius: var(--nas-radius-md);
   font-size: var(--nas-size-xs);
@@ -147,7 +151,11 @@
   &--rejected { background: var(--nas-status-red-50); }
 }
 
-.etl__action { inline-size: 72px; text-align: end; }
+.etl__action { text-align: end; }
+
+// Column widths on the fixed-layout table: the course takes what is left.
+.etl__w-learner { inline-size: 15%; }
+.etl__w-text    { inline-size: 12%; }
 
 .etl__view {
   display: inline-flex;
@@ -199,3 +207,6 @@ nas-pager { padding: var(--nas-space-3) var(--nas-space-5); border-block-start: 
 @media (max-width: 767px) {
   .etl__toolbar { padding-inline: var(--nas-space-4); }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

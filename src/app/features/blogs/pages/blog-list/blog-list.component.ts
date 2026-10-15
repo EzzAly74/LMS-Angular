@@ -14,12 +14,13 @@ import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { BlogsApiService } from '../../services/blogs-api.service';
 import { BlogListItem } from '../../models/blog.types';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [LocalDatePipe, NasCanDirective, 
+  imports: [LocalDatePipe, NasCanDirective, NasPagerComponent,
     CommonModule,
     RouterLink,
     SkeletonModule,
@@ -46,7 +47,6 @@ export class BlogListComponent implements OnInit {
   page = 1;
   readonly perPage = 15;
   readonly skeletons = [1, 2, 3, 4, 5, 6, 7];
-  readonly min = Math.min;
 
   constructor() {
     withLocaleReload(() => this.load());

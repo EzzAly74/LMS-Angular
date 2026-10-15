@@ -1,3 +1,5 @@
+@use '../../styles/table-fit';
+
 :host { display: block; }
 
 .ndt-card {
@@ -15,6 +17,8 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--nas-size-xs);
+  // Fixed layout: columns take their `width`, long text ends in "…".
+  @include table-fit.fit;
 
   thead th {
     text-align: start;

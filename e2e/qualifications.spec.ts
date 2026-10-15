@@ -66,13 +66,17 @@ test('the list shows the Figma columns and every figure the API returns', async 
   await expect(third.getByRole('progressbar')).toHaveCount(0);
 });
 
-test('a long name wraps instead of pushing the table sideways (6007)', async ({ page }) => {
+test('a long name ends in an ellipsis instead of pushing the table sideways (6007)', async ({ page }) => {
   const long = 'Understanding of software development and testing principles, strong attention to detail, analytical thinking and problem solving';
   await setup(page, [row(1, long), ...ROWS.slice(1)]);
   const name = page.locator('tbody tr').nth(0).locator('th');
   await expect(name).toContainText('analytical thinking');
+  // One line, cut with "…", the full name in its title (table-fit).
+  await expect(name).toHaveAttribute('title', long);
+  await expect(name).toHaveCSS('text-overflow', 'ellipsis');
+  expect(await name.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
   const box = (await name.boundingBox())!;
-  expect(box.height).toBeGreaterThan(30);
+  expect(box.height).toBeLessThan(60);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   await expect(page.getByRole('button', { name: /Actions for Understanding/ })).toBeInViewport();
 });

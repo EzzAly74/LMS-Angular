@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ── Greeting ────────────────────────────────────────────────────── */
 .dashboard-greeting {
   display: flex;
@@ -269,6 +271,8 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--nas-size-xs);
+  min-inline-size: 760px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -311,3 +315,6 @@
 }
 
 [dir="rtl"] .nas-table__action .pi-chevron-right { transform: scaleX(-1); }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

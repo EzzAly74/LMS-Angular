@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +16,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
+import { NasPagerComponent } from '../nas-pager/nas-pager.component';
 import { NotificationsDrawerService } from './notifications-drawer.service';
 import { ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
@@ -65,6 +67,7 @@ type RecipientRole = 'learner' | 'instructor';
     SkeletonModule,
     TranslateModule,
     NasIconComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notifications-drawer.component.html',
@@ -135,6 +138,10 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
         if (open) {
           this.feed.load();
           this.loadRecipients();
+        } else if (untracked(() => this.feed.page()) > 1) {
+          // The dashboard card previews the same feed: closing on an older
+          // page brings the newest page back.
+          this.feed.load();
         }
       },
       { allowSignalWrites: true },
@@ -148,7 +155,7 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
     withLocaleReload(() => {
       this.langTick.update(v => v + 1);
       if (!this.drawer.isOpen()) return;
-      this.feed.load();
+      this.feed.load(this.feed.perPage(), this.feed.page());
       this.loadRecipients();
     });
   }
@@ -170,6 +177,11 @@ export class NotificationsDrawerComponent implements OnInit, OnDestroy {
   /* ── UI handlers ──────────────────────────────────────────────────── */
   onVisibleChange(open: boolean): void {
     if (!open) this.drawer.close();
+  }
+
+  onFeedPage(page: number): void {
+    if (page < 1 || page === this.feed.page()) return;
+    this.feed.load(this.feed.perPage(), page);
   }
 
   toggleComposer(): void {

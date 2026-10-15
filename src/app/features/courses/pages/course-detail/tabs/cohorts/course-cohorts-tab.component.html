@@ -1,6 +1,6 @@
 <nas-list-toolbar [search]="search()" [filterCount]="activeFilters()"
   [label]="'course_detail.search_cohorts' | translate" [placeholder]="'course_detail.search_placeholder' | translate"
-  (searchChange)="search.set($event)" (filter)="filterOpen.set(true)" />
+  (searchChange)="onSearch($event)" (filter)="filterOpen.set(true)" />
 <div class="ct-bar">
   <p class="cl-count" aria-live="polite">{{ countLabel() | translate: { count: rowCount() } }}</p>
   <button *nasCan="'edit-courses'" type="button" class="ct-add" (click)="openAddCohort()">
@@ -13,29 +13,29 @@
     <table class="cl-table">
       <thead>
         <tr>
-          <th scope="col" [attr.aria-sort]="nameSort()">
+          <th scope="col" class="tf-w-xl" [attr.aria-sort]="nameSort()">
             <button type="button" class="cl-sort" [class.cl-sort--desc]="sort()?.key === 'name' && sort()?.dir === 'desc'" (click)="toggleSort('name')">
               {{ 'course_detail.cohort' | translate }}
               <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
             </button>
           </th>
-          <th scope="col">{{ 'course_detail.start' | translate }}</th>
-          <th scope="col">{{ 'course_detail.end' | translate }}</th>
-          <th scope="col">{{ 'course_detail.enrolled_capacity' | translate }}</th>
-          <th scope="col" class="cl-center">{{ 'course_detail.sessions' | translate }}</th>
-          <th scope="col" [attr.aria-sort]="statusSort()">
+          <th scope="col" class="tf-w-date">{{ 'course_detail.start' | translate }}</th>
+          <th scope="col" class="tf-w-date">{{ 'course_detail.end' | translate }}</th>
+          <th scope="col" class="tf-w-date">{{ 'course_detail.enrolled_capacity' | translate }}</th>
+          <th scope="col" class="cl-center tf-w-num">{{ 'course_detail.sessions' | translate }}</th>
+          <th scope="col" class="tf-w-status" [attr.aria-sort]="statusSort()">
             <button type="button" class="cl-sort" [class.cl-sort--desc]="sort()?.key === 'status' && sort()?.dir === 'desc'" (click)="toggleSort('status')">
               {{ 'course_detail.status' | translate }}
               <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
             </button>
           </th>
-          <th scope="col"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+          <th scope="col" class="tf-w-action"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
         </tr>
       </thead>
       <tbody>
-        @for (cohort of rows(); track cohort.id) {
+        @for (cohort of pager.items(); track cohort.id) {
           <tr>
-            <td class="cl-strong"><bdi>{{ cohort.name || ('course_detail.unnamed_cohort' | translate) }}</bdi></td>
+            <td class="cl-strong" [attr.title]="cohort.name || null"><bdi>{{ cohort.name || ('course_detail.unnamed_cohort' | translate) }}</bdi></td>
             <td>{{ cohort.start_date ? (cohort.start_date | nasDate: locale()) : '-' }}</td>
             <td>{{ cohort.end_date ? (cohort.end_date | nasDate: locale()) : '-' }}</td>
             <td>
@@ -61,6 +61,9 @@
         }
       </tbody>
     </table>
+    @if (pager.pageable()) {
+      <nas-pager nasTablePager [page]="pager.page()" [total]="pager.total()" [perPage]="pager.perPage" (pageChange)="pager.goTo($event)" />
+    }
 </nas-table-card>
 
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />

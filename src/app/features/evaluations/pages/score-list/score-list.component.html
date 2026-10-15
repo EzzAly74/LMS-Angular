@@ -69,7 +69,7 @@
               <tr class="sl__row">
                 <td>
                   <span class="ev__cell-stack">
-                    <a class="ev__primary sl__link" [routerLink]="r.link" [queryParams]="{ template: r.template.id }">
+                    <a class="ev__primary sl__link" [routerLink]="r.link" [queryParams]="{ template: r.template.id }" [attr.title]="r.learner.name || null">
                       <bdi>{{ r.learner.name || ('evaluations.unknown_learner' | translate) }}</bdi>
                     </a>
                     @if (r.learner.employee_id) {
@@ -79,7 +79,7 @@
                 </td>
                 <td>
                   <span class="ev__cell-stack">
-                    <span class="ev__primary"><bdi>{{ r.template.name }}</bdi></span>
+                    <span class="ev__primary" [attr.title]="r.template.name"><bdi>{{ r.template.name }}</bdi></span>
                     @if (r.template.created_at) {
                       <span class="ev__secondary">{{ 'evaluations.created_on' | translate: { date: (r.template.created_at | nasDate: locale()) } }}</span>
                     }

@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ──────────────────────────────────────────────────────────────
    Controllers — 2026 redesign
    All classes are prefixed `ctrl-` to stay isolated.
@@ -77,6 +79,8 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--nas-size-xs);
+  min-inline-size: 640px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -237,16 +241,10 @@
 }
 
 /* ── Pagination ───────────────────────────────────────────── */
-.ctrl-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--nas-space-3) var(--nas-space-5);
-  border-top: 1px solid var(--nas-color-border);
-  font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-muted);
-
-  &__nav { display: flex; align-items: center; }
+/* The shared pager row closes the card. */
+.ctrl-pager {
+  display: block;
+  border-block-start: 1px solid var(--nas-color-border);
 }
 
 /* ── Form (dialog) ─────────────────────────────────────────── */
@@ -411,3 +409,6 @@
 
   &:disabled { opacity: 0.45; cursor: not-allowed; }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

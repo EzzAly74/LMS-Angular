@@ -182,7 +182,12 @@
   td { white-space: nowrap; }
 
   &__primary { font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
-  &__actions { inline-size: 72px; }
+  // Column widths (fixed layout, shared/styles/_table-fit.scss).
+  &__c-id      { inline-size: 16%; }
+  &__c-learner { inline-size: 28%; }
+  &__c-course  { inline-size: 38%; }
+  &__c-issued  { inline-size: 18%; }
+  &__actions   { inline-size: 72px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

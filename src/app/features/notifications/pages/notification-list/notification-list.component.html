@@ -80,11 +80,11 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'notifications.title_label' | translate }}</th>
-            <th>{{ 'notifications.body_label' | translate }}</th>
-            <th>{{ 'notifications.audience' | translate }}</th>
-            <th>{{ 'notifications.date' | translate }}</th>
-            <th></th>
+            <th class="tf-w-lg">{{ 'notifications.title_label' | translate }}</th>
+            <th class="tf-w-xl">{{ 'notifications.body_label' | translate }}</th>
+            <th class="tf-w-status">{{ 'notifications.audience' | translate }}</th>
+            <th class="tf-w-date">{{ 'notifications.date' | translate }}</th>
+            <th class="tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -99,8 +99,8 @@
           } @else {
             @for (item of items(); track item.id) {
               <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ display(item.title) }}</td>
-                <td class="nas-table__body">{{ display(item.body) }}</td>
+                <td class="nas-table__primary" [attr.title]="display(item.title)">{{ display(item.title) }}</td>
+                <td class="nas-table__body" [attr.title]="display(item.body)">{{ display(item.body) }}</td>
                 <td>
                   <span class="notif-audience-badge" [class.notif-audience-badge--public]="item.for_public" [class.notif-audience-badge--targeted]="!item.for_public">
                     {{ (item.for_public ? 'notifications.all_users' : 'notifications.targeted') | translate }}

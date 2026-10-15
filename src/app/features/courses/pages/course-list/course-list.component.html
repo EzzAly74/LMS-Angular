@@ -47,7 +47,7 @@
                 <td>
                   <span class="cc-course">
                     <span class="cc-course__top">
-                      <a class="cc-course__title" [routerLink]="['/admin/courses', row.id]" (click)="$event.stopPropagation()">{{ row.title }}</a>
+                      <a class="cc-course__title" [routerLink]="['/admin/courses', row.id]" [attr.title]="row.title" (click)="$event.stopPropagation()">{{ row.title }}</a>
                       @if (row.type) {
                         <nas-status-badge class="cc-badge" [tone]="row.typeTone">{{ row.typeLabel }}</nas-status-badge>
                       }
@@ -57,8 +57,8 @@
                     }
                   </span>
                 </td>
-                <td class="cc-strong"><bdi>{{ row.category?.name ?? '—' }}</bdi></td>
-                <td class="cc-strong"><bdi>{{ row.instructor?.name ?? '—' }}</bdi></td>
+                <td class="cc-strong" [attr.title]="row.category?.name ?? null"><bdi>{{ row.category?.name ?? '—' }}</bdi></td>
+                <td class="cc-strong" [attr.title]="row.instructor?.name ?? null"><bdi>{{ row.instructor?.name ?? '—' }}</bdi></td>
                 <td class="cc-strong cl-center">{{ row.cohorts_count ?? 0 }}</td>
                 <td class="cc-strong cl-center">{{ row.users_count ?? 0 }}</td>
                 <td>
@@ -81,7 +81,7 @@
                   }
                 </td>
                 <td>
-                  <nas-status-badge class="cc-badge" [tone]="row.statusTone">{{ row.statusLabel }}</nas-status-badge>
+                  <nas-status-badge class="cc-badge" [tone]="row.statusTone" [attr.title]="row.statusLabel">{{ row.statusLabel }}</nas-status-badge>
                 </td>
                 <td class="cl-end">
                   <button type="button" class="cl-more" aria-haspopup="menu"

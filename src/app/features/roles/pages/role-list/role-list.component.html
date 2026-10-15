@@ -165,4 +165,9 @@
       </button>
     </div>
   }
+
+  <!-- Pagination (shared pager, server-paged: GET admin/roles page/per_page) -->
+  @if (!loading() && total() > 0) {
+    <nas-pager class="rl-pager" [page]="page()" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
+  }
 </div>

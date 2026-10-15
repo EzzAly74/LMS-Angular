@@ -19,12 +19,21 @@ const COHORTS = ['cohort 2', 'cohort 3', 'Course 4', 'COHORT 5', 'cohort 6'];
 
 test('cohort pills, wrapped names and a clean View All list', async ({ page }, info) => {
   await page.route('**/api/v1/admin/assignments/summary', r => r.fulfill({ json: ok({ assignments_count: 2, courses_count: 1 }) }));
-  await page.route('**/api/v1/admin/assignments?**', r => r.fulfill({ json: page1([
+  const created = [
     { id: 3, title: LONG, title_ar: null, course_id: 1, course_title: 'Course python 5 sessions', cohort_scope: 'specific',
       cohorts: COHORTS.map((title, i) => ({ id: i + 1, title })), questions_count: 6, total_score: 128, pass_score: 60, status: 'active', type: 'pre', due_date: null, created_at: null },
     { id: 4, title: 'ASSIG 1', title_ar: null, course_id: 1, course_title: 'Course python 5 sessions', cohort_scope: 'all', cohorts: [],
       questions_count: 1, total_score: 100, pass_score: 50, status: 'active', type: 'post', due_date: null, created_at: null },
-  ]) }));
+  ];
+  // The Created table asks for the five newest; View All pages the same index ten at a time (D-113).
+  await page.route('**/api/v1/admin/assignments?**', r => {
+    const viewAll = new URL(r.request().url()).searchParams.get('per_page') === '10';
+    return r.fulfill({ json: page1(viewAll ? [
+      { ...created[0], course_title: 'Course python 5 sessions with a long course name too' },
+      created[1],
+      { ...created[1], id: 5, title: 'Final Project Intermediate Excel Course', course_title: 'Intermediate Excel Course' },
+    ] : created) });
+  });
   await page.route('**/api/v1/admin/assignments/submissions?**', r => r.fulfill({ json: page1([]) }));
   await page.route('**/api/v1/admin/assignments/submissions/filter-options', r => r.fulfill({ json: ok({ learners: [], instructors: [], items: [] }) }));
   await page.route('**/api/v1/admin/assignments/list**', r => r.fulfill({ json: ok([
@@ -59,6 +68,7 @@ test('cohort pills, wrapped names and a clean View All list', async ({ page }, i
   await page.locator('.ql-outline').first().click();
   const rows = page.locator('.ql-modal-row');
   await expect(rows).toHaveCount(3);
+  await expect(page.locator('.ql-modal-pager')).toContainText('1–3 of 3');
   await expect(page.locator('.ql-modal-row__course')).toHaveCount(0);
   await expect(rows.nth(0)).not.toContainText('Course python 5 sessions with');
   const boxes = await rows.evaluateAll(els => els.map(e => e.getBoundingClientRect()).map(r => ({ top: r.top, bottom: r.bottom })));

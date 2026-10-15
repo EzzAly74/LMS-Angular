@@ -112,10 +112,10 @@
       <table class="cl-table cert-table">
         <thead>
           <tr>
-            <th scope="col">{{ 'certificates.employee_id' | translate }}</th>
-            <th scope="col">{{ 'quizzes.learner' | translate }}</th>
-            <th scope="col">{{ 'common.course' | translate }}</th>
-            <th scope="col">{{ 'certificates.issued' | translate }}</th>
+            <th scope="col" class="cert-table__c-id">{{ 'certificates.employee_id' | translate }}</th>
+            <th scope="col" class="cert-table__c-learner">{{ 'quizzes.learner' | translate }}</th>
+            <th scope="col" class="cert-table__c-course">{{ 'common.course' | translate }}</th>
+            <th scope="col" class="cert-table__c-issued">{{ 'certificates.issued' | translate }}</th>
             <th scope="col" class="cert-table__actions"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
           </tr>
         </thead>
@@ -132,9 +132,9 @@
             @default {
               @for (item of list.items(); track item.key) {
                 <tr class="cert-table__row">
-                  <td><bdi dir="ltr">{{ item.employee_id || '—' }}</bdi></td>
-                  <td class="cert-table__primary"><bdi>{{ item.learner_name }}</bdi></td>
-                  <td class="cl-strong"><bdi>{{ item.course_title }}</bdi></td>
+                  <td [attr.title]="item.employee_id || null"><bdi dir="ltr">{{ item.employee_id || '—' }}</bdi></td>
+                  <td class="cert-table__primary" [attr.title]="item.learner_name"><bdi>{{ item.learner_name }}</bdi></td>
+                  <td class="cl-strong" [attr.title]="item.course_title"><bdi>{{ item.course_title }}</bdi></td>
                   <td class="cl-small">{{ item.issued_at ? (item.issued_at | nasDate: locale.locale()) : '—' }}</td>
                   <td class="cl-end">
                     <button type="button" class="cl-view"

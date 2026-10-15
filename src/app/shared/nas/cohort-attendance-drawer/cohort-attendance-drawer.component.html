@@ -30,7 +30,7 @@
         class="cad-search__input"
         [placeholder]="'course_detail.attendance_search' | translate"
         [ngModel]="search()"
-        (ngModelChange)="search.set($event)" />
+        (ngModelChange)="onSearch($event)" />
     </label>
 
     <!-- ── Tabs + filter chips ──────────────────────────────────────── -->
@@ -100,7 +100,7 @@
       @if (tab() === 'sessions') {
         @if (filteredSessions().length) {
           <div class="cad-list">
-            @for (s of filteredSessions(); track s.id) {
+            @for (s of sessionPager.items(); track s.id) {
               <article class="cad-row"
                        [class.cad-row--open]="isExpanded(s.id)">
                 <button type="button" class="cad-row__head"
@@ -157,6 +157,7 @@
               </article>
             }
           </div>
+          <nas-pager class="cad-pager" [page]="sessionPager.page()" [total]="sessionPager.total()" [perPage]="sessionPager.perPage" (pageChange)="sessionPager.goTo($event)" />
         } @else {
           <div class="cad-empty">
             <nas-icon name="magnifying-glass" [size]="28" />
@@ -173,7 +174,7 @@
       @if (tab() === 'learners') {
         @if (filteredLearners().length) {
           <div class="cad-list">
-            @for (l of filteredLearners(); track l.id) {
+            @for (l of learnerPager.items(); track l.id) {
               <article class="cad-row"
                        [class.cad-row--open]="isExpanded(l.id)">
                 <button type="button" class="cad-row__head"
@@ -216,6 +217,7 @@
               </article>
             }
           </div>
+          <nas-pager class="cad-pager" [page]="learnerPager.page()" [total]="learnerPager.total()" [perPage]="learnerPager.perPage" (pageChange)="learnerPager.goTo($event)" />
         } @else {
           <div class="cad-empty">
             <nas-icon name="magnifying-glass" [size]="28" />

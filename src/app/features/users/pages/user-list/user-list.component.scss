@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ──────────────────────────────────────────────────────────────
    Users — 2026 redesign
    All classes are prefixed `ul-` (user-list) to stay isolated.
@@ -161,6 +163,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--nas-size-xs);
+  min-inline-size: 640px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -351,43 +355,12 @@
 }
 
 /* ── Pagination ──────────────────────────────────────────── */
-.ul-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--nas-space-4) var(--nas-space-5);
-  border-top: 1px solid var(--nas-color-border);
+/* The shared pager row closes the card. */
+.ul-pager {
+  display: block;
+  border-block-start: 1px solid var(--nas-color-border);
   background: var(--nas-color-bg-surface);
-
-  &__info {
-    font-size: var(--nas-size-2xs);
-    color: var(--nas-color-text-muted);
-  }
-
-  &__nav { display: flex; gap: var(--nas-space-2); }
-
-  &__btn {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--nas-radius-sm);
-    border: 1px solid var(--nas-color-border);
-    background: var(--nas-color-bg-surface);
-    color: var(--nas-color-text-strong);
-    cursor: pointer;
-    transition: background var(--transition-speed), border-color var(--transition-speed);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    i { font-size: 11px; }
-    &:hover:not(:disabled) {
-      background: var(--nas-neutral-100);
-      border-color: var(--nas-color-text-muted);
-    }
-    &:disabled { opacity: 0.4; cursor: not-allowed; }
-  }
 }
-
-[dir="rtl"] .ul-pagination__btn i { transform: scaleX(-1); }
 
 /* ── Form & filter modals ────────────────────────────────── */
 .ul-form { display: flex; flex-direction: column; gap: var(--nas-space-4); }
@@ -901,3 +874,6 @@
 @media (prefers-reduced-motion: reduce) {
   .ul-rules__item { transition: none; }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

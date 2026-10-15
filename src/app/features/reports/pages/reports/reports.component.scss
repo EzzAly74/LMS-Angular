@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ── Page-level CTA ─────────────────────────────────────────── */
 .rp-export-all-btn {
   display: inline-flex;
@@ -212,11 +214,19 @@
 /* ── Preview table ──────────────────────────────────────────── */
 .rp-table-wrap { overflow-x: auto; }
 
+/* The shared pager row closes the preview card. */
+.rp-pager {
+  display: block;
+  border-block-start: 1px solid var(--nas-color-border);
+}
+
 .rp-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--nas-size-xs);
+  min-inline-size: 680px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -247,7 +257,7 @@
   &__primary { font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong); }
   &__muted   { color: var(--nas-color-text-muted); }
   &__num     { text-align: end; font-variant-numeric: tabular-nums; }
-  &__bar     { width: 240px; min-width: 200px; }
+  &__bar     { width: 240px; }
   &__empty   { text-align: center; padding: var(--nas-space-10); color: var(--nas-color-text-muted); }
 }
 
@@ -279,3 +289,6 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

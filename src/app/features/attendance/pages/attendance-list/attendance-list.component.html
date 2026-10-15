@@ -12,13 +12,13 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'attendance.machine_code' | translate }}</th>
-            <th>{{ 'attendance.department' | translate }}</th>
-            <th>{{ 'attendance.course' | translate }}</th>
-            <th>{{ 'attendance.category' | translate }}</th>
-            <th>{{ 'attendance.hours' | translate }}</th>
-            <th>{{ 'attendance.type' | translate }}</th>
-            <th>{{ 'attendance.date' | translate }}</th>
+            <th class="tf-w-num">{{ 'attendance.machine_code' | translate }}</th>
+            <th class="tf-w-md">{{ 'attendance.department' | translate }}</th>
+            <th class="tf-w-xl">{{ 'attendance.course' | translate }}</th>
+            <th class="tf-w-md">{{ 'attendance.category' | translate }}</th>
+            <th class="tf-w-num">{{ 'attendance.hours' | translate }}</th>
+            <th class="tf-w-status">{{ 'attendance.type' | translate }}</th>
+            <th class="tf-w-date">{{ 'attendance.date' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -34,9 +34,9 @@
             @for (item of items(); track item.id) {
               <tr class="nas-table__row">
                 <td class="nas-table__primary">{{ item.user_machine_code }}</td>
-                <td>{{ item.user_department }}</td>
-                <td>{{ item.course_name }}</td>
-                <td>{{ item.course_category_name }}</td>
+                <td [attr.title]="item.user_department">{{ item.user_department }}</td>
+                <td [attr.title]="item.course_name">{{ item.course_name }}</td>
+                <td [attr.title]="item.course_category_name">{{ item.course_category_name }}</td>
                 <td>{{ item.attendance_hours }}</td>
                 <td>
                   <nas-status-badge [tone]="item.is_manual ? 'warning' : 'info'">

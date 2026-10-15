@@ -80,6 +80,12 @@ export interface AdminRoleListResponse {
   total_views: number;
   total_permissions: number;
   roles: AdminRoleListItem[];
+  /** Roles matching the search (all pages). */
+  total?: number;
+  /** Paging meta, present when the request named a `page`. */
+  current_page?: number;
+  per_page?: number;
+  last_page?: number;
 }
 
 export interface AdminRoleStorePayload {

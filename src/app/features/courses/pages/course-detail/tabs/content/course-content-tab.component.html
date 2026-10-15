@@ -48,10 +48,10 @@
     } @else {
       <!-- Modules, quizzes and assignments in one numbered list (Figma 342:11813, D-109). -->
       <ol class="modules-list">
-        @for (c of filteredContent(); track c.kind + '-' + c.id; let idx = $index) {
+        @for (c of pager.items(); track c.kind + '-' + c.id; let idx = $index) {
           @let m = moduleOf(c);
           <li class="module-row">
-            <span class="module-row__index" aria-hidden="true">{{ idx + 1 }}</span>
+            <span class="module-row__index" aria-hidden="true">{{ (pager.page() - 1) * pager.perPage + idx + 1 }}</span>
             <div class="module-row__body">
               <div class="module-row__title-line">
                 <span class="module-row__title" dir="auto">{{ m ? moduleTitle(m) : c.title }}</span>
@@ -91,6 +91,9 @@
           </li>
         }
       </ol>
+      @if (pager.pageable()) {
+        <nas-pager class="modules-pager" [page]="pager.page()" [total]="pager.total()" [perPage]="pager.perPage" (pageChange)="pager.goTo($event)" />
+      }
     }
   </div>
 </section>

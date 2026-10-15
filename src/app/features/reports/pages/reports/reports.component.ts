@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { SkeletonModule } from 'primeng/skeleton';
 import { NasPageHeaderComponent } from '../../../../shared/nas/nas-page-header/nas-page-header.component';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { API } from '../../../../core/constants/api.constants';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
@@ -27,6 +28,15 @@ interface CompliancePreviewRow {
   compliance_pct: number;
 }
 
+/** GET admin/reports/compliance-preview with `page`: one page and its total. */
+interface CompliancePreviewPage {
+  rows: CompliancePreviewRow[];
+  total?: number;
+  current_page?: number;
+  per_page?: number;
+  last_page?: number;
+}
+
 /** Maps backend icon slugs to PrimeIcons. */
 const ICON_MAP: Record<string, string> = {
   'shield-check':   'pi pi-shield',
@@ -40,7 +50,7 @@ const ICON_MAP: Record<string, string> = {
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [LocalDatePipe, CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent],
+  imports: [LocalDatePipe, CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent, NasPagerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.scss',
@@ -53,6 +63,10 @@ export class ReportsComponent implements OnInit {
   readonly cardsLoading   = signal(true);
   readonly preview        = signal<CompliancePreviewRow[]>([]);
   readonly previewLoading = signal(true);
+  /** The preview pages through every job-title row (ten a page). */
+  readonly previewPerPage = 10;
+  readonly previewPage    = signal(1);
+  readonly previewTotal   = signal(0);
 
   /** Active export keys, keyed by `${type}:${format}` for per-card spinners. */
   readonly downloading = signal<Record<string, boolean>>({});
@@ -86,13 +100,24 @@ export class ReportsComponent implements OnInit {
 
   private loadPreview(): void {
     this.previewLoading.set(true);
-    this.api.get<{ rows: CompliancePreviewRow[] }>(`${API.ADMIN_REPORTS}/compliance-preview`).subscribe({
+    this.api.get<CompliancePreviewPage>(`${API.ADMIN_REPORTS}/compliance-preview`, {
+      page: this.previewPage(),
+      per_page: this.previewPerPage,
+    }).subscribe({
       next: res => {
-        this.preview.set(res.result.rows ?? []);
+        const rows = res.result.rows ?? [];
+        this.preview.set(rows);
+        this.previewTotal.set(res.result.total ?? rows.length);
         this.previewLoading.set(false);
       },
       error: () => this.previewLoading.set(false),
     });
+  }
+
+  onPreviewPage(page: number): void {
+    if (page < 1 || page === this.previewPage()) return;
+    this.previewPage.set(page);
+    this.loadPreview();
   }
 
   /* ── Exports ─────────────────────────────────────────────────── */

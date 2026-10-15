@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ── Table card ───────────────────────────────────────────────────── */
 .notif-table-card {
   padding: 0;
@@ -53,6 +55,8 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--nas-size-xs);
+  min-inline-size: 760px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -74,7 +78,7 @@
 
   &__row { transition: background var(--transition-speed); &:hover { background: var(--nas-neutral-100); } }
   &__primary { font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); max-width: 200px; }
-  &__body    { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--nas-color-text-muted); }
+  &__body    { color: var(--nas-color-text-muted); }
   &__action  { width: 80px; text-align: end; }
   &__empty   { text-align: center; padding: var(--nas-space-10); color: var(--nas-color-text-muted); }
 }
@@ -226,3 +230,6 @@
     &:not(:disabled):hover { background: var(--nas-neutral-300); }
   }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

@@ -41,20 +41,19 @@
 
 .ql-strong { font-weight: var(--nas-weight-bold); }
 
-// A long name wraps to two lines, then an ellipsis; the full name is its title.
-.ql-table td.ql-title-cell { min-inline-size: 200px; max-inline-size: 420px; white-space: normal; }
-.ql-title {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-}
+// A long name stays on one line and ends in "…" (table-fit); the full name
+// is its title.
+.ql-title { display: block; overflow: hidden; text-overflow: ellipsis; }
 
-.ql-pills { display: inline-flex; flex-wrap: wrap; gap: 4px; max-inline-size: 260px; }
+// Column widths (fixed layout, shared/styles/_table-fit.scss).
+.ql-w-name    { inline-size: 26%; }
+.ql-w-course  { inline-size: 20%; }
+.ql-w-scope   { inline-size: 20%; }
+.ql-w-actions { inline-size: 140px; } // two 44 px icons
 
-.ql-actions { inline-size: 1%; padding-inline: 20px 24px !important; text-align: end; }
+.ql-pills { display: inline-flex; gap: 4px; max-inline-size: 100%; vertical-align: middle; }
+
+.ql-actions { padding-inline: 20px 24px !important; text-align: end; }
 .ql-actions__inner { display: inline-flex; gap: var(--nas-space-1); }
 
 // Row actions: a bare 20 px icon in a 44 x 36 target.
@@ -79,10 +78,12 @@
 .ql-score { font-size: var(--nas-size-s); line-height: 24px; }
 
 .ql-pill {
-  display: inline-flex;
-  align-items: center;
-  max-inline-size: 220px;
+  display: inline-block;
+  flex-shrink: 1;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   min-block-size: 18px;
+  vertical-align: middle;
   padding: 2px var(--nas-space-2);
   overflow: hidden;
   border-radius: var(--nas-radius-full);
@@ -93,7 +94,7 @@
   white-space: nowrap;
 
   &--all { background: var(--nas-teal-200); color: var(--nas-teal-800); }
-  &--more { background: var(--nas-neutral-300); color: var(--nas-neutral-1000); }
+  &--more { flex-shrink: 0; background: var(--nas-neutral-300); color: var(--nas-neutral-1000); }
   &--specific, &--pending { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
 }
 
@@ -122,6 +123,10 @@
   border-radius: var(--nas-radius-lg);
 }
 
+/* The modal's pager sits flush under the list (the dialog already pads it). */
+.ql-modal-pager { display: block; }
+.ql-modal-pager ::ng-deep .nas-pager { padding-inline: 0; padding-block-end: 0; }
+
 // Loading lines in the list: the same soft blocks as the table placeholder.
 .ql-modal-skel {
   display: block;
@@ -139,6 +144,9 @@
   align-items: center;
   gap: var(--nas-space-3);
   min-block-size: 37px;
+  // The list scrolls: a row keeps its height. Without this the 37px minimum
+  // replaced the content minimum and long titles overlapped (2026-10-15).
+  flex-shrink: 0;
   padding: var(--nas-space-2) var(--nas-space-3);
   font-size: var(--nas-size-xs);
   color: var(--nas-neutral-1000);

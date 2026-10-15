@@ -33,6 +33,7 @@ import type {
 } from '../../../roles/models/role.types';
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -83,6 +84,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     DialogModule,
     DropdownModule,
     NasPageHeaderComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './controller-list.component.html',
@@ -120,7 +122,6 @@ export class ControllerListComponent implements OnInit, OnDestroy {
   page             = 1;
   search           = '';
   readonly skeletons = [1, 2, 3, 4, 5];
-  readonly min       = Math.min;
 
   /* ── Dialog state ─────────────────────────────────────────────── */
   readonly dialogOpen = signal(false);
@@ -298,6 +299,8 @@ export class ControllerListComponent implements OnInit, OnDestroy {
       this.api.delete(`${API.ADMIN_CONTROLLERS}/${item.id}`).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.messages.success('controllers_toasts.removed', { title: 'common.deleted', params: { name: this.displayName(item) } });
+          // Step back a page when the last row of this one was removed.
+          if (this.items().length === 1 && this.page > 1) this.page--;
           this.refresh();
         },
         error: () => {

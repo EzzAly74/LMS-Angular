@@ -30,9 +30,9 @@
       <table class="cat-table">
         <thead>
           <tr>
-            <th class="cat-table__head">{{ 'categories.title' | translate }}</th>
-            <th class="cat-table__head">{{ 'categories.linked_courses' | translate }}</th>
-            <th class="cat-table__head cat-table__head--action"></th>
+            <th class="cat-table__head tf-w-fill">{{ 'categories.title' | translate }}</th>
+            <th class="cat-table__head tf-w-status">{{ 'categories.linked_courses' | translate }}</th>
+            <th class="cat-table__head cat-table__head--action tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@
           } @else if (items().length) {
             @for (item of items(); track item.id) {
               <tr class="cat-table__row">
-                <td class="cat-table__name">{{ item.name }}</td>
+                <td class="cat-table__name" [attr.title]="item.name">{{ item.name }}</td>
                 <td>
                   <span class="cat-pill">{{ item.courses_count ?? 0 }} {{ 'categories.courses_word' | translate }}</span>
                 </td>
@@ -67,24 +67,8 @@
       </table>
     </div>
 
-    @if (total() > perPage) {
-      <div class="cat-pagination">
-        <span class="cat-pagination__info">
-          {{ rangeStart() }}–{{ rangeEnd() }} {{ 'common.of' | translate }} {{ total() }}
-        </span>
-        <div class="cat-pagination__nav">
-          <button type="button" class="cat-pagination__btn"
-            [disabled]="page() === 1"
-            (click)="onPage(page() - 1)" [attr.aria-label]="'common.previous' | translate">
-            <nas-icon name="caret-left" [size]="16" />
-          </button>
-          <button type="button" class="cat-pagination__btn"
-            [disabled]="page() * perPage >= total()"
-            (click)="onPage(page() + 1)" [attr.aria-label]="'common.next' | translate">
-            <nas-icon name="caret-right" [size]="16" />
-          </button>
-        </div>
-      </div>
+    @if (!loading() && total() > 0) {
+      <nas-pager class="cat-pager" [page]="page()" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
     }
   </section>
 </div>

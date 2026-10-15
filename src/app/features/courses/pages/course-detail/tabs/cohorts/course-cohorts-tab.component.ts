@@ -22,6 +22,8 @@ import {
 import { NasListToolbarComponent } from '../../../../../../shared/nas/nas-list-toolbar/nas-list-toolbar.component';
 import { NasTableCardComponent } from '../../../../../../shared/nas/nas-table-card/nas-table-card.component';
 import { NasListStateComponent } from '../../../../../../shared/nas/nas-list-state/nas-list-state.component';
+import { NasPagerComponent } from '../../../../../../shared/nas/nas-pager/nas-pager.component';
+import { ClientPager } from '../../../../../../shared/list/client-pager';
 import {
   NasRowMenuComponent, type NasRowAction, type NasRowActionPick,
 } from '../../../../../../shared/nas/nas-row-menu/nas-row-menu.component';
@@ -71,6 +73,7 @@ interface CohortRow extends Cohort {
     NasListToolbarComponent,
     NasTableCardComponent,
     NasListStateComponent,
+    NasPagerComponent,
     NasRowMenuComponent,
     NasStatusBadgeComponent,
     CohortAttendanceDrawerComponent,
@@ -135,6 +138,13 @@ export class CourseCohortsTabComponent {
     return list;
   });
 
+  /**
+   * Ten cohorts a page. The course's cohorts are loaded whole by the page
+   * (the header and the other tabs' cohort filters need all of them), so the
+   * tab pages through that list rather than asking the server again.
+   */
+  readonly pager = new ClientPager<CohortRow>(this.rows, 10);
+
   readonly rowCount = computed(() => this.rows().length);
   readonly countLabel = computed(() => pluralKey('course_detail.cohorts_count', this.rowCount(), this.locale()));
   readonly nameSort = computed(() => this.ariaSort('name'));
@@ -172,16 +182,23 @@ export class CourseCohortsTabComponent {
     withLocaleReload(() => this.langTick.update(v => v + 1));
   }
 
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.pager.reset();
+  }
+
   onFilter(v: NasFilterValues): void {
     this.filter.set({
       cohort: filterNumbers(v['cohort'])[0] ?? null,
       status: filterStrings(v['status'])[0] ?? null,
     });
+    this.pager.reset();
   }
 
   toggleSort(key: SortKey): void {
     const s = this.sort();
     this.sort.set(!s || s.key !== key ? { key, dir: 'asc' } : s.dir === 'asc' ? { key, dir: 'desc' } : null);
+    this.pager.reset();
   }
 
   private ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {

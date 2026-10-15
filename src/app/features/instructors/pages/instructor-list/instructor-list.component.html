@@ -23,11 +23,11 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'instructors.instructor' | translate }}</th>
-            <th>{{ 'instructors.job_title' | translate }}</th>
-            <th>{{ 'instructors.courses' | translate }}</th>
-            <th>{{ 'instructors.joined' | translate }}</th>
-            <th></th>
+            <th class="tf-w-xl">{{ 'instructors.instructor' | translate }}</th>
+            <th class="tf-w-lg">{{ 'instructors.job_title' | translate }}</th>
+            <th class="tf-w-num">{{ 'instructors.courses' | translate }}</th>
+            <th class="tf-w-date">{{ 'instructors.joined' | translate }}</th>
+            <th class="tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -45,10 +45,10 @@
                 <td>
                   <div class="inst-name-cell">
                     <nas-avatar class="inst-avatar" [name]="item.name" [image]="item.image" />
-                    <span class="nas-table__primary">{{ item.name }}</span>
+                    <span class="nas-table__primary" [attr.title]="item.name">{{ item.name }}</span>
                   </div>
                 </td>
-                <td class="nas-table__muted">{{ item.job_title || '—' }}</td>
+                <td class="nas-table__muted" [attr.title]="item.job_title || null">{{ item.job_title || '—' }}</td>
                 <td>{{ item.courses_count ?? 0 }}</td>
                 <td class="nas-table__muted">{{ item.created_at | localDate }}</td>
                 <td class="nas-table__action">

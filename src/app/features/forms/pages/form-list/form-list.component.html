@@ -20,12 +20,12 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'common.title' | translate }}</th>
-            <th>{{ 'forms.duration' | translate }}</th>
-            <th>{{ 'forms.full_mark' | translate }}</th>
-            <th>{{ 'common.status' | translate }}</th>
-            <th>{{ 'common.created_at' | translate }}</th>
-            <th></th>
+            <th class="tf-w-xl">{{ 'common.title' | translate }}</th>
+            <th class="tf-w-num">{{ 'forms.duration' | translate }}</th>
+            <th class="tf-w-num">{{ 'forms.full_mark' | translate }}</th>
+            <th class="tf-w-status">{{ 'common.status' | translate }}</th>
+            <th class="tf-w-date">{{ 'common.created_at' | translate }}</th>
+            <th class="tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
@@ -36,7 +36,7 @@
           } @else {
             @for (item of items(); track item.id) {
               <tr class="nas-table__row">
-                <td class="nas-table__primary">{{ item.title }}</td>
+                <td class="nas-table__primary" [attr.title]="item.title">{{ item.title }}</td>
                 <td class="nas-table__muted">{{ item.duration }} {{ 'forms.duration_unit' | translate }}</td>
                 <td>{{ item.full_mark }}</td>
                 <td>

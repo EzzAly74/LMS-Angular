@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 .article-table-card { padding: 0; overflow: hidden; }
 
 .article-toolbar {
@@ -45,6 +47,8 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--nas-size-xs);
+  min-inline-size: 720px;
+  @include table-fit.fit;
 
   thead th {
     text-align: start;
@@ -111,3 +115,6 @@
   i { font-size: 13px; }
   &:hover { background: var(--nas-status-red-50); color: var(--nas-status-red-500); border-color: var(--nas-status-red-200); }
 }
+
+// Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
+@include table-fit.columns;

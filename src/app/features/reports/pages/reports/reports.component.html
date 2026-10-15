@@ -98,10 +98,10 @@
         <table class="rp-table">
           <thead>
             <tr>
-              <th>{{ 'reports.col_role' | translate }}</th>
-              <th>{{ 'reports.col_department' | translate }}</th>
-              <th class="rp-table__num">{{ 'reports.col_learners' | translate }}</th>
-              <th class="rp-table__num">{{ 'reports.col_qualified' | translate }}</th>
+              <th class="tf-w-fill">{{ 'reports.col_role' | translate }}</th>
+              <th class="tf-w-lg">{{ 'reports.col_department' | translate }}</th>
+              <th class="rp-table__num tf-w-num">{{ 'reports.col_learners' | translate }}</th>
+              <th class="rp-table__num tf-w-num">{{ 'reports.col_qualified' | translate }}</th>
               <th class="rp-table__bar">{{ 'reports.col_compliance' | translate }}</th>
             </tr>
           </thead>
@@ -119,8 +119,8 @@
             } @else {
               @for (row of preview(); track row.role) {
                 <tr class="rp-table__row">
-                  <td class="rp-table__primary">{{ row.role }}</td>
-                  <td class="rp-table__muted">{{ row.department || '—' }}</td>
+                  <td class="rp-table__primary" [attr.title]="row.role">{{ row.role }}</td>
+                  <td class="rp-table__muted" [attr.title]="row.department || null">{{ row.department || '—' }}</td>
                   <td class="rp-table__num">{{ row.learners }}</td>
                   <td class="rp-table__num">{{ row.qualified }}</td>
                   <td class="rp-table__bar">
@@ -145,6 +145,10 @@
           </tbody>
         </table>
       </div>
+      <!-- Pagination (shared pager, server-paged: compliance-preview page/per_page) -->
+      @if (!previewLoading() && previewTotal() > 0) {
+        <nas-pager class="rp-pager" [page]="previewPage()" [total]="previewTotal()" [perPage]="previewPerPage" (pageChange)="onPreviewPage($event)" />
+      }
     </div>
   </div>
 </div>

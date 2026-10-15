@@ -15,6 +15,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NasPageHeaderComponent } from '../../../../shared/nas';
+import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
 import { AdminAuditLogApiService } from '../../services/admin-audit-log-api.service';
 import type {
@@ -40,6 +41,7 @@ type RoleTab = 'all' | 'admin' | 'instructor';
     SkeletonModule,
     TranslateModule,
     NasPageHeaderComponent,
+    NasPagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-log-list.component.html',
@@ -54,7 +56,6 @@ export class AuditLogListComponent implements OnInit, OnDestroy {
   private readonly search$  = new Subject<string>();
 
   readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
-  readonly min = Math.min;
 
   constructor() {
     // Reload primary list AND filter-modal lookups (roles,

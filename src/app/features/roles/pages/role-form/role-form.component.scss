@@ -1,3 +1,5 @@
+@use '../../../../shared/styles/table-fit';
+
 /* ──────────────────────────────────────────────────────────────
    Roles — 2026 redesign (Create / Edit form)
    Classes prefixed `rf-` to stay isolated.
@@ -626,8 +628,12 @@
 
 .rf-matrix {
   inline-size: 100%;
+  // Fixed layout (table-fit): the action columns keep 76 px and the section
+  // name takes the rest, never less than 200 px (--rf-cols: action count).
+  min-inline-size: calc(200px + var(--rf-cols, 4) * 76px);
   border-collapse: collapse;
   font-size: var(--nas-size-xs);
+  @include table-fit.fit;
 
   th, td { padding: 0 var(--nas-space-3); block-size: 48px; }
 
@@ -642,10 +648,7 @@
 
   tbody tr + tr :is(th, td) { border-block-start: 1px solid var(--nas-color-border); }
 
-  &__section {
-    text-align: start;
-    min-inline-size: 150px;
-  }
+  &__section { text-align: start; }
 
   &__action,
   &__cell {
@@ -683,7 +686,7 @@
 
   @media (max-width: 560px) {
     th, td { padding: 0 var(--nas-space-2); }
-    &__section { min-inline-size: 128px; }
+    min-inline-size: calc(160px + var(--rf-cols, 4) * 52px);
     &__action, &__cell { inline-size: 52px; }
   }
 }

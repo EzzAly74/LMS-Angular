@@ -122,21 +122,21 @@
       <table class="nas-table">
         <thead>
           <tr>
-            <th>{{ 'dashboard.table_course' | translate }}</th>
-            <th>{{ 'dashboard.table_instructor' | translate }}</th>
-            <th>{{ 'dashboard.table_enrolled' | translate }}</th>
-            <th>{{ 'dashboard.table_completion' | translate }}</th>
-            <th>{{ 'dashboard.table_status' | translate }}</th>
-            <th></th>
+            <th class="tf-w-xl">{{ 'dashboard.table_course' | translate }}</th>
+            <th class="tf-w-md">{{ 'dashboard.table_instructor' | translate }}</th>
+            <th class="tf-w-num">{{ 'dashboard.table_enrolled' | translate }}</th>
+            <th class="tf-w-progress">{{ 'dashboard.table_completion' | translate }}</th>
+            <th class="tf-w-status">{{ 'dashboard.table_status' | translate }}</th>
+            <th class="tf-w-action"></th>
           </tr>
         </thead>
         <tbody>
           @for (c of data()?.top_courses ?? []; track c.id) {
           <tr class="nas-table__row" [routerLink]="['/admin/courses', c.id]">
-            <td class="nas-table__primary">{{ topCourseTitle(c) }}</td>
-            <td>{{ topCourseInstructor(c) }}</td>
+            <td class="nas-table__primary" [attr.title]="topCourseTitle(c)">{{ topCourseTitle(c) }}</td>
+            <td [attr.title]="topCourseInstructor(c)">{{ topCourseInstructor(c) }}</td>
             <td>{{ c.users_count ?? 0 }}</td>
-            <td style="min-width: 180px;">
+            <td>
               <nas-progress [value]="c.completion_percent ?? 0" />
             </td>
             <td>

@@ -44,14 +44,14 @@
           <!-- Content -->
           <div class="blog-row__body">
             <div class="blog-row__header">
-              <span class="blog-row__title">{{ item.title }}</span>
+              <span class="blog-row__title" [title]="item.title">{{ item.title }}</span>
               @if (item.level) {
                 <span class="blog-badge" [ngClass]="'blog-badge--' + item.level">
                   {{ 'blogs.level.' + item.level | translate }}
                 </span>
               }
               @for (qual of item.qualifications; track qual.id) {
-                <span class="blog-badge blog-badge--qual">{{ qual.name }}</span>
+                <span class="blog-badge blog-badge--qual" [title]="qual.name">{{ qual.name }}</span>
               }
             </div>
             @if (item.subtitle) {
@@ -98,24 +98,12 @@
       }
     }
 
-  </div>
+    <!-- Pagination (shared pager, server-paged: GET admin/blogs page/per_page) -->
+    @if (!loading() && total() > 0) {
+      <nas-pager class="blog-list-pager" [page]="page" [total]="total()" [perPage]="perPage" (pageChange)="onPage($event)" />
+    }
 
-  <!-- Pagination -->
-  @if (total() > perPage) {
-    <div class="nas-table-pagination">
-      <span class="nas-table-pagination__info">
-        {{ (page - 1) * perPage + 1 }}–{{ min(page * perPage, total()) }} {{ 'common.of' | translate }} {{ total() }}
-      </span>
-      <div class="nas-table-pagination__nav">
-        <button type="button" class="nas-table-pagination__btn" [disabled]="page === 1" (click)="onPage(page - 1)">
-          <i class="pi pi-chevron-left" aria-hidden="true"></i>
-        </button>
-        <button type="button" class="nas-table-pagination__btn" [disabled]="page * perPage >= total()" (click)="onPage(page + 1)">
-          <i class="pi pi-chevron-right" aria-hidden="true"></i>
-        </button>
-      </div>
-    </div>
-  }
+  </div>
 
 </div>
 
