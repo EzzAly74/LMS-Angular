@@ -80,7 +80,7 @@
           </div>
         } @else {
           <div class="jt-state">
-            <nas-list-state [message]="(hasQuery() ? 'job_titles.no_results' : 'job_titles.empty') | translate" />
+            <nas-list-state [message]="hasQuery() ? '' : ('job_titles.empty' | translate)" />
           </div>
         }
       }

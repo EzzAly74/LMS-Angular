@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -27,7 +28,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'app-external-training-list',
   standalone: true,
-  imports: [RouterLink, TranslateModule, SkeletonModule, NasIconComponent, NasPagerComponent, NasDatePipe, NasRelativeTimePipe, EtStatsComponent],
+  imports: [NasListStateComponent, RouterLink, TranslateModule, SkeletonModule, NasIconComponent, NasPagerComponent, NasDatePipe, NasRelativeTimePipe, EtStatsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './request-list.component.html',
   styleUrl: './request-list.component.scss',

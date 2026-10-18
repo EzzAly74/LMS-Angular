@@ -61,7 +61,7 @@
               </tr>
             }
           } @else {
-            <tr><td colspan="3" class="cat-table__empty">{{ 'categories.no_results' | translate }}</td></tr>
+            <tr><td colspan="3"><nas-list-state [message]="search() ? '' : ('categories.no_results' | translate)" /></td></tr>
           }
         </tbody>
       </table>

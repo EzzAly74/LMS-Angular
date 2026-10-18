@@ -15,8 +15,7 @@
   &__row { transition: background var(--transition-speed); &:hover { background: var(--nas-neutral-100); } }
   &__primary { font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
   &__muted { color: var(--nas-color-text-muted); }
-  &__action { width: 48px; text-align: end; }
-  &__empty { text-align: center; padding: var(--nas-space-10); color: var(--nas-color-text-muted); } }
+  &__action { width: 48px; text-align: end; } }
 .nas-table-pagination { display: flex; align-items: center; justify-content: space-between; padding: var(--nas-space-3) var(--nas-space-5); border-top: 1px solid var(--nas-color-border); font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted);
   &__nav { display: flex; gap: var(--nas-space-2); }
   &__btn { width: 32px; height: 32px; border: 1px solid var(--nas-color-border); border-radius: var(--nas-radius-sm); background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--nas-color-text-muted); transition: background var(--transition-speed); i { font-size: 12px; } &:hover:not([disabled]) { background: var(--nas-neutral-300); color: var(--nas-color-text-strong); } &[disabled] { opacity: 0.4; cursor: not-allowed; } } }

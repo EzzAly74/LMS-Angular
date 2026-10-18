@@ -9,6 +9,7 @@ import {
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -55,7 +56,7 @@ interface CategoryFormState {
 @Component({
   selector: 'app-category-list',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [NasListStateComponent, NasCanDirective, 
     CommonModule,
     FormsModule,
     DialogModule,

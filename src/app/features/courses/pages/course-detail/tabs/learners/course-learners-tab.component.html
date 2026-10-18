@@ -64,7 +64,7 @@
             </tr>
           } @empty {
             <tr><td [attr.colspan]="columns()">
-              <nas-list-state [message]="(hasQuery() ? 'course_detail.no_results' : 'course_detail.no_learners') | translate" />
+              <nas-list-state [message]="hasQuery() ? '' : ('course_detail.no_learners' | translate)" />
             </td></tr>
           }
         }

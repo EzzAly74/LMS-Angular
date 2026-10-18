@@ -66,7 +66,7 @@
               </tr>
             }
             @if (!items().length) {
-              <tr><td colspan="6" class="nas-table__empty">{{ 'articles.no_results' | translate }}</td></tr>
+              <tr><td colspan="6"><nas-list-state [message]="search ? '' : ('articles.no_results' | translate)" /></td></tr>
             }
           }
         </tbody>

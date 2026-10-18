@@ -70,7 +70,8 @@ test.describe('behaviour', () => {
     await page.getByLabel('Search certificates...').fill('  zzz ');
     await expect.poll(() => calls.at(-1)!.searchParams.get('search')).toBe('zzz');
     expect(calls.at(-1)!.searchParams.get('page')).toBe('1');
-    await expect(page.locator('nas-list-state')).toContainText('No certificates found.');
+    await expect(page.locator('nas-list-state .nls-empty__title')).toHaveText('No Results');
+    await expect(page.locator('nas-list-state .nls-empty__hint')).toHaveText('Try adjusting or clearing your filters to find what you are looking for.');
   });
 
   test('loading shows the skeleton; a failed load offers Try again', async ({ page }) => {
@@ -89,7 +90,8 @@ test.describe('behaviour', () => {
     mode = 'ok';
     await page.getByRole('button', { name: 'Try again' }).click();
     await expect(page.locator('.cert-table__row')).toHaveCount(0);
-    await expect(page.locator('nas-list-state')).toContainText('No certificates found.');
+    await expect(page.locator('nas-list-state .nls-empty__title')).toHaveText('No Results');
+    await expect(page.locator('nas-list-state .nls-empty__hint')).toHaveText('Try adjusting or clearing your filters to find what you are looking for.');
   });
 });
 

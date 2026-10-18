@@ -1,4 +1,5 @@
 import { ShortNamePipe } from '../../../../shared/pipes/short-name.pipe';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -85,7 +86,7 @@ export function fullNameError(value: string): string | null {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [LocalDatePipe, ShortNamePipe, NasCanDirective, NasAvatarComponent, RouterLink,
+  imports: [NasListStateComponent, LocalDatePipe, ShortNamePipe, NasCanDirective, NasAvatarComponent, RouterLink,
     CommonModule,
     FormsModule,
     DialogModule,

@@ -92,8 +92,8 @@
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="8" class="etl__message">
-                    <p>{{ (search() || status() ? 'external_training.list.no_results' : 'external_training.list.empty') | translate }}</p>
+                  <td colspan="8">
+                    <nas-list-state [message]="search() || status() ? '' : ('external_training.list.empty' | translate)" />
                   </td>
                 </tr>
               }

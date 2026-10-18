@@ -43,7 +43,7 @@
             }
             @if (!items().length) {
               <tr>
-                <td colspan="5" class="nas-table__empty">{{ (selectedCourseId ? 'exams.no_results' : 'exams.select_to_view') | translate }}</td>
+                <td colspan="5"><nas-list-state [message]="(selectedCourseId ? 'exams.no_results' : 'exams.select_to_view') | translate" /></td>
               </tr>
             }
           }

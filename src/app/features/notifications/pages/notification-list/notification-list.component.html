@@ -118,7 +118,7 @@
             }
             @if (!items().length) {
               <tr>
-                <td colspan="5" class="nas-table__empty">{{ 'notifications.no_results' | translate }}</td>
+                <td colspan="5"><nas-list-state [message]="search ? '' : ('notifications.no_results' | translate)" /></td>
               </tr>
             }
           }

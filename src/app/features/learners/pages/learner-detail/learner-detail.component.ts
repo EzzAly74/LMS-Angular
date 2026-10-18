@@ -1,4 +1,5 @@
 import { ShortNamePipe } from '../../../../shared/pipes/short-name.pipe';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -61,7 +62,7 @@ const EMPTY_TABLE = { rows: [], total: 0, page: 1, state: 'loading' as LoadState
 @Component({
   selector: 'app-learner-detail',
   standalone: true,
-  imports: [ShortNamePipe, 
+  imports: [NasListStateComponent, ShortNamePipe, 
     RouterLink,
     TranslateModule,
     SkeletonModule,

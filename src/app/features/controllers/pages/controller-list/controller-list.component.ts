@@ -1,4 +1,5 @@
 import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -76,7 +77,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-controller-list',
   standalone: true,
-  imports: [LocalDatePipe, NasCanDirective, NasAvatarComponent,
+  imports: [NasListStateComponent, LocalDatePipe, NasCanDirective, NasAvatarComponent,
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

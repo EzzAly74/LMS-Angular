@@ -50,15 +50,6 @@
 
     &--skeleton td { padding: var(--nas-space-3) var(--nas-space-5); }
   }
-
-  &__empty {
-    text-align: center;
-    padding: var(--nas-space-10) var(--nas-space-5);
-    color: var(--nas-color-text-muted);
-
-    i { font-size: 28px; display: block; margin-bottom: var(--nas-space-3); }
-    p { margin: 0; font-size: var(--nas-size-2xs); }
-  }
 }
 
 /* ── Slim prev/next pagination ────────────────────────────────────── */

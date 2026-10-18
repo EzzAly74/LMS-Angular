@@ -1,4 +1,5 @@
 import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -25,7 +26,7 @@ interface Form {
 @Component({
   selector: 'app-form-list',
   standalone: true,
-  imports: [LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [NasListStateComponent, LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './form-list.component.html',
   styleUrl: './form-list.component.scss',

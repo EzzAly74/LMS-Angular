@@ -152,7 +152,7 @@
                 </tr>
               } @empty {
                 <tr><td colspan="5">
-                  <nas-list-state [message]="(list.query().search ? 'certificates.no_results' : 'certificates.no_issued') | translate" />
+                  <nas-list-state [message]="list.query().search ? '' : ('certificates.no_issued' | translate)" />
                 </td></tr>
               }
             }

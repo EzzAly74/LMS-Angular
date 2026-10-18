@@ -106,27 +106,6 @@
   &__muted { color: var(--nas-color-text-muted); font-size: var(--nas-size-2xs); white-space: nowrap; }
   &__actions { width: 100px; white-space: nowrap; text-align: end; }
   &__th--actions { text-align: end; }
-
-  &__empty {
-    text-align: center;
-    padding: var(--nas-space-10) var(--nas-space-5);
-    color: var(--nas-color-text-muted);
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--nas-space-2);
-
-    strong {
-      font-size: var(--nas-size-xs);
-      font-weight: var(--nas-weight-medium);
-      color: var(--nas-color-text-strong);
-    }
-
-    span { font-size: var(--nas-size-2xs); }
-  }
-
-  &__empty-icon { font-size: 32px; color: var(--nas-color-text-muted); }
 }
 
 /* ── User cell (avatar + name + email) ────────────────────── */

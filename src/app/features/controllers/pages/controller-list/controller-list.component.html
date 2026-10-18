@@ -206,10 +206,8 @@
             }
           } @else if (!hasRows()) {
             <tr>
-              <td colspan="4" class="ctrl-table__empty">
-                <i class="pi pi-users ctrl-table__empty-icon" aria-hidden="true"></i>
-                <strong>{{ 'controllers.no_results' | translate }}</strong>
-                <span>{{ 'controllers.no_results_hint' | translate }}</span>
+              <td colspan="4">
+                <nas-list-state [message]="search ? '' : ('controllers.no_results' | translate)" />
               </td>
             </tr>
           } @else {

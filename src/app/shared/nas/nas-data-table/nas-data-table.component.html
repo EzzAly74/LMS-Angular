@@ -51,9 +51,8 @@
           }
         } @else {
           <tr>
-            <td [attr.colspan]="columns.length" class="nas-table__empty">
-              <i [class]="emptyIcon"></i>
-              <p>{{ emptyText | translate }}</p>
+            <td [attr.colspan]="columns.length">
+              <nas-list-state [message]="emptyText | translate" />
             </td>
           </tr>
         }

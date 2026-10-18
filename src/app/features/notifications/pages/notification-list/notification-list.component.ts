@@ -1,4 +1,5 @@
 import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +27,7 @@ interface Notification {
 @Component({
   selector: 'app-notification-list',
   standalone: true,
-  imports: [LocalDatePipe, 
+  imports: [NasListStateComponent, LocalDatePipe, 
     CommonModule, FormsModule, DialogModule, SkeletonModule, TranslateModule, NasPageHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -138,9 +138,8 @@
             }
           } @else if (!items().length) {
             <tr>
-              <td colspan="5" class="al-table__empty">
-                <i class="pi pi-shield" aria-hidden="true"></i>
-                {{ 'audit_log.no_results' | translate }}
+              <td colspan="5">
+                <nas-list-state [message]="search || activeTab() !== 'all' || instructorIds.length ? '' : ('audit_log.no_results' | translate)" />
               </td>
             </tr>
           } @else {

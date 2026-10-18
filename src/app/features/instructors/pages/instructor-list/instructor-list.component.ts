@@ -1,4 +1,5 @@
 import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -26,7 +27,7 @@ interface Instructor {
 @Component({
   selector: 'app-instructor-list',
   standalone: true,
-  imports: [LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasAvatarComponent],
+  imports: [NasListStateComponent, LocalDatePipe, CommonModule, SkeletonModule, TranslateModule, NasPageHeaderComponent, NasAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './instructor-list.component.html',
   styleUrl: './instructor-list.component.scss',

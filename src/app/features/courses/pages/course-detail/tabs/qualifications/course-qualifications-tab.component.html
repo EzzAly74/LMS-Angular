@@ -20,13 +20,6 @@
     </ul>
     <nas-pager class="qt-pager" [page]="pager.page()" [total]="pager.total()" [perPage]="pager.perPage" (pageChange)="pager.goTo($event)" />
   } @else {
-    <div class="cl-state">
-      @if (qualifications().length) {
-        <p>{{ 'course_detail.no_results' | translate }}</p>
-      } @else {
-        <p class="cl-strong">{{ 'course_detail.no_qualifications' | translate }}</p>
-        <p>{{ 'course_detail.no_qualifications_hint' | translate }}</p>
-      }
-    </div>
+    <nas-list-state [message]="qualifications().length ? '' : ('course_detail.no_qualifications' | translate)" />
   }
 </section>

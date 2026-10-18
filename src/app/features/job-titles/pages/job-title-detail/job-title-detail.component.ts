@@ -9,6 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -41,7 +42,7 @@ type LoadState = 'loading' | 'ready' | 'error' | 'not-found';
 @Component({
   selector: 'app-job-title-detail',
   standalone: true,
-  imports: [FormsModule, TranslateModule, SkeletonModule, NasIconComponent],
+  imports: [NasListStateComponent, FormsModule, TranslateModule, SkeletonModule, NasIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-title-detail.component.html',
   styleUrl: './job-title-detail.component.scss',

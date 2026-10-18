@@ -183,8 +183,8 @@
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="9" class="ld__message" role="status">
-                    <p>{{ (filtered() ? 'learners.detail.no_matches' : 'learners.detail.no_courses') | translate }}</p>
+                  <tr><td colspan="9">
+                    <nas-list-state [message]="filtered() ? '' : ('learners.detail.no_courses' | translate)" />
                   </td></tr>
                 }
               }
@@ -249,8 +249,8 @@
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="7" class="ld__message" role="status">
-                    <p>{{ (filtered() ? 'learners.detail.no_matches' : 'learners.detail.no_performance') | translate }}</p>
+                  <tr><td colspan="7">
+                    <nas-list-state [message]="filtered() ? '' : ('learners.detail.no_performance' | translate)" />
                   </td></tr>
                 }
               }

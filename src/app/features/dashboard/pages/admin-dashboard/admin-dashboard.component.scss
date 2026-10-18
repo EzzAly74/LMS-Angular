@@ -295,7 +295,6 @@
   &__row { cursor: pointer; transition: background var(--transition-speed); &:hover { background: var(--nas-neutral-200); } }
   &__primary { font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
   &__action  { width: 52px; text-align: end; }
-  &__empty   { text-align: center; padding: var(--nas-space-8); color: var(--nas-color-text-muted); }
 }
 
 .nas-view-btn {

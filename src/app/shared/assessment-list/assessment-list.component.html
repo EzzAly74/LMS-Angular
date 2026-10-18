@@ -210,7 +210,7 @@
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="8"><nas-list-state [message]="(hasQuery() ? ns + '.no_results' : ns + '.no_submissions') | translate" /></td></tr>
+                <tr><td colspan="8"><nas-list-state [message]="hasQuery() ? '' : (ns + '.no_submissions' | translate)" /></td></tr>
               }
             }
           }

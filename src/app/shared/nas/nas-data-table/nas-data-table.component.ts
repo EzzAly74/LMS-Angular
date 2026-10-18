@@ -12,6 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NasListStateComponent } from '../nas-list-state/nas-list-state.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { NasShimmerComponent } from '../nas-shimmer/nas-shimmer.component';
 import { NasCellTplDirective } from './nas-cell-tpl.directive';
@@ -31,7 +32,7 @@ export interface NasTableColumn {
 @Component({
   selector: 'nas-data-table',
   standalone: true,
-  imports: [CommonModule, TranslateModule, NasShimmerComponent],
+  imports: [NasListStateComponent, CommonModule, TranslateModule, NasShimmerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nas-data-table.component.html',
   styleUrl:    './nas-data-table.component.scss',
@@ -45,7 +46,9 @@ export class NasDataTableComponent<T = unknown> implements AfterContentInit {
   @Input() page            = 1;
   @Input() paginated       = true;
   @Input() rowClickable    = false;
+  /** i18n key for the empty-state hint (rendered by nas-list-state, the Figma empty state). */
   @Input() emptyText       = 'common.no_records';
+  /** No longer rendered: the empty state draws the Figma illustration. Kept so existing bindings still compile. */
   @Input() emptyIcon       = 'pi pi-inbox';
   @Input() skeletonRows    = 6;
   /** custom CSS class applied to outer card */

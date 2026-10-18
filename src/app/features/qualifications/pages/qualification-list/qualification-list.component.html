@@ -99,7 +99,7 @@
               </tr>
             } @empty {
               <tr><td colspan="6">
-                <nas-list-state [message]="(list.query().search ? 'qualifications.no_results' : 'qualifications.empty') | translate" />
+                <nas-list-state [message]="list.query().search ? '' : ('qualifications.empty' | translate)" />
               </td></tr>
             }
           }

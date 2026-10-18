@@ -1,4 +1,5 @@
 import { NasConfirmService } from '../../../../shared/nas/nas-confirm-modal/nas-confirm.service';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +26,7 @@ interface Exam {
 @Component({
   selector: 'app-exam-list',
   standalone: true,
-  imports: [LocalDatePipe, CommonModule, FormsModule, TranslateModule, DropdownModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [NasListStateComponent, LocalDatePipe, CommonModule, FormsModule, TranslateModule, DropdownModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exam-list.component.html',
   styleUrl: './exam-list.component.scss',

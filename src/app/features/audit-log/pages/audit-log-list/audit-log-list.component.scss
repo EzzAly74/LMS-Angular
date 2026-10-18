@@ -160,19 +160,6 @@
   }
 
   tbody tr:last-child td { border-bottom: none; }
-
-  &__empty {
-    text-align: center;
-    padding: var(--nas-space-10) var(--nas-space-5);
-    color: var(--nas-color-text-muted);
-    font-size: var(--nas-size-xs);
-
-    i {
-      font-size: 22px;
-      margin-inline-end: var(--nas-space-2);
-      vertical-align: middle;
-    }
-  }
 }
 
 .al-row {

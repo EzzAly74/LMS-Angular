@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
@@ -34,7 +35,7 @@ type RoleTab = 'all' | 'admin' | 'instructor';
 @Component({
   selector: 'app-audit-log-list',
   standalone: true,
-  imports: [LocalDatePipe, 
+  imports: [NasListStateComponent, LocalDatePipe, 
     CommonModule,
     FormsModule,
     DialogModule,

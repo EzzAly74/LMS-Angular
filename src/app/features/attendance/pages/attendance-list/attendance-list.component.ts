@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -24,7 +25,7 @@ interface Attendance {
 @Component({
   selector: 'app-attendance-list',
   standalone: true,
-  imports: [LocalDatePipe, CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
+  imports: [NasListStateComponent, LocalDatePipe, CommonModule, TranslateModule, SkeletonModule, NasPageHeaderComponent, NasStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './attendance-list.component.html',
   styleUrl: './attendance-list.component.scss',

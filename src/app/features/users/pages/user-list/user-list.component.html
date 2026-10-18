@@ -459,9 +459,8 @@
             }
           } @else if (!items().length) {
             <tr>
-              <td colspan="5" class="ul-table__empty">
-                <i class="pi pi-users" aria-hidden="true"></i>
-                <span>{{ 'users.no_results' | translate }}</span>
+              <td colspan="5">
+                <nas-list-state [message]="search || activeRole() ? '' : ('users.no_results' | translate)" />
               </td>
             </tr>
           } @else {

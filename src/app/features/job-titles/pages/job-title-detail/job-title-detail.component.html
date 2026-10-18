@@ -190,11 +190,8 @@
                 }
               } @empty {
                 <tr>
-                  <td class="jtd__td jtd__message" colspan="3" role="status">
-                    <nas-icon name="tray" [size]="32" />
-                    <p>
-                      {{ (search() ? 'job_titles.detail.no_results' : 'job_titles.detail.empty') | translate }}
-                    </p>
+                  <td class="jtd__td" colspan="3">
+                    <nas-list-state [message]="search() ? '' : ('job_titles.detail.empty' | translate)" />
                   </td>
                 </tr>
               }

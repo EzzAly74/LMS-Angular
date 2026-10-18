@@ -97,7 +97,7 @@
               </tr>
             } @empty {
               <tr><td colspan="7">
-                <nas-list-state [message]="(hasQuery() ? 'learners.no_results' : 'learners.empty') | translate" />
+                <nas-list-state [message]="hasQuery() ? '' : ('learners.empty' | translate)" />
               </td></tr>
             }
           }

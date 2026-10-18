@@ -98,7 +98,7 @@
               </tr>
             } @empty {
               <tr><td colspan="7">
-                <nas-list-state [message]="(hasQuery() ? 'evaluations.no_results' : 'evaluations.scores.empty') | translate" />
+                <nas-list-state [message]="hasQuery() ? '' : ('evaluations.scores.empty' | translate)" />
               </td></tr>
             }
           }

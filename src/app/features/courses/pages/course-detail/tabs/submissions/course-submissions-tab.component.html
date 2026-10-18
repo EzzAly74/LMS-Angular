@@ -82,7 +82,7 @@
           } @empty {
             <tr><td [attr.colspan]="cols">
               <nas-list-state
-                [message]="(hasQuery() ? 'course_detail.no_results' : (quiz ? 'course_detail.no_quiz_submissions' : 'course_detail.no_assignment_submissions')) | translate" />
+                [message]="hasQuery() ? '' : ((quiz ? 'course_detail.no_quiz_submissions' : 'course_detail.no_assignment_submissions') | translate)" />
             </td></tr>
           }
         }

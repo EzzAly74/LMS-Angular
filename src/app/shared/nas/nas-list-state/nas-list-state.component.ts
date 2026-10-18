@@ -2,9 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { TranslateModule } from '@ngx-translate/core';
 
 /**
- * A list's empty, no-results or error message (reference: All Courses). Use
- * it in a full-width table cell (`<tr><td [attr.colspan]="n">`) or on its own
- * under a card grid. An error is announced (role="alert") and offers Retry.
+ * A list's empty, no-results or error message. Use it in a full-width table
+ * cell (`<tr><td [attr.colspan]="n">`) or on its own under a card grid.
+ *
+ * Empty (the Figma "Empty State", 2265:128625): the 80 px illustration, a
+ * "No Results" title and a hint, centred. Every Dashboard table uses it. The
+ * hint is the page's `message`; without one it is the Figma text ("Try
+ * adjusting or clearing your filters to find what you are looking for.").
+ * `title` overrides "No Results" where a list is empty rather than filtered.
+ * An error is announced (role="alert") and offers Retry.
  */
 @Component({
   selector: 'nas-list-state',
@@ -18,7 +24,13 @@ import { TranslateModule } from '@ngx-translate/core';
         <button type="button" class="nls__retry" (click)="retry.emit()">{{ 'common.retry' | translate }}</button>
       </div>
     } @else {
-      <p class="nls">{{ message() }}</p>
+      <div class="nls-empty" role="status">
+        <img class="nls-empty__art" src="assets/icons/figma/empty-state.svg" width="80" height="80" alt="" />
+        <div class="nls-empty__text">
+          <p class="nls-empty__title">{{ title() || ('common.empty_state.title' | translate) }}</p>
+          <p class="nls-empty__hint">{{ message() || ('common.empty_state.hint' | translate) }}</p>
+        </div>
+      </div>
     }
   `,
   styles: `
@@ -46,12 +58,41 @@ import { TranslateModule } from '@ngx-translate/core';
     }
     .nls__retry:hover { background: var(--nas-neutral-200); }
     .nls__retry:focus-visible { outline: 2px solid var(--nas-teal-1000); outline-offset: 2px; }
+
+    /* Figma 2265:128625: 8 px padding, 12 px between the art and the text, 4 px between the lines. */
+    .nls-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: var(--nas-space-10, 40px) 8px;
+      text-align: center;
+      white-space: normal;
+    }
+    .nls-empty__art { display: block; flex-shrink: 0; }
+    .nls-empty__text { display: flex; flex-direction: column; align-items: center; gap: 4px; max-inline-size: 320px; }
+    .nls-empty__title {
+      margin: 0;
+      font-size: var(--nas-size-l);
+      line-height: 24px;
+      font-weight: var(--nas-weight-bold);
+      color: var(--nas-color-text-strong, #171819);
+    }
+    .nls-empty__hint {
+      margin: 0;
+      font-size: var(--nas-size-s);
+      line-height: 19.2px;
+      font-weight: var(--nas-weight-regular);
+      color: var(--nas-neutral-800, #595959);
+    }
   `,
 })
 export class NasListStateComponent {
   readonly kind = input<'empty' | 'error'>('empty');
-  /** The message, already translated. */
-  readonly message = input.required<string>();
+  /** Empty: the hint (default: the Figma "adjust your filters" text). Error: the message. Already translated. */
+  readonly message = input<string>('');
+  /** Empty: the title, already translated (default "No Results"). */
+  readonly title = input<string>('');
   readonly retry = output<void>();
 }
 

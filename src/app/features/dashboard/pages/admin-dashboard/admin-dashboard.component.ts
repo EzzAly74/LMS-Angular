@@ -1,4 +1,5 @@
 import { ShortNamePipe } from '../../../../shared/pipes/short-name.pipe';
+import { NasListStateComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -67,7 +68,7 @@ type TrendRange = DashboardTrendRange;
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [LocalDatePipe, ShortNamePipe, NasCanDirective, 
+  imports: [NasListStateComponent, LocalDatePipe, ShortNamePipe, NasCanDirective, 
     CommonModule,
     RouterLink,
     TranslateModule,

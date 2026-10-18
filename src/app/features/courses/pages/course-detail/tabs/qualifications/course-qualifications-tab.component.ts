@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { NasListStateComponent } from '../../../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { NasIconComponent } from '../../../../../../shared/nas';
@@ -14,7 +15,7 @@ import { ClientPager } from '../../../../../../shared/list/client-pager';
 @Component({
   selector: 'app-course-qualifications-tab',
   standalone: true,
-  imports: [FormsModule, TranslateModule, NasIconComponent, NasPagerComponent],
+  imports: [NasListStateComponent, FormsModule, TranslateModule, NasIconComponent, NasPagerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './course-qualifications-tab.component.html',
   styleUrl: './course-qualifications-tab.component.scss',
