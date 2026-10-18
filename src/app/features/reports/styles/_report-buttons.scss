@@ -1,0 +1,27 @@
+// The dark Large button of the reports pages: "Export All" (Figma 2201:81888)
+// and "Export" (2201:82054): 16 px text, 24 px icon, 16 / 12 padding,
+// 8 px radius, the "Normal / Medium" shadow.
+.rp-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  min-block-size: 44px;
+  padding: 12px var(--nas-space-4);
+  border: 0;
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-essential-cta, #0c2427);
+  box-shadow: 0 2px 5px 0 rgba(103, 110, 118, 0.08), 0 0 0 0 rgba(103, 110, 118, 0.16), 0 1px 1px 0 rgba(0, 0, 0, 0.12);
+  color: var(--nas-color-text-onDark, #fffbf7);
+  font: inherit;
+  font-size: var(--nas-size-s);
+  line-height: 19.2px;
+  font-weight: var(--nas-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+
+  img { display: block; flex-shrink: 0; }
+  &:hover:not(:disabled) { background: var(--nas-teal-900, #082022); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}

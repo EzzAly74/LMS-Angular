@@ -1,9 +1,15 @@
-<!-- Reports home (D-112): one card per NAS report -->
+<!-- Reports - Figma 2201:81876 (Report Picker) -->
 <div class="nas-page-container cl-page">
   <header class="cl-head">
     <div class="cl-head__text">
       <h1 class="cl-title">{{ 'reports.title' | translate }}</h1>
       <p class="cl-subtitle">{{ 'reports.subtitle' | translate }}</p>
+    </div>
+    <div class="cl-head__actions">
+      <button type="button" class="rp-primary" [disabled]="exporting() !== null || state() !== 'ready'" (click)="onExportAll()">
+        <img src="assets/icons/figma/reports/export.svg" width="24" height="24" alt="" />
+        {{ (exporting() === 'all' ? 'reports.exporting' : 'reports.export_all') | translate }}
+      </button>
     </div>
   </header>
 
@@ -12,10 +18,14 @@
       <ul class="rl-grid" [attr.aria-busy]="true" [attr.aria-label]="'reports.title' | translate">
         @for (s of skeletons; track s) {
           <li class="rl-card">
-            <nas-skeleton width="40px" height="40px" radius="10px" />
-            <nas-skeleton width="60%" height="16px" />
-            <nas-skeleton width="100%" height="12px" />
-            <nas-skeleton width="40%" height="12px" />
+            <div class="rl-card__head">
+              <nas-skeleton width="40px" height="40px" radius="12px" />
+              <div class="rl-card__text">
+                <nas-skeleton width="60%" height="14px" />
+                <nas-skeleton width="90%" height="12px" />
+              </div>
+            </div>
+            <nas-skeleton width="45%" height="12px" />
           </li>
         }
       </ul>
@@ -24,56 +34,48 @@
       <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="load()" />
     }
     @default {
-      <ul class="rl-grid">
-        @for (r of reports(); track r.key) {
-          <li class="rl-card">
-            <div class="rl-card__head">
-              <span class="rl-card__icon"><img [src]="iconOf(r.key)" width="20" height="20" alt="" /></span>
-              <div class="rl-card__text">
-                <h2 class="rl-card__title">
-                  <a class="rl-card__link" [routerLink]="[r.key]"><bdi>{{ r.name }}</bdi></a>
-                </h2>
-                <p class="rl-card__desc">{{ r.description }}</p>
+      @if (cards().length) {
+        <ul class="rl-grid">
+          @for (r of cards(); track r.key) {
+            <li class="rl-card">
+              <div class="rl-card__head">
+                <span class="rl-card__icon"><img [src]="iconOf(r.key)" width="20" height="20" alt="" /></span>
+                <div class="rl-card__text">
+                  <h2 class="rl-card__title">
+                    <a class="rl-card__link" [routerLink]="[r.key]">
+                      <bdi>{{ isEvaluation(r) ? ('reports.cards.evaluation_title' | translate) : r.name }}</bdi>
+                    </a>
+                  </h2>
+                  <p class="rl-card__desc">{{ isEvaluation(r) ? ('reports.cards.evaluation_description' | translate) : r.description }}</p>
+                </div>
               </div>
-            </div>
 
-            <dl class="rl-card__meta">
-              <div>
-                <dt>{{ 'reports.row_is' | translate }}</dt>
-                <dd>{{ r.row_unit }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'reports.columns_count' | translate }}</dt>
-                <dd>
-                  {{ r.columns.length }}
-                  @if (missingCount(r) > 0) {
-                    <span class="rl-card__missing">{{ 'reports.not_captured_count' | translate: { count: missingCount(r) } }}</span>
-                  }
-                </dd>
-              </div>
-              <div>
-                <dt>{{ 'reports.last_exported' | translate }}</dt>
-                <dd>{{ r.last_exported_at ? (r.last_exported_at | nasDate: locale()) : ('reports.never' | translate) }}</dd>
-              </div>
-            </dl>
+              <p class="rl-card__meta">
+                {{ 'reports.last_generated' | translate }}
+                <span class="rl-card__date">{{ r.last_exported_at ? (r.last_exported_at | nasDate: locale()) : ('reports.never' | translate) }}</span>
+              </p>
 
-            <div class="rl-card__actions">
-              <a class="rl-card__open" [routerLink]="[r.key]">{{ 'reports.open' | translate }}</a>
-              @if (!needsChoice(r)) {
-                <nas-action-menu
-                  [label]="(exporting() === r.key ? 'reports.exporting' : 'reports.export') | translate"
-                  [title]="'reports.export_title' | translate: { name: r.name }"
-                  icon="assets/icons/figma/export.svg"
-                  [items]="exportItems()"
-                  [disabled]="exporting() !== null"
-                  (picked)="onExport(r, $event)" />
-              }
-            </div>
-          </li>
-        } @empty {
-          <li class="rl-empty"><nas-list-state [message]="'reports.none' | translate" /></li>
-        }
-      </ul>
+              <div class="rl-card__foot">
+                <div class="rl-card__exports">
+                  <button type="button" class="rl-card__btn" [disabled]="exporting() !== null" (click)="onExport(r, 'csv')"
+                    [attr.aria-label]="'reports.export_csv_of' | translate: { name: r.name }">
+                    {{ (isExporting(r.key, 'csv') ? 'reports.exporting' : 'reports.export_csv') | translate }}
+                  </button>
+                  <button type="button" class="rl-card__btn" [disabled]="exporting() !== null" (click)="onExport(r, 'xlsx')"
+                    [attr.aria-label]="'reports.export_excel_of' | translate: { name: r.name }">
+                    {{ (isExporting(r.key, 'xlsx') ? 'reports.exporting' : 'reports.export_excel') | translate }}
+                  </button>
+                </div>
+                <a class="rl-card__open" [routerLink]="[r.key]" [attr.aria-label]="'reports.open_report' | translate: { name: r.name }">
+                  <img src="assets/icons/figma/reports/card-arrow.svg" width="17.4545" height="17.4545" alt="" />
+                </a>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <nas-list-state [message]="'reports.none' | translate" />
+      }
     }
   }
 </div>

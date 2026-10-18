@@ -1,6 +1,7 @@
-// Reports home (D-112). Head is the shared list head; the cards keep the
-// former Reports card look (grid of 3 / 2 / 1).
+// Reports - Figma 2201:81876. Head is the shared list head; the cards, the
+// grid (3 / 2 / 1 columns, 16 px gaps) and "Export All" are drawn here.
 @use '../../../../shared/styles/list';
+@use '../../styles/report-buttons';
 
 .rl-grid {
   display: grid;
@@ -14,24 +15,19 @@
   @media (max-width: 640px) { grid-template-columns: minmax(0, 1fr); }
 }
 
-.rl-empty { grid-column: 1 / -1; }
-
+// Card: 21 px padding, 16 px between the parts, 16 px radius.
 .rl-card {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--nas-space-4);
-  padding: 20px;
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-lg);
-  background: var(--nas-color-bg-surface);
-  box-shadow: var(--nas-shadow-card);
-
-  &:hover { box-shadow: var(--nas-shadow-md); }
-  @media (prefers-reduced-motion: no-preference) { transition: box-shadow 0.15s ease; }
+  padding: 21px;
+  border: 1px solid var(--nas-neutral-400, #e6e7e8);
+  border-radius: 16px;
+  background: var(--nas-color-bg-surface, #fff);
+  filter: drop-shadow(0 1px 1px rgba(12, 36, 39, 0.08));
 }
 
-.rl-card__head { display: flex; gap: var(--nas-space-3); align-items: flex-start; }
+.rl-card__head { display: flex; gap: var(--nas-space-3); align-items: flex-start; flex: 1 0 auto; }
 
 .rl-card__icon {
   display: inline-flex;
@@ -40,18 +36,20 @@
   flex-shrink: 0;
   inline-size: 40px;
   block-size: 40px;
-  border-radius: 10px;
-  background: var(--nas-teal-100);
+  border-radius: 12px;
+  background: var(--nas-teal-100, #f2fbfa);
+
+  img { display: block; }
 }
 
-.rl-card__text { display: flex; flex-direction: column; gap: var(--nas-space-1); min-inline-size: 0; }
+.rl-card__text { display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; flex: 1; }
 
 .rl-card__title {
   margin: 0;
-  font-size: var(--nas-size-s);
-  line-height: 1.3;
-  font-weight: 700;
-  color: var(--nas-color-text-strong);
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong, #171819);
 }
 
 .rl-card__link {
@@ -64,50 +62,68 @@
 
 .rl-card__desc {
   margin: 0;
-  font-size: var(--nas-size-xs);
-  line-height: 1.45;
-  color: var(--nas-color-text-muted);
+  font-size: var(--nas-size-2xs);
+  line-height: 16.8px;
+  color: var(--nas-color-text-muted, #676e76);
 }
 
 .rl-card__meta {
-  display: grid;
-  gap: var(--nas-space-1);
   margin: 0;
   font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-muted);
-
-  > div { display: flex; flex-wrap: wrap; gap: var(--nas-space-1); }
-  dt::after { content: ':'; }
-  dd { margin: 0; font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
+  line-height: 18px;
+  color: var(--nas-color-text-muted, #676e76);
 }
 
-.rl-card__missing {
-  margin-inline-start: var(--nas-space-1);
-  font-weight: var(--nas-weight-regular);
-  color: var(--nas-status-amber-800);
-}
+.rl-card__date { color: var(--nas-color-text-strong, #171819); }
 
-.rl-card__actions {
+// Divider, then Export CSV · Export Excel · the dark arrow.
+.rl-card__foot {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--nas-space-2);
-  margin-block-start: auto;
+  padding-block-start: 9px;
+  border-block-start: 1px solid var(--nas-neutral-400, #e6e7e8);
+}
+
+.rl-card__exports { display: flex; gap: var(--nas-space-2); flex: 1; min-inline-size: 0; }
+
+.rl-card__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 36px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid #bfbfbf;
+  border-radius: var(--nas-radius-md);
+  background: transparent;
+  color: var(--nas-teal-1000, #0c2427);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  line-height: 16.8px;
+  font-weight: var(--nas-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: var(--nas-neutral-50); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
 .rl-card__open {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-block-size: 40px;
-  padding-inline: var(--nas-space-4);
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-essential-cta);
-  color: var(--nas-color-text-onDark);
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  text-decoration: none;
+  flex-shrink: 0;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 5.818px;
+  background: var(--nas-essential-cta, #0c2427);
 
-  &:hover { background: var(--nas-teal-900, #082022); }
+  // The chevron points down in the asset: turned toward the reading direction.
+  img { display: block; transform: rotate(-90deg); }
   &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
 }
+
+:host-context([dir='rtl']) .rl-card__open img { transform: rotate(90deg); }

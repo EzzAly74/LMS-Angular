@@ -80,21 +80,6 @@
   .p-dropdown-label.p-placeholder { color: var(--nas-neutral-750); }
 }
 
-.fd__input {
-  inline-size: 100%;
-  block-size: 44px;
-  padding-inline: var(--nas-space-3);
-  border: 1px solid var(--nas-color-border);
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-color-bg-surface, #fff);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  color: var(--nas-color-text-strong);
-
-  &::placeholder { color: var(--nas-neutral-750); }
-  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 1px; }
-}
-
 .fd__foot {
   display: grid;
   grid-template-columns: 113px minmax(0, 1fr);

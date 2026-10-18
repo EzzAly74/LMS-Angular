@@ -79,15 +79,6 @@ export class RemoteFilterOptions {
 
   search(term: string): void { this.term$.next(term.trim()); }
 
-  /**
-   * Start with options already fetched (a default chosen before the field was
-   * ever searched): they are the matches, and `chosenIds` keep their labels.
-   */
-  seed(options: readonly NasFilterFieldOption[], chosenIds: readonly (string | number)[] = []): void {
-    this.matches.set([...options]);
-    this.remember(chosenIds);
-  }
-
   /** Keep the labels of the ids now applied (call when the filter is applied). */
   remember(ids: readonly (string | number)[]): void {
     const known = new Map([...this.chosen(), ...this.matches()].map(o => [o.id, o]));

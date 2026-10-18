@@ -1,31 +1,37 @@
-<!-- One NAS report (D-112): shared list head, toolbar, Filter modal, table card and pager -->
-<div class="nas-page-container cl-page">
+<!-- One report - Figma 2201:82041 (with rows) and 2265:128244 (no rows) -->
+<div class="nas-page-container cl-page rv">
   <header class="cl-head">
-    <div class="cl-head__text">
+    <div class="cl-head__text rv__head-text">
       <nav [attr.aria-label]="'reports.view.breadcrumb' | translate">
         <ol class="rv__crumbs">
           <li>
-            <a routerLink="/admin/reports">{{ 'reports.title' | translate }}</a>
-            <img class="rv__crumb-sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+            <a routerLink="/admin/reports" class="rv__crumb-root">
+              <img src="assets/icons/figma/reports/crumb-chart-bar.svg" width="18" height="18" alt="" />
+              {{ 'reports.title' | translate }}
+            </a>
+            <img class="rv__crumb-sep" src="assets/icons/figma/reports/crumb-chevron-right.svg" width="14" height="14" alt="" />
           </li>
           <li><span aria-current="page"><bdi>{{ definition()?.name ?? '' }}</bdi></span></li>
         </ol>
       </nav>
       <h1 class="cl-title"><bdi>{{ definition()?.name ?? ('reports.title' | translate) }}</bdi></h1>
       @if (definition(); as d) {
-        <p class="cl-subtitle">{{ d.description }}</p>
-        <p class="rv__unit">{{ 'reports.row_is' | translate }}: <strong>{{ d.row_unit }}</strong></p>
+        <p class="cl-subtitle">{{ d.page_description }}</p>
       }
     </div>
     @if (definitionState() === 'ready') {
-      <div class="cl-head__actions">
-        <nas-action-menu
-          [label]="(exporting() ? 'reports.exporting' : 'reports.export') | translate"
-          [title]="'reports.export_title' | translate: { name: definition()?.name ?? '' }"
-          icon="assets/icons/figma/export.svg"
-          [items]="exportItems()"
-          [disabled]="exporting() || list.state() !== 'ready' || list.total() === 0"
-          (picked)="onExport($event)" />
+      <div class="cl-head__actions rv-export">
+        <button type="button" class="rp-primary" [disabled]="exporting()" (click)="toggleExportMenu()"
+          aria-haspopup="true" [attr.aria-expanded]="exportMenuOpen()" aria-controls="rv-export-menu">
+          <img src="assets/icons/figma/reports/export.svg" width="24" height="24" alt="" />
+          {{ (exporting() ? 'reports.exporting' : 'reports.export') | translate }}
+        </button>
+        @if (exportMenuOpen()) {
+          <ul class="rv-export__menu" id="rv-export-menu" role="list">
+            <li><button type="button" class="rv-export__item" (click)="onExport('xlsx')">{{ 'reports.export_excel' | translate }}</button></li>
+            <li><button type="button" class="rv-export__item" (click)="onExport('csv')">{{ 'reports.export_csv' | translate }}</button></li>
+          </ul>
+        }
       </div>
     }
   </header>
@@ -33,108 +39,165 @@
   @switch (definitionState()) {
     @case ('loading') {
       <nas-table-card [label]="'reports.title' | translate" [busy]="true">
-        <table class="cl-table rv__table"><tbody>
-          @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="['text', 'text', 'short', 'short', 'short', 'short']" [row]="s"></tr> }
+        <table class="cl-table rv-table"><tbody>
+          @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells()" [row]="s"></tr> }
         </tbody></table>
       </nas-table-card>
     }
     @case ('missing') {
-      <nas-list-state [message]="'reports.view.not_found' | translate" />
-    }
-    @case ('no_choice') {
-      <nas-list-state [message]="'reports.view.no_template' | translate" />
+      <nas-list-state [title]="'reports.view.not_found_title' | translate" [message]="'reports.view.not_found' | translate" />
     }
     @case ('error') {
       <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="loadAgain()" />
     }
     @default {
       @if (definition(); as d) {
-        <nas-list-toolbar [search]="list.query().search" [filterCount]="d.filters.length ? activeFilters() : null"
-          [label]="'reports.view.search_label' | translate" [placeholder]="'reports.view.search_placeholder' | translate"
-          (searchChange)="list.search($event)" (filter)="openFilter()">
-          @if (scopeLabel(); as scope) {
-            <span class="rv__scope">{{ scope.label }}: <bdi>{{ scope.value }}</bdi></span>
-          }
-        </nas-list-toolbar>
-
-        @if (missingColumns().length) {
-          <p class="rv__notice" id="rv-missing" role="note">
-            <img src="assets/icons/figma/seal-question-20.svg" width="20" height="20" alt="" />
-            <span>
-              {{ 'reports.view.not_captured' | translate: { count: missingColumns().length } }}
-              @for (c of missingColumns(); track c.key; let last = $last) {
-                <bdi class="rv__notice-col">{{ c.label }}</bdi>{{ last ? '' : ('reports.view.list_sep' | translate) }}
-              }
-            </span>
-          </p>
+        @if (tabs().length) {
+          <nas-pill-tabs [tabs]="tabs()" [activeId]="key()" (activeIdChange)="openTab($event)" />
         }
 
-        <nas-table-card [label]="d.name" [busy]="list.state() === 'loading'">
-            <table class="cl-table rv__table" [style.min-inline-size.px]="shownColumns().length * 150">
-              <thead>
-                <tr class="rv__groups">
-                  @for (g of groups(); track $index) {
-                    <th scope="colgroup" [attr.colspan]="g.span">{{ g.label }}</th>
+        @if (d.filters.length) {
+          <section class="rv-filters" aria-labelledby="rv-filters-title">
+            <div class="rv-filters__head">
+              <div class="rv-filters__heading">
+                <h2 class="rv-filters__title" id="rv-filters-title">{{ 'reports.view.filters' | translate }}</h2>
+                <p class="rv-filters__sub">{{ 'reports.view.filters_hint' | translate }}</p>
+              </div>
+              <div class="rv-filters__meta">
+                <span class="rv-filters__count" aria-live="polite">{{ 'reports.view.active_count' | translate: { count: activeCount() } }}</span>
+                <img src="assets/icons/figma/reports/funnel.svg" width="20" height="20" alt="" />
+              </div>
+            </div>
+
+            <div class="rv-filters__fields">
+              @for (f of d.filters; track f.key) {
+                @switch (f.type) {
+                  @case ('date_range') {
+                    <div class="rv-field">
+                      <label class="rv-field__label" [for]="'rv-' + f.key + '-from'">{{ f.range_labels?.from ?? f.label }}</label>
+                      <nas-datepicker variant="inset" [inputId]="'rv-' + f.key + '-from'" [placeholder]="'reports.placeholders.date_from' | translate"
+                        [ngModel]="dateValue(f.key + '_from')" (ngModelChange)="setDate(f.key + '_from', $event)" [max]="dateValue(f.key + '_to')" />
+                    </div>
+                    <div class="rv-field">
+                      <label class="rv-field__label" [for]="'rv-' + f.key + '-to'">{{ f.range_labels?.to ?? f.label }}</label>
+                      <nas-datepicker variant="inset" [inputId]="'rv-' + f.key + '-to'" [placeholder]="'reports.placeholders.date_to' | translate"
+                        [ngModel]="dateValue(f.key + '_to')" (ngModelChange)="setDate(f.key + '_to', $event)" [min]="dateValue(f.key + '_from')" />
+                    </div>
                   }
-                </tr>
-                <tr>
-                  @for (c of shownColumns(); track c.key) {
-                    <th scope="col" [class.rv__num]="isNumeric(c)" [class.rv__missing]="!c.available"
-                      [attr.aria-describedby]="c.available ? null : 'rv-missing'">
-                      <bdi>{{ c.label }}</bdi>
-                      @if (!c.available) { <span class="rv__tag">{{ 'reports.view.not_captured_tag' | translate }}</span> }
-                    </th>
+                  @case ('date') {
+                    <div class="rv-field">
+                      <label class="rv-field__label" [for]="'rv-' + f.key">{{ f.label }}</label>
+                      <nas-datepicker variant="inset" [inputId]="'rv-' + f.key" [placeholder]="'reports.placeholders.date_from' | translate"
+                        [ngModel]="dateValue(f.key)" (ngModelChange)="setDate(f.key, $event)" />
+                    </div>
                   }
-                </tr>
-              </thead>
-              <tbody>
-                @switch (list.state()) {
-                  @case ('loading') {
-                    @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells()" [row]="s"></tr> }
+                  @case ('number') {
+                    <div class="rv-field">
+                      <label class="rv-field__label" [for]="'rv-' + f.key">{{ f.label }}</label>
+                      <input #num class="rv-field__input" type="number" inputmode="decimal" min="0" max="100" [id]="'rv-' + f.key"
+                        [value]="value(f.key) ?? ''" [placeholder]="'reports.placeholders.percent' | translate" (change)="setNumber(f.key, num.value)" />
+                    </div>
                   }
-                  @case ('error') {
-                    <tr><td [attr.colspan]="shownColumns().length">
-                      <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
-                    </td></tr>
+                  @case ('select') {
+                    <div class="rv-field">
+                      <span class="rv-field__label" [id]="'rv-' + f.key">{{ f.label }}</span>
+                      <p-dropdown styleClass="rv-field__control" panelStyleClass="rv-panel" appendTo="body"
+                        [ariaLabelledBy]="'rv-' + f.key" [options]="optionsOf(f)" optionLabel="label" optionValue="id"
+                        [ngModel]="value(f.key)" (ngModelChange)="setFilter(f.key, $event)" [filter]="true" filterBy="label"
+                        [showClear]="!f.required" [placeholder]="placeholderOf(f)" (onFilter)="searchOptions(f, $event.filter)"
+                        [emptyMessage]="'common.no_options' | translate" [emptyFilterMessage]="'common.no_results' | translate">
+                        <ng-template pTemplate="dropdownicon">
+                          <img src="assets/icons/figma/reports/field-arrow-down.svg" width="24" height="24" alt="" />
+                        </ng-template>
+                      </p-dropdown>
+                    </div>
                   }
                   @default {
-                    @for (r of list.items(); track $index) {
-                      <tr>
-                        @for (c of shownColumns(); track c.key) {
-                          @let v = r[c.key] ?? null;
-                          <td [class.rv__num]="isNumeric(c)" [class.rv__missing]="!c.available">
-                            @if (v === null || v === '') {
-                              <span class="rv__empty" aria-hidden="true">-</span>
-                            } @else if (c.type === 'date') {
-                              {{ v + '' | nasDate: locale() }}
-                            } @else if (c.type === 'datetime') {
-                              {{ (v + '').slice(0, 10) | nasDate: locale() }} <bdi dir="ltr">{{ (v + '').slice(11) }}</bdi>
-                            } @else if (isNumeric(c)) {
-                              <bdi dir="ltr">{{ display(c, v) }}</bdi>
-                            } @else {
-                              <bdi class="rv__text" [attr.title]="display(c, v)">{{ display(c, v) }}</bdi>
-                            }
-                          </td>
-                        }
-                      </tr>
-                    } @empty {
-                      <tr><td [attr.colspan]="shownColumns().length">
-                        <nas-list-state [message]="(hasQuery() ? 'reports.view.no_results' : 'reports.view.empty') | translate" />
-                      </td></tr>
-                    }
+                    <div class="rv-field">
+                      <span class="rv-field__label" [id]="'rv-' + f.key">{{ f.label }}</span>
+                      <p-multiSelect styleClass="rv-field__control" panelStyleClass="rv-panel" appendTo="body"
+                        [ariaLabelledBy]="'rv-' + f.key" [options]="optionsOf(f)" optionLabel="label" optionValue="id"
+                        [ngModel]="value(f.key)" (ngModelChange)="setFilter(f.key, $event)" [filter]="true" filterBy="label"
+                        [showToggleAll]="false" [resetFilterOnHide]="true" [maxSelectedLabels]="1"
+                        [selectedItemsLabel]="'common.n_selected' | translate" [placeholder]="placeholderOf(f)"
+                        (onPanelShow)="searchOptions(f, '')" (onFilter)="searchOptions(f, $event.filter)"
+                        [emptyMessage]="(f.source ? 'common.type_to_search' : 'common.no_options') | translate"
+                        [emptyFilterMessage]="'common.no_results' | translate">
+                        <ng-template pTemplate="dropdownicon">
+                          <img src="assets/icons/figma/reports/field-arrow-down.svg" width="24" height="24" alt="" />
+                        </ng-template>
+                      </p-multiSelect>
+                    </div>
                   }
                 }
-              </tbody>
-            </table>
-          @if (list.pageable()) {
-            <nas-pager nasTablePager [total]="list.total()" [page]="list.query().page" [perPage]="list.query().perPage"
-              [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
+              }
+            </div>
+          </section>
+        }
+
+        <section class="rv-preview" aria-labelledby="rv-preview-title">
+          <div class="rv-preview__head">
+            <h2 class="rv-preview__title" id="rv-preview-title">{{ 'reports.view.preview_title' | translate: { name: d.name } }}</h2>
+            <p class="rv-preview__sub">{{ 'reports.view.preview_hint' | translate }}</p>
+          </div>
+
+          @if (list.state() === 'ready' && list.total() === 0) {
+            <nas-list-state [message]="activeCount() ? '' : ('reports.view.empty' | translate)" />
+          } @else {
+            <nas-table-card [label]="d.name" [busy]="list.state() === 'loading'">
+              <table class="cl-table rv-table">
+                <thead>
+                  <tr>
+                    @for (c of columns(); track c.key) {
+                      <th scope="col" [class.rv-num]="isNumeric(c)">{{ c.label }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @switch (list.state()) {
+                    @case ('loading') {
+                      @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells()" [row]="s"></tr> }
+                    }
+                    @case ('error') {
+                      <tr><td [attr.colspan]="columns().length || 1">
+                        <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+                      </td></tr>
+                    }
+                    @default {
+                      @for (r of list.items(); track $index) {
+                        <tr>
+                          @for (c of columns(); track c.key) {
+                            @let v = r[c.key] ?? null;
+                            <td [class.rv-num]="isNumeric(c)" [class.rv-strong]="c.strong">
+                              @if (v === null || v === '') {
+                                <span class="rv-empty" aria-hidden="true">—</span>
+                              } @else if (c.type === 'status') {
+                                <span [class]="'rv-badge rv-badge--' + toneOf(c, v)">{{ v }}</span>
+                              } @else if (c.type === 'date') {
+                                {{ v + '' | nasDate: locale() }}
+                              } @else if (c.type === 'datetime') {
+                                {{ (v + '').slice(0, 10) | nasDate: locale() }} <bdi dir="ltr">{{ (v + '').slice(11) }}</bdi>
+                              } @else if (isNumeric(c)) {
+                                <bdi dir="ltr">{{ display(c, v) }}</bdi>
+                              } @else {
+                                <bdi class="rv-text" [attr.title]="display(c, v)">{{ display(c, v) }}</bdi>
+                              }
+                            </td>
+                          }
+                        </tr>
+                      }
+                    }
+                  }
+                </tbody>
+              </table>
+              @if (list.pageable() && list.total() > list.query().perPage) {
+                <nas-pager nasTablePager [total]="list.total()" [page]="list.query().page" [perPage]="list.query().perPage"
+                  [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
+              }
+            </nas-table-card>
           }
-        </nas-table-card>
+        </section>
       }
     }
   }
 </div>
-
-<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
-  (apply)="onFilter($event)" (search)="onFilterSearch($event)" />

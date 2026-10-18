@@ -1,17 +1,27 @@
 /**
- * The card icon of each NAS report: existing Dashboard SVGs (decorative).
+ * Each report card's icon, as drawn on the report list (Figma 2201:81876).
+ * Decorative: the card's title names the report.
  */
+const BASE = 'assets/icons/figma/reports';
+
 export const REPORT_ICONS: Readonly<Record<string, string>> = {
-  'compliance-by-job-title': 'assets/images/nav-icons/icon-job-titles.svg',
-  'individual-compliance': 'assets/images/nav-icons/icon-qualifications.svg',
-  'attendance': 'assets/icons/figma/users-20.svg',
-  'completion': 'assets/icons/figma/check-circle-20.svg',
-  'quiz-scores': 'assets/icons/figma/seal-question-20.svg',
-  'assignment-scores': 'assets/icons/figma/file-page-28.svg',
-  'certificate-status': 'assets/images/nav-icons/icon-certificates.svg',
-  'evaluation-summary': 'assets/icons/figma/star-fill-dark.svg',
-  'evaluation-responses': 'assets/icons/figma/users-16.svg',
-  'external-training': 'assets/images/nav-icons/icon-learning.svg',
+  'compliance-by-job-title': `${BASE}/card-shield-check.svg`,
+  'individual-compliance': `${BASE}/card-user.svg`,
+  'attendance': `${BASE}/card-check-circle.svg`,
+  'completion': `${BASE}/card-graduation-cap.svg`,
+  'quiz-scores': `${BASE}/card-chart-bar.svg`,
+  'assignment-scores': `${BASE}/card-chart-bar.svg`,
+  'certificate-status': `${BASE}/card-star.svg`,
+  'evaluation-summary': `${BASE}/card-star.svg`,
+  'evaluation-responses': `${BASE}/card-star.svg`,
+  'external-training': `${BASE}/card-graduation-cap.svg`,
 };
 
-export const DEFAULT_REPORT_ICON = 'assets/images/nav-icons/icon-reports.svg';
+export const DEFAULT_REPORT_ICON = `${BASE}/card-chart-bar.svg`;
+
+/**
+ * The evaluation reports are one card, "Evaluation Scores" (Figma 2201:82006);
+ * the response detail opens from the summary page.
+ */
+export const EVALUATION_SUMMARY = 'evaluation-summary';
+export const EVALUATION_RESPONSES = 'evaluation-responses';

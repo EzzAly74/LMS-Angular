@@ -1,51 +1,44 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { LocaleService } from '../../../../core/services/locale.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { withLocaleReload } from '../../../../core/utils/with-locale-reload';
-import { NasActionMenuComponent, type NasActionMenuItem } from '../../../../shared/nas/nas-action-menu/nas-action-menu.component';
 import { NasListStateComponent, NasSkeletonComponent } from '../../../../shared/nas/nas-list-state/nas-list-state.component';
 import { NasDatePipe } from '../../../../shared/pipes/nas-date.pipes';
-import { DEFAULT_REPORT_ICON, REPORT_ICONS } from '../../report-icons';
+import { DEFAULT_REPORT_ICON, EVALUATION_RESPONSES, EVALUATION_SUMMARY, REPORT_ICONS } from '../../report-icons';
 import { ReportExportError, ReportsApiService } from '../../services/reports-api.service';
-import { asFormat, type ReportDefinition } from '../../models/report.model';
+import type { ReportDefinition, ReportFormat } from '../../models/report.model';
 
 /**
- * Reports home (D-112): one card per NAS report, in the spec's order, with
- * its description, what one row is, when it was last exported, and a quick
- * export of the whole report. A report that needs a choice first (an
- * evaluation template) opens instead.
+ * Reports (Figma 2201:81876, "Report Picker"): one card per report with its
+ * description, when it was last generated, Export CSV / Export Excel and the
+ * arrow that opens it; "Export All" in the header zips every report. The two
+ * evaluation reports are one "Evaluation Scores" card.
  */
 @Component({
   selector: 'app-report-list',
   standalone: true,
-  imports: [RouterLink, TranslateModule, NasActionMenuComponent, NasListStateComponent, NasSkeletonComponent, NasDatePipe],
+  imports: [RouterLink, TranslateModule, NasListStateComponent, NasSkeletonComponent, NasDatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-list.component.html',
   styleUrl: './report-list.component.scss',
 })
 export class ReportListComponent {
   private readonly api = inject(ReportsApiService);
-  private readonly t = inject(TranslateService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly locale = inject(LocaleService).locale;
 
   readonly reports = signal<ReportDefinition[]>([]);
   readonly state = signal<'loading' | 'ready' | 'error'>('loading');
-  /** The report being exported, so only its menu shows "Exporting…". */
+  /** `<key>:<format>` of the export running, or `all`. */
   readonly exporting = signal<string | null>(null);
-  readonly skeletons = [1, 2, 3, 4, 5, 6];
+  readonly skeletons = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-  readonly exportItems = computed<NasActionMenuItem[]>(() => {
-    this.locale();
-    return [
-      { id: 'xlsx', label: this.t.instant('reports.export_excel'), icon: 'file-text' },
-      { id: 'csv', label: this.t.instant('reports.export_csv'), icon: 'file-text' },
-    ];
-  });
+  /** The cards: the response detail opens from the evaluation card's page. */
+  readonly cards = computed(() => this.reports().filter(r => r.key !== EVALUATION_RESPONSES));
 
   constructor() {
     withLocaleReload(() => this.load());
@@ -64,28 +57,39 @@ export class ReportListComponent {
     return REPORT_ICONS[key] ?? DEFAULT_REPORT_ICON;
   }
 
-  /** A required filter (an evaluation template) must be chosen on the report page first. */
-  needsChoice(report: ReportDefinition): boolean {
-    return report.filters.some(f => f.required);
+  isEvaluation(report: ReportDefinition): boolean {
+    return report.key === EVALUATION_SUMMARY;
   }
 
-  missingCount(report: ReportDefinition): number {
-    return report.columns.filter(c => !c.available).length;
+  isExporting(key: string, format: ReportFormat): boolean {
+    return this.exporting() === `${key}:${format}`;
   }
 
-  onExport(report: ReportDefinition, format: string): void {
-    const fmt = asFormat(format);
-    if (this.exporting() !== null || fmt === null) return;
-    this.exporting.set(report.key);
-    this.api.export(report.key, {}, '', fmt).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.exporting.set(null);
-        this.reports.update(list => list.map(r => (r.key === report.key ? { ...r, last_exported_at: new Date().toISOString() } : r)));
-      },
-      error: (err: unknown) => {
-        this.exporting.set(null);
-        if (err instanceof ReportExportError) this.toast.warn(err.reason ?? 'errors.validation');
-      },
+  onExport(report: ReportDefinition, format: ReportFormat): void {
+    if (this.exporting() !== null) return;
+    this.exporting.set(`${report.key}:${format}`);
+    this.api.export(report.key, {}, format).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => { this.exporting.set(null); this.markExported([report.key]); },
+      error: (err: unknown) => this.failed(err),
     });
+  }
+
+  onExportAll(): void {
+    if (this.exporting() !== null) return;
+    this.exporting.set('all');
+    this.api.exportAll('xlsx').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => { this.exporting.set(null); this.markExported(this.reports().map(r => r.key)); },
+      error: (err: unknown) => this.failed(err),
+    });
+  }
+
+  private markExported(keys: readonly string[]): void {
+    const now = new Date().toISOString();
+    this.reports.update(list => list.map(r => (keys.includes(r.key) ? { ...r, last_exported_at: now } : r)));
+  }
+
+  private failed(err: unknown): void {
+    this.exporting.set(null);
+    if (err instanceof ReportExportError) this.toast.warn(err.reason ?? 'errors.validation');
   }
 }

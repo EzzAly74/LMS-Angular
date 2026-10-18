@@ -3,85 +3,78 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
- * Reports (backend D-112): the report list and one report, against a mocked
- * API in the real response shapes, with the layout checked at every width
- * and language.
+ * Reports (backend D-112) against the Figma frames: the report list
+ * (2201:81876), a report with rows (2201:82041) and with none (2265:128244),
+ * on a mocked API in the real response shapes, at every width and language.
  */
 
 const ARTIFACTS = resolve(__dirname, '../e2e-artifacts/reports');
 
-const col = (key: string, label: string, group: string, groupLabel: string, type = 'text', available = true) =>
-  ({ key, label, group, group_label: groupLabel, type, available });
-
-const ATTENDANCE_COLUMNS = [
-  col('employee_id', 'Employee ID', 'employee', 'Employee'),
-  col('full_name_ar', 'Full Name (AR)', 'employee', 'Employee'),
-  col('department', 'Department', 'employee', 'Employee'),
-  col('course_name', 'Course Name', 'course', 'Course'),
-  col('required_sessions', 'Required Sessions', 'sessions', 'Sessions', 'number'),
-  col('sessions_attended', 'Sessions Attended', 'sessions', 'Sessions', 'number'),
-  col('line_manager', 'Line Manager', 'employee', 'Employee', 'text', false),
-  col('group_start_date', 'Group Start Date', 'course', 'Course', 'date'),
-  col('attendance_pct_sessions', 'Attendance % (Sessions)', 'calculated', 'Calculated', 'percent'),
-  col('attendance_status', 'Attendance Status', 'calculated', 'Calculated'),
-];
-
 const filter = (key: string, label: string, type: string, source: string | null = null, extra: Record<string, unknown> = {}) =>
-  ({ key, label, type, source, required: false, depends_on: null, options: [], ...extra });
+  ({ key, label, type, source, required: false, depends_on: null, options: [], range_labels: null, ...extra });
+
+const report = (key: string, name: string, description: string, filters: unknown[], extra: Record<string, unknown> = {}) =>
+  ({ key, name, description, page_description: description, row_unit: '', columns: [], filters, last_exported_at: '2026-05-08T09:00:00Z', ...extra });
 
 const CATALOG = [
-  {
-    key: 'attendance', name: 'Attendance Report', description: 'Session attendance per course, cohort, and learner',
-    row_unit: 'One learner × one course × one group', columns: ATTENDANCE_COLUMNS, last_exported_at: '2026-10-01T09:00:00Z',
-    filters: [
-      filter('departments', 'Department', 'multi', 'departments'),
-      filter('course_ids', 'Course', 'multi', 'courses'),
-      filter('cohort_ids', 'Group / Cohort', 'multi', 'cohorts', { depends_on: 'course_ids' }),
-      filter('period', 'Date range', 'date_range'),
-      filter('attendance_below', 'Attendance below (%)', 'number'),
-    ],
-  },
-  {
-    key: 'evaluation-summary', name: 'Evaluation Scores – Summary', description: 'Average evaluation results per course, group and instructor',
-    row_unit: 'One course × one group × one instructor', last_exported_at: null,
-    columns: [col('course_name', 'Course Name', 'course', 'Course'), col('respondents', 'Respondents', 'response', 'Response', 'number')],
-    filters: [filter('template_id', 'Evaluation template', 'select', 'templates', { required: true }), filter('course_ids', 'Course', 'multi', 'courses')],
-  },
+  report('attendance', 'Attendance Report', 'Session attendance per course, cohort, and learner', []),
+  report('evaluation-summary', 'Evaluation Scores – Summary', 'Average evaluation results per course, group and instructor', [
+    filter('template_id', 'Evaluation template', 'select', 'templates', { required: true }),
+  ]),
+  report('evaluation-responses', 'Evaluation Scores – Response Detail', 'One row per submitted evaluation form', [
+    filter('template_id', 'Evaluation template', 'select', 'templates', { required: true }),
+  ]),
+  report('external-training', 'External Training Report', 'Approved & pending external training claims & hours', [
+    filter('training', 'Training date', 'date_range', null, { range_labels: { from: 'Start Date', to: 'End Date' } }),
+    filter('qualification_ids', 'Qualification', 'multi', 'qualifications'),
+    filter('providers', 'Provider', 'multi', 'providers'),
+    filter('employee_ids', 'Learner', 'multi', 'employees'),
+    filter('org_units', 'Department / Job Title', 'multi', 'org_units'),
+    filter('statuses', 'Status', 'status', null, { options: [{ id: 'pending', label: 'Pending' }, { id: 'approved', label: 'Accepted' }, { id: 'rejected', label: 'Rejected' }] }),
+  ], { page_description: 'Approved and pending external training claims, filtered by learner, hours, and qualification' }),
 ];
 
-const ROWS = [
-  { employee_id: '1732', full_name_ar: 'أحمد حسن', department: 'الموارد البشرية', course_name: 'Selling Skills', required_sessions: 4, sessions_attended: 2, line_manager: null, group_start_date: '2025-12-15', attendance_pct_sessions: 50, attendance_status: 'Partial' },
-  { employee_id: '21A3', full_name_ar: 'منى عادل', department: 'المبيعات', course_name: 'Structured Interviewing for Hiring Managers and Team Leads', required_sessions: 4, sessions_attended: 0, line_manager: null, group_start_date: '2025-12-15', attendance_pct_sessions: 0, attendance_status: 'No Show' },
+const col = (key: string, label: string, type = 'text', strong = false, tones: unknown[] = []) => ({ key, label, type, strong, tones });
+const EXTERNAL_COLUMNS = [
+  col('learner', 'Learner', 'text', true), col('provider', 'Provider'), col('training_title', 'Title'),
+  col('hours_claimed', 'Hours', 'number', true), col('linked_qualification', 'Qualification'),
+  col('claim_status', 'Status', 'status', false, [{ label: 'Accepted', tone: 'success' }, { label: 'Pending', tone: 'warning' }, { label: 'Rejected', tone: 'danger' }]),
+  col('submission_date', 'Submitted', 'date'), col('approved_on', 'Approved', 'date'),
+];
+const EXTERNAL_ROWS = [
+  { learner: 'Ahmed Hassan', provider: 'Coursera', training_title: 'Advanced Excel for Finance', hours_claimed: 24, linked_qualification: 'Service Excellence', claim_status: 'Accepted', submission_date: '2026-05-12', approved_on: '2026-05-15' },
+  { learner: 'Sara Youssef', provider: 'LinkedIn Learning', training_title: 'PM Fundamentals', hours_claimed: 16, linked_qualification: null, claim_status: 'Pending', submission_date: '2026-05-18', approved_on: null },
+  { learner: 'Mohamed Ali', provider: 'Udemy', training_title: 'Cybersecurity Basics', hours_claimed: 10, linked_qualification: 'IT Compliance', claim_status: 'Rejected', submission_date: '2026-05-10', approved_on: null },
 ];
 
-interface Calls { pages: Request[]; options: string[]; exports: Request[] }
+interface Calls { pages: Request[]; exports: Request[]; exportAll: Request[] }
 
-async function mockReports(page: Page, opts: { exportStatus?: number } = {}): Promise<Calls> {
-  const calls: Calls = { pages: [], options: [], exports: [] };
+async function mockReports(page: Page, opts: { empty?: boolean } = {}): Promise<Calls> {
+  const calls: Calls = { pages: [], exports: [], exportAll: [] };
   const ok = (result: unknown) => ({ json: { status: 'success', message: '', result } });
+  const file = (name: string) => ({
+    status: 200, contentType: 'application/octet-stream', body: 'x',
+    headers: { 'Content-Disposition': `attachment; filename=${name}`, 'Access-Control-Expose-Headers': 'Content-Disposition' },
+  });
   await page.route(/\/api\/v1\/admin\/reports(\?.*)?$/, r => r.fulfill(ok(CATALOG)));
   await page.route('**/api/v1/admin/reports/options/**', r => {
-    const url = new URL(r.request().url());
-    calls.options.push(url.pathname.split('/').pop() + (url.search ? url.search : ''));
-    const source = url.pathname.split('/').pop();
+    const source = new URL(r.request().url()).pathname.split('/').pop();
     const result = source === 'templates' ? [{ id: 5, label: 'Course Feedback' }, { id: 6, label: 'Trainer Feedback' }]
-      : source === 'courses' ? [{ id: 11, label: 'Selling Skills' }, { id: 12, label: 'Structured Interviewing' }]
-      : [{ id: 'الموارد البشرية', label: 'Human Resources' }];
+      : source === 'qualifications' ? [{ id: 31, label: 'Service Excellence' }, { id: 32, label: 'IT Compliance' }]
+      : [{ id: 'Coursera', label: 'Coursera' }];
     return r.fulfill(ok(result));
   });
-  await page.route('**/api/v1/admin/reports/*/export?**', r => {
-    calls.exports.push(r.request());
-    if (opts.exportStatus === 422) {
-      return r.fulfill({ status: 422, contentType: 'application/json', body: JSON.stringify({ status: 'error', message: 'This export would hold 12,000 rows; the limit is 10,000. Narrow the filters and try again.' }) });
-    }
-    return r.fulfill({ status: 200, contentType: 'text/csv', headers: { 'Content-Disposition': 'attachment; filename=NAS-attendance-2026-10-18-120000.csv', 'Access-Control-Expose-Headers': 'Content-Disposition' }, body: '﻿Report Name,Attendance Report\n' });
-  });
-  await page.route(/\/api\/v1\/admin\/reports\/(attendance|evaluation-summary)\?.*/, r => {
+  await page.route('**/api/v1/admin/reports/export-all?**', r => { calls.exportAll.push(r.request()); return r.fulfill(file('NAS-reports-2026-10-18-120000.zip')); });
+  await page.route('**/api/v1/admin/reports/*/export?**', r => { calls.exports.push(r.request()); return r.fulfill(file('NAS-external-training-2026-10-18-120000.csv')); });
+  await page.route(/\/api\/v1\/admin\/reports\/(attendance|evaluation-summary|evaluation-responses|external-training)\?.*/, r => {
     calls.pages.push(r.request());
-    const key = new URL(r.request().url()).pathname.split('/').pop();
-    const def = CATALOG.find(c => c.key === key)!;
-    const rows = key === 'attendance' ? ROWS : [{ course_name: 'Selling Skills', respondents: 21 }];
-    return r.fulfill(ok({ columns: def.columns, rows, total: rows.length, current_page: 1, per_page: 25, last_page: 1 }));
+    const url = new URL(r.request().url());
+    const key = url.pathname.split('/').pop();
+    const evaluation = key?.startsWith('evaluation');
+    const columns = evaluation ? [col('course_name', 'Course', 'text', true), col('respondents', 'Respondents', 'number', true)] : EXTERNAL_COLUMNS;
+    const rows = opts.empty ? [] : evaluation ? [{ course_name: 'Selling Skills', respondents: 21 }] : EXTERNAL_ROWS;
+    const filters = evaluation ? { template_id: Number(url.searchParams.get('template_id') ?? 5) } : {};
+    return r.fulfill(ok({ columns, rows, filters, total: rows.length, current_page: 1, per_page: 25, last_page: 1 }));
   });
   return calls;
 }
@@ -89,113 +82,116 @@ async function mockReports(page: Page, opts: { exportStatus?: number } = {}): Pr
 test.describe('behaviour', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 1440, 'behaviour test: desktop project only');
 
-  test('the list opens a report; columns, the not-captured notice, filters, search and export', async ({ page }) => {
+  test('report list: one card per report, card exports and Export All', async ({ page }) => {
     await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
     const calls = await mockReports(page);
     await page.goto('/admin/reports');
 
-    await expect(page.locator('.rl-card')).toHaveCount(2);
-    await expect(page.locator('.rl-card').first()).toContainText('1 not captured yet');
-    // A report that needs a template first offers no quick export.
-    await expect(page.locator('.rl-card').nth(1).locator('nas-action-menu')).toHaveCount(0);
+    // The two evaluation reports are one "Evaluation Scores" card (Figma 2201:82006).
+    await expect(page.locator('.rl-card')).toHaveCount(3);
+    await expect(page.locator('.rl-card__title')).toHaveText(['Attendance Report', 'Evaluation Scores', 'External Training Report']);
+    await expect(page.locator('.rl-card').nth(1).locator('.rl-card__desc')).toHaveText('All evaluated courses');
+    await expect(page.locator('.rl-card').first().locator('.rl-card__meta')).toContainText('Last generated:');
+    await expect(page.locator('.rl-card').first().getByRole('button')).toHaveText(['Export CSV', 'Export Excel']);
 
-    await page.getByRole('link', { name: 'Attendance Report' }).first().click();
-    await expect(page).toHaveURL(/\/admin\/reports\/attendance$/);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Attendance Report');
-    await expect(page.locator('.rv__groups th')).toHaveText(['Employee', 'Course', 'Sessions', 'Employee', 'Course', 'Calculated']);
-    await expect(page.locator('tbody tr')).toHaveCount(2);
-    await expect(page.locator('tbody tr').first().locator('td').nth(8)).toHaveText('50%');
-    await expect(page.locator('.rv__notice')).toContainText('Line Manager');
-    await expect(page.locator('thead th.rv__missing')).toContainText('Not captured yet');
-
-    await page.getByLabel('Search this report').fill('1732');
-    await expect.poll(() => new URL(calls.pages.at(-1)!.url()).searchParams.get('search')).toBe('1732');
-
-    await page.getByRole('button', { name: 'Filter' }).click();
-    const d = page.getByRole('dialog');
-    await d.locator('.p-multiselect').nth(1).click();
-    await page.getByRole('option', { name: 'Selling Skills' }).click();
-    await page.keyboard.press('Escape');
-    await d.getByLabel('Attendance below (%)').fill('75');
-    await d.getByLabel('Attendance below (%)').blur();
-    await d.getByRole('button', { name: 'Filter' }).click();
-    const params = new URL(calls.pages.at(-1)!.url()).searchParams;
-    expect(params.getAll('course_ids[]')).toEqual(['11']);
-    expect(params.get('attendance_below')).toBe('75');
-    expect(params.get('search')).toBe('1732');
-    await expect(page.locator('.nlt__badge')).toHaveText('2');
-
-    // The export carries the same filters and search.
-    await page.getByRole('button', { name: /Export/ }).click();
     const download = page.waitForEvent('download');
-    await page.locator('.nas-am__item', { hasText: 'CSV (.csv)' }).click();
-    expect((await download).suggestedFilename()).toBe('NAS-attendance-2026-10-18-120000.csv');
-    const exp = new URL(calls.exports.at(-1)!.url()).searchParams;
-    expect([exp.get('format'), exp.getAll('course_ids[]')[0], exp.get('attendance_below'), exp.get('search')]).toEqual(['csv', '11', '75', '1732']);
+    await page.locator('.rl-card').nth(2).getByRole('button', { name: 'Export External Training Report as CSV' }).click();
+    await download;
+    expect(new URL(calls.exports.at(-1)!.url()).searchParams.get('format')).toBe('csv');
+
+    const all = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export All' }).click();
+    expect((await all).suggestedFilename()).toBe('NAS-reports-2026-10-18-120000.zip');
+    expect(new URL(calls.exportAll.at(-1)!.url()).searchParams.get('format')).toBe('xlsx');
+
+    await page.getByRole('link', { name: 'Open External Training Report' }).click();
+    await expect(page).toHaveURL(/\/admin\/reports\/external-training$/);
   });
 
-  test('a refused export shows the server reason', async ({ page }) => {
+  test('a report: filters inline as drawn, preview columns and badges, export with the filters', async ({ page }) => {
     await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
-    await mockReports(page, { exportStatus: 422 });
-    await page.goto('/admin/reports/attendance');
-    await expect(page.locator('tbody tr')).toHaveCount(2);
-    await page.getByRole('button', { name: /Export/ }).click();
-    await page.locator('.nas-am__item', { hasText: 'Excel (.xlsx)' }).click();
-    await expect(page.getByText(/the limit is 10,000/)).toBeVisible();
+    const calls = await mockReports(page);
+    await page.goto('/admin/reports/external-training');
+
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('External Training Report');
+    await expect(page.locator('.cl-subtitle')).toHaveText('Approved and pending external training claims, filtered by learner, hours, and qualification');
+    await expect(page.locator('.rv__crumbs')).toContainText('Reports');
+    await expect(page.locator('.rv-field__label')).toHaveText(['Start Date', 'End Date', 'Qualification', 'Provider', 'Learner', 'Department / Job Title', 'Status']);
+    await expect(page.locator('.rv-filters__count')).toHaveText('0 active');
+    await expect(page.locator('.rv-preview__title')).toHaveText('Preview: External Training Report');
+    await expect(page.locator('.rv-table thead th')).toHaveText(['Learner', 'Provider', 'Title', 'Hours', 'Qualification', 'Status', 'Submitted', 'Approved']);
+    await expect(page.locator('.rv-table tbody tr')).toHaveCount(3);
+    await expect(page.locator('.rv-badge')).toHaveClass([/rv-badge--success/, /rv-badge--warning/, /rv-badge--danger/]);
+    await expect(page.locator('.rv-table tbody tr').nth(1).locator('td').nth(4)).toHaveText('—');
+    // The preview asks for the preview columns.
+    expect(new URL(calls.pages.at(-1)!.url()).searchParams.get('preview')).toBe('1');
+
+    await page.locator('.rv-field').nth(2).locator('.p-multiselect').click();
+    await page.getByRole('option', { name: 'Service Excellence' }).click();
+    await page.keyboard.press('Escape');
+    await expect.poll(() => new URL(calls.pages.at(-1)!.url()).searchParams.getAll('qualification_ids[]')).toEqual(['31']);
+    await expect(page.locator('.rv-filters__count')).toHaveText('1 active');
+
+    await page.getByRole('button', { name: 'Export' }).click();
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export CSV' }).click();
+    expect((await download).suggestedFilename()).toBe('NAS-external-training-2026-10-18-120000.csv');
+    const exp = new URL(calls.exports.at(-1)!.url()).searchParams;
+    expect([exp.get('format'), exp.getAll('qualification_ids[]')]).toEqual(['csv', ['31']]);
   });
 
-  test('an evaluation report starts on the most answered template and shows it as its scope', async ({ page }) => {
+  test('no rows: the Figma empty state replaces the table', async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
+    await mockReports(page, { empty: true });
+    await page.goto('/admin/reports/external-training');
+
+    const empty = page.locator('.rv-preview nas-list-state');
+    await expect(empty.locator('.nls-empty__title')).toHaveText('No Results');
+    await expect(empty.locator('img')).toHaveAttribute('src', 'assets/icons/figma/empty-state.svg');
+    await expect(page.locator('.rv-table')).toHaveCount(0);
+  });
+
+  test('evaluation: the most answered template by default, Summary and Response Detail tabs', async ({ page }) => {
     await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
     const calls = await mockReports(page);
     await page.goto('/admin/reports/evaluation-summary');
 
-    await expect(page.locator('tbody tr')).toHaveCount(1);
-    expect(new URL(calls.pages.at(-1)!.url()).searchParams.get('template_id')).toBe('5');
-    await expect(page.locator('.rv__scope')).toHaveText('Evaluation template: Course Feedback');
-    // The template is the scope, not a counted filter.
-    await expect(page.locator('.nlt__badge')).toHaveCount(0);
-  });
-
-  test('a failed load offers a retry', async ({ page }) => {
-    await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
-    await mockReports(page);
-    let fail = true;
-    await page.route(/\/api\/v1\/admin\/reports\/attendance\?.*/, r => (fail ? r.fulfill({ status: 500, json: { status: 'error', message: 'x' } }) : r.fallback()));
-    await page.goto('/admin/reports/attendance');
-    await expect(page.locator('nas-list-state [role=alert]')).toBeVisible();
-    fail = false;
-    await page.getByRole('button', { name: 'Try again' }).click();
-    await expect(page.locator('tbody tr')).toHaveCount(2);
+    await expect(page.locator('.rv-table tbody tr')).toHaveCount(1);
+    await expect(page.locator('.rv-field .p-dropdown-label')).toHaveText('Course Feedback');
+    // The template is the report's scope, not a counted filter.
+    await expect(page.locator('.rv-filters__count')).toHaveText('0 active');
+    await page.getByRole('tab', { name: 'Response Detail' }).click();
+    await expect(page).toHaveURL(/\/admin\/reports\/evaluation-responses$/);
+    await expect.poll(() => new URL(calls.pages.at(-1)!.url()).pathname.endsWith('evaluation-responses')).toBe(true);
   });
 });
 
 for (const locale of ['en', 'ar'] as const) {
-  test(`report list, report and filter modal fit and read ${locale}`, async ({ page }, info) => {
+  test(`report list, report and empty report fit and read ${locale}`, async ({ page }, info) => {
     const errors: string[] = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['2b_locale', locale] as const);
-    await mockReports(page);
     mkdirSync(ARTIFACTS, { recursive: true });
-    const width = page.viewportSize()?.width ?? 0;
     const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
+    await mockReports(page);
     await page.goto('/admin/reports');
-    await expect(page.locator('.rl-card')).toHaveCount(2);
+    await expect(page.locator('.rl-card')).toHaveCount(3);
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
     expect(await overflow()).toBeLessThanOrEqual(1);
     await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-list.png`), fullPage: true });
 
-    await page.goto('/admin/reports/attendance');
-    await expect(page.locator('tbody tr')).toHaveCount(2);
-    // The wide table scrolls inside its card; the page itself never does.
+    await page.goto('/admin/reports/external-training');
+    await expect(page.locator('.rv-table tbody tr')).toHaveCount(3);
     expect(await overflow()).toBeLessThanOrEqual(1);
     await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-report.png`), fullPage: true });
 
-    await page.locator('.nlt__filter').click();
-    const box = await page.getByRole('dialog').boundingBox();
-    expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(width);
-    await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-filter.png`) });
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+    await mockReports(page, { empty: true });
+    await page.goto('/admin/reports/external-training');
+    await expect(page.locator('.rv-preview .nls-empty')).toBeVisible();
+    expect(await overflow()).toBeLessThanOrEqual(1);
+    await page.screenshot({ path: resolve(ARTIFACTS, `${info.project.name}-${locale}-empty.png`), fullPage: true });
 
     const text = await page.locator('body').innerText();
     expect(text.match(/\b(reports|common)\.[a-z_.]+/g) ?? []).toEqual([]);

@@ -31,15 +31,6 @@
               [min]="dateValue(f.after)"
               [max]="dateValue(f.before)"
               [placeholder]="f.placeholder" />
-            } @else if (f.type === 'number') {
-            <label class="fd__label" [id]="uid + '-' + f.key" [for]="uid + '-in-' + f.key">{{ f.label }}</label>
-            <input #num class="fd__input" type="number" inputmode="decimal"
-              [id]="uid + '-in-' + f.key"
-              [attr.min]="f.min ?? null"
-              [attr.max]="f.max ?? null"
-              [value]="value(f.key) ?? ''"
-              (change)="setNumber(f, num.value)"
-              [placeholder]="f.placeholder" />
             } @else {
             <span class="fd__label" [id]="uid + '-' + f.key">{{ f.label }}</span>
             @if (f.multiple) {

@@ -119,6 +119,12 @@ export class PagedList<Q extends PagedQuery, T> {
     this.load$.next(this._query());
   }
 
+  /**
+   * Record a value the server chose for the query (a default it applied)
+   * without loading again: the rows on screen already reflect it.
+   */
+  adopt(patch: Partial<Q>): void { this._query.update(q => ({ ...q, ...patch })); }
+
   goTo(page: number): void { this.patch({ page } as Partial<Q>); }
 
   showAll(): void { this.patch({ page: 1, perPage: this.showAllSize } as Partial<Q>); }

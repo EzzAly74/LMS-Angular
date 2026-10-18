@@ -1,110 +1,226 @@
-// One NAS report (D-112). Head, toolbar, card, table, states and pager are
-// the shared list ones; this file adds the breadcrumb, the "not captured"
-// notice, the two-row grouped header and the typed cells.
+// One report - Figma 2201:82041 / 2265:128244. Head, table card, skeleton,
+// states and pager are the shared ones; the breadcrumb, Export menu, Filters
+// card, preview heading, table metrics and status badges are drawn here.
 @use '../../../../shared/styles/list';
+@use '../../styles/report-buttons';
 
+.rv { display: flex; flex-direction: column; gap: var(--nas-space-6); }
+.rv__head-text { gap: var(--nas-space-1); }
+
+// Breadcrumb: the chart icon and "Reports" (muted), a 14 px chevron, the report.
 .rv__crumbs {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--nas-space-2);
+  gap: var(--nas-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
   font-size: var(--nas-size-xs);
-  color: var(--nas-color-text-muted);
+  line-height: 16.8px;
+  font-weight: var(--nas-weight-medium);
 
-  li { display: inline-flex; align-items: center; gap: var(--nas-space-2); }
-  a { color: inherit; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  a:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
-  [aria-current='page'] { color: var(--nas-color-text-strong); font-weight: var(--nas-weight-medium); }
+  li { display: inline-flex; align-items: center; gap: var(--nas-space-1); }
+  [aria-current='page'] { color: #000; }
+}
+
+.rv__crumb-root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  color: var(--nas-color-text-muted, #676e76);
+  text-decoration: none;
+
+  img { display: block; }
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
 }
 
 .rv__crumb-sep { display: block; }
 :host-context([dir='rtl']) .rv__crumb-sep { transform: scaleX(-1); }
 
-.rv__unit {
-  margin: var(--nas-space-1) 0 0;
-  font-size: var(--nas-size-2xs);
-  color: var(--nas-color-text-muted);
+// "Export" opens Excel / CSV under it.
+.rv-export { position: relative; }
 
-  strong { font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
+.rv-export__menu {
+  position: absolute;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-end: 0;
+  z-index: 20;
+  min-inline-size: 180px;
+  margin: 0;
+  padding: var(--nas-space-1);
+  list-style: none;
+  border: 1px solid var(--nas-neutral-400, #e6e7e8);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface, #fff);
+  box-shadow: var(--nas-shadow-md);
 }
 
-.rv__scope {
+.rv-export__item {
+  display: block;
+  inline-size: 100%;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 0;
+  border-radius: var(--nas-radius-sm, 6px);
+  background: transparent;
+  color: var(--nas-color-text-strong, #171819);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  text-align: start;
+  cursor: pointer;
+
+  &:hover { background: var(--nas-neutral-50); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: -2px; }
+}
+
+// Filters card: 16 px padding and radius, 12 px gaps, 220 px fields.
+.rv-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-3);
+  padding: var(--nas-space-4);
+  border: 1px solid var(--nas-neutral-400, #e6e7e8);
+  border-radius: 16px;
+  background: var(--nas-color-bg-surface, #fff);
+  filter: drop-shadow(0 1px 1px rgba(12, 36, 39, 0.08));
+}
+
+.rv-filters__head { display: flex; align-items: center; justify-content: space-between; gap: var(--nas-space-3); }
+.rv-filters__heading { display: flex; flex-direction: column; gap: 2px; }
+
+.rv-filters__title {
+  margin: 0;
+  font-size: var(--nas-size-xs);
+  line-height: 21px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong, #171819);
+}
+
+.rv-filters__sub, .rv-preview__sub {
+  margin: 0;
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  color: var(--nas-color-text-muted, #676e76);
+}
+
+.rv-filters__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  min-block-size: 44px;
+
+  img { display: block; }
+}
+
+.rv-filters__count {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--nas-teal-100, #f2fbfa);
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  font-weight: var(--nas-weight-semibold);
+  color: #26787b;
+}
+
+.rv-filters__fields { display: flex; flex-wrap: wrap; gap: var(--nas-space-3); }
+
+.rv-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-1);
+  inline-size: 220px;
+  max-inline-size: 100%;
+
+  @media (max-width: 520px) { inline-size: 100%; }
+}
+
+.rv-field__label {
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  font-weight: var(--nas-weight-semibold);
+  color: var(--nas-color-text-muted, #676e76);
+}
+
+.rv-field__input {
+  inline-size: 100%;
+  block-size: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--nas-neutral-400, #e6e7e8);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface, #fff);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-strong, #171819);
+
+  &::placeholder { color: var(--nas-neutral-700, #8c8c8c); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 1px; }
+}
+
+// PrimeNG dropdown / multi-select drawn as the Figma field: 44 px, 14 px
+// sides, the grey placeholder and the 24 px arrow.
+:host ::ng-deep .rv-field__control {
+  inline-size: 100%;
+  min-block-size: 44px;
+  border: 1px solid var(--nas-neutral-400, #e6e7e8);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-color-bg-surface, #fff);
+  box-shadow: none;
+
+  &:not(.p-disabled):hover { border-color: var(--nas-neutral-500, #cfd0d1); }
+  &.p-focus { border-color: var(--nas-teal-600); box-shadow: none; }
+
+  .p-dropdown-label, .p-multiselect-label {
+    padding: 13px 14px;
+    font-size: var(--nas-size-xs);
+    line-height: 16.8px;
+    color: var(--nas-color-text-strong, #171819);
+  }
+  .p-placeholder { color: var(--nas-neutral-700, #8c8c8c); }
+  .p-dropdown-trigger, .p-multiselect-trigger { inline-size: auto; padding-inline-end: 10px; }
+  .p-dropdown-clear-icon { inset-inline-end: 40px; }
+}
+
+// "Preview: <report>" and the table.
+.rv-preview { display: flex; flex-direction: column; gap: var(--nas-space-3); }
+.rv-preview__head { display: flex; flex-direction: column; gap: 2px; }
+
+.rv-preview__title {
+  margin: 0;
+  font-size: var(--nas-size-s);
+  line-height: 24px;
+  font-weight: var(--nas-weight-bold);
+  color: var(--nas-color-text-strong, #171819);
+}
+
+// Columns size to their content, as drawn (the card scrolls sideways when narrow).
+.rv-table {
+  table-layout: auto;
+
+  th { block-size: 45.5px; background: var(--nas-neutral-50, #fafafa); color: var(--nas-color-text-muted, #676e76); }
+  td { block-size: 46px; color: var(--nas-color-text-strong, #171819); }
+  :is(th, td) { white-space: nowrap; overflow: visible; text-overflow: clip; }
+}
+
+.rv-num { text-align: start; font-variant-numeric: tabular-nums; }
+.rv-strong { font-weight: var(--nas-weight-semibold); }
+.rv-empty { font-weight: var(--nas-weight-semibold); color: var(--nas-color-text-strong, #171819); }
+.rv-text { display: inline-block; max-inline-size: 320px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+
+// Status badges as drawn: Accepted (green), Pending (amber pill), Rejected (red).
+.rv-badge {
   display: inline-flex;
   align-items: center;
-  max-inline-size: 100%;
-  min-block-size: 32px;
-  padding-inline: var(--nas-space-3);
-  border: 0.7px solid var(--nas-teal-1000);
-  border-radius: 16px;
-  background: var(--nas-teal-100);
-  font-size: var(--nas-size-xs);
+  padding: 2px var(--nas-space-2);
+  border-radius: var(--nas-radius-md);
+  font-size: var(--nas-size-2xs);
+  line-height: 14.4px;
   font-weight: var(--nas-weight-medium);
-  color: var(--nas-teal-1000);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--nas-color-text-strong, #171819);
   white-space: nowrap;
 }
 
-.rv__notice {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--nas-space-2);
-  margin: 0;
-  padding: var(--nas-space-3) var(--nas-space-4);
-  border: 1px solid var(--nas-status-amber-500-16);
-  border-radius: var(--nas-radius-md);
-  background: var(--nas-status-amber-50);
-  font-size: var(--nas-size-2xs);
-  line-height: 18px;
-  color: var(--nas-status-amber-800);
-
-  img { flex-shrink: 0; }
-}
-
-.rv__notice-col { font-weight: var(--nas-weight-medium); }
-
-.rv__table {
-  // Long headings (an evaluation question) wrap instead of being cut.
-  thead th {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    vertical-align: bottom;
-    padding-block: var(--nas-space-2);
-    line-height: 18px;
-  }
-
-  td { block-size: 49px; }
-}
-
-// The spec's "Group" row above the column names.
-.rv__groups th {
-  block-size: 32px;
-  background: var(--nas-neutral-100);
-  border-inline-start: 1px solid var(--nas-color-border);
-  font-size: var(--nas-size-2xs);
-  font-weight: var(--nas-weight-semibold);
-  color: var(--nas-color-text-strong);
-  text-transform: none;
-
-  &:first-child { border-inline-start: 0; }
-}
-
-.rv__num { text-align: end !important; font-variant-numeric: tabular-nums; }
-
-.rv__missing { background: var(--nas-status-amber-500-08); }
-thead .rv__missing { color: var(--nas-status-amber-800); }
-
-.rv__tag {
-  display: block;
-  font-size: 11px;
-  font-weight: var(--nas-weight-regular);
-  line-height: 14px;
-}
-
-.rv__empty { color: var(--nas-neutral-500); }
-
-.rv__text { display: block; overflow: hidden; text-overflow: ellipsis; }
+.rv-badge--success { background: #e7f8f0; }
+.rv-badge--warning { border-radius: 9999px; background: #fef4e6; color: #a85e05; }
+.rv-badge--danger { background: #feeceb; }
+.rv-badge--neutral { background: var(--nas-neutral-100, #f2f2f2); }
