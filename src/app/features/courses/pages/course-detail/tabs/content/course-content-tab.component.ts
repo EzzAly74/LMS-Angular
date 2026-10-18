@@ -501,17 +501,6 @@ export class CourseContentTabComponent implements OnInit {
     return `${(kb / 1024).toFixed(1)} MB`;
   }
 
-  /**
-   * Manual stepper for the "Approximate Duration" input. We render the input
-   * as a plain `<input type="number">` so the project-wide rule that hides
-   * the native spinners still applies, then drive these chevron buttons from
-   * the reactive form. Clamped to the same range as the field's validators.
-   */
-  adjustDuration(delta: number): void {
-    const current = Number(this.moduleForm.value.duration_minutes ?? 0);
-    const next = Math.max(0, Math.min(1000, current + delta));
-    this.moduleForm.patchValue({ duration_minutes: next });
-  }
 
   /** True when the rich-text editor has no meaningful text content. */
   private isRichTextEmpty(html: string): boolean {

@@ -214,18 +214,8 @@
 
               <div class="af-field">
                 <label class="af-label" [for]="'af-q-score-' + i">{{ 'assignments.form_max_score' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
-                <div class="af-number">
-                  <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true"
-                    [attr.aria-invalid]="q.controls.score.hasError('min')" [attr.aria-describedby]="q.controls.score.hasError('min') ? 'af-q-score-err-' + i : null" />
-                  <span class="af-number__steps">
-                    <button type="button" class="af-step af-step--up" (click)="stepScore(i, 1)" [attr.aria-label]="'assignments.form_score_up' | translate">
-                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
-                    </button>
-                    <button type="button" class="af-step" (click)="stepScore(i, -1)" [attr.aria-label]="'assignments.form_score_down' | translate">
-                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
-                    </button>
-                  </span>
-                </div>
+                <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true"
+                  [attr.aria-invalid]="q.controls.score.hasError('min')" [attr.aria-describedby]="q.controls.score.hasError('min') ? 'af-q-score-err-' + i : null" />
                 @if (q.controls.score.hasError('min')) {
                   <p class="af-err" role="alert" [id]="'af-q-score-err-' + i">{{ 'assignments.form_score_negative' | translate }}</p>
                 }

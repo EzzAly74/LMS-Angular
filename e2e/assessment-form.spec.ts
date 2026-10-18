@@ -79,7 +79,7 @@ test.describe('behaviour', () => {
     await expect(page.getByRole('combobox', { name: 'Correct answer / grading key' })).toBeVisible();
     await expect(save).toBeDisabled();
     await pick(page, 'Correct answer / grading key', 'Yes');
-    await page.getByRole('button', { name: 'Increase score' }).click();
+    await page.locator('#af-q-score-0').fill('1'); // no chevrons on number fields (2026-10-18)
     await expect(save).toBeEnabled();
 
     await save.click();
@@ -173,7 +173,7 @@ test.describe('behaviour', () => {
     await ar.getByLabel('Option 2', { exact: true }).fill('أحمر');
     await expect(page.getByRole('textbox', { name: /grading key/ })).toHaveCount(0);
     await pick(page, 'Correct answer / grading key', '2. Red');
-    await page.getByRole('button', { name: 'Increase score' }).click();
+    await page.locator('#af-q-score-0').fill('1'); // no chevrons on number fields (2026-10-18)
 
     await page.getByRole('button', { name: 'Save Changes' }).click();
     await expect.poll(() => saves.length).toBe(1);

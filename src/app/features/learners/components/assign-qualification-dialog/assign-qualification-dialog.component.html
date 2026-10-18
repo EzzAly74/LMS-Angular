@@ -92,10 +92,11 @@
       </div>
 
       <footer class="aq__foot">
-        <button type="button" class="aq__btn aq__btn--ghost" (click)="close()" [disabled]="saving()">
+        <button type="button" class="af-btn af-btn--outline" (click)="close()" [disabled]="saving()">
           {{ 'common.cancel' | translate }}
         </button>
-        <button type="submit" class="aq__btn aq__btn--primary" [disabled]="!canSubmit()">
+        <button type="submit" class="af-btn af-btn--primary" [disabled]="!canSubmit()">
+          <nas-icon [name]="saving() ? 'spinner-gap' : 'check-circle'" [size]="20" [class.af-spin]="saving()" />
           {{ (saving() ? 'learners.assign.saving' : 'learners.assign.submit') | translate: { count: targetCount() } }}
         </button>
       </footer>

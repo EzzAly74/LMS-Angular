@@ -139,16 +139,12 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="cat-btn cat-btn--ghost" [disabled]="saving()" (click)="closeDialog()">
+    <button type="button" class="af-btn af-btn--outline" [disabled]="saving()" (click)="closeDialog()">
       {{ 'common.cancel' | translate }}
     </button>
-    <button type="button" class="cat-btn cat-btn--primary" [disabled]="!isFormValid || saving()" (click)="save()">
-      @if (saving()) {
-        <nas-icon name="spinner-gap" [size]="16" />
-        <span>{{ 'common.saving' | translate }}</span>
-      } @else {
-        <span>{{ (dialogMode() === 'create' ? 'categories.create' : 'common.save_changes') | translate }}</span>
-      }
+    <button type="button" class="af-btn af-btn--primary" [disabled]="!isFormValid || saving()" (click)="save()">
+      <nas-icon [name]="saving() ? 'spinner-gap' : (dialogMode() === 'create' ? 'plus-circle' : 'floppy-disk')" [size]="20" [class.af-spin]="saving()" />
+      {{ (saving() ? 'common.saving' : dialogMode() === 'create' ? 'categories.create' : 'common.save_changes') | translate }}
     </button>
   </ng-template>
 </p-dialog>

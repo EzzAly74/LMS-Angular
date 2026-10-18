@@ -64,7 +64,7 @@ for (const locale of ['en', 'ar'] as const) {
     await nameEn.fill('Mona');
     await expect(dialog.locator('#ul-name-en-error')).not.toBeEmpty();
     await expect(nameEn).toHaveAttribute('aria-invalid', 'true');
-    await expect(dialog.locator('.ul-btn--primary')).toBeDisabled();
+    await expect(dialog.locator('.af-btn--primary')).toBeDisabled();
     await nameEn.fill('Mo Adel');
     await expect(dialog.locator('#ul-name-en-error')).not.toBeEmpty();
     await nameEn.fill('Mona Adel');
@@ -74,7 +74,7 @@ for (const locale of ['en', 'ar'] as const) {
 
     // NEW2B-6160: Remove, then Save, asks the server to remove the photo.
     await dialog.locator('.photo-upload__clear').click();
-    await dialog.locator('.ul-btn--primary').click();
+    await dialog.locator('.af-btn--primary').click();
     await expect.poll(() => writes.length).toBe(1);
     expect(writes[0].postDataJSON()).toMatchObject({ name_en: 'Mona Adel', remove_image: true });
 

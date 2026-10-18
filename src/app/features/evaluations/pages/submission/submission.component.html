@@ -11,7 +11,7 @@
     @case ('not-found') {
       <div class="tr__message" role="alert">
         <p>{{ 'evaluations.submission.not_found' | translate }}</p>
-        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations/scores">{{ 'evaluations.back_to_listing' | translate }}</a>
+        <a class="af-btn af-btn--outline" routerLink="/admin/evaluations/scores">{{ 'evaluations.back_to_listing' | translate }}</a>
       </div>
     }
     @case ('error') {
@@ -41,7 +41,7 @@
             </nav>
             <h1 class="ev__title"><bdi>{{ name }}</bdi></h1>
           </div>
-          <a class="ev__btn ev__btn--outline tr__back" routerLink="/admin/evaluations/scores">{{ 'evaluations.back_to_listing' | translate }}</a>
+          <a class="af-btn af-btn--outline tr__back" routerLink="/admin/evaluations/scores">{{ 'evaluations.back_to_listing' | translate }}</a>
         </header>
 
         <div class="tr__tiles">
@@ -88,7 +88,7 @@
             }
           </dl>
           @if (d.template.id !== null) {
-            <a class="ev__btn ev__btn--outline ev__btn--sm tr__scores" [routerLink]="['/admin/evaluations', d.template.id]">
+            <a class="af-btn af-btn--outline af-btn--sm tr__scores" [routerLink]="['/admin/evaluations', d.template.id]">
               {{ 'evaluations.submission.view_template' | translate }}
             </a>
           }

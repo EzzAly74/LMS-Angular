@@ -27,6 +27,7 @@ import { NasPhotoUploadComponent } from '../../../../shared/nas/nas-photo-upload
 import { NasRichTextComponent } from '../../../../shared/nas/nas-rich-text/nas-rich-text.component';
 import { BlogsApiService } from '../../services/blogs-api.service';
 import { AdminBlog, AdminBlogSection, QualificationOption, UserOption } from '../../models/blog.types';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 
 /** The server's limits (BlogRequest); the form says them before it sends (NEW2B-5877 / 5878 / 5890). */
 /** Server limits (BlogRequest), mirrored for UX: the blog name 100 (NEW2B-5965), section titles 255. */
@@ -49,7 +50,7 @@ export interface FieldError { key: string; params?: Record<string, unknown>; }
 @Component({
   selector: 'app-blog-form',
   standalone: true,
-  imports: [
+  imports: [NasIconComponent, 
     CommonModule,
     RouterLink,
     ReactiveFormsModule,

@@ -703,46 +703,63 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 }
 
-.nas-btn {
+/* ── Buttons: the one Dashboard button (human, 2026-10-18) ────────────────
+   af-btn--primary   save / create / submit (with a Phosphor icon; while busy
+                     the icon is spinner-gap + .af-spin and the label says so)
+   af-btn--outline   cancel / secondary
+   af-btn--sm        36px, for dense rows
+   af-btn--cancel / --save   the page header pair's Figma widths */
+.af-btn {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
+  justify-content: center;
   gap: var(--nas-space-2);
-  height: 44px;
-  padding: 0 var(--nas-space-5);
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid transparent;
   border-radius: var(--nas-radius-md);
+  background: transparent;
+  font: inherit;
   font-size: var(--nas-size-xs);
   font-weight: var(--nas-weight-medium);
+  line-height: 16.8px;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    background var(--transition-speed),
-    color var(--transition-speed);
+  transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
 
-  i {
-    font-size: 14px;
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+  &:disabled { cursor: not-allowed; }
+
+  // Cancel, Remove, Add Option, Add
+  &--outline {
+    border-color: var(--nas-button-outline);
+    color: var(--nas-teal-1000);
+    &:hover:not(:disabled) { background: var(--nas-teal-100); }
   }
 
+  // Save Changes, Add Question
   &--primary {
-    background: var(--nas-essential-cta);
-    color: var(--nas-color-text-onDark);
-    &:hover:not([disabled]) {
-      background: var(--nas-teal-900);
+    background: var(--nas-teal-1000);
+    color: var(--nas-neutral-100);
+    box-shadow: 0 1px 1px 0 var(--nas-neutral-2000-12), 0 2px 5px 0 var(--nas-neutral-700-08);
+    &:hover:not(:disabled) { background: var(--nas-teal-900); }
+    &:disabled {
+      background: var(--nas-button-disabled-bg);
+      color: var(--nas-button-disabled-text);
+      box-shadow: none;
     }
   }
-  &--ghost {
-    background: transparent;
-    color: var(--nas-color-text-body);
-    border-color: var(--nas-color-border);
-    &:hover:not([disabled]) {
-      background: var(--nas-neutral-200);
-    }
-  }
-  &[disabled],
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+
+  &--cancel { inline-size: 104px; }
+  &--save { inline-size: 180px; }
+  &--sm { block-size: 36px; }
 }
+
+.af-spin { animation: af-spin 0.9s linear infinite; }
+@keyframes af-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .af-spin { animation: none; } }
 
 .nas-dialog {
   .p-dialog-header {
@@ -1096,27 +1113,11 @@ html[dir='rtl'] {
   }
 }
 
-/* ── "Generate with AI" dialog chrome (D-113) ───────────────────────────
-   Header and footer bars of .aig-dialog; the footer's buttons are laid out
-   by the component (.aig-foot), so PrimeNG's default button margins go. */
-.p-dialog.aig-dialog {
-  border-radius: 16px;
-  overflow: hidden;
+/* ── "Generate with AI" dialog footer (D-113) ──────────────────────────
+   Its af-btn actions are laid out by the component (.aig-foot), so the
+   PrimeNG default footer button margins must not apply. */
+.p-dialog.aig-dialog .p-dialog-footer {
+  border-top: 1px solid var(--nas-color-border);
 
-  .p-dialog-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--nas-color-border);
-  }
-  .p-dialog-content {
-    padding: 20px;
-  }
-  .p-dialog-footer {
-    display: flex;
-    padding: 14px 20px;
-    border-top: 1px solid var(--nas-color-border);
-    background: var(--nas-neutral-50);
-    margin: 0;
-
-    button { margin: 0; }
-  }
+  button { margin: 0; }
 }

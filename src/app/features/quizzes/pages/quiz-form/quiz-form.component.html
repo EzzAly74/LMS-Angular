@@ -208,17 +208,7 @@
 
               <div class="af-field">
                 <label class="af-label" [for]="'af-q-score-' + i">{{ 'quizzes.form_score' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
-                <div class="af-number">
-                  <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true" />
-                  <span class="af-number__steps">
-                    <button type="button" class="af-step af-step--up" (click)="stepScore(i, 1)" [attr.aria-label]="'quizzes.form_score_up' | translate">
-                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
-                    </button>
-                    <button type="button" class="af-step" (click)="stepScore(i, -1)" [attr.aria-label]="'quizzes.form_score_down' | translate">
-                      <img src="assets/icons/figma/arrow-down-grey-16.svg" width="16" height="16" alt="" />
-                    </button>
-                  </span>
-                </div>
+                <input [id]="'af-q-score-' + i" type="number" inputmode="numeric" formControlName="score" min="0" class="af-input" aria-required="true" />
               </div>
 
               <!-- ── MCQ options / reorder items (1982:42048, 1982:42222) ── -->

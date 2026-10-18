@@ -26,6 +26,7 @@ import type {
   AdminRoleStorePayload,
 } from '../../models/role.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 
 interface RoleFormState {
   name_en: string;
@@ -77,7 +78,7 @@ const permissionOf = (action: PermissionAction, section: string): string => `${a
 @Component({
   selector: 'app-role-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SkeletonModule, TranslateModule],
+  imports: [NasIconComponent, CommonModule, FormsModule, RouterLink, SkeletonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './role-form.component.html',
   styleUrl: './role-form.component.scss',

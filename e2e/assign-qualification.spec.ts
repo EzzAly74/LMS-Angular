@@ -33,7 +33,7 @@ test('assigns one qualification to the learners ticked', async ({ page }) => {
   const dialog = page.locator('.aq__card');
   await expect(dialog).toBeVisible();
 
-  const submit = dialog.locator('.aq__btn--primary');
+  const submit = dialog.locator('.af-btn--primary');
   await expect(submit).toBeDisabled(); // nothing chosen yet
 
   await dialog.getByText('Fixture Qualification', { exact: true }).click();
@@ -67,7 +67,7 @@ test('"everyone matching" is refused above the 500 the API accepts', async ({ pa
   await dialog.locator('.aq__mode').nth(1).click();
 
   await expect(dialog.locator('.aq__note--warn')).toContainText('at most 500');
-  await expect(dialog.locator('.aq__btn--primary')).toBeDisabled();
+  await expect(dialog.locator('.af-btn--primary')).toBeDisabled();
   expect(posts).toHaveLength(0);
 });
 
@@ -116,8 +116,8 @@ test('"everyone matching" pages through the whole filtered list and posts every 
   const dialog = page.locator('.aq__card');
   await dialog.getByText('Fixture Qualification', { exact: true }).click();
   await dialog.locator('.aq__mode').nth(1).click();
-  await expect(dialog.locator('.aq__btn--primary')).toHaveText('Assign (150)');
-  await dialog.locator('.aq__btn--primary').click();
+  await expect(dialog.locator('.af-btn--primary')).toHaveText('Assign (150)');
+  await dialog.locator('.af-btn--primary').click();
   await expect(dialog).toBeHidden();
 
   // Two pages of 100, with the list's filter, then one POST with all 150.

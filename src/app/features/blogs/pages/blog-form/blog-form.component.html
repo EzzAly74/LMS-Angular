@@ -257,10 +257,10 @@
           </div>
 
           <div class="bf-actions">
-            <button type="button" class="bf-btn bf-btn--cancel" (click)="cancel()">{{ 'common.cancel' | translate
+            <button type="button" class="af-btn af-btn--outline" (click)="cancel()">{{ 'common.cancel' | translate
               }}</button>
-            <button type="submit" class="bf-btn bf-btn--save" [disabled]="saving()">
-              <i class="pi" aria-hidden="true" [ngClass]="saving() ? 'pi-spin pi-spinner' : (isEdit() ? 'pi-save' : 'pi-send')"></i>
+            <button type="submit" class="af-btn af-btn--primary" [disabled]="saving()">
+              <nas-icon [name]="saving() ? 'spinner-gap' : (isEdit() ? 'floppy-disk' : 'paper-plane-tilt')" [size]="20" [class.af-spin]="saving()" />
               {{ (isEdit() ? 'blogs.save_changes' : 'blogs.publish') | translate }}
             </button>
           </div>

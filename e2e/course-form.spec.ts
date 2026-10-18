@@ -366,7 +366,7 @@ test('NEW2B-5975: in Arabic, required marks and errors are red and in Arabic', a
   await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), [LOCALE_KEY, 'ar'] as const);
   await page.goto('/admin/courses/new');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await page.locator('.cf__actions .nas-btn--primary, button[type="submit"]').last().click();
+  await page.locator('.cf__actions .af-btn--primary, button[type="submit"]').last().click();
 
   const errors = page.locator('.cf__error');
   await expect(errors.first()).toBeVisible();

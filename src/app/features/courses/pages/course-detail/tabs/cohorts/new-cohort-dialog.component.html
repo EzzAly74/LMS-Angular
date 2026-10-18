@@ -34,14 +34,6 @@
       <div class="nc__number">
         <input id="nc-capacity" class="nc__number-input" type="number" inputmode="numeric" formControlName="capacity" [min]="minCapacity()" max="10000" placeholder="30"
           [attr.aria-invalid]="showError('capacity')" [attr.aria-describedby]="showError('capacity') ? 'nc-capacity-err' : null" />
-        <span class="nc__steppers">
-          <button type="button" class="nc__step" (click)="step(1)" [attr.aria-label]="'course_detail.schedule.capacity_up' | translate">
-            <img class="nc__step-up" src="assets/icons/figma/arrow-down-old-system.svg" width="16" height="16" alt="" />
-          </button>
-          <button type="button" class="nc__step" (click)="step(-1)" [attr.aria-label]="'course_detail.schedule.capacity_down' | translate">
-            <img src="assets/icons/figma/arrow-down-old-system.svg" width="16" height="16" alt="" />
-          </button>
-        </span>
       </div>
       @if (showError('capacity')) {
         <p class="nc__error" id="nc-capacity-err">
@@ -65,7 +57,7 @@
             <span class="nc__card-desc">{{ (editing() ? 'course_detail.schedule.download_desc_edit' : 'course_detail.schedule.download_desc') | translate }}</span>
           </span>
         </div>
-        <button type="button" class="nc__btn nc__btn--outline" (click)="downloadTemplate()" [disabled]="downloading()" [attr.aria-busy]="downloading()">
+        <button type="button" class="af-btn af-btn--outline" (click)="downloadTemplate()" [disabled]="downloading()" [attr.aria-busy]="downloading()">
           {{ (editing() ? 'course_detail.schedule.download_button_edit' : 'course_detail.schedule.download_button') | translate }}
         </button>
       </div>
@@ -129,8 +121,9 @@
 
   <ng-template pTemplate="footer">
     <div class="nc__footer">
-      <button type="button" class="nc__btn nc__btn--outline nc__btn--cancel" (click)="close()" [disabled]="saving()">{{ 'common.cancel' | translate }}</button>
-      <button type="submit" form="nc-form" class="nc__btn nc__btn--primary" [disabled]="!canSubmit()" [attr.aria-busy]="saving()">
+      <button type="button" class="af-btn af-btn--outline" (click)="close()" [disabled]="saving()">{{ 'common.cancel' | translate }}</button>
+      <button type="submit" form="nc-form" class="af-btn af-btn--primary" [disabled]="!canSubmit()" [attr.aria-busy]="saving()">
+        <nas-icon [name]="saving() ? 'spinner-gap' : (editing() ? 'floppy-disk' : 'plus-circle')" [size]="20" [class.af-spin]="saving()" />
         {{ (editing() ? 'common.save_changes' : 'course_detail.schedule.add_cohort') | translate }}
       </button>
     </div>

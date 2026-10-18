@@ -287,35 +287,6 @@
   border-top: 1px solid #e6e7e8;
 }
 
-.bf-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 44px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background var(--transition-speed), opacity var(--transition-speed);
-  flex: 1;
-  border: none;
-  i { font-size: 16px; }
-
-  &--cancel {
-    background: #fff;
-    border: 1px solid #bfbfbf;
-    color: #0c2427;
-    &:hover { background: #f5f5f5; }
-  }
-  &--save {
-    background: var(--nas-essential-cta, #0c2427);
-    color: #fffbf7;
-    &:hover:not(:disabled) { background: var(--nas-teal-900, #082022); }
-    &:disabled { opacity: 0.45; cursor: not-allowed; }
-  }
-}
 
 // Under a long field: the message on the start side, the count on the end side.
 .bf-field__foot {

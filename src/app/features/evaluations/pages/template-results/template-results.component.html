@@ -11,7 +11,7 @@
     @case ('not-found') {
       <div class="tr__message" role="alert">
         <p>{{ 'evaluations.results.not_found' | translate }}</p>
-        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+        <a class="af-btn af-btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
       </div>
     }
     @case ('error') {
@@ -38,12 +38,12 @@
           </div>
           <div class="tr__head-actions">
             @if (!d.template.locked) {
-              <a *nasCan="'edit-evaluations'" class="ev__btn ev__btn--primary" [routerLink]="['/admin/evaluations', d.template.id, 'edit']">
+              <a *nasCan="'edit-evaluations'" class="af-btn af-btn--primary" [routerLink]="['/admin/evaluations', d.template.id, 'edit']">
                 <img src="assets/icons/figma/pencil-simple-light-20.svg" width="20" height="20" alt="" />
                 {{ 'common.edit' | translate }}
               </a>
             }
-            <a class="ev__btn ev__btn--outline tr__back" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+            <a class="af-btn af-btn--outline tr__back" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
           </div>
         </header>
 
@@ -89,7 +89,7 @@
             </div>
           </dl>
           @if (d.summary.submissions > 0) {
-            <a class="ev__btn ev__btn--outline ev__btn--sm tr__scores" routerLink="/admin/evaluations/scores"
+            <a class="af-btn af-btn--outline af-btn--sm tr__scores" routerLink="/admin/evaluations/scores"
               [queryParams]="{ template: d.template.id }">
               {{ 'evaluations.results.view_scores' | translate }}
             </a>

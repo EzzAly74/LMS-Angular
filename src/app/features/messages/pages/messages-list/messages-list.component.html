@@ -102,7 +102,7 @@
                [ngModel]="draftReply()" [ngModelOptions]="{ standalone: true }"
                (ngModelChange)="draftReply.set($event)" [attr.maxlength]="BODY_MAX"
                [placeholder]="'inbox.compose_message_placeholder' | translate" />
-        <button type="submit" class="nas-btn nas-btn--primary"
+        <button type="submit" class="af-btn af-btn--primary"
                 [disabled]="!draftReply().trim() || replying()">
           <i class="pi pi-send" aria-hidden="true"></i>
         </button>
@@ -213,10 +213,10 @@
     </div>
 
     <footer class="nas-form__footer">
-      <button type="button" class="nas-btn nas-btn--ghost" (click)="showCompose.set(false)">
+      <button type="button" class="af-btn af-btn--outline" (click)="showCompose.set(false)">
         {{ 'common.cancel' | translate }}
       </button>
-      <button type="submit" class="nas-btn nas-btn--primary"
+      <button type="submit" class="af-btn af-btn--primary"
               [disabled]="saving() || composeForm.invalid || selectedCount() === 0">
         <i class="pi pi-send" aria-hidden="true"></i>
         {{ 'inbox.send' | translate }}

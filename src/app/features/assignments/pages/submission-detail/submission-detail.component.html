@@ -19,7 +19,7 @@
   } @else if (failed()) {
     <div class="asd-card asd-message" role="alert">
       <p>{{ 'common.could_not_load' | translate }}</p>
-      <button type="button" class="asd-btn asd-btn--outline" (click)="load()">{{ 'common.retry' | translate }}</button>
+      <button type="button" class="af-btn af-btn--outline" (click)="load()">{{ 'common.retry' | translate }}</button>
     </div>
   } @else if (detail()) {
     @let d = detail()!;
@@ -56,7 +56,7 @@
           }
         </p>
       </div>
-      <button type="button" class="asd-btn asd-btn--outline asd-head__back" (click)="back()">
+      <button type="button" class="af-btn af-btn--outline asd-head__back" (click)="back()">
         {{ 'assignments.back_to_assignments' | translate }}
       </button>
     </header>
@@ -206,11 +206,12 @@
                   }
                 </div>
                 <div class="asd-score__actions">
-                  <button type="button" class="asd-btn asd-btn--outline" (click)="cancel(a)" [disabled]="saving() === a.id">
+                  <button type="button" class="af-btn af-btn--outline" (click)="cancel(a)" [disabled]="saving() === a.id">
                     {{ 'common.cancel' | translate }}
                   </button>
-                  <button type="submit" class="asd-btn asd-btn--primary"
+                  <button type="submit" class="af-btn af-btn--primary"
                     [disabled]="parsedScore(a) === null || saving() === a.id" [attr.aria-busy]="saving() === a.id">
+                    <nas-icon [name]="saving() === a.id ? 'spinner-gap' : 'floppy-disk'" [size]="20" [class.af-spin]="saving() === a.id" />
                     {{ (editing ? 'assignments.update' : 'assignments.save_score') | translate }}
                   </button>
                 </div>
@@ -219,7 +220,7 @@
               @if (a.feedback) {
                 <p class="asd-feedback"><strong>{{ 'assignments.feedback_label' | translate }}</strong> <span dir="auto">{{ a.feedback }}</span></p>
               }
-              <button *nasCan="'edit-assignments'" type="button" class="asd-btn asd-btn--outline asd-edit" (click)="startEdit(a)">
+              <button *nasCan="'edit-assignments'" type="button" class="af-btn af-btn--outline asd-edit" (click)="startEdit(a)">
                 <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
                 {{ 'common.edit' | translate }}
               </button>

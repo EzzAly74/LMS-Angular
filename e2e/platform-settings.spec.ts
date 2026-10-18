@@ -63,11 +63,13 @@ test('an empty field asks for a value', async ({ page }) => {
   await expect(page.locator('#default_cohort_size-error')).toHaveText('Enter a value.');
 });
 
-test('the steppers stay inside the limits', async ({ page }) => {
+test('number fields are plain inputs, stepped by the keyboard', async ({ page }) => {
   await setup(page);
-  await page.locator('#default_cohort_size').fill('1');
-  await page.locator('#default_cohort_size').locator('xpath=..').locator('.ps-number__step').nth(1).click();
-  await expect(page.locator('#default_cohort_size')).toHaveValue('1');
+  // No up / down or − / + controls on number fields (human, 2026-10-18).
+  await expect(page.getByRole('button', { name: /increase|decrease/i })).toHaveCount(0);
+  await page.locator('#default_cohort_size').fill('5');
+  await page.locator('#default_cohort_size').press('ArrowUp');
+  await expect(page.locator('#default_cohort_size')).toHaveValue('6');
   await expect(page.locator('#default_cohort_size-error')).toHaveCount(0);
 });
 

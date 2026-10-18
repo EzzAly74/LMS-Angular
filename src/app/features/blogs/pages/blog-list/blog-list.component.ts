@@ -17,10 +17,11 @@ import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directiv
 import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [LocalDatePipe, NasCanDirective, NasPagerComponent,
+  imports: [NasIconComponent, LocalDatePipe, NasCanDirective, NasPagerComponent,
     CommonModule,
     RouterLink,
     SkeletonModule,

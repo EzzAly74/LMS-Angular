@@ -347,11 +347,6 @@ export class QuizFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  stepScore(index: number, delta: 1 | -1): void {
-    const ctrl = this.questions.at(index).controls.score;
-    ctrl.setValue(Math.max(0, (Number(ctrl.value) || 0) + delta));
-    ctrl.markAsDirty();
-  }
 
   yesNo(index: number): YesNo | null {
     return yesNoFromKey(this.questions.at(index).controls.correct_answer_en.value);

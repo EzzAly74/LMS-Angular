@@ -159,13 +159,13 @@
                   (ngModelChange)="editingFeedback.set($event)"
                   [placeholder]="'quizzes.feedback_placeholder' | translate"></textarea>
                 <div class="asd-open__editor-actions">
-                  <button type="button" class="asd-btn asd-btn--ghost" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
+                  <button type="button" class="af-btn af-btn--outline" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
                   <button
                     type="button"
-                    class="asd-btn asd-btn--primary"
+                    class="af-btn af-btn--primary"
                     [disabled]="savingAnswerId() === row.answer.id"
                     (click)="saveEdit(row.answer)">
-                    @if (savingAnswerId() === row.answer.id) { <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> }
+                    <nas-icon [name]="savingAnswerId() === row.answer.id ? 'spinner-gap' : 'floppy-disk'" [size]="20" [class.af-spin]="savingAnswerId() === row.answer.id" />
                     {{ (scored ? 'quizzes.update' : 'quizzes.save_score') | translate }}
                   </button>
                 </div>

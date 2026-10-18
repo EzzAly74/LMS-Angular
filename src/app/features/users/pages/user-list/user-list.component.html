@@ -210,21 +210,17 @@
   <ng-template pTemplate="footer">
     <button
       type="button"
-      class="ul-btn ul-btn--ghost"
+      class="af-btn af-btn--outline"
       [disabled]="formSaving()"
       (click)="closeForm()">
       {{ 'common.cancel' | translate }}
     </button>
     <button
       type="button"
-      class="ul-btn ul-btn--primary"
+      class="af-btn af-btn--primary"
       [disabled]="!formValid() || formSaving()"
       (click)="submitForm()">
-      @if (formSaving()) {
-        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-      } @else {
-        <i class="pi pi-plus" aria-hidden="true"></i>
-      }
+      <nas-icon [name]="formSaving() ? 'spinner-gap' : (formMode() === 'create' ? 'plus-circle' : 'floppy-disk')" [size]="20" [class.af-spin]="formSaving()" />
       {{ (formMode() === 'create' ? 'users.add_user' : 'common.save_changes') | translate }}
     </button>
   </ng-template>
@@ -250,14 +246,14 @@
   <ng-template pTemplate="footer">
     <button
       type="button"
-      class="ul-btn ul-btn--ghost"
+      class="af-btn af-btn--outline"
       [disabled]="deactivating()"
       (click)="confirmDeactivate()">
       {{ 'common.yes_deactivate' | translate }}
     </button>
     <button
       type="button"
-      class="ul-btn ul-btn--primary"
+      class="af-btn af-btn--primary"
       [disabled]="deactivating()"
       (click)="cancelDeactivate()">
       {{ 'common.no_keep_it' | translate }}
@@ -344,8 +340,8 @@
     </dl>
 
     <footer class="ul-drawer__footer">
-      <button type="button" class="ul-btn ul-btn--ghost" (click)="closeProfile()">{{ 'common.cancel' | translate }}</button>
-      <button *nasCan="'edit-users'" type="button" class="ul-btn ul-btn--primary" (click)="editFromProfile()">
+      <button type="button" class="af-btn af-btn--outline" (click)="closeProfile()">{{ 'common.cancel' | translate }}</button>
+      <button *nasCan="'edit-users'" type="button" class="af-btn af-btn--primary" (click)="editFromProfile()">
         <i class="pi pi-pencil" aria-hidden="true"></i> {{ 'users.edit_profile' | translate }}
       </button>
     </footer>
@@ -360,7 +356,7 @@
   <nas-page-header
     [title]="'users.title' | translate"
     [subtitle]="'users.subtitle' | translate">
-    <button *nasCan="'create-users'" type="button" class="ul-btn ul-btn--primary ul-add-btn" (click)="openCreateForm()">
+    <button *nasCan="'create-users'" type="button" class="af-btn af-btn--primary ul-add-btn" (click)="openCreateForm()">
       <i class="pi pi-plus-circle" aria-hidden="true"></i>
       {{ 'users.add_user' | translate }}
     </button>

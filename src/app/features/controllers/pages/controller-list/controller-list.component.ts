@@ -37,6 +37,7 @@ import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directiv
 import { NasPagerComponent } from '../../../../shared/nas/nas-pager/nas-pager.component';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 /* ── Types ──────────────────────────────────────────────────────── */
 
 interface ControllerRoleChip {
@@ -77,7 +78,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-controller-list',
   standalone: true,
-  imports: [NasListStateComponent, LocalDatePipe, NasCanDirective, NasAvatarComponent,
+  imports: [NasIconComponent, NasListStateComponent, LocalDatePipe, NasCanDirective, NasAvatarComponent,
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

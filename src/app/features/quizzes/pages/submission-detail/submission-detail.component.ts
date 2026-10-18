@@ -27,6 +27,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 interface QuestionRow {
   answer: QuizSubmissionAnswer;
   position: number;
@@ -35,7 +36,7 @@ interface QuestionRow {
 @Component({
   selector: 'app-quiz-submission-detail',
   standalone: true,
-  imports: [LocalDatePipe, NasCanDirective, 
+  imports: [NasIconComponent, LocalDatePipe, NasCanDirective, 
     CommonModule,
     FormsModule,
     RouterLink,

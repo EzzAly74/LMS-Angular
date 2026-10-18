@@ -30,12 +30,13 @@ import type {
 import { ToastService } from '../../../../core/services/toast.service';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 type RoleTab = 'all' | 'admin' | 'instructor';
 
 @Component({
   selector: 'app-audit-log-list',
   standalone: true,
-  imports: [NasListStateComponent, LocalDatePipe, 
+  imports: [NasIconComponent, NasListStateComponent, LocalDatePipe, 
     CommonModule,
     FormsModule,
     DialogModule,

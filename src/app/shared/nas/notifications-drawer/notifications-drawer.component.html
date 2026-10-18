@@ -103,13 +103,9 @@
             </div>
           </div>
 
-          <button type="button" class="nd-send-btn" [disabled]="!canSend()" (click)="send()">
-            @if (saving()) {
-              <nas-icon name="spinner-gap" [size]="18" />
-              <span>{{ 'notifications.sending' | translate }}</span>
-            } @else {
-              <span>{{ 'notifications.send' | translate }}</span>
-            }
+          <button type="button" class="af-btn af-btn--primary nd-send" [disabled]="!canSend()" (click)="send()">
+            <nas-icon [name]="saving() ? 'spinner-gap' : 'paper-plane-tilt'" [size]="20" [class.af-spin]="saving()" />
+            {{ (saving() ? 'notifications.sending' : 'notifications.send') | translate }}
           </button>
         </div>
       }

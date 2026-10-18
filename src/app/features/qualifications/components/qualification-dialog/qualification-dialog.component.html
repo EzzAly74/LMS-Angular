@@ -31,7 +31,7 @@
           @case ('error') {
             <div class="qd__message" role="alert">
               <p>{{ 'common.could_not_load' | translate }}</p>
-              <button type="button" class="qd__btn qd__btn--ghost" (click)="retry()">{{ 'qualifications.retry' | translate }}</button>
+              <button type="button" class="af-btn af-btn--outline" (click)="retry()">{{ 'qualifications.retry' | translate }}</button>
             </div>
           }
           @default {
@@ -118,11 +118,11 @@
       }
 
       <footer class="qd__foot">
-        <button type="button" class="qd__btn qd__btn--ghost" (click)="close()" [disabled]="saving()">
+        <button type="button" class="af-btn af-btn--outline" (click)="close()" [disabled]="saving()">
           {{ 'common.cancel' | translate }}
         </button>
-        <button type="submit" class="qd__btn qd__btn--primary" [disabled]="!canSubmit()">
-          <nas-icon [name]="editing() ? 'floppy-disk' : 'plus-circle'" [size]="20" />
+        <button type="submit" class="af-btn af-btn--primary" [disabled]="!canSubmit()">
+          <nas-icon [name]="saving() ? 'spinner-gap' : (editing() ? 'floppy-disk' : 'plus-circle')" [size]="20" [class.af-spin]="saving()" />
           {{ (saving() ? 'common.saving' : editing() ? 'common.save_changes' : 'qualifications.new_qualification') | translate }}
         </button>
       </footer>

@@ -62,11 +62,7 @@
       class="al-export-btn"
       [disabled]="exporting() || loading()"
       (click)="exportLog()">
-      @if (exporting()) {
-        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-      } @else {
-        <i class="pi pi-upload" aria-hidden="true"></i>
-      }
+      <nas-icon [name]="exporting() ? 'spinner-gap' : 'download-simple'" [size]="16" [class.af-spin]="exporting()" />
       {{ 'audit_log.export_log' | translate }}
     </button>
   </nas-page-header>

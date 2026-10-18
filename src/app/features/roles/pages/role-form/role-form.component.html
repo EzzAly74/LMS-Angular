@@ -21,20 +21,16 @@
       </div>
 
       <div class="rf-header__actions">
-        <button type="button" class="rf-btn rf-btn--ghost"
+        <button type="button" class="af-btn af-btn--outline"
                 [disabled]="saving()"
                 (click)="cancel()">
           {{ 'common.cancel' | translate }}
         </button>
-        <button type="button" class="rf-btn rf-btn--primary"
+        <button type="button" class="af-btn af-btn--primary"
                 [disabled]="!canSubmit()"
                 [hidden]="readOnly()"
                 (click)="submit()">
-          @if (saving()) {
-            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-          } @else {
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-          }
+          <nas-icon [name]="saving() ? 'spinner-gap' : (mode() === 'create' ? 'plus-circle' : 'floppy-disk')" [size]="20" [class.af-spin]="saving()" />
           {{ (mode() === 'create' ? 'roles.create_role' : 'common.save_changes') | translate }}
         </button>
       </div>

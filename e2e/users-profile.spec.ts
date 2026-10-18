@@ -119,7 +119,7 @@ for (const locale of ['en', 'ar'] as const) {
     await field.fill('https://www.linkedin.com/in/mona-adel-hassan');
     await field.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `e2e-artifacts/users-linkedin-${locale}-${info.project.name}.png` });
-    await dialog.locator('.ul-btn--primary').click();
+    await dialog.locator('.af-btn--primary').click();
     await expect.poll(() => writes.length).toBe(1);
     expect(writes[0].postDataJSON()).toMatchObject({ linkedin_url: 'https://www.linkedin.com/in/mona-adel-hassan' });
   });

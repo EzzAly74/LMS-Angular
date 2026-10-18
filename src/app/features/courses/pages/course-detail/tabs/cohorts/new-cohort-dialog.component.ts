@@ -133,10 +133,6 @@ export class NewCohortDialogComponent {
     return c.invalid && (c.touched || this.submitted());
   }
 
-  step(delta: number): void {
-    const current = Number(this.form.controls.capacity.value ?? 0);
-    this.form.controls.capacity.setValue(Math.max(this.minCapacity(), Math.min(10000, current + delta)));
-  }
 
   downloadTemplate(): void {
     if (this.downloading()) return;

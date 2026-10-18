@@ -160,32 +160,8 @@
   background: var(--nas-neutral-50);
 }
 
-.aq__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  block-size: 44px;
-  padding: var(--nas-space-2) var(--nas-space-3);
-  border-radius: var(--nas-radius-md);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  cursor: pointer;
 
-  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
-  &[disabled] { opacity: 0.5; cursor: not-allowed; }
-}
 
-.aq__btn--ghost { inline-size: 113px; border: 1px solid var(--nas-teal-1000); background: transparent; color: var(--nas-teal-1000); }
-
-.aq__btn--primary {
-  flex: 1 1 0;
-  border: 0;
-  background: var(--nas-teal-1000);
-  color: var(--nas-neutral-100);
-
-  &:hover:not([disabled]) { background: var(--nas-teal-950); }
-}
 
 // PrimeNG's dialog sets its own font-family, so without this the dialog
 // rendered in the theme font instead of Fira Sans / Almarai.

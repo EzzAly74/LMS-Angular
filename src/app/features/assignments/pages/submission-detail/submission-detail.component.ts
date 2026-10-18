@@ -28,6 +28,7 @@ import {
 } from '../../models/assignment.types';
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 
 interface QuestionRow {
   answer: SubmissionAnswer;
@@ -46,7 +47,7 @@ interface QuestionRow {
 @Component({
   selector: 'app-submission-detail',
   standalone: true,
-  imports: [NasCanDirective, 
+  imports: [NasIconComponent, NasCanDirective, 
     FormsModule,
     RouterLink,
     SkeletonModule,

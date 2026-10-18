@@ -35,7 +35,9 @@ test('fields, template download, file pick and remove, then Add Cohort posts the
   await expect(d.getByLabel('Capacity', { exact: true })).toHaveValue('30');
   await expect(add).toBeDisabled();
 
-  await d.getByRole('button', { name: 'Increase capacity' }).click();
+  // A plain number field: no up / down buttons (human, 2026-10-18); typed or keyboard-stepped.
+  await expect(d.getByRole('button', { name: /increase|decrease/i })).toHaveCount(0);
+  await d.getByLabel('Capacity', { exact: true }).press('ArrowUp');
   await expect(d.getByLabel('Capacity', { exact: true })).toHaveValue('31');
 
   // No "Open for enrolment early" switch: a new cohort is always open (human, 2026-10-07).

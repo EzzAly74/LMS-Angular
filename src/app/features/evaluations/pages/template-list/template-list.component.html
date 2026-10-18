@@ -10,18 +10,18 @@
       <p class="cl-subtitle">{{ 'evaluations.templates.subtitle' | translate }}</p>
     </div>
     <div class="cl-head__actions">
-      <a *nasCan="'create-evaluations'" class="ev__btn ev__btn--primary tl__create" routerLink="new">
+      <a *nasCan="'create-evaluations'" class="af-btn af-btn--primary tl__create" routerLink="new">
         <nas-icon name="plus-circle" [size]="24" />
         {{ 'evaluations.templates.create' | translate }}
       </a>
-      <button type="button" class="ev__btn tl__menu-btn" aria-haspopup="menu" [disabled]="importing()"
+      <button type="button" class="af-btn af-btn--outline tl__menu-btn" aria-haspopup="menu" [disabled]="importing()"
         (click)="importMenu.toggle($event)">
         <img src="assets/icons/figma/file-arrow-down.svg" width="16" height="16" alt="" />
         {{ (importing() ? 'evaluations.transfer.importing' : 'evaluations.transfer.import') | translate }}
         <img src="assets/icons/figma/caret-down-16.svg" width="16" height="16" alt="" />
       </button>
       <p-menu #importMenu [model]="importItems()" [popup]="true" appendTo="body" />
-      <button type="button" class="ev__btn tl__menu-btn" aria-haspopup="menu" [disabled]="exporting()"
+      <button type="button" class="af-btn af-btn--outline tl__menu-btn" aria-haspopup="menu" [disabled]="exporting()"
         (click)="exportMenu.toggle($event)">
         <img src="assets/icons/figma/export.svg" width="16" height="16" alt="" />
         {{ (exporting() ? 'evaluations.transfer.exporting' : 'evaluations.transfer.export') | translate }}
@@ -105,13 +105,13 @@
                 <!-- Figma 2009:88432: Edit and the results button side by side at the card's end. -->
                 <div class="tl__tcard-actions">
                   @if (!t.locked) {
-                    <a *nasCan="'edit-evaluations'" class="ev__btn ev__btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
+                    <a *nasCan="'edit-evaluations'" class="af-btn af-btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
                       <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
                       {{ 'common.edit' | translate }}
                       <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
                     </a>
                   }
-                  <a class="ev__btn ev__btn--primary tl__results" [routerLink]="[t.id]">
+                  <a class="af-btn af-btn--primary tl__results" [routerLink]="[t.id]">
                     {{ 'evaluations.templates.view_results' | translate }}
                     <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
                   </a>
@@ -133,7 +133,7 @@
     <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
       [label]="'evaluations.templates.search_label' | translate" [placeholder]="'common.quick_search' | translate"
       (searchChange)="list.search($event)" (filter)="openFilter()">
-      <a class="ev__btn ev__btn--outline tl__scores-link" routerLink="scores">{{ 'evaluations.scores.title' | translate }}</a>
+      <a class="af-btn af-btn--outline tl__scores-link" routerLink="scores">{{ 'evaluations.scores.title' | translate }}</a>
     </nas-list-toolbar>
 
     <nas-table-card [label]="'evaluations.templates.all' | translate" [busy]="list.state() === 'loading'">

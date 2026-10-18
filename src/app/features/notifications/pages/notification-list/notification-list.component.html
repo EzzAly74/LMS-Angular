@@ -41,8 +41,8 @@
   </form>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="closeDialog()">{{ 'common.cancel' | translate }}</button>
-    <button type="button" class="nas-btn nas-btn--primary" [disabled]="saving()" (click)="save()">
+    <button type="button" class="af-btn af-btn--outline" (click)="closeDialog()">{{ 'common.cancel' | translate }}</button>
+    <button type="button" class="af-btn af-btn--primary" [disabled]="saving()" (click)="save()">
       <i class="pi pi-send" aria-hidden="true"></i>
       {{ 'notifications.send' | translate }}
     </button>

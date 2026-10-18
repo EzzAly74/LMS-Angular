@@ -75,39 +75,9 @@
 }
 
 // ── Buttons ──────────────────────────────────────────────────────────────
-.ev__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nas-space-2);
-  min-block-size: 44px;
-  padding: var(--nas-space-2) var(--nas-space-4);
-  border-radius: var(--nas-radius-md);
-  font: inherit;
-  font-size: var(--nas-size-xs);
-  font-weight: var(--nas-weight-medium);
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
 
-  &:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; }
-}
 
-.ev__btn--primary {
-  border: 0;
-  background: var(--nas-teal-1000);
-  color: var(--nas-neutral-100);
-  &:hover { background: var(--nas-teal-950); }
-}
 
-.ev__btn--outline {
-  border: 1px solid var(--nas-teal-1000);
-  background: var(--nas-color-bg-surface);
-  color: var(--nas-teal-1000);
-  &:hover { background: var(--nas-teal-100); }
-}
-
-.ev__btn--sm { min-block-size: 32px; padding: var(--nas-space-1) var(--nas-space-3); }
 
 // ── Search, chips ────────────────────────────────────────────────────────
 .ev__filters { display: flex; flex-direction: column; gap: var(--nas-space-2); }

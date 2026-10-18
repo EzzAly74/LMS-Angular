@@ -308,16 +308,6 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  /* ── Stepper handlers ─────────────────────────────────── */
-  adjust(field: NumericSetting, delta: number): void {
-    const ctrl = this.form.get(field);
-    if (!ctrl) return;
-    // The steppers stay inside the field's limits.
-    const { min, max } = this.limit(field);
-    const next = Math.round(Number(ctrl.value || 0)) + delta;
-    ctrl.setValue(Math.min(max, Math.max(min, next)));
-    ctrl.markAsTouched();
-  }
 
   /* ── Validation ─────────────────────────────────────────── */
   /** Set when Save was pressed with an invalid field: show every error. */

@@ -15,9 +15,9 @@
     </div>
     @if (state() === 'ready') {
       <div class="tb__actions">
-        <a class="ev__btn ev__btn--outline tb__cancel" routerLink="/admin/evaluations">{{ 'common.cancel' | translate }}</a>
-        <button type="submit" form="tb-form" class="ev__btn ev__btn--primary" [disabled]="!canPublish()">
-          <nas-icon name="paper-plane-tilt" [size]="20" />
+        <a class="af-btn af-btn--outline tb__cancel" routerLink="/admin/evaluations">{{ 'common.cancel' | translate }}</a>
+        <button type="submit" form="tb-form" class="af-btn af-btn--primary" [disabled]="!canPublish()">
+          <nas-icon [name]="saving() ? 'spinner-gap' : 'paper-plane-tilt'" [size]="20" [class.af-spin]="saving()" />
           {{ (saving() ? 'evaluations.builder.publishing' : editing() ? 'evaluations.builder.save' : 'evaluations.builder.publish') | translate }}
         </button>
       </div>
@@ -37,21 +37,21 @@
     @case ('not-found') {
       <div class="tb__message" role="alert">
         <p>{{ 'evaluations.results.not_found' | translate }}</p>
-        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+        <a class="af-btn af-btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
       </div>
     }
     @case ('locked') {
       <div class="tb__message" role="alert">
         <p>{{ 'evaluations.builder.locked' | translate }}</p>
         @if (existing(); as t) {
-          <a class="ev__btn ev__btn--outline" [routerLink]="['/admin/evaluations', t.id]">{{ 'evaluations.templates.view_results' | translate }}</a>
+          <a class="af-btn af-btn--outline" [routerLink]="['/admin/evaluations', t.id]">{{ 'evaluations.templates.view_results' | translate }}</a>
         }
       </div>
     }
     @case ('error') {
       <div class="tb__message" role="alert">
         <p>{{ 'common.could_not_load' | translate }}</p>
-        <a class="ev__btn ev__btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
+        <a class="af-btn af-btn--outline" routerLink="/admin/evaluations">{{ 'evaluations.back_to_listing' | translate }}</a>
       </div>
     }
     @default {
@@ -112,7 +112,7 @@
           <section class="tb__card" aria-labelledby="tb-questions">
             <div class="tb__card-head">
               <h2 class="tb__card-title" id="tb-questions">{{ 'evaluations.builder.questions' | translate }}</h2>
-              <button type="button" class="ev__btn ev__btn--primary tb__add" (click)="addQuestion()">
+              <button type="button" class="af-btn af-btn--primary tb__add" (click)="addQuestion()">
                 <nas-icon name="plus-circle" [size]="20" />
                 {{ 'evaluations.builder.add_question' | translate }}
               </button>
@@ -128,7 +128,7 @@
                 <li class="tb__q" [formGroupName]="i" [attr.aria-label]="'evaluations.question_n' | translate: { n: n }">
                   <div class="tb__q-head">
                     <span class="tb__q-no" aria-hidden="true">{{ n }}</span>
-                    <button type="button" class="ev__btn ev__btn--outline tb__remove" (click)="removeQuestion(i)"
+                    <button type="button" class="af-btn af-btn--outline tb__remove" (click)="removeQuestion(i)"
                       [attr.aria-label]="'evaluations.builder.remove_n' | translate: { n: n }">
                       <nas-icon name="minus-circle" [size]="20" />
                       {{ 'evaluations.builder.remove' | translate }}

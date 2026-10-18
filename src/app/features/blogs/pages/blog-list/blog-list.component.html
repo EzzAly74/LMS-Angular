@@ -122,7 +122,7 @@
       </div>
       <div class="blog-modal__foot">
         <button type="button" class="blog-modal__btn blog-modal__btn--danger" [disabled]="deleting()" (click)="confirmDelete()">
-          <i class="pi" aria-hidden="true" [ngClass]="deleting() ? 'pi-spin pi-spinner' : 'pi-trash'"></i>
+          <nas-icon [name]="deleting() ? 'spinner-gap' : 'trash'" [size]="16" [class.af-spin]="deleting()" />
           {{ 'blogs.delete_confirm' | translate }}
         </button>
         <button type="button" class="blog-modal__btn blog-modal__btn--keep" [disabled]="deleting()" (click)="cancelDelete()">

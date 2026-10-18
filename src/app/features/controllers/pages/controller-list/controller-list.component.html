@@ -134,17 +134,13 @@
   </form>
 
   <ng-template pTemplate="footer">
-    <button type="button" class="ctrl-btn ctrl-btn--ghost"
+    <button type="button" class="af-btn af-btn--outline"
             [disabled]="saving()" (click)="closeDialog()">
       {{ 'common.cancel' | translate }}
     </button>
-    <button type="button" class="ctrl-btn ctrl-btn--primary"
+    <button type="button" class="af-btn af-btn--primary"
             [disabled]="saving()" (click)="submit()">
-      @if (saving()) {
-        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-      } @else {
-        <i class="pi pi-check-circle" aria-hidden="true"></i>
-      }
+      <nas-icon [name]="saving() ? 'spinner-gap' : (dialogMode() === 'create' ? 'plus-circle' : 'floppy-disk')" [size]="20" [class.af-spin]="saving()" />
       {{ (dialogMode() === 'create' ? 'controllers.create' : 'common.save_changes') | translate }}
     </button>
   </ng-template>

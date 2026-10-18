@@ -40,8 +40,8 @@
   }
 
   <ng-template pTemplate="footer">
-    <button type="button" class="nas-btn nas-btn--ghost" (click)="viewAllOpen.set(false)">{{ 'common.cancel' | translate }}</button>
-    <button type="button" class="nas-btn nas-btn--primary" [disabled]="!viewAllSelected()" (click)="confirmViewAll()">
+    <button type="button" class="af-btn af-btn--outline" (click)="viewAllOpen.set(false)">{{ 'common.cancel' | translate }}</button>
+    <button type="button" class="af-btn af-btn--primary" [disabled]="!viewAllSelected()" (click)="confirmViewAll()">
       <nas-icon name="eye" [size]="20" /> {{ src.keys.viewItem | translate }}
     </button>
   </ng-template>

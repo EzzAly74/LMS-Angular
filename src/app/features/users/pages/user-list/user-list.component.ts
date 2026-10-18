@@ -36,6 +36,7 @@ import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directiv
 import { AuthService } from '../../../../core/services/auth.service';
 
 import { LocalDatePipe } from '../../../../shared/pipes/local-date.pipe';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 /** Assigned Courses rows shown before "+N more" (Figma 715:57123). */
 const PROFILE_COURSES_SHOWN = 3;
 
@@ -86,7 +87,7 @@ export function fullNameError(value: string): string | null {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [NasListStateComponent, LocalDatePipe, ShortNamePipe, NasCanDirective, NasAvatarComponent, RouterLink,
+  imports: [NasIconComponent, NasListStateComponent, LocalDatePipe, ShortNamePipe, NasCanDirective, NasAvatarComponent, RouterLink,
     CommonModule,
     FormsModule,
     DialogModule,

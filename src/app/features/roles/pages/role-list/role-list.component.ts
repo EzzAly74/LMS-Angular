@@ -27,11 +27,12 @@ import type {
 import { ToastService } from '../../../../core/services/toast.service';
 import { NasCanDirective } from '../../../../shared/nas/nas-can/nas-can.directive';
 import { AuthService } from '../../../../core/services/auth.service';
+import { NasIconComponent } from '../../../../shared/nas/nas-icon/nas-icon.component';
 
 @Component({
   selector: 'app-role-list',
   standalone: true,
-  imports: [
+  imports: [NasIconComponent, 
     NasCanDirective,
     CommonModule,
     FormsModule,

@@ -25,11 +25,7 @@
     <button type="button" class="rl-btn rl-btn--danger"
             [disabled]="deleting()"
             (click)="confirmDelete()">
-      @if (deleting()) {
-        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-      } @else {
-        <i class="pi pi-trash" aria-hidden="true"></i>
-      }
+      <nas-icon [name]="deleting() ? 'spinner-gap' : 'trash'" [size]="16" [class.af-spin]="deleting()" />
       {{ 'common.yes_delete' | translate }}
     </button>
   </ng-template>

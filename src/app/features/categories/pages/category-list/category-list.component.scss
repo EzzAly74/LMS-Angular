@@ -359,35 +359,6 @@
 }
 
 /* Footer buttons */
-.cat-btn {
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  font-family: 'Fira Sans', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 120ms, opacity 120ms;
-}
-.cat-btn--ghost {
-  background: #ffffff;
-  color: #0c2427;
-  border-color: #0c2427;
-}
-.cat-btn--ghost:hover:not(:disabled) { background: #f7fafa; }
-.cat-btn--primary {
-  background: #0c2427;
-  color: #fffbf7;
-  border-color: #0c2427;
-  min-width: 160px;
-}
-.cat-btn--primary:hover:not(:disabled) { background: #15363a; }
-.cat-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 // Column widths for the fixed-layout table (shared/styles/_table-fit.scss).
 @include table-fit.columns;
