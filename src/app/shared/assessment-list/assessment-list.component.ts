@@ -33,6 +33,9 @@ import type {
 } from './assessment-list.source';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AiGenerateDialogComponent } from '../ai-questions/ai-generate-dialog.component';
+import { AiQuestionDraftService } from '../ai-questions/ai-question-draft.service';
+import type { AiDraftQuestion } from '../ai-questions/ai-questions.model';
 
 /** Passed / Failed (D-065); no choice is "all". */
 const RESULTS = ['passed', 'failed'] as const;
@@ -94,7 +97,7 @@ const SHARED_KEYS = {
     RouterLink, DialogModule, TranslateModule,
     NasIconComponent, NasPagerComponent, NasFilterDialogComponent,
     NasListToolbarComponent, NasTableCardComponent, NasListStateComponent, NasSkeletonRowComponent,
-    NasDatePipe,
+    NasDatePipe, AiGenerateDialogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './assessment-list.component.html',
@@ -347,6 +350,16 @@ export class AssessmentListComponent implements OnInit {
   readonly canCreate = computed(() => this.auth.canDo(this.section(), 'create'));
   readonly canEdit = computed(() => this.auth.canDo(this.section(), 'edit'));
   readonly canDelete = computed(() => this.auth.canDo(this.section(), 'delete'));
+
+  /* Generate with AI (D-113): the dialog's questions open in the Add form. */
+  private readonly aiDrafts = inject(AiQuestionDraftService);
+  readonly aiOpen = signal(false);
+
+  onAiGenerated(questions: AiDraftQuestion[]): void {
+    const src = this.source();
+    this.aiDrafts.set(src.kind, questions);
+    void this.router.navigate([src.route, 'new']);
+  }
 
   /* ── "Created" table ───────────────────────────────────────────── */
   editItem(row: AssessmentItemRow, event?: Event): void {

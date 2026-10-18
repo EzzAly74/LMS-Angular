@@ -48,7 +48,7 @@
   color: var(--nas-neutral-1000);
 }
 
-.af-actions { display: flex; align-items: center; gap: var(--nas-space-2); }
+.af-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nas-space-2); }
 
 // ── Buttons ───────────────────────────────────────────────────────────────
 .af-btn {
@@ -126,7 +126,7 @@
 
   &--questions { padding-block-start: 15px; }
 
-  &__head { display: flex; align-items: center; justify-content: space-between; gap: var(--nas-space-3); }
+  &__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--nas-space-3); }
 
   &__title {
     margin: 0;

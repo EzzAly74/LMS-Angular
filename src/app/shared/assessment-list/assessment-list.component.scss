@@ -158,3 +158,27 @@
 }
 
 .ql-modal-empty { margin: 0; padding: var(--nas-space-4) var(--nas-space-3); font-size: var(--nas-size-xs); color: var(--nas-neutral-750); }
+
+// "Generate with AI" beside "Add" (D-113): the outlined twin of the primary button.
+.ql-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nas-space-2); }
+
+.ql-ai {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nas-space-2);
+  block-size: 44px;
+  padding: var(--nas-space-2) var(--nas-space-3);
+  border: 1px solid var(--nas-teal-1000);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-neutral-0);
+  color: var(--nas-teal-1000);
+  font: inherit;
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover { background: var(--nas-teal-100); }
+  &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; }
+}

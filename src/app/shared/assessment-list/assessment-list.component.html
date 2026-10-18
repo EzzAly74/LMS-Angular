@@ -56,10 +56,16 @@
       <p class="cl-subtitle">{{ src.keys.subtitle | translate }}</p>
     </div>
     @if (canCreate()) {
-      <a [routerLink]="[src.route, 'new']" class="cl-primary cl-primary--sm">
-        <nas-icon name="plus-circle" [size]="20" />
-        {{ ns + '.create' | translate }}
-      </a>
+      <div class="ql-head-actions">
+        <button type="button" class="ql-ai" (click)="aiOpen.set(true)">
+          <nas-icon name="sparkle" [size]="20" />
+          {{ 'ai_questions.button' | translate }}
+        </button>
+        <a [routerLink]="[src.route, 'new']" class="cl-primary cl-primary--sm">
+          <nas-icon name="plus-circle" [size]="20" />
+          {{ ns + '.create' | translate }}
+        </a>
+      </div>
     }
   </header>
 
@@ -227,3 +233,6 @@
 <!-- Filter: the Dashboard's one filter pattern (All Courses, Figma 2430:135164; D-070) -->
 <nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
   (apply)="onFilter($event)" (search)="onFilterSearch($event)" />
+
+<!-- Generate with AI (D-113): the questions open in the Add form, reviewed and saved there -->
+<app-ai-generate-dialog [target]="source().kind" [(visible)]="aiOpen" (generated)="onAiGenerated($event)" />

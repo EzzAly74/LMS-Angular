@@ -67,8 +67,7 @@ export const ADMIN_LAYOUT_ROUTES: Routes = [
       { path: 'forms',          loadChildren: () => import('../../features/forms/forms.routes').then(m => m.FORMS_ROUTES) },                        // legacy
 
       // ── Analytics & settings ──────────────────────────────────────
-      { path: 'reports',        loadChildren: () => import('../../features/reports/reports.routes').then(m => m.REPORTS_ROUTES),                 data: { viewKey: 'view-reports' } },
-      { path: 'ai-assessments', loadChildren: () => import('../../features/ai-assessments/ai-assessments.routes').then(m => m.AI_ASSESSMENTS_ROUTES), data: { viewKey: 'view-ai-assessments' } },
+      { path: 'reports',        loadChildren: () => import('../../features/reports/reports.routes').then(m => m.REPORTS_ROUTES),                 data: { viewKey: 'view-reports' } },
       { path: 'audit-log',      loadChildren: () => import('../../features/audit-log/audit-log.routes').then(m => m.AUDIT_LOG_ROUTES),           data: { viewKey: 'view-audit-log' } },
       {
         path: 'settings',

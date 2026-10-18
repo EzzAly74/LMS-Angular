@@ -1,0 +1,308 @@
+<!-- "Generate with AI" (backend D-113). No Figma frame exists: built from the Dashboard dialog and the
+     Add / Edit Quiz form primitives (custom checks, segmented choices, steppers, nas-btn). -->
+<p-dialog [visible]="visible()" (visibleChange)="visible.set($event)" [modal]="true" [draggable]="false" [resizable]="false"
+  [closable]="!starting()" [closeOnEscape]="!starting()" styleClass="nas-dialog aig-dialog"
+  [style]="{ width: '760px', maxWidth: 'calc(100vw - 24px)' }">
+
+  <p-header>
+    <span class="aig-head">
+      <span class="aig-head__icon" aria-hidden="true"><nas-icon name="sparkle" [size]="22" /></span>
+      <div class="aig-head__text">
+        <h2 class="aig-head__title">{{ (target() === 'quiz' ? 'ai_questions.title_quiz' : 'ai_questions.title_assignment') | translate }}</h2>
+        <p class="aig-head__sub">{{ 'ai_questions.subtitle' | translate }}</p>
+      </div>
+    </span>
+  </p-header>
+
+  @switch (phase()) {
+
+    <!-- ── Running ─────────────────────────────────────────────── -->
+    @case ('running') {
+      <div class="aig-running" role="status">
+        <span class="aig-orb" aria-hidden="true"><nas-icon name="sparkle" [size]="30" /></span>
+        <p class="aig-running__title">{{ 'ai_questions.running_title' | translate: { n: total() } }}</p>
+        <p class="aig-running__time" aria-live="off"><nas-icon name="clock" [size]="16" /> <span dir="ltr">{{ elapsedLabel() }}</span></p>
+        <span class="aig-bar" aria-hidden="true"><span></span></span>
+        <p class="aig-running__hint">{{ 'ai_questions.running_hint' | translate }}</p>
+      </div>
+    }
+
+    <!-- ── Review ──────────────────────────────────────────────── -->
+    @case ('review') {
+      <div class="aig-review">
+        <div class="aig-review__bar">
+          <div class="aig-review__summary">
+            <strong>{{ 'ai_questions.review_ready' | translate: { n: results().length } }}</strong>
+            <span class="aig-review__chips">
+              @for (c of resultCounts(); track c.type) {
+                <span class="aig-chip-static">{{ 'ai_questions.types.' + c.type | translate }} · {{ c.n }}</span>
+              }
+            </span>
+          </div>
+          <label class="aig-check">
+            <input type="checkbox" class="aig-check__input" [checked]="selectedCount() === results().length"
+              [indeterminate]="selectedCount() > 0 && selectedCount() < results().length" (change)="toggleAll()" />
+            <span class="aig-check__box" aria-hidden="true"><img src="assets/icons/figma/checkbox-check-15.svg" width="12" height="12" alt="" /></span>
+            {{ 'ai_questions.select_all' | translate }}
+          </label>
+        </div>
+
+        <ol class="aig-results">
+          @for (q of results(); track $index; let i = $index) {
+            <li class="aig-result" [class.aig-result--off]="!selected().has(i)">
+              <label class="aig-check aig-result__pick">
+                <input type="checkbox" class="aig-check__input" [checked]="selected().has(i)" (change)="toggle(i)"
+                  [attr.aria-label]="'ai_questions.include_n' | translate: { n: i + 1 }" />
+                <span class="aig-check__box" aria-hidden="true"><img src="assets/icons/figma/checkbox-check-15.svg" width="12" height="12" alt="" /></span>
+              </label>
+              <div class="aig-result__body">
+                <div class="aig-result__meta">
+                  <span class="aig-result__num">{{ i + 1 }}</span>
+                  <span class="aig-type"><nas-icon [name]="typeIcons[q.type]" [size]="14" /> {{ 'ai_questions.types.' + q.type | translate }}</span>
+                  <span class="aig-result__score">{{ 'ai_questions.points' | translate: { n: q.score } }}</span>
+                </div>
+                <p class="aig-result__q">{{ text(q) }}</p>
+                <p class="aig-result__alt" [attr.dir]="locale() === 'ar' ? 'ltr' : 'rtl'" [attr.lang]="locale() === 'ar' ? 'en' : 'ar'">{{ otherText(q) }}</p>
+
+                @if (q.type === 'mcq') {
+                  <ul class="aig-opts">
+                    @for (o of options(q); track $index) {
+                      <li class="aig-opt" [class.aig-opt--correct]="isCorrect(q, o)">
+                        @if (isCorrect(q, o)) {
+                          <nas-icon name="check-circle" [size]="16" />
+                          <span class="aig-sr-only">{{ 'ai_questions.correct' | translate }}</span>
+                        } @else { <span class="aig-opt__dot" aria-hidden="true"></span> }
+                        {{ o }}
+                      </li>
+                    }
+                  </ul>
+                } @else if (q.type === 'reorder') {
+                  <ol class="aig-opts aig-opts--ordered">
+                    @for (o of options(q); track $index) { <li class="aig-opt">{{ o }}</li> }
+                  </ol>
+                } @else if (q.type === 'yes_no') {
+                  <p class="aig-answer"><nas-icon name="check-circle" [size]="16" /> {{ answer(q) }}</p>
+                }
+                @if (explanation(q); as ex) { <p class="aig-result__why">{{ ex }}</p> }
+              </div>
+            </li>
+          }
+        </ol>
+      </div>
+    }
+
+    <!-- ── Failed ──────────────────────────────────────────────── -->
+    @case ('failed') {
+      <div class="aig-failed" role="alert">
+        <span class="aig-failed__icon" aria-hidden="true"><nas-icon name="warning" [size]="26" /></span>
+        <p class="aig-failed__title">{{ 'ai_questions.failed_title' | translate }}</p>
+        <p class="aig-failed__msg">{{ serverError() }}</p>
+      </div>
+    }
+
+    <!-- ── Settings ────────────────────────────────────────────── -->
+    @default {
+      <form class="aig" [formGroup]="form" (ngSubmit)="generate()" novalidate id="aig-form">
+        @if (usage(); as u) {
+          @if (!u.configured) {
+            <p class="aig-notice" role="status"><nas-icon name="info" [size]="20" /><span>{{ 'ai_questions.err_not_configured' | translate }}</span></p>
+          }
+        }
+
+        <!-- 1. Course material -->
+        <section class="aig-section" aria-labelledby="aig-s1">
+          <h3 class="aig-section__title" id="aig-s1"><span class="aig-step">1</span>{{ 'ai_questions.sources' | translate }}</h3>
+
+          <div class="aig-tabs" role="tablist" [attr.aria-label]="'ai_questions.sources' | translate">
+            <button type="button" role="tab" class="aig-tab" id="aig-tab-upload" [class.aig-tab--on]="tab() === 'upload'"
+              [attr.aria-selected]="tab() === 'upload'" aria-controls="aig-panel-upload" (click)="tab.set('upload')">
+              <nas-icon name="upload-simple" [size]="16" /> {{ 'ai_questions.tab_upload' | translate }}
+              @if (files().length) { <span class="aig-tab__badge">{{ files().length }}</span> }
+            </button>
+            <button type="button" role="tab" class="aig-tab" id="aig-tab-paste" [class.aig-tab--on]="tab() === 'paste'"
+              [attr.aria-selected]="tab() === 'paste'" aria-controls="aig-panel-paste" (click)="tab.set('paste')">
+              <nas-icon name="file-text" [size]="16" /> {{ 'ai_questions.tab_paste' | translate }}
+              @if (textLength()) { <span class="aig-tab__badge"><nas-icon name="check" [size]="12" /></span> }
+            </button>
+          </div>
+
+          <div role="tabpanel" id="aig-panel-upload" aria-labelledby="aig-tab-upload" [hidden]="tab() !== 'upload'">
+            <label class="aig-drop" [class.aig-drop--over]="dragOver()"
+              (dragover)="$event.preventDefault(); dragOver.set(true)" (dragleave)="dragOver.set(false)" (drop)="onDrop($event)">
+              <input #pick type="file" class="aig-sr-only" multiple [accept]="accept" (change)="addFiles(pick.files, pick)" />
+              <span class="aig-drop__icon" aria-hidden="true"><nas-icon name="upload-simple" [size]="22" /></span>
+              <span class="aig-drop__title">{{ 'ai_questions.drop' | translate }} <span class="aig-drop__link">{{ 'ai_questions.browse' | translate }}</span></span>
+              <span class="aig-drop__hint">{{ 'ai_questions.formats' | translate: { max: limits.files, mb: limits.fileMb } }}</span>
+            </label>
+            @if (fileError()) { <p class="aig-err" role="alert">{{ fileError() }}</p> }
+            @if (files().length) {
+              <ul class="aig-files">
+                @for (f of files(); track f.name + f.size; let i = $index) {
+                  <li class="aig-file">
+                    <span class="aig-file__icon" aria-hidden="true"><nas-icon [name]="fileIcon(f.name)" [size]="18" /></span>
+                    <span class="aig-file__name"><bdi>{{ f.name }}</bdi></span>
+                    <span class="aig-file__size" dir="ltr">{{ fileSize(f.size) }}</span>
+                    <button type="button" class="aig-icon" (click)="removeFile(i)" [attr.aria-label]="'ai_questions.remove_file' | translate: { name: f.name }">
+                      <nas-icon name="x" [size]="16" />
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          <div role="tabpanel" id="aig-panel-paste" aria-labelledby="aig-tab-paste" [hidden]="tab() !== 'paste'">
+            <label class="aig-sr-only" for="aig-text">{{ 'ai_questions.tab_paste' | translate }}</label>
+            <textarea id="aig-text" class="aig-textarea aig-text" formControlName="text" rows="6"
+              [placeholder]="'ai_questions.paste_placeholder' | translate" aria-describedby="aig-text-count"></textarea>
+            <p class="aig-counter" id="aig-text-count" [class.aig-counter--ok]="textLength() >= limits.pastedMin">
+              {{ 'ai_questions.paste_count' | translate: { n: textLength(), min: limits.pastedMin } }}
+            </p>
+          </div>
+        </section>
+
+        <!-- 2. Questions -->
+        <section class="aig-section" aria-labelledby="aig-s2">
+          <div class="aig-section__head">
+            <h3 class="aig-section__title" id="aig-s2"><span class="aig-step">2</span>{{ 'ai_questions.counts' | translate }}</h3>
+            <div class="aig-presets" role="group" [attr.aria-label]="'ai_questions.presets' | translate">
+              @for (p of presets; track p) {
+                <button type="button" class="aig-preset" [class.aig-preset--on]="activePreset() === p" [attr.aria-pressed]="activePreset() === p"
+                  (click)="applyPreset(p)">{{ 'ai_questions.preset.' + p | translate }}</button>
+              }
+            </div>
+          </div>
+          <div class="aig-types" formGroupName="counts">
+            @for (type of types; track type) {
+              <div class="aig-type-card" [class.aig-type-card--on]="counts()[type] > 0">
+                <span class="aig-type-card__icon" aria-hidden="true"><nas-icon [name]="typeIcons[type]" [size]="18" /></span>
+                <label class="aig-type-card__text" [for]="'aig-count-' + type">
+                  <strong>{{ 'ai_questions.types.' + type | translate }}</strong>
+                  <small>{{ 'ai_questions.type_hint.' + type | translate }}</small>
+                </label>
+                <div class="aig-stepper">
+                  <button type="button" class="aig-stepper__btn" [disabled]="counts()[type] <= 0"
+                    [attr.aria-label]="'ai_questions.fewer' | translate: { type: ('ai_questions.types.' + type | translate) }" (click)="step(type, -1)">−</button>
+                  <input [id]="'aig-count-' + type" type="number" class="aig-stepper__input" min="0" [max]="limits.perType" inputmode="numeric" [formControlName]="type" />
+                  <button type="button" class="aig-stepper__btn" [disabled]="counts()[type] >= limits.perType"
+                    [attr.aria-label]="'ai_questions.more' | translate: { type: ('ai_questions.types.' + type | translate) }" (click)="step(type, 1)">+</button>
+                </div>
+              </div>
+            }
+          </div>
+          @if (target() === 'assignment') { <p class="aig-note">{{ 'ai_questions.file_questions_hint' | translate }}</p> }
+        </section>
+
+        <!-- 3. Fine-tune -->
+        <section class="aig-section" aria-labelledby="aig-s3">
+          <h3 class="aig-section__title" id="aig-s3"><span class="aig-step">3</span>{{ 'ai_questions.options' | translate }}</h3>
+          <div class="aig-grid">
+            <fieldset class="aig-fieldset">
+              <legend class="aig-label">{{ 'ai_questions.difficulty' | translate }}</legend>
+              <div class="aig-segmented">
+                @for (d of difficulties; track d) {
+                  <label class="aig-segment">
+                    <input type="radio" class="aig-segment__input" formControlName="difficulty" [value]="d" />
+                    <span>{{ 'ai_questions.difficulties.' + d | translate }}</span>
+                  </label>
+                }
+              </div>
+            </fieldset>
+            <div class="aig-fieldset">
+              <label class="aig-label" for="aig-score">{{ 'ai_questions.score' | translate }}</label>
+              <div class="aig-stepper">
+                <button type="button" class="aig-stepper__btn" [attr.aria-label]="'ai_questions.score_less' | translate" (click)="stepScore(-1)">−</button>
+                <input id="aig-score" type="number" class="aig-stepper__input" formControlName="score" min="0" max="100" inputmode="numeric" />
+                <button type="button" class="aig-stepper__btn" [attr.aria-label]="'ai_questions.score_more' | translate" (click)="stepScore(1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <details class="aig-more" [open]="bloomCount() > 0 || form.controls.objectives.value.length > 0">
+            <summary class="aig-more__summary">
+              <nas-icon name="caret-down" [size]="16" class="aig-more__caret" />
+              {{ 'ai_questions.more_options' | translate }}
+              @if (bloomCount()) { <span class="aig-tab__badge">{{ bloomCount() }}</span> }
+            </summary>
+            <fieldset class="aig-fieldset" formGroupName="bloom">
+              <legend class="aig-label">{{ 'ai_questions.bloom' | translate }}</legend>
+              <div class="aig-blooms">
+                @for (b of blooms; track b) {
+                  <label class="aig-check aig-check--tile">
+                    <input type="checkbox" class="aig-check__input" [formControlName]="b" />
+                    <span class="aig-check__box" aria-hidden="true"><img src="assets/icons/figma/checkbox-check-15.svg" width="12" height="12" alt="" /></span>
+                    {{ 'ai_questions.blooms.' + b | translate }}
+                  </label>
+                }
+              </div>
+            </fieldset>
+            <div class="aig-fieldset">
+              <label class="aig-label" for="aig-objectives">{{ 'ai_questions.objectives' | translate }}</label>
+              <textarea id="aig-objectives" class="aig-textarea" formControlName="objectives" rows="2" maxlength="2000"
+                [placeholder]="'ai_questions.objectives_placeholder' | translate"></textarea>
+            </div>
+          </details>
+        </section>
+
+        @if (serverError()) {
+          <p class="aig-error" role="alert"><nas-icon name="warning" [size]="18" /> {{ serverError() }}</p>
+        } @else if (submitted() && problem()) {
+          <p class="aig-error" role="alert"><nas-icon name="warning" [size]="18" /> {{ problem()! | translate: { max: limits.total, min: limits.pastedMin } }}</p>
+        }
+      </form>
+    }
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="aig-foot">
+      @switch (phase()) {
+        @case ('running') {
+          <span class="aig-foot__info">{{ 'ai_questions.running_foot' | translate }}</span>
+          <div class="aig-foot__actions">
+            <button type="button" class="nas-btn nas-btn--ghost" (click)="close()">{{ 'ai_questions.hide' | translate }}</button>
+          </div>
+        }
+        @case ('review') {
+          <button type="button" class="nas-btn nas-btn--ghost aig-foot__regen" [disabled]="starting()" (click)="regenerate()">
+            <nas-icon [name]="starting() ? 'spinner-gap' : 'arrow-clockwise'" [size]="18" [class.aig-spin]="starting()" /> {{ 'ai_questions.regenerate' | translate }}
+          </button>
+          <div class="aig-foot__actions">
+            <button type="button" class="nas-btn nas-btn--ghost" (click)="close()">{{ 'common.cancel' | translate }}</button>
+            <button type="button" class="nas-btn nas-btn--primary" [disabled]="!selectedCount()" (click)="addSelected()">
+              <nas-icon name="plus-circle" [size]="18" /> {{ 'ai_questions.add_n' | translate: { n: selectedCount() } }}
+            </button>
+          </div>
+        }
+        @case ('failed') {
+          <span class="aig-foot__info"></span>
+          <div class="aig-foot__actions">
+            <button type="button" class="nas-btn nas-btn--ghost" (click)="backToForm()">{{ 'ai_questions.back_to_settings' | translate }}</button>
+            <button type="button" class="nas-btn nas-btn--primary" (click)="generate()">
+              <nas-icon name="arrow-clockwise" [size]="18" /> {{ 'ai_questions.try_again' | translate }}
+            </button>
+          </div>
+        }
+        @default {
+          <div class="aig-foot__info">
+            <span class="aig-foot__summary">{{ 'ai_questions.summary' | translate: { n: total() } }}</span>
+            @if (usage(); as u) {
+              @if (u.configured) {
+                <span class="aig-meter" [attr.aria-label]="'ai_questions.usage' | translate: { used: u.used, limit: u.limit }">
+                  <span class="aig-meter__track" aria-hidden="true"><span class="aig-meter__fill" [style.inline-size.%]="usagePercent()"></span></span>
+                  <span class="aig-meter__text" aria-hidden="true">{{ 'ai_questions.usage' | translate: { used: u.used, limit: u.limit } }}</span>
+                </span>
+              }
+            }
+          </div>
+          <div class="aig-foot__actions">
+            <button type="button" class="nas-btn nas-btn--ghost" [disabled]="starting()" (click)="close()">{{ 'common.cancel' | translate }}</button>
+            <button type="submit" form="aig-form" class="nas-btn nas-btn--primary" [disabled]="starting() || usage()?.configured === false">
+              <nas-icon [name]="starting() ? 'spinner-gap' : 'sparkle'" [size]="18" [class.aig-spin]="starting()" />
+              {{ 'ai_questions.generate' | translate }}
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </ng-template>
+</p-dialog>

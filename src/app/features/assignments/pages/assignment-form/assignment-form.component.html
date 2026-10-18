@@ -163,10 +163,16 @@
       <section class="af-card af-card--questions" aria-labelledby="af-questions">
         <div class="af-card__head">
           <h2 class="af-card__title" id="af-questions">{{ 'assignments.form_questions' | translate }}</h2>
-          <button type="button" class="af-btn af-btn--primary af-btn--sm" (click)="addQuestion()">
-            <nas-icon name="plus-circle" [size]="20" />
-            {{ 'assignments.form_add_question' | translate }}
-          </button>
+          <div class="af-actions">
+            <button type="button" class="af-btn af-btn--outline af-btn--sm" (click)="aiOpen.set(true)">
+              <nas-icon name="sparkle" [size]="20" />
+              {{ 'ai_questions.button' | translate }}
+            </button>
+            <button type="button" class="af-btn af-btn--primary af-btn--sm" (click)="addQuestion()">
+              <nas-icon name="plus-circle" [size]="20" />
+              {{ 'assignments.form_add_question' | translate }}
+            </button>
+          </div>
         </div>
         <hr class="af-card__rule" />
 
@@ -391,3 +397,7 @@
 
   }
 </div>
+
+<!-- Generate with AI (D-113): questions are added below for review and saved with the assignment -->
+<app-ai-generate-dialog target="assignment" [courseId]="form.controls.course_id.value" [assessmentType]="form.controls.type.value"
+  [(visible)]="aiOpen" (generated)="addAiQuestions($event)" />

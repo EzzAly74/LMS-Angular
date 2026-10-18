@@ -54,6 +54,9 @@ import type {
   CohortLite,
 } from '../../models/quiz.types';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AiGenerateDialogComponent } from '../../../../shared/ai-questions/ai-generate-dialog.component';
+import { AiQuestionDraftService } from '../../../../shared/ai-questions/ai-question-draft.service';
+import type { AiDraftQuestion } from '../../../../shared/ai-questions/ai-questions.model';
 
 interface CourseOpt { id: number; title: string; }
 
@@ -121,7 +124,7 @@ interface QuestionGroup {
     SkeletonModule,
     TranslateModule,
     NasIconComponent, NasOrderEditorComponent,
-    NasDatepickerComponent,
+    NasDatepickerComponent, AiGenerateDialogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './quiz-form.component.html',
@@ -231,7 +234,10 @@ export class QuizFormComponent implements OnInit, OnDestroy {
         if (id) {
           this.fetchQuiz(id);
         } else {
-          this.addQuestion();
+          // Opened from "Generate with AI" on the Quizzes page (D-113): start with those questions.
+          const drafted = this.aiDrafts.take('quiz');
+          if (drafted.length) this.addAiQuestions(drafted);
+          else this.addQuestion();
           this.loading.set(false);
         }
       },
@@ -528,6 +534,27 @@ export class QuizFormComponent implements OnInit, OnDestroy {
     }
     this.totalScore.set(total);
     this.questionCount.set(qs.length);
+  }
+
+  /* ── Generate with AI (D-113) ───────────────────────────────── */
+
+  private readonly aiDrafts = inject(AiQuestionDraftService);
+  readonly aiOpen = signal(false);
+
+  /**
+   * Add generated questions to the form for review; they are saved with the
+   * quiz, through the same rules as typed ones. An untouched empty starter
+   * question is replaced rather than left blank above them.
+   */
+  addAiQuestions(questions: readonly AiDraftQuestion[]): void {
+    if (this.questions.length === 1) {
+      const only = this.questions.at(0).getRawValue();
+      if (!only.id && !only.question_en.trim() && !only.question_ar.trim() && !filled(only.options_en).length && !filled(only.options_ar).length) {
+        this.questions.removeAt(0);
+      }
+    }
+    for (const q of questions) this.questions.push(this.buildQuestionGroup(q));
+    this.questions.markAsDirty();
   }
 
   private buildQuestionGroup(q: Partial<QuizQuestion>): FormGroup<QuestionGroup> {

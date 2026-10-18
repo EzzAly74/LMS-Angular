@@ -1095,3 +1095,28 @@ html[dir='rtl'] {
     padding-left: 1.75rem;
   }
 }
+
+/* ── "Generate with AI" dialog chrome (D-113) ───────────────────────────
+   Header and footer bars of .aig-dialog; the footer's buttons are laid out
+   by the component (.aig-foot), so PrimeNG's default button margins go. */
+.p-dialog.aig-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+
+  .p-dialog-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--nas-color-border);
+  }
+  .p-dialog-content {
+    padding: 20px;
+  }
+  .p-dialog-footer {
+    display: flex;
+    padding: 14px 20px;
+    border-top: 1px solid var(--nas-color-border);
+    background: var(--nas-neutral-50);
+    margin: 0;
+
+    button { margin: 0; }
+  }
+}

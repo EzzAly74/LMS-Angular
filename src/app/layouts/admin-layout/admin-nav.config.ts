@@ -47,8 +47,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
           { label: 'nav.external_training', route: '/admin/external-training', icon: '', viewKey: 'view-external-training' },
         ],
       },
-      { label: 'nav.blogs', route: '/admin/blogs', icon: `${NAV_ICONS}/icon-resources.svg`, viewKey: 'view-resources' },
-      { label: 'nav.ai_assessments', route: '/admin/ai-assessments', icon: `${NAV_ICONS}/icon-ai-assessments.svg`, viewKey: 'view-ai-assessments' },
+      { label: 'nav.blogs', route: '/admin/blogs', icon: `${NAV_ICONS}/icon-resources.svg`, viewKey: 'view-resources' },
     ],
   },
   {
