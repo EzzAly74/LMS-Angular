@@ -140,6 +140,37 @@ test.describe('behaviour', () => {
     expect([exp.get('format'), exp.getAll('qualification_ids[]')]).toEqual(['csv', ['31']]);
   });
 
+  test('a date filter applies and the page stays responsive', async ({ page }) => {
+    // Regression: setting any date froze the page (a fresh Date per change-detection pass kept ngModel re-writing).
+    await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
+    const calls = await mockReports(page);
+    await page.goto('/admin/reports/external-training');
+    await expect(page.locator('.rv-table tbody tr')).toHaveCount(3);
+
+    const today = await page.evaluate(() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    });
+    const responsive = () => Promise.race([
+      page.evaluate(() => 'ok'),
+      new Promise<string>(r => setTimeout(() => r('frozen'), 3_000)),
+    ]);
+
+    await page.locator('#rv-training-from').click();
+    await page.locator('.nasdp__panel').getByRole('button', { name: 'Today' }).click();
+    await expect.poll(() => calls.pages.at(-1)!.url()).toContain(`training_from=${today}`);
+    expect(await responsive()).toBe('ok');
+    await expect(page.locator('#rv-training-from')).not.toHaveValue('');
+    await expect(page.locator('.rv-filters__count')).toHaveText('1 active');
+
+    // The other end of the range, bounded by the first: still responsive.
+    await page.locator('#rv-training-to').click();
+    await page.locator('.nasdp__panel').getByRole('button', { name: 'Today' }).click();
+    await expect.poll(() => calls.pages.at(-1)!.url()).toContain(`training_to=${today}`);
+    expect(await responsive()).toBe('ok');
+    await expect(page.locator('.rv-filters__count')).toHaveText('1 active'); // a range is one filter
+  });
+
   test('no rows: the Figma empty state replaces the table', async ({ page }) => {
     await page.addInitScript(() => window.localStorage.setItem('2b_locale', 'en'));
     await mockReports(page, { empty: true });

@@ -41,6 +41,7 @@ import {
   type ReportCell, type ReportDefinition, type ReportFilter, type ReportFilterOption, type ReportFilterParams,
   type ReportPreviewColumn, type ReportRow, type ReportTone,
 } from '../../models/report.model';
+import { localDateOf } from '../../../../core/utils/local-date';
 
 interface Query extends PagedQuery {
   readonly filters: ReportFilterParams;
@@ -156,10 +157,9 @@ export class ReportViewComponent {
     return this.list.query().filters[key] ?? null;
   }
 
+  /** Stable per day (see localDateOf): a fresh Date here froze the page. */
   dateValue(key: string): Date | null {
-    const v = this.value(key);
-    const m = typeof v === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(v) : null;
-    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+    return localDateOf(this.value(key));
   }
 
   optionsOf(f: ReportFilter): ReportFilterOption[] {

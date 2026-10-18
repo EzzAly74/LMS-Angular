@@ -20,6 +20,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { PrimeTemplate } from 'primeng/api';
 import { NasIconComponent } from '../nas-icon/nas-icon.component';
 import { NasDatepickerComponent } from '../nas-datepicker/nas-datepicker.component';
+import { localDateOf } from '../../../core/utils/local-date';
 
 export type NasFilterValue = number | string;
 
@@ -150,12 +151,9 @@ export class NasFilterDialogComponent {
   }
 
   /** A date field's value as a Date (local midnight), or null. */
+  /** Stable per day (see localDateOf): a fresh Date here froze the page. */
   protected dateValue(key: string | undefined): Date | null {
-    if (!key) return null;
-    const v = this.working()[key];
-    if (typeof v !== 'string') return null;
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
-    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+    return key ? localDateOf(this.working()[key]) : null;
   }
 
   /** Store a picked date as a local `YYYY-MM-DD` (not toISOString, which shifts by the UTC offset). */
