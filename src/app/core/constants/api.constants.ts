@@ -77,6 +77,8 @@ export const API = {
   ADMIN_AUDIT_LOG:  `${API_BASE}/admin/audit-log`,
   REPORTS:        `${API_BASE}/reports`,
   ADMIN_REPORTS:  `${API_BASE}/admin/reports`,
+  /** AI Assessment builder (D-113). */
+  ADMIN_AI_ASSESSMENTS: `${API_BASE}/admin/ai-assessments`,
   ATTENDANCE:     `${API_BASE}/attendance`,
   EXAMS:          `${API_BASE}/exams`,
   ENUMS:          `${API_BASE}/enums`,

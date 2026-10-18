@@ -1,0 +1,26 @@
+// Shared pieces of the AI Assessment screens (D-113), built on the Dashboard tokens.
+
+/** An informational banner: amber for "needs attention", never colour alone (icon + text). */
+@mixin notice($tone: amber) {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nas-space-2);
+  margin: 0;
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border: 1px solid var(--nas-status-#{$tone}-500);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-status-#{$tone}-50);
+  color: var(--nas-neutral-1000);
+  font-size: var(--nas-size-xs);
+  line-height: 1.5;
+
+  nas-icon { flex-shrink: 0; margin-block-start: 1px; color: var(--nas-status-#{$tone}-800, var(--nas-status-#{$tone}-500)); }
+}
+
+@mixin spin {
+  animation: ai-spin 1s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+@keyframes ai-spin { to { transform: rotate(360deg); } }

@@ -1,0 +1,120 @@
+<!-- AI Assessment library (D-113). No Figma frame exists for this module: built from the
+     Dashboard list pattern (Courses List reference, shared nas-* components). -->
+<div class="nas-page-container cl-page">
+
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ 'ai_assessments.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'ai_assessments.subtitle' | translate }}</p>
+    </div>
+    <div class="aal-head-actions">
+      @if (usage(); as u) {
+        @if (u.configured) {
+          <span class="aal-usage" [class.aal-usage--out]="usageLeft() === 0">
+            <nas-icon name="sparkle" [size]="16" />
+            {{ 'ai_assessments.usage' | translate: { used: u.used, limit: u.limit } }}
+          </span>
+        }
+      }
+      <a *nasCan="'create-ai-assessments'" routerLink="/admin/ai-assessments/new" class="cl-primary">
+        <nas-icon name="plus-circle" [size]="20" />
+        <span>{{ 'ai_assessments.new' | translate }}</span>
+      </a>
+    </div>
+  </header>
+
+  @if (usage(); as u) {
+    @if (!u.configured) {
+      <p class="aal-notice" role="status">
+        <nas-icon name="info" [size]="20" />
+        <span>{{ 'ai_assessments.not_configured_notice' | translate }}</span>
+      </p>
+    }
+  }
+
+  <nas-list-toolbar [search]="list.query().search" [filterCount]="activeFilters()"
+    [label]="'ai_assessments.search_label' | translate" [placeholder]="'ai_assessments.search_placeholder' | translate"
+    (searchChange)="list.search($event)" (filter)="filterOpen.set(true)" />
+
+  <nas-table-card [label]="'ai_assessments.title' | translate" [busy]="list.state() === 'loading'">
+    <table class="cl-table cl-table--fixed aal-table">
+      <thead>
+        <tr>
+          <th scope="col" class="aal-w-title">{{ 'ai_assessments.col_assessment' | translate }}</th>
+          <th scope="col" class="aal-w-type">{{ 'ai_assessments.col_type' | translate }}</th>
+          <th scope="col" class="aal-w-lang">{{ 'ai_assessments.col_language' | translate }}</th>
+          <th scope="col" class="cl-center aal-w-num">{{ 'ai_assessments.col_questions' | translate }}</th>
+          <th scope="col" class="aal-w-course">{{ (showAuthor() ? 'ai_assessments.col_author' : 'ai_assessments.col_course') | translate }}</th>
+          <th scope="col" class="aal-w-status">{{ 'ai_assessments.col_status' | translate }}</th>
+          <th scope="col" class="aal-w-actions"><span class="cl-sr-only">{{ 'common.actions' | translate }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @switch (list.state()) {
+          @case ('loading') {
+            @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells" [row]="s"></tr> }
+          }
+          @case ('error') {
+            <tr><td colspan="7">
+              <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+            </td></tr>
+          }
+          @default {
+            @for (row of list.items(); track row.id) {
+              <tr class="cl-row" [class.aal-row--busy]="busyRow() === row.id" (click)="open(row)">
+                <td>
+                  <span class="aal-title">
+                    <a class="aal-title__link" [routerLink]="['/admin/ai-assessments', row.id]" [attr.title]="row.title"
+                      (click)="$event.stopPropagation()"><bdi>{{ row.title }}</bdi></a>
+                    <span class="aal-title__meta">
+                      @if (row.version > 1) {
+                        <span class="aal-version">{{ 'ai_assessments.version_n' | translate: { n: row.version } }}</span>
+                      }
+                      @if (row.updated_at) {
+                        <span>{{ 'ai_assessments.updated' | translate }} {{ row.updated_at | nasDate: locale() }}</span>
+                      }
+                    </span>
+                  </span>
+                </td>
+                <td><nas-status-badge [tone]="typeTone(row.type)">{{ 'ai_assessments.types.' + row.type | translate }}</nas-status-badge></td>
+                <td class="aal-strong">{{ 'ai_assessments.languages.' + row.content_language | translate }}</td>
+                <td class="cl-center aal-strong">
+                  <span [attr.aria-label]="'ai_assessments.approved_of' | translate: { approved: row.approved_count, total: row.questions_count }">
+                    <span dir="ltr">{{ row.approved_count }}/{{ row.questions_count }}</span>
+                  </span>
+                </td>
+                @if (showAuthor()) {
+                  <td class="aal-strong" [attr.title]="row.author?.name ?? null"><bdi>{{ row.author?.name ?? '—' }}</bdi></td>
+                } @else {
+                  <td class="aal-strong" [attr.title]="row.course?.title ?? null"><bdi>{{ row.course?.title ?? '—' }}</bdi></td>
+                }
+                <td><nas-status-badge [tone]="statusTone(row.status)" [dot]="true">{{ 'ai_assessments.statuses.' + row.status | translate }}</nas-status-badge></td>
+                <td class="cl-end">
+                  <button type="button" class="cl-more" aria-haspopup="menu" [disabled]="busyRow() === row.id"
+                    [attr.aria-label]="'common.actions_for' | translate: { name: row.title }"
+                    (click)="$event.stopPropagation(); rowMenu.open($event, row)">
+                    <nas-icon [name]="busyRow() === row.id ? 'spinner-gap' : 'dots-three'" [size]="16" [class.aal-spin]="busyRow() === row.id" />
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7">
+                <nas-list-state
+                  [title]="hasQuery() ? '' : ('ai_assessments.empty_title' | translate)"
+                  [message]="hasQuery() ? '' : ('ai_assessments.empty_message' | translate)" />
+              </td></tr>
+            }
+          }
+        }
+      </tbody>
+    </table>
+    @if (list.pageable()) {
+      <nas-pager nasTablePager [page]="list.query().page" [total]="list.total()" [perPage]="list.query().perPage"
+        [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
+    }
+  </nas-table-card>
+</div>
+
+<nas-row-menu #rowMenu [actions]="rowActions" (picked)="onRowAction($event)" />
+
+<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()" (apply)="onFilter($event)" />

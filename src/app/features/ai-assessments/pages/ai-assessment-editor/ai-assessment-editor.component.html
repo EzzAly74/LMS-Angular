@@ -1,0 +1,534 @@
+<!-- AI Assessment wizard (D-113, spec §2-3). No Figma frame exists: built from the Add / Edit Quiz
+     form (Figma 1982:41913) primitives so it reads as part of the same Dashboard. -->
+@let a = assessment();
+
+<div class="nas-page-container aae">
+
+  <div class="af-top">
+    <nav class="af-crumbs" [attr.aria-label]="'ai_assessments.breadcrumb' | translate">
+      <a routerLink="/admin/ai-assessments" class="af-crumbs__link">
+        <nas-icon name="sparkle" [size]="18" />
+        {{ 'ai_assessments.title' | translate }}
+      </a>
+      <img class="af-crumbs__sep aae-flip" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+      <span class="af-crumbs__current" aria-current="page"><bdi>{{ a?.title || ('ai_assessments.new' | translate) }}</bdi></span>
+    </nav>
+
+    <div class="af-head">
+      <div class="aae-head-text">
+        <h1 class="af-title"><bdi>{{ a?.title || ('ai_assessments.new' | translate) }}</bdi></h1>
+        @if (a) {
+          <div class="aae-head-meta">
+            <nas-status-badge [tone]="statusTone()" [dot]="true">{{ 'ai_assessments.statuses.' + a.status | translate }}</nas-status-badge>
+            <span>{{ 'ai_assessments.types.' + a.type | translate }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ 'ai_assessments.languages.' + a.content_language | translate }}</span>
+            @if (a.version > 1) {
+              <span aria-hidden="true">·</span>
+              <span>{{ 'ai_assessments.version_n' | translate: { n: a.version } }}</span>
+            }
+          </div>
+        }
+      </div>
+      @if (a && a.questions.length && !generating()) {
+        <div class="af-actions">
+          <button type="button" class="af-btn af-btn--primary" (click)="openExport()">
+            <nas-icon name="download-simple" [size]="20" /> {{ 'ai_assessments.export' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  @switch (loadState()) {
+    @case ('loading') {
+      <div class="af-card af-loading" aria-busy="true">
+        <span class="aae-skel"></span><span class="aae-skel aae-skel--short"></span><span class="aae-skel"></span>
+      </div>
+    }
+    @case ('error') {
+      <div class="af-card">
+        <nas-list-state kind="error" [message]="'ai_assessments.load_error' | translate" (retry)="a ? load(a.id) : null" />
+        <a routerLink="/admin/ai-assessments" class="af-btn af-btn--outline aae-back">{{ 'common.back_to_list' | translate }}</a>
+      </div>
+    }
+    @default {
+
+  <!-- Steps -->
+  <nav class="aae-steps" [attr.aria-label]="'ai_assessments.steps_label' | translate">
+    <ol>
+      @for (s of steps; track s; let i = $index) {
+        <li>
+          <button type="button" class="aae-step" [class.aae-step--current]="step() === s" [class.aae-step--done]="!!a && i < steps.indexOf(step())"
+            [disabled]="!stepEnabled(s)" [attr.aria-current]="step() === s ? 'step' : null" (click)="goTo(s)">
+            <span class="aae-step__num" aria-hidden="true">{{ i + 1 }}</span>
+            <span class="aae-step__label">{{ 'ai_assessments.step.' + s | translate }}</span>
+          </button>
+        </li>
+      }
+    </ol>
+  </nav>
+
+  <p class="af-sr-only" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
+
+  @switch (step()) {
+
+    <!-- ── 1. Details ───────────────────────────────────────────── -->
+    @case ('details') {
+      <form class="af-card aae-card" [formGroup]="details" (ngSubmit)="saveDetails()" novalidate>
+        <h2 class="af-card__title">{{ 'ai_assessments.step.details' | translate }}</h2>
+        <hr class="af-card__rule" />
+
+        <div class="af-field">
+          <label class="af-label" for="aae-title">{{ 'ai_assessments.f_title' | translate }} <span class="af-req" aria-hidden="true">*</span></label>
+          <input id="aae-title" type="text" class="af-input" formControlName="title" maxlength="200" aria-required="true"
+            [attr.aria-invalid]="showError(details.controls.title)" [attr.aria-describedby]="showError(details.controls.title) ? 'aae-title-err' : null"
+            [placeholder]="'ai_assessments.f_title_placeholder' | translate" />
+          @if (showError(details.controls.title)) {
+            <p class="af-err" id="aae-title-err">{{ 'ai_assessments.f_title_required' | translate }}</p>
+          }
+        </div>
+
+        <fieldset class="aae-choices">
+          <legend class="af-label">{{ 'ai_assessments.f_type' | translate }} <span class="af-req" aria-hidden="true">*</span></legend>
+          <div class="aae-choices__row">
+            @for (t of types; track t) {
+              <label class="aae-choice">
+                <input type="radio" formControlName="type" [value]="t" />
+                <span class="aae-choice__text">
+                  <strong>{{ 'ai_assessments.types.' + t | translate }}</strong>
+                  <small>{{ 'ai_assessments.type_hint.' + t | translate }}</small>
+                </span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="aae-choices">
+          <legend class="af-label">{{ 'ai_assessments.f_language' | translate }} <span class="af-req" aria-hidden="true">*</span></legend>
+          <div class="aae-choices__row">
+            @for (l of languages; track l) {
+              <label class="aae-choice aae-choice--compact">
+                <input type="radio" formControlName="content_language" [value]="l" />
+                <span class="aae-choice__text"><strong>{{ 'ai_assessments.languages.' + l | translate }}</strong></span>
+              </label>
+            }
+          </div>
+          <p class="af-hint">{{ 'ai_assessments.f_language_hint' | translate }}</p>
+        </fieldset>
+
+        <div class="af-cols2 aae-cols">
+          <div class="af-field">
+            <label class="af-label" for="aae-audience">{{ 'ai_assessments.f_audience' | translate }}</label>
+            <input id="aae-audience" type="text" class="af-input" formControlName="audience" maxlength="150"
+              [placeholder]="'ai_assessments.f_audience_placeholder' | translate" />
+          </div>
+          <div class="af-field">
+            <label class="af-label" id="aae-course-label">{{ 'ai_assessments.f_course' | translate }}</label>
+            <p-dropdown formControlName="course_id" [options]="courses()" optionLabel="title" optionValue="id" [filter]="true"
+              filterBy="title" [showClear]="true" ariaLabelledBy="aae-course-label" appendTo="body" styleClass="af-dropdown"
+              [placeholder]="'ai_assessments.f_course_placeholder' | translate" [emptyMessage]="'common.no_options' | translate"
+              [emptyFilterMessage]="'common.no_results' | translate">
+              <ng-template pTemplate="dropdownicon">
+                <img src="assets/icons/figma/arrow-down-grey-24.svg" width="24" height="24" alt="" />
+              </ng-template>
+            </p-dropdown>
+          </div>
+        </div>
+
+        @if (canEdit()) {
+          <div class="aae-footer">
+            <a routerLink="/admin/ai-assessments" class="af-btn af-btn--outline">{{ 'common.cancel' | translate }}</a>
+            <button type="submit" class="af-btn af-btn--primary" [disabled]="saving()">
+              <nas-icon [name]="saving() ? 'spinner-gap' : 'floppy-disk'" [size]="20" [class.af-spin]="saving()" />
+              {{ (isNew() ? 'ai_assessments.create_continue' : 'ai_assessments.save_continue') | translate }}
+            </button>
+          </div>
+        }
+      </form>
+    }
+
+    <!-- ── 2. Sources ───────────────────────────────────────────── -->
+    @case ('sources') {
+      @if (a) {
+      <section class="af-card aae-card" aria-labelledby="aae-sources-title">
+        <h2 class="af-card__title" id="aae-sources-title">{{ 'ai_assessments.step.sources' | translate }}</h2>
+        <hr class="af-card__rule" />
+        <p class="af-hint">{{ 'ai_assessments.sources_intro' | translate: { max: limits.sources, mb: limits.fileMb } }}</p>
+
+        @if (canEdit() && !generating()) {
+          <div class="aae-drop" [class.aae-drop--over]="dragOver()"
+            (dragover)="$event.preventDefault(); dragOver.set(true)" (dragleave)="dragOver.set(false)" (drop)="onDrop($event)">
+            <nas-icon name="upload-simple" [size]="28" />
+            <p class="aae-drop__text">{{ 'ai_assessments.drop_text' | translate }}</p>
+            <label class="af-btn af-btn--outline aae-drop__pick">
+              {{ 'ai_assessments.choose_files' | translate }}
+              <input #filePick type="file" class="af-sr-only" multiple [accept]="accept" (change)="onFiles(filePick.files, filePick)" />
+            </label>
+            <p class="af-hint">{{ 'ai_assessments.drop_formats' | translate: { mb: limits.fileMb } }}</p>
+          </div>
+        }
+
+        @if (uploads().length) {
+          <ul class="aae-uploads" aria-live="polite">
+            @for (u of uploads(); track u.key) {
+              <li class="aae-upload aae-upload--{{ u.state }}">
+                <nas-icon [name]="u.state === 'done' ? 'check-circle' : u.state === 'error' ? 'warning' : 'spinner-gap'" [size]="16"
+                  [class.af-spin]="u.state === 'uploading'" />
+                <span class="aae-upload__name"><bdi>{{ u.name }}</bdi></span>
+                <span class="aae-upload__state">{{ u.error ?? ('ai_assessments.upload_state.' + u.state | translate) }}</span>
+              </li>
+            }
+          </ul>
+          <button type="button" class="aae-link" (click)="clearUploads()">{{ 'ai_assessments.clear_uploads' | translate }}</button>
+        }
+
+        <h3 class="aae-subtitle">{{ 'ai_assessments.sources_added' | translate: { n: a.sources.length, max: limits.sources } }}</h3>
+        @if (a.sources.length) {
+          <ul class="aae-sources">
+            @for (s of a.sources; track s.id) {
+              <li class="aae-source">
+                <span class="aae-source__icon" aria-hidden="true">
+                  <nas-icon [name]="s.kind === 'pdf' ? 'file-pdf' : s.kind === 'text' ? 'file-text' : 'file-doc'" [size]="20" />
+                </span>
+                <span class="aae-source__body">
+                  <span class="aae-source__name"><bdi>{{ s.name }}</bdi></span>
+                  <span class="aae-source__meta">
+                    {{ 'ai_assessments.kinds.' + s.kind | translate }}
+                    @if (s.kind !== 'text') { · <span dir="ltr">{{ fileSize(s.size) }}</span> }
+                    @if (s.units) { · {{ (s.kind === 'pptx' ? 'ai_assessments.n_slides' : 'ai_assessments.n_pages') | translate: { n: s.units } }} }
+                    @if (s.kind === 'pdf') { · {{ 'ai_assessments.pdf_native' | translate }} }
+                    @else { · {{ 'ai_assessments.n_chars' | translate: { n: s.chars } }} }
+                  </span>
+                </span>
+                @if (canEdit() && !generating()) {
+                  <button type="button" class="aae-icon aae-icon--danger" (click)="removeSource(s)"
+                    [attr.aria-label]="'ai_assessments.remove_source' | translate: { name: s.name }">
+                    <nas-icon name="trash" [size]="18" />
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <nas-list-state [title]="'ai_assessments.no_sources_title' | translate" [message]="'ai_assessments.no_sources_message' | translate" />
+        }
+
+        @if (canEdit() && !generating()) {
+          <form class="aae-paste" [formGroup]="pasteForm" (ngSubmit)="paste()" novalidate>
+            <h3 class="aae-subtitle">{{ 'ai_assessments.paste_title' | translate }}</h3>
+            <div class="af-field">
+              <label class="af-label" for="aae-paste-label">{{ 'ai_assessments.paste_label' | translate }}</label>
+              <input id="aae-paste-label" type="text" class="af-input" formControlName="label" maxlength="120"
+                [placeholder]="'ai_assessments.paste_label_placeholder' | translate" />
+            </div>
+            <div class="af-field">
+              <label class="af-label" for="aae-paste-text">{{ 'ai_assessments.paste_text' | translate }}</label>
+              <textarea id="aae-paste-text" class="af-textarea aae-paste__text" formControlName="text" rows="6"
+                [attr.aria-describedby]="'aae-paste-count'" [placeholder]="'ai_assessments.paste_placeholder' | translate"></textarea>
+              <p class="af-hint" id="aae-paste-count">
+                {{ 'ai_assessments.paste_count' | translate: { n: pasteForm.controls.text.value.length, min: limits.pastedMin } }}
+              </p>
+              @if (pasteError()) { <p class="af-err" role="alert">{{ pasteError() }}</p> }
+            </div>
+            <button type="submit" class="af-btn af-btn--outline aae-paste__add" [disabled]="pasting() || pasteForm.invalid">
+              <nas-icon [name]="pasting() ? 'spinner-gap' : 'plus-circle'" [size]="18" [class.af-spin]="pasting()" />
+              {{ 'ai_assessments.paste_add' | translate }}
+            </button>
+          </form>
+        }
+
+        <div class="aae-footer">
+          <button type="button" class="af-btn af-btn--outline" (click)="goTo('details')">{{ 'common.back' | translate }}</button>
+          <button type="button" class="af-btn af-btn--primary" (click)="goTo('configure')">{{ 'ai_assessments.continue' | translate }}</button>
+        </div>
+      </section>
+      }
+    }
+
+    <!-- ── 3. Configure ─────────────────────────────────────────── -->
+    @case ('configure') {
+      @if (a) {
+      <form class="af-card aae-card" [formGroup]="configure" (ngSubmit)="saveConfigure()" novalidate>
+        <h2 class="af-card__title">{{ 'ai_assessments.step.configure' | translate }}</h2>
+        <hr class="af-card__rule" />
+
+        <fieldset class="aae-choices" formGroupName="counts">
+          <legend class="af-label">{{ 'ai_assessments.f_counts' | translate }}</legend>
+          <p class="af-hint">{{ 'ai_assessments.f_counts_hint' | translate: { per: limits.perType, max: limits.total } }}</p>
+          <div class="aae-counts">
+            @for (qt of questionTypes; track qt) {
+              <div class="aae-count" [class.aae-count--on]="configure.controls.counts.controls[qt].value > 0">
+                <label class="aae-count__label" [for]="'aae-count-' + qt">
+                  <strong>{{ 'ai_assessments.qtypes.' + qt | translate }}</strong>
+                  <small>{{ 'ai_assessments.qtype_hint.' + qt | translate }}</small>
+                </label>
+                <div class="aae-stepper">
+                  <button type="button" class="aae-stepper__btn" [disabled]="!canEdit() || configure.controls.counts.controls[qt].value <= 0"
+                    [attr.aria-label]="'ai_assessments.decrease' | translate: { type: ('ai_assessments.qtypes.' + qt | translate) }" (click)="stepCount(qt, -1)">−</button>
+                  <input [id]="'aae-count-' + qt" type="number" class="aae-stepper__input" min="0" [max]="limits.perType" step="1"
+                    inputmode="numeric" [formControlName]="qt" />
+                  <button type="button" class="aae-stepper__btn" [disabled]="!canEdit() || configure.controls.counts.controls[qt].value >= limits.perType"
+                    [attr.aria-label]="'ai_assessments.increase' | translate: { type: ('ai_assessments.qtypes.' + qt | translate) }" (click)="stepCount(qt, 1)">+</button>
+                </div>
+              </div>
+            }
+          </div>
+          <p class="aae-total" [class.aae-total--over]="countsTotal() > limits.total" aria-live="polite">
+            {{ 'ai_assessments.total_questions' | translate: { n: countsTotal(), max: limits.total } }}
+          </p>
+        </fieldset>
+
+        <fieldset class="aae-choices">
+          <legend class="af-label">{{ 'ai_assessments.f_difficulty' | translate }}</legend>
+          <div class="aae-choices__row">
+            @for (d of difficulties; track d) {
+              <label class="aae-choice aae-choice--compact">
+                <input type="radio" formControlName="difficulty" [value]="d" />
+                <span class="aae-choice__text"><strong>{{ 'ai_assessments.difficulties.' + d | translate }}</strong></span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="aae-choices" formGroupName="bloom">
+          <legend class="af-label">{{ 'ai_assessments.f_bloom' | translate }}</legend>
+          <p class="af-hint">{{ 'ai_assessments.f_bloom_hint' | translate }}</p>
+          <div class="aae-choices__row">
+            @for (b of blooms; track b) {
+              <label class="aae-choice aae-choice--compact">
+                <input type="checkbox" [formControlName]="b" />
+                <span class="aae-choice__text"><strong>{{ 'ai_assessments.bloom.' + b | translate }}</strong></span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <div class="af-field">
+          <label class="af-label" for="aae-objectives">{{ 'ai_assessments.f_objectives' | translate }}</label>
+          <textarea id="aae-objectives" class="af-textarea" formControlName="objectives" rows="4" maxlength="4000"
+            [placeholder]="'ai_assessments.f_objectives_placeholder' | translate"></textarea>
+        </div>
+
+        <div class="aae-footer">
+          <button type="button" class="af-btn af-btn--outline" (click)="goTo('sources')">{{ 'common.back' | translate }}</button>
+          @if (canEdit()) {
+            <button type="submit" class="af-btn af-btn--primary" [disabled]="saving() || countsTotal() > limits.total || configure.invalid">
+              <nas-icon [name]="saving() ? 'spinner-gap' : 'floppy-disk'" [size]="20" [class.af-spin]="saving()" />
+              {{ 'ai_assessments.save_continue' | translate }}
+            </button>
+          }
+        </div>
+      </form>
+      }
+    }
+
+    <!-- ── 4. Review: generate, edit, reorder ───────────────────── -->
+    @case ('review') {
+      @if (a) {
+      <section class="af-card aae-card" aria-labelledby="aae-gen-title">
+        <div class="aae-gen">
+          <div class="aae-gen__text">
+            <h2 class="af-card__title" id="aae-gen-title">
+              {{ (a.questions.length ? 'ai_assessments.review_title' : 'ai_assessments.generate_title') | translate }}
+            </h2>
+            <p class="af-hint">
+              @if (usage(); as u) {
+                @if (u.configured) { {{ 'ai_assessments.usage' | translate: { used: u.used, limit: u.limit } }} }
+              }
+            </p>
+          </div>
+          @if (canEdit()) {
+            <button type="button" class="af-btn af-btn--primary aae-gen__btn" [disabled]="!canGenerate() || starting()"
+              [attr.aria-describedby]="generateBlocker() ? 'aae-gen-blocker' : null" (click)="generate()">
+              <nas-icon [name]="starting() || generating() ? 'spinner-gap' : 'sparkle'" [size]="20" [class.af-spin]="starting() || generating()" />
+              {{ (generating() ? 'ai_assessments.generating' : a.questions.length ? 'ai_assessments.regenerate_all' : 'ai_assessments.generate') | translate }}
+            </button>
+          }
+        </div>
+
+        @if (canEdit() && generateBlocker() && !generating()) {
+          <p class="aae-notice" id="aae-gen-blocker"><nas-icon name="info" [size]="20" /><span>{{ generateBlocker()! | translate }}</span></p>
+        }
+        @if (generationError()) {
+          <p class="aae-notice aae-notice--error" role="alert"><nas-icon name="warning" [size]="20" /><span>{{ generationError() }}</span></p>
+        } @else if (a.last_error && !generating()) {
+          <p class="aae-notice aae-notice--error" role="alert"><nas-icon name="warning" [size]="20" /><span>{{ a.last_error_message }}</span></p>
+        }
+
+        @if (generating()) {
+          <div class="aae-progress" role="status">
+            <span class="aae-progress__bar" aria-hidden="true"><span></span></span>
+            <span>{{ 'ai_assessments.progress' | translate: { n: a.questions.length } }}</span>
+          </div>
+        }
+
+        @if (a.questions.length) {
+          <p class="aae-review-counts">
+            {{ 'ai_assessments.review_counts' | translate: { approved: reviewCounts().approved, flagged: reviewCounts().flagged, total: reviewCounts().total } }}
+          </p>
+        }
+      </section>
+
+      @if (a.questions.length) {
+        <ol class="aae-questions" cdkDropList [cdkDropListData]="a.questions" [cdkDropListDisabled]="!canEdit() || generating() || editingId() !== null"
+          (cdkDropListDropped)="onDropQuestion($event)" [attr.aria-label]="'ai_assessments.questions_label' | translate">
+          @for (q of a.questions; track q.id; let i = $index, first = $first, last = $last) {
+            <li class="af-question aae-q" cdkDrag [cdkDragData]="q" [class.aae-q--flagged]="q.status === 'flagged'"
+              [class.aae-q--approved]="q.status === 'approved'" [attr.aria-busy]="questionBusy() === q.id">
+              <div class="aae-q__head">
+                @if (canEdit() && !generating()) {
+                  <button type="button" class="aae-handle" cdkDragHandle [attr.aria-label]="'ai_assessments.drag' | translate">
+                    <nas-icon name="dots-six-vertical" [size]="18" />
+                  </button>
+                }
+                <span class="af-question__num aae-q__num">{{ i + 1 }}</span>
+                <span class="aae-q__type">{{ 'ai_assessments.qtypes.' + q.type | translate }}</span>
+                @if (q.bloom) { <span class="af-pill">{{ 'ai_assessments.bloom.' + q.bloom | translate }}</span> }
+                @if (q.difficulty) { <span class="af-pill aae-pill--muted">{{ 'ai_assessments.difficulties.' + q.difficulty | translate }}</span> }
+                <nas-status-badge class="aae-q__status" [tone]="questionTone(q.status)">{{ 'ai_assessments.qstatus.' + q.status | translate }}</nas-status-badge>
+              </div>
+
+              @if (editingId() === q.id) {
+                <app-ai-question-editor [question]="q" [language]="a.content_language" [saving]="questionBusy() === q.id"
+                  [serverError]="questionError()" (save)="saveQuestion(q, $event)" (cancel)="editingId.set(null)" />
+              } @else {
+                <div class="aae-q__body" [attr.dir]="contentDir()" [attr.lang]="a.content_language">
+                  @if (q.context) { <p class="aae-q__context">{{ q.context }}</p> }
+                  <p class="aae-q__prompt">{{ q.prompt }}</p>
+
+                  @if (options(q).length) {
+                    <ul class="aae-q__options">
+                      @for (o of options(q); track $index; let oi = $index) {
+                        <li class="aae-q__option" [class.aae-q__option--correct]="isCorrect(q, oi)">
+                          <span class="aae-q__letter">{{ letters()[oi] }}</span>
+                          <span>{{ o }}</span>
+                          @if (isCorrect(q, oi)) {
+                            <nas-icon name="check-circle" [size]="16" class="aae-q__tick" />
+                            <span class="af-sr-only">{{ 'ai_assessments.correct_answer' | translate }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  }
+                  @if (q.type === 'true_false') {
+                    <p class="aae-q__answer"><strong>{{ 'ai_assessments.answer' | translate }}:</strong>
+                      {{ (tfValue(q) ? 'ai_assessments.true' : 'ai_assessments.false') | translate }}</p>
+                  }
+                  @if (q.type === 'short') {
+                    <p class="aae-q__answer"><strong>{{ 'ai_assessments.model_answer' | translate }}:</strong> {{ modelAnswer(q) }}</p>
+                  }
+                  @if (q.type === 'fill_blank') {
+                    <p class="aae-q__answer"><strong>{{ 'ai_assessments.answer' | translate }}:</strong>
+                      @if (blankAnswers(q).length === 1) { {{ blankAnswers(q)[0] }} } @else {
+                        @for (b of blankAnswers(q); track $index; let bi = $index) { <span class="aae-q__blank">{{ bi + 1 }}) {{ b }}</span> }
+                      }
+                    </p>
+                  }
+                  @if (pairs(q).length) {
+                    <table class="aae-q__pairs">
+                      <caption class="af-sr-only">{{ 'ai_assessments.q_pairs' | translate }}</caption>
+                      <tbody>
+                        @for (p of pairs(q); track $index) {
+                          <tr><td>{{ p.left }}</td><td class="aae-q__link" aria-hidden="true"><span></span></td><td>{{ p.right }}</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                  @if (q.explanation) {
+                    <p class="aae-q__explain"><strong>{{ 'ai_assessments.explanation' | translate }}:</strong> {{ q.explanation }}</p>
+                  }
+                  @if (q.source_ref) {
+                    <p class="aae-q__source"><nas-icon name="file-text" [size]="14" /> {{ q.source_ref }}</p>
+                  }
+                </div>
+
+                @if (canEdit() && !generating()) {
+                  <div class="aae-q__actions">
+                    <button type="button" class="aae-act" [class.aae-act--on]="q.status === 'approved'" [attr.aria-pressed]="q.status === 'approved'"
+                      (click)="setStatus(q, 'approved')">
+                      <nas-icon name="check-circle" [size]="16" /> {{ 'ai_assessments.approve' | translate }}
+                    </button>
+                    <button type="button" class="aae-act" [class.aae-act--flag]="q.status === 'flagged'" [attr.aria-pressed]="q.status === 'flagged'"
+                      (click)="setStatus(q, 'flagged')">
+                      <nas-icon name="flag" [size]="16" /> {{ 'ai_assessments.flag' | translate }}
+                    </button>
+                    <button type="button" class="aae-act" (click)="edit(q)" [disabled]="questionBusy() !== null">
+                      <nas-icon name="pencil-simple" [size]="16" /> {{ 'common.edit' | translate }}
+                    </button>
+                    <button type="button" class="aae-act" (click)="regenerateOne(q)" [disabled]="questionBusy() !== null || !usage()?.configured">
+                      <nas-icon [name]="questionBusy() === q.id ? 'spinner-gap' : 'arrows-clockwise'" [size]="16" [class.af-spin]="questionBusy() === q.id" />
+                      {{ 'ai_assessments.regenerate' | translate }}
+                    </button>
+                    <span class="aae-q__spacer"></span>
+                    <button type="button" class="aae-icon" [disabled]="first" (click)="move(i, i - 1)"
+                      [attr.aria-label]="'ai_assessments.move_up' | translate: { n: i + 1 }">
+                      <nas-icon name="caret-up" [size]="16" />
+                    </button>
+                    <button type="button" class="aae-icon" [disabled]="last" (click)="move(i, i + 1)"
+                      [attr.aria-label]="'ai_assessments.move_down' | translate: { n: i + 1 }">
+                      <nas-icon name="caret-down" [size]="16" />
+                    </button>
+                    <button type="button" class="aae-icon aae-icon--danger" (click)="removeQuestion(q, i)"
+                      [attr.aria-label]="'ai_assessments.delete_question' | translate: { n: i + 1 }">
+                      <nas-icon name="trash" [size]="16" />
+                    </button>
+                  </div>
+                }
+              }
+            </li>
+          }
+        </ol>
+      } @else if (!generating()) {
+        <div class="af-card">
+          <nas-list-state [title]="'ai_assessments.no_questions_title' | translate" [message]="'ai_assessments.no_questions_message' | translate" />
+        </div>
+      }
+      }
+    }
+  }
+    }
+  }
+</div>
+
+<!-- Export (spec §1 Export, §3.5) -->
+<p-dialog [visible]="exportOpen()" (visibleChange)="exportOpen.set($event)" [modal]="true" [draggable]="false" [resizable]="false"
+  [closable]="!exporting()" [closeOnEscape]="!exporting()" styleClass="nas-dialog" [style]="{ width: '520px', maxWidth: 'calc(100vw - 32px)' }"
+  [header]="'ai_assessments.export_title' | translate">
+  <div class="aae-export">
+    <fieldset class="aae-choices">
+      <legend class="af-label">{{ 'ai_assessments.export_format' | translate }}</legend>
+      <div class="aae-export__grid">
+        @for (f of exportFormats; track f) {
+          <label class="aae-choice aae-choice--tile">
+            <input type="radio" name="aae-export-format" [value]="f" [checked]="exportFormat() === f" (change)="exportFormat.set(f)" />
+            <nas-icon [name]="f === 'docx' ? 'file-doc' : f === 'pdf' ? 'file-pdf' : 'file-xls'" [size]="24" />
+            <span class="aae-choice__text"><strong>{{ 'ai_assessments.formats.' + f | translate }}</strong></span>
+          </label>
+        }
+      </div>
+    </fieldset>
+    <fieldset class="aae-choices">
+      <legend class="af-label">{{ 'ai_assessments.export_variant' | translate }}</legend>
+      <div class="aae-choices__col">
+        @for (v of exportVariants; track v) {
+          <label class="aae-choice">
+            <input type="radio" name="aae-export-variant" [value]="v" [checked]="exportVariant() === v" (change)="exportVariant.set(v)" />
+            <span class="aae-choice__text">
+              <strong>{{ 'ai_assessments.variants.' + v | translate }}</strong>
+              <small>{{ 'ai_assessments.variant_hint.' + v | translate }}</small>
+            </span>
+          </label>
+        }
+      </div>
+    </fieldset>
+    @if (exportError()) { <p class="af-err" role="alert">{{ exportError() }}</p> }
+  </div>
+  <ng-template pTemplate="footer">
+    <button type="button" class="af-btn af-btn--outline" [disabled]="exporting()" (click)="exportOpen.set(false)">{{ 'common.cancel' | translate }}</button>
+    <button type="button" class="af-btn af-btn--primary" [disabled]="exporting()" (click)="download()">
+      <nas-icon [name]="exporting() ? 'spinner-gap' : 'download-simple'" [size]="20" [class.af-spin]="exporting()" />
+      {{ 'common.download' | translate }}
+    </button>
+  </ng-template>
+</p-dialog>

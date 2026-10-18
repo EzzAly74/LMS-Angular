@@ -1,0 +1,86 @@
+// AI Assessment library (D-113): the shared list look (Courses List reference).
+@use '../../../../shared/styles/list';
+@use '../../styles/ai-shared';
+
+.aal-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nas-space-3);
+}
+
+.aal-usage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nas-space-2);
+  min-block-size: 32px;
+  padding: var(--nas-space-1) var(--nas-space-3);
+  border-radius: var(--nas-radius-full);
+  background: var(--nas-teal-100);
+  color: var(--nas-teal-800);
+  font-size: var(--nas-size-2xs);
+  font-weight: var(--nas-weight-medium);
+
+  &--out { background: var(--nas-status-amber-50); color: var(--nas-status-amber-800); }
+}
+
+.aal-notice { @include ai-shared.notice; }
+
+// Fixed column widths: the title takes what is left.
+.aal-table {
+  .aal-w-type    { inline-size: 150px; }
+  .aal-w-lang    { inline-size: 110px; }
+  .aal-w-num     { inline-size: 110px; }
+  .aal-w-course  { inline-size: 200px; }
+  .aal-w-status  { inline-size: 140px; }
+  .aal-w-actions { inline-size: 56px; }
+
+  td { vertical-align: middle; }
+}
+
+.aal-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nas-space-1);
+  min-inline-size: 0;
+
+  &__link {
+    overflow: hidden;
+    color: var(--nas-neutral-1000);
+    font-weight: var(--nas-weight-semibold);
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover { color: var(--nas-teal-700); text-decoration: underline; }
+    &:focus-visible { outline: 2px solid var(--nas-teal-600); outline-offset: 2px; border-radius: var(--nas-radius-xs); }
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nas-space-2);
+    color: var(--nas-neutral-750);
+    font-size: var(--nas-size-3xs);
+  }
+}
+
+.aal-version {
+  padding-inline: var(--nas-space-2);
+  border-radius: var(--nas-radius-full);
+  background: var(--nas-neutral-200);
+  color: var(--nas-neutral-900);
+  font-weight: var(--nas-weight-medium);
+}
+
+.aal-strong {
+  overflow: hidden;
+  color: var(--nas-neutral-1000);
+  font-weight: var(--nas-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aal-row--busy { opacity: .6; pointer-events: none; }
+
+.aal-spin { @include ai-shared.spin; }
