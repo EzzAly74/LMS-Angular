@@ -39,9 +39,13 @@ export interface NasFilterField {
   readonly options: NasFilterFieldOption[];
   /**
    * `date`: a calendar date instead of a list (e.g. "Active from"); its value
-   * is a local `YYYY-MM-DD` string. Default: a dropdown / multi-select.
+   * is a local `YYYY-MM-DD` string. `number`: a number between `min` and
+   * `max` (a percentage threshold). Default: a dropdown / multi-select.
    */
-  readonly type?: 'select' | 'date';
+  readonly type?: 'select' | 'date' | 'number';
+  /** Number field bounds. */
+  readonly min?: number;
+  readonly max?: number;
   /** Date field: may not be before this other date field (From of a From / To pair). */
   readonly after?: string;
   /** Date field: may not be after this other date field (To of a From / To pair). */
@@ -163,6 +167,13 @@ export class NasFilterDialogComponent {
     if (!d) { this.set(key, null); return; }
     const pad = (n: number) => String(n).padStart(2, '0');
     this.set(key, `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+  }
+
+  /** A number field's input: empty or not a number is "no filter"; out of range is clamped. */
+  protected setNumber(f: NasFilterField, raw: string): void {
+    const n = raw.trim() === '' ? NaN : Number(raw);
+    if (!Number.isFinite(n)) { this.set(f.key, null); return; }
+    this.set(f.key, Math.min(f.max ?? Infinity, Math.max(f.min ?? -Infinity, n)));
   }
 
   protected onRemoteFilter(key: string, term: string | null | undefined): void {
