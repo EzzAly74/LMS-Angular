@@ -1,0 +1,110 @@
+// One NAS report (D-112). Head, toolbar, card, table, states and pager are
+// the shared list ones; this file adds the breadcrumb, the "not captured"
+// notice, the two-row grouped header and the typed cells.
+@use '../../../../shared/styles/list';
+
+.rv__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nas-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--nas-size-xs);
+  color: var(--nas-color-text-muted);
+
+  li { display: inline-flex; align-items: center; gap: var(--nas-space-2); }
+  a { color: inherit; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--nas-teal-700); outline-offset: 2px; border-radius: 2px; }
+  [aria-current='page'] { color: var(--nas-color-text-strong); font-weight: var(--nas-weight-medium); }
+}
+
+.rv__crumb-sep { display: block; }
+:host-context([dir='rtl']) .rv__crumb-sep { transform: scaleX(-1); }
+
+.rv__unit {
+  margin: var(--nas-space-1) 0 0;
+  font-size: var(--nas-size-2xs);
+  color: var(--nas-color-text-muted);
+
+  strong { font-weight: var(--nas-weight-medium); color: var(--nas-color-text-strong); }
+}
+
+.rv__scope {
+  display: inline-flex;
+  align-items: center;
+  max-inline-size: 100%;
+  min-block-size: 32px;
+  padding-inline: var(--nas-space-3);
+  border: 0.7px solid var(--nas-teal-1000);
+  border-radius: 16px;
+  background: var(--nas-teal-100);
+  font-size: var(--nas-size-xs);
+  font-weight: var(--nas-weight-medium);
+  color: var(--nas-teal-1000);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rv__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nas-space-2);
+  margin: 0;
+  padding: var(--nas-space-3) var(--nas-space-4);
+  border: 1px solid var(--nas-status-amber-500-16);
+  border-radius: var(--nas-radius-md);
+  background: var(--nas-status-amber-50);
+  font-size: var(--nas-size-2xs);
+  line-height: 18px;
+  color: var(--nas-status-amber-800);
+
+  img { flex-shrink: 0; }
+}
+
+.rv__notice-col { font-weight: var(--nas-weight-medium); }
+
+.rv__table {
+  // Long headings (an evaluation question) wrap instead of being cut.
+  thead th {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: bottom;
+    padding-block: var(--nas-space-2);
+    line-height: 18px;
+  }
+
+  td { block-size: 49px; }
+}
+
+// The spec's "Group" row above the column names.
+.rv__groups th {
+  block-size: 32px;
+  background: var(--nas-neutral-100);
+  border-inline-start: 1px solid var(--nas-color-border);
+  font-size: var(--nas-size-2xs);
+  font-weight: var(--nas-weight-semibold);
+  color: var(--nas-color-text-strong);
+  text-transform: none;
+
+  &:first-child { border-inline-start: 0; }
+}
+
+.rv__num { text-align: end !important; font-variant-numeric: tabular-nums; }
+
+.rv__missing { background: var(--nas-status-amber-500-08); }
+thead .rv__missing { color: var(--nas-status-amber-800); }
+
+.rv__tag {
+  display: block;
+  font-size: 11px;
+  font-weight: var(--nas-weight-regular);
+  line-height: 14px;
+}
+
+.rv__empty { color: var(--nas-neutral-500); }
+
+.rv__text { display: block; overflow: hidden; text-overflow: ellipsis; }

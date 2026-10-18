@@ -67,7 +67,7 @@ type CertificateBasis = 'attendance' | 'score' | 'both';
  */
 /** The Platform Config number fields and their limits (match the server). */
 type NumericSetting = 'default_cohort_size' | 'academy_close_offset_days' | 'passcode_reset_seconds'
-  | 'min_passing_attendance' | 'min_passing_score';
+  | 'min_passing_attendance' | 'min_passing_score' | 'compliance_target';
 
 const NUMERIC_LIMITS: Record<NumericSetting, { min: number; max: number }> = {
   default_cohort_size:       { min: 1, max: 1000 },
@@ -75,6 +75,7 @@ const NUMERIC_LIMITS: Record<NumericSetting, { min: number; max: number }> = {
   passcode_reset_seconds:    { min: 1, max: 86400 },
   min_passing_attendance:    { min: 0, max: 100 },
   min_passing_score:         { min: 0, max: 100 },
+  compliance_target:         { min: 0, max: 100 },
 };
 
 @Component({
@@ -154,6 +155,8 @@ export class SettingsComponent implements OnInit {
       certificate_award_basis:   ['attendance' as CertificateBasis],
       min_passing_attendance:    [70, this.rangeValidators('min_passing_attendance')],
       min_passing_score:         [30, this.rangeValidators('min_passing_score')],
+      // The Compliance by Job Title report's target (backend D-112).
+      compliance_target:         [90, this.rangeValidators('compliance_target')],
     });
 
     this.load();
@@ -208,6 +211,7 @@ export class SettingsComponent implements OnInit {
       certificate_award_basis:   basis,
       min_passing_attendance:    this.numericValue(map['min_passing_attendance'], 70),
       min_passing_score:         this.numericValue(map['min_passing_score'], 30),
+      compliance_target:         this.numericValue(map['compliance_target'], 90),
     }, { emitEvent: false });
   }
 
@@ -252,6 +256,7 @@ export class SettingsComponent implements OnInit {
       put('certificate_award_basis',   f.certificate_award_basis);
       put('min_passing_attendance',    f.min_passing_attendance);
       put('min_passing_score',         f.min_passing_score);
+      put('compliance_target',         f.compliance_target);
 
       const res = await this.api.put<Setting[]>(API.ADMIN_SETTINGS, { settings: payload }).toPromise();
       if (res?.result) this.ingestSettings(res.result);
@@ -328,6 +333,7 @@ export class SettingsComponent implements OnInit {
     if (!this.attendanceSig()) visible.push('passcode_reset_seconds');
     if (this.showMinAttendance()) visible.push('min_passing_attendance');
     if (this.showMinScore()) visible.push('min_passing_score');
+    visible.push('compliance_target');
     return visible.filter(f => this.form.get(f)?.invalid);
   }
 

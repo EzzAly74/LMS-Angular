@@ -246,6 +246,35 @@
             </div>
           }
 
+          <div class="ps-field ps-field--half">
+            <label for="compliance_target">
+              {{ 'platform_settings.compliance_target' | translate }} <span class="ps-asterisk">*</span>
+            </label>
+            <div class="ps-number">
+              <input id="compliance_target" type="number" [attr.min]="limit('compliance_target').min" [attr.max]="limit('compliance_target').max" inputmode="numeric"
+                     class="ps-input ps-input--number"
+                     formControlName="compliance_target"
+                     [attr.aria-invalid]="fieldError('compliance_target') ? true : null"
+                     [attr.aria-describedby]="fieldError('compliance_target') ? 'compliance_target-error compliance_target-help' : 'compliance_target-help'" />
+              <div class="ps-number__steppers">
+                <button type="button" class="ps-number__step"
+                        (click)="adjust('compliance_target', +1)"
+                        tabindex="-1">
+                  <nas-icon name="caret-up" [size]="12" />
+                </button>
+                <button type="button" class="ps-number__step"
+                        (click)="adjust('compliance_target', -1)"
+                        tabindex="-1">
+                  <nas-icon name="caret-down" [size]="12" />
+                </button>
+              </div>
+            </div>
+            @if (fieldError('compliance_target'); as err) {
+              <p class="ps-error" id="compliance_target-error">{{ err }}</p>
+            }
+            <p class="ps-help" id="compliance_target-help">{{ 'platform_settings.compliance_target_help' | translate }}</p>
+          </div>
+
         </div>
       </section>
 

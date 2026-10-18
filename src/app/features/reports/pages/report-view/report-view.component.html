@@ -1,0 +1,140 @@
+<!-- One NAS report (D-112): shared list head, toolbar, Filter modal, table card and pager -->
+<div class="nas-page-container cl-page">
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <nav [attr.aria-label]="'reports.view.breadcrumb' | translate">
+        <ol class="rv__crumbs">
+          <li>
+            <a routerLink="/admin/reports">{{ 'reports.title' | translate }}</a>
+            <img class="rv__crumb-sep" src="assets/icons/figma/chevron-right-14.svg" width="14" height="14" alt="" />
+          </li>
+          <li><span aria-current="page"><bdi>{{ definition()?.name ?? '' }}</bdi></span></li>
+        </ol>
+      </nav>
+      <h1 class="cl-title"><bdi>{{ definition()?.name ?? ('reports.title' | translate) }}</bdi></h1>
+      @if (definition(); as d) {
+        <p class="cl-subtitle">{{ d.description }}</p>
+        <p class="rv__unit">{{ 'reports.row_is' | translate }}: <strong>{{ d.row_unit }}</strong></p>
+      }
+    </div>
+    @if (definitionState() === 'ready') {
+      <div class="cl-head__actions">
+        <nas-action-menu
+          [label]="(exporting() ? 'reports.exporting' : 'reports.export') | translate"
+          [title]="'reports.export_title' | translate: { name: definition()?.name ?? '' }"
+          icon="assets/icons/figma/export.svg"
+          [items]="exportItems()"
+          [disabled]="exporting() || list.state() !== 'ready' || list.total() === 0"
+          (picked)="onExport($event)" />
+      </div>
+    }
+  </header>
+
+  @switch (definitionState()) {
+    @case ('loading') {
+      <nas-table-card [label]="'reports.title' | translate" [busy]="true">
+        <table class="cl-table rv__table"><tbody>
+          @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="['text', 'text', 'short', 'short', 'short', 'short']" [row]="s"></tr> }
+        </tbody></table>
+      </nas-table-card>
+    }
+    @case ('missing') {
+      <nas-list-state [message]="'reports.view.not_found' | translate" />
+    }
+    @case ('no_choice') {
+      <nas-list-state [message]="'reports.view.no_template' | translate" />
+    }
+    @case ('error') {
+      <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="loadAgain()" />
+    }
+    @default {
+      @if (definition(); as d) {
+        <nas-list-toolbar [search]="list.query().search" [filterCount]="d.filters.length ? activeFilters() : null"
+          [label]="'reports.view.search_label' | translate" [placeholder]="'reports.view.search_placeholder' | translate"
+          (searchChange)="list.search($event)" (filter)="openFilter()">
+          @if (scopeLabel(); as scope) {
+            <span class="rv__scope">{{ scope.label }}: <bdi>{{ scope.value }}</bdi></span>
+          }
+        </nas-list-toolbar>
+
+        @if (missingColumns().length) {
+          <p class="rv__notice" id="rv-missing" role="note">
+            <img src="assets/icons/figma/seal-question-20.svg" width="20" height="20" alt="" />
+            <span>
+              {{ 'reports.view.not_captured' | translate: { count: missingColumns().length } }}
+              @for (c of missingColumns(); track c.key; let last = $last) {
+                <bdi class="rv__notice-col">{{ c.label }}</bdi>{{ last ? '' : ('reports.view.list_sep' | translate) }}
+              }
+            </span>
+          </p>
+        }
+
+        <nas-table-card [label]="d.name" [busy]="list.state() === 'loading'">
+            <table class="cl-table rv__table" [style.min-inline-size.px]="shownColumns().length * 150">
+              <thead>
+                <tr class="rv__groups">
+                  @for (g of groups(); track $index) {
+                    <th scope="colgroup" [attr.colspan]="g.span">{{ g.label }}</th>
+                  }
+                </tr>
+                <tr>
+                  @for (c of shownColumns(); track c.key) {
+                    <th scope="col" [class.rv__num]="isNumeric(c)" [class.rv__missing]="!c.available"
+                      [attr.aria-describedby]="c.available ? null : 'rv-missing'">
+                      <bdi>{{ c.label }}</bdi>
+                      @if (!c.available) { <span class="rv__tag">{{ 'reports.view.not_captured_tag' | translate }}</span> }
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @switch (list.state()) {
+                  @case ('loading') {
+                    @for (s of skeletons; track s) { <tr nasSkeletonRow [cells]="skeletonCells()" [row]="s"></tr> }
+                  }
+                  @case ('error') {
+                    <tr><td [attr.colspan]="shownColumns().length">
+                      <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="list.reload()" />
+                    </td></tr>
+                  }
+                  @default {
+                    @for (r of list.items(); track $index) {
+                      <tr>
+                        @for (c of shownColumns(); track c.key) {
+                          @let v = r[c.key] ?? null;
+                          <td [class.rv__num]="isNumeric(c)" [class.rv__missing]="!c.available">
+                            @if (v === null || v === '') {
+                              <span class="rv__empty" aria-hidden="true">-</span>
+                            } @else if (c.type === 'date') {
+                              {{ v + '' | nasDate: locale() }}
+                            } @else if (c.type === 'datetime') {
+                              {{ (v + '').slice(0, 10) | nasDate: locale() }} <bdi dir="ltr">{{ (v + '').slice(11) }}</bdi>
+                            } @else if (isNumeric(c)) {
+                              <bdi dir="ltr">{{ display(c, v) }}</bdi>
+                            } @else {
+                              <bdi class="rv__text" [attr.title]="display(c, v)">{{ display(c, v) }}</bdi>
+                            }
+                          </td>
+                        }
+                      </tr>
+                    } @empty {
+                      <tr><td [attr.colspan]="shownColumns().length">
+                        <nas-list-state [message]="(hasQuery() ? 'reports.view.no_results' : 'reports.view.empty') | translate" />
+                      </td></tr>
+                    }
+                  }
+                }
+              </tbody>
+            </table>
+          @if (list.pageable()) {
+            <nas-pager nasTablePager [total]="list.total()" [page]="list.query().page" [perPage]="list.query().perPage"
+              [showAllVisible]="list.canShowAll()" (showAll)="list.showAll()" (pageChange)="list.goTo($event)" />
+          }
+        </nas-table-card>
+      }
+    }
+  }
+</div>
+
+<nas-filter-dialog [(visible)]="filterOpen" [fields]="filterFields()" [applied]="appliedFilters()"
+  (apply)="onFilter($event)" (search)="onFilterSearch($event)" />

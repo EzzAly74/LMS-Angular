@@ -1,0 +1,79 @@
+<!-- Reports home (D-112): one card per NAS report -->
+<div class="nas-page-container cl-page">
+  <header class="cl-head">
+    <div class="cl-head__text">
+      <h1 class="cl-title">{{ 'reports.title' | translate }}</h1>
+      <p class="cl-subtitle">{{ 'reports.subtitle' | translate }}</p>
+    </div>
+  </header>
+
+  @switch (state()) {
+    @case ('loading') {
+      <ul class="rl-grid" [attr.aria-busy]="true" [attr.aria-label]="'reports.title' | translate">
+        @for (s of skeletons; track s) {
+          <li class="rl-card">
+            <nas-skeleton width="40px" height="40px" radius="10px" />
+            <nas-skeleton width="60%" height="16px" />
+            <nas-skeleton width="100%" height="12px" />
+            <nas-skeleton width="40%" height="12px" />
+          </li>
+        }
+      </ul>
+    }
+    @case ('error') {
+      <nas-list-state kind="error" [message]="'common.could_not_load' | translate" (retry)="load()" />
+    }
+    @default {
+      <ul class="rl-grid">
+        @for (r of reports(); track r.key) {
+          <li class="rl-card">
+            <div class="rl-card__head">
+              <span class="rl-card__icon"><img [src]="iconOf(r.key)" width="20" height="20" alt="" /></span>
+              <div class="rl-card__text">
+                <h2 class="rl-card__title">
+                  <a class="rl-card__link" [routerLink]="[r.key]"><bdi>{{ r.name }}</bdi></a>
+                </h2>
+                <p class="rl-card__desc">{{ r.description }}</p>
+              </div>
+            </div>
+
+            <dl class="rl-card__meta">
+              <div>
+                <dt>{{ 'reports.row_is' | translate }}</dt>
+                <dd>{{ r.row_unit }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'reports.columns_count' | translate }}</dt>
+                <dd>
+                  {{ r.columns.length }}
+                  @if (missingCount(r) > 0) {
+                    <span class="rl-card__missing">{{ 'reports.not_captured_count' | translate: { count: missingCount(r) } }}</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'reports.last_exported' | translate }}</dt>
+                <dd>{{ r.last_exported_at ? (r.last_exported_at | nasDate: locale()) : ('reports.never' | translate) }}</dd>
+              </div>
+            </dl>
+
+            <div class="rl-card__actions">
+              <a class="rl-card__open" [routerLink]="[r.key]">{{ 'reports.open' | translate }}</a>
+              @if (!needsChoice(r)) {
+                <nas-action-menu
+                  [label]="(exporting() === r.key ? 'reports.exporting' : 'reports.export') | translate"
+                  [title]="'reports.export_title' | translate: { name: r.name }"
+                  icon="assets/icons/figma/export.svg"
+                  [items]="exportItems()"
+                  [disabled]="exporting() !== null"
+                  (picked)="onExport(r, $event)" />
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="rl-empty"><nas-list-state [message]="'reports.none' | translate" /></li>
+        }
+      </ul>
+    }
+  }
+</div>
