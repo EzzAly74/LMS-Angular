@@ -99,26 +99,30 @@ test.describe('behaviour', () => {
     await page.getByRole('button', { name: 'Generate with AI' }).click();
 
     const dialog = page.getByRole('dialog', { name: /Generate quiz questions with AI/ });
-    await expect(dialog).toContainText('AI generations today: 3 / 30');
-    await expect(dialog).toContainText('Questions: 10 · English + Arabic'); // the Standard mix
-    await expect(dialog.getByRole('button', { name: 'Standard · 10' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(dialog).toContainText('AI today: 3 / 30');
 
-    // Nothing to read from yet: explained, nothing sent.
-    await dialog.getByRole('button', { name: 'Generate' }).click();
+    // Step 1 with nothing to read from: explained, not moved on.
+    await dialog.getByRole('button', { name: 'Next' }).click();
     await expect(dialog.getByRole('alert')).toContainText('Upload a file or paste at least 50 characters of course text.');
-    expect(calls.starts).toHaveLength(0);
+    await expect(dialog.locator('[aria-current=step]')).toContainText('Course material');
 
-    await dialog.getByRole('tab', { name: 'Paste text' }).click();
+    await dialog.getByRole('button', { name: 'Paste text instead' }).click();
     await dialog.locator('#aig-text').fill('Fire exits must stay clear at all times. Report every near miss within 24 hours using the safety form.');
-    await dialog.getByRole('button', { name: 'Quick check · 5' }).click();
+    await dialog.getByRole('button', { name: 'Next' }).click();
+
+    // Step 2: the Standard mix is preselected; counts are plain number fields (no − / + counters).
+    await expect(dialog.locator('[aria-current=step]')).toContainText('Questions');
+    await expect(dialog).toContainText('Questions: 10 · English + Arabic');
+    await expect(dialog.getByRole('tab', { name: 'Standard · 10' })).toHaveAttribute('aria-selected', 'true');
+    await expect(dialog.getByRole('button', { name: /increase|decrease|fewer|more .* questions/i })).toHaveCount(0);
+    await dialog.getByRole('tab', { name: 'Quick check · 5' }).click();
     await expect(dialog).toContainText('Questions: 5 · English + Arabic');
-    await dialog.locator('#aig-count-mcq').fill('1');
-    for (const type of ['Yes / No', 'Open question', 'Reorder']) {
-      await dialog.getByRole('button', { name: `More ${type} questions` }).click();
-    }
-    await dialog.getByRole('radio', { name: 'Hard' }).check();
-    await dialog.getByRole('button', { name: 'More points' }).click();
-    await dialog.getByRole('button', { name: 'Generate' }).click();
+    for (const type of ['mcq', 'yes_no', 'open', 'reorder']) await dialog.locator(`#aig-count-${type}`).fill('1');
+    await dialog.getByRole('tab', { name: 'Hard' }).click();
+    await dialog.getByText("Bloom's levels and learning objectives").click();
+    await dialog.locator('#aig-score').fill('2');
+    expect(calls.starts).toHaveLength(0);
+    await dialog.getByRole('button', { name: 'Generate (4)' }).click();
 
     await expect(dialog.getByRole('status')).toContainText('Writing 4 questions in English and Arabic');
     const sent = calls.starts[0].postDataBuffer()?.toString() ?? '';
@@ -130,8 +134,8 @@ test.describe('behaviour', () => {
 
     // Review: every question with its answer; leave one out, add the rest.
     await expect(dialog).toContainText('Questions ready: 4.', { timeout: 15_000 });
-    await expect(dialog.locator('.aig-result')).toHaveCount(4);
-    await expect(dialog.locator('.aig-opt--correct')).toHaveText(/Fire exits/);
+    await expect(dialog.locator('.af-question')).toHaveCount(4);
+    await expect(dialog.locator('.aig-correct').first()).toContainText('Fire exits');
     await dialog.getByRole('checkbox', { name: 'Include question 3' }).uncheck();
     await dialog.getByRole('button', { name: 'Add questions (3)' }).click();
 
@@ -150,13 +154,15 @@ test.describe('behaviour', () => {
 
     await page.locator('.af-card--questions').getByRole('button', { name: 'Generate with AI' }).click();
     const dialog = page.getByRole('dialog', { name: /Generate assignment questions with AI/ });
-    await expect(dialog).toContainText('File-upload questions are added by hand');
     // A file the server would refuse is refused before upload.
     await dialog.locator('input[type=file]').setInputFiles({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
     await expect(dialog.getByRole('alert')).toContainText('"notes.txt" is not a PDF, DOCX or PPTX file.');
-    await dialog.getByRole('tab', { name: 'Paste text' }).click();
+    await dialog.getByRole('button', { name: 'Paste text instead' }).click();
     await dialog.locator('#aig-text').fill('Fire exits must stay clear at all times. Report every near miss within 24 hours using the safety form.');
-    await dialog.getByRole('button', { name: 'Generate' }).click();
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await expect(dialog).toContainText('File-upload questions are added by hand');
+    for (const type of ['mcq', 'yes_no', 'open', 'reorder']) await dialog.locator(`#aig-count-${type}`).fill('1');
+    await dialog.getByRole('button', { name: 'Generate (4)' }).click();
     await dialog.getByRole('button', { name: 'Add questions (4)' }).click({ timeout: 15_000 });
 
     // The empty starter question is replaced, not left above them.
@@ -169,12 +175,15 @@ test.describe('behaviour', () => {
     await page.goto('/admin/quizzes');
     await page.getByRole('button', { name: 'Generate with AI' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByRole('tab', { name: 'Paste text' }).click();
+    await dialog.getByRole('button', { name: 'Paste text instead' }).click();
     await dialog.locator('#aig-text').fill('Fire exits must stay clear at all times. Report every near miss within 24 hours using the safety form.');
-    await dialog.getByRole('button', { name: 'Generate' }).click();
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await dialog.getByRole('button', { name: /^Generate \(/ }).click();
 
-    await expect(dialog.getByRole('alert')).toContainText('The AI service is busy or its quota is used up.', { timeout: 15_000 });
+    await expect(dialog).toContainText('The AI service is busy or its quota is used up.', { timeout: 15_000 });
+    await expect(dialog.getByRole('button', { name: 'Try again' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Back to settings' }).click();
+    await dialog.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(dialog.locator('#aig-text')).toHaveValue(/Fire exits/); // nothing typed is lost
     await expect(page).toHaveURL(/\/admin\/quizzes$/);
   });
@@ -185,7 +194,10 @@ test.describe('behaviour', () => {
     await page.getByRole('button', { name: 'Generate with AI' }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('status')).toContainText('AI generation is not set up on this server yet.');
-    await expect(dialog.getByRole('button', { name: 'Generate' })).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Paste text instead' }).click();
+    await dialog.locator('#aig-text').fill('Fire exits must stay clear at all times. Report every near miss within 24 hours using the safety form.');
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await expect(dialog.getByRole('button', { name: /^Generate \(/ })).toBeDisabled();
   });
 
   test('the standalone AI Assessments page is gone', async ({ page }) => {
@@ -218,7 +230,7 @@ for (const locale of ['en', 'ar'] as const) {
       await shot(`${section}-page`);
 
       await button.click();
-      await expect(page.locator('.aig')).toBeVisible();
+      await expect(page.locator('.aig-dialog')).toBeVisible();
       await noRawKeys();
       await shot(`${section}-dialog`);
       await page.keyboard.press('Escape');
@@ -227,14 +239,19 @@ for (const locale of ['en', 'ar'] as const) {
     // The generated questions in the real Add Quiz form.
     await page.goto('/admin/quizzes');
     await page.locator('.ql-ai').click();
-    await page.locator('#aig-tab-paste').click();
+    await page.locator('.aig-option').click();
     await page.locator('#aig-text').fill('Fire exits must stay clear at all times. Report every near miss within 24 hours using the safety form.');
     await page.locator('.aig-dialog button[type=submit]').click();
-    await expect(page.locator('.aig-result')).toHaveCount(4, { timeout: 15_000 });
+    await expect(page.locator('.aig-mix')).toBeVisible();
+    expect(await overflow()).toBeLessThanOrEqual(1);
+    await noRawKeys();
+    await shot('step-2');
+    await page.locator('.aig-dialog button[type=submit]').click();
+    await expect(page.locator('.aig-dialog .af-question')).toHaveCount(4, { timeout: 15_000 });
     expect(await overflow()).toBeLessThanOrEqual(1);
     await noRawKeys();
     await shot('review');
-    await page.locator('.aig-foot .nas-btn--primary').click();
+    await page.locator('.aig-foot .af-btn--primary').click();
     await expect(page.locator('.af-question')).toHaveCount(4);
     expect(await overflow()).toBeLessThanOrEqual(1);
     await noRawKeys();

@@ -6,7 +6,10 @@ import { DialogModule } from 'primeng/dialog';
 import { EMPTY, catchError, exhaustMap, filter, finalize, interval, map, of, switchMap, takeWhile, timer } from 'rxjs';
 import { LocaleService } from '../../core/services/locale.service';
 import { ToastService } from '../../core/services/toast.service';
+import { NasFileCardComponent } from '../nas/nas-file-card/nas-file-card.component';
 import { NasIconComponent } from '../nas/nas-icon/nas-icon.component';
+import { NasListStateComponent } from '../nas/nas-list-state/nas-list-state.component';
+import { NasPillTabsComponent, type NasPillTab } from '../nas/nas-pill-tabs/nas-pill-tabs.component';
 import { AiQuestionsApiService, AiRefusal } from './ai-questions-api.service';
 import {
   AI_BLOOM_LEVELS, AI_DIFFICULTIES, AI_FILE_EXTENSIONS, AI_LIMITS, AI_QUESTION_TYPES,
@@ -14,7 +17,6 @@ import {
 } from './ai-questions.model';
 
 type Phase = 'form' | 'running' | 'review' | 'failed';
-type SourceTab = 'upload' | 'paste';
 type PresetKey = 'quick' | 'standard' | 'full';
 
 /** How often a running generation is re-read. */
@@ -25,13 +27,6 @@ const PRESETS: Record<PresetKey, Record<AiQuestionType, number>> = {
   quick:    { mcq: 5, yes_no: 0, open: 0, reorder: 0 },
   standard: { mcq: 6, yes_no: 2, open: 1, reorder: 1 },
   full:     { mcq: 10, yes_no: 4, open: 3, reorder: 3 },
-};
-
-const TYPE_ICONS: Record<AiQuestionType, string> = {
-  mcq: 'list-bullets',
-  yes_no: 'check-circle',
-  open: 'file-text',
-  reorder: 'list-numbers',
 };
 
 /**
@@ -50,7 +45,10 @@ const TYPE_ICONS: Record<AiQuestionType, string> = {
 @Component({
   selector: 'app-ai-generate-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, DialogModule, NasIconComponent],
+  imports: [
+    ReactiveFormsModule, TranslateModule, DialogModule, NasIconComponent, NasPillTabsComponent,
+    NasFileCardComponent, NasListStateComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ai-generate-dialog.component.html',
   styleUrl: './ai-generate-dialog.component.scss',
@@ -71,7 +69,6 @@ export class AiGenerateDialogComponent {
   readonly generated = output<AiDraftQuestion[]>();
 
   readonly types = AI_QUESTION_TYPES;
-  readonly typeIcons = TYPE_ICONS;
   readonly blooms = AI_BLOOM_LEVELS;
   readonly difficulties = AI_DIFFICULTIES;
   readonly presets: readonly PresetKey[] = ['quick', 'standard', 'full'];
@@ -79,7 +76,9 @@ export class AiGenerateDialogComponent {
   readonly accept = AI_FILE_EXTENSIONS.map(e => `.${e}`).join(',');
 
   readonly phase = signal<Phase>('form');
-  readonly tab = signal<SourceTab>('upload');
+  /** The wizard step while phase is 'form': 1 material, 2 question mix. */
+  readonly wizardStep = signal<1 | 2>(1);
+  readonly pasteOpen = signal(false);
   readonly usage = signal<AiUsage | null>(null);
   readonly files = signal<File[]>([]);
   readonly fileError = signal<string | null>(null);
@@ -114,9 +113,21 @@ export class AiGenerateDialogComponent {
     this.tick();
     return this.form.controls.text.value.trim().length;
   });
-  readonly bloomCount = computed(() => {
+  /** Re-read on a language switch so pill labels follow it. */
+  private readonly langTick = signal(0);
+  readonly difficultyTabs = computed<NasPillTab[]>(() => {
+    this.langTick();
+    return this.difficulties.map(d => ({ id: d, label: this.t.instant(`ai_questions.difficulties.${d}`) }));
+  });
+  /** "More options" opens by itself when something in it is set. */
+  readonly moreOpen = computed(() => {
     this.tick();
-    return Object.values(this.form.controls.bloom.getRawValue()).filter(Boolean).length;
+    const v = this.form.getRawValue();
+    return Object.values(v.bloom).some(Boolean) || !!v.objectives.trim() || Number(v.score) !== 1;
+  });
+  readonly presetTabs = computed<NasPillTab[]>(() => {
+    this.langTick();
+    return this.presets.map(p => ({ id: p, label: this.t.instant(`ai_questions.preset.${p}`) }));
   });
   readonly activePreset = computed<PresetKey | null>(() => {
     const c = this.counts();
@@ -126,15 +137,14 @@ export class AiGenerateDialogComponent {
     const s = this.elapsed();
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   });
-  readonly usagePercent = computed(() => {
-    const u = this.usage();
-    return u && u.limit > 0 ? Math.min(100, Math.round((u.used / u.limit) * 100)) : 0;
-  });
   readonly selectedCount = computed(() => this.selected().size);
-  readonly resultCounts = computed(() => {
-    const out: Partial<Record<AiQuestionType, number>> = {};
-    for (const q of this.results()) out[q.type] = (out[q.type] ?? 0) + 1;
-    return AI_QUESTION_TYPES.filter(type => out[type]).map(type => ({ type, n: out[type] ?? 0 }));
+
+  /** The material step's problem (i18n key), or null. */
+  readonly sourceProblem = computed<string | null>(() => {
+    this.tick();
+    if (!this.files().length && this.textLength() < AI_LIMITS.pastedMin) return 'ai_questions.err_no_source';
+    if (this.form.controls.text.invalid) return 'ai_questions.err_invalid';
+    return null;
   });
 
   /** The first thing to fix before Generate, as an i18n key; null when ready. */
@@ -143,14 +153,18 @@ export class AiGenerateDialogComponent {
     const u = this.usage();
     if (u && !u.configured) return 'ai_questions.err_not_configured';
     if (u && u.used >= u.limit) return 'ai_questions.err_daily_limit';
-    if (!this.files().length && this.textLength() < AI_LIMITS.pastedMin) return 'ai_questions.err_no_source';
+    if (this.sourceProblem()) return this.sourceProblem();
     if (this.total() < 1 || this.total() > AI_LIMITS.total) return 'ai_questions.err_counts';
     if (this.form.invalid) return 'ai_questions.err_invalid';
     return null;
   });
 
+  /** What blocks the current wizard step. */
+  readonly stepProblem = computed(() => (this.wizardStep() === 1 ? this.sourceProblem() : this.problem()));
+
   constructor() {
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.tick.update(v => v + 1));
+    this.t.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => this.langTick.update(v => v + 1));
 
     // Each time the dialog opens: fresh usage; a failed run goes back to the form.
     effect(() => {
@@ -224,29 +238,43 @@ export class AiGenerateDialogComponent {
     this.files.update(list => list.filter((_, i) => i !== index));
   }
 
-  fileSize(bytes: number): string {
-    return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  openPaste(): void {
+    this.pasteOpen.set(true);
+    queueMicrotask(() => document.getElementById('aig-text')?.focus());
   }
 
-  fileIcon(name: string): string {
-    return name.toLowerCase().endsWith('.pdf') ? 'file-pdf' : 'file-text';
+  /* ── wizard ────────────────────────────────────────────────────── */
+
+  /** Step 1 continues to step 2 once there is material; step 2 generates. */
+  onSubmit(): void {
+    if (this.wizardStep() === 1) {
+      this.submitted.set(true);
+      if (this.sourceProblem()) return;
+      this.submitted.set(false);
+      this.wizardStep.set(2);
+      return;
+    }
+    this.generate();
+  }
+
+  back(): void {
+    this.submitted.set(false);
+    this.serverError.set(null);
+    this.wizardStep.set(1);
+  }
+
+  setDifficulty(id: string): void {
+    const d = this.difficulties.find(x => x === id);
+    if (d) this.form.controls.difficulty.setValue(d);
   }
 
   /* ── mix ───────────────────────────────────────────────────────── */
 
-  applyPreset(key: PresetKey): void {
-    this.form.controls.counts.setValue({ ...PRESETS[key] });
+  applyPresetId(id: string): void {
+    const key = this.presets.find(p => p === id);
+    if (key) this.form.controls.counts.setValue({ ...PRESETS[key] });
   }
 
-  step(type: AiQuestionType, delta: number): void {
-    const c = this.form.controls.counts.controls[type];
-    c.setValue(Math.max(0, Math.min(AI_LIMITS.perType, (Number(c.value) || 0) + delta)));
-  }
-
-  stepScore(delta: number): void {
-    const c = this.form.controls.score;
-    c.setValue(Math.max(0, Math.min(100, (Number(c.value) || 0) + delta)));
-  }
 
   /* ── run ───────────────────────────────────────────────────────── */
 
@@ -351,5 +379,7 @@ export class AiGenerateDialogComponent {
     this.submitted.set(false);
     this.serverError.set(null);
     this.form.controls.text.setValue('');
+    this.wizardStep.set(1);
+    this.pasteOpen.set(false);
   }
 }

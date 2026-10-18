@@ -1,5 +1,14 @@
 {
-  "hr_sync": {"hint": "Learners and job titles update from HR automatically every {{hours}} hours. Last update: {{date}}.", "hint_overdue": "No update from HR since {{date}}. The automatic update every {{hours}} hours is not running: ask the system administrator.", "hint_never": "No successful update from HR yet. The automatic update runs every {{hours}} hours once the server scheduler is set up.", "no_data": "HR did not send any employees: the sign-in to HR failed or HR is unreachable. Check the HR address and account on the server.", "not_configured": "The connection to HR is not set up on the server (HR address and account). Ask the system administrator.", "running": "Updating…", "done": "Updated from HR: {{employees}} employees ({{created}} new, {{updated}} updated).", "failed": "The update from HR did not finish. Try again later."},
+  "hr_sync": {
+    "hint": "Learners and job titles update from HR automatically every {{hours}} hours. Last update: {{date}}.",
+    "hint_overdue": "No update from HR since {{date}}. The automatic update every {{hours}} hours is not running: ask the system administrator.",
+    "hint_never": "No successful update from HR yet. The automatic update runs every {{hours}} hours once the server scheduler is set up.",
+    "no_data": "HR did not send any employees: the sign-in to HR failed or HR is unreachable. Check the HR address and account on the server.",
+    "not_configured": "The connection to HR is not set up on the server (HR address and account). Ask the system administrator.",
+    "running": "Updating…",
+    "done": "Updated from HR: {{employees}} employees ({{created}} new, {{updated}} updated).",
+    "failed": "The update from HR did not finish. Try again later."
+  },
   "app": {
     "title": "2B Academy",
     "loading": "Loading..."
@@ -97,7 +106,10 @@
     "add": "Add item"
   },
   "common": {
-    "empty_state": { "title": "No Results", "hint": "Try adjusting or clearing your filters to find what you are looking for." },
+    "empty_state": {
+      "title": "No Results",
+      "hint": "Try adjusting or clearing your filters to find what you are looking for."
+    },
     "language": "Language",
     "no_keep": "No, keep it",
     "list_separator": ", ",
@@ -381,8 +393,14 @@
     "search_items": "Search by assignment or course name",
     "search_attempts": "Search by learner, assignment or course",
     "col_assignments": "Assignments",
-    "count_created": {"one":"{{count}} created assignment","other":"{{count}} created assignments"},
-    "count_courses": {"one":"for {{count}} course","other":"for {{count}} courses"},
+    "count_created": {
+      "one": "{{count}} created assignment",
+      "other": "{{count}} created assignments"
+    },
+    "count_courses": {
+      "one": "for {{count}} course",
+      "other": "for {{count}} courses"
+    },
     "filter_type": "Type",
     "sub_col_type": "Type",
     "result": "Result",
@@ -524,8 +542,6 @@
     "form_key_no_options": "Add the options first.",
     "form_add": "Add",
     "form_remove_option": "Remove {{label}}",
-    "form_score_up": "Increase score",
-    "form_score_down": "Decrease score",
     "form_publish_summary": "PUBLISH SUMMARY",
     "form_scope": "Scope",
     "form_total_score": "Total score",
@@ -1273,8 +1289,14 @@
     "search_items": "Search by quiz or course name",
     "search_attempts": "Search by learner, quiz or course",
     "col_quizzes": "Quizzes",
-    "count_created": {"one":"{{count}} created quiz","other":"{{count}} created quizzes"},
-    "count_courses": {"one":"for {{count}} course","other":"for {{count}} courses"},
+    "count_created": {
+      "one": "{{count}} created quiz",
+      "other": "{{count}} created quizzes"
+    },
+    "count_courses": {
+      "one": "for {{count}} course",
+      "other": "for {{count}} courses"
+    },
     "filter_type": "Type",
     "result": "Result",
     "sub_col_type": "Type",
@@ -1374,8 +1396,6 @@
     "form_key_no_options": "Add the options first.",
     "form_add": "Add",
     "form_remove_option": "Remove {{label}}",
-    "form_score_up": "Increase score",
-    "form_score_down": "Decrease score",
     "toast_created": "Quiz created.",
     "toast_updated": "Quiz updated.",
     "form_publish_summary": "PUBLISH SUMMARY",
@@ -1654,8 +1674,6 @@
       "file_size": "The file is larger than 8 MB.",
       "file_required": "Upload the completed schedule.",
       "add_cohort": "Add Cohort",
-      "capacity_up": "Increase capacity",
-      "capacity_down": "Decrease capacity",
       "capacity_range": "Capacity must be between 1 and 10,000.",
       "step1_edit": "Step 1 · Download the current schedule",
       "download_title_edit": "Download current schedule",
@@ -1748,7 +1766,10 @@
     "attendance_session_n": "Session {{n}}",
     "attendance_sessions_count": "{{count}} Sessions",
     "attendance_absence_heading": "ABSENCE",
-    "attendance_load_failed": "The attendance could not be loaded.", "attendance_upcoming": "Upcoming", "attendance_live": "Live now", "attendance_no_data": "No attendance records for this cohort yet.",
+    "attendance_load_failed": "The attendance could not be loaded.",
+    "attendance_upcoming": "Upcoming",
+    "attendance_live": "Live now",
+    "attendance_no_data": "No attendance records for this cohort yet.",
     "attendance_no_results": "Nothing matches your search.",
     "up_coming": "Up Coming",
     "no_modules": "No modules yet",
@@ -1768,12 +1789,11 @@
     "cohort": "Cohort",
     "select_cohort": "Select cohort",
     "approximate_duration": "Approximate Duration",
-    "increase_duration": "Increase duration",
-    "decrease_duration": "Decrease duration",
     "document": "Document",
     "video": "Video",
     "upload_video": "Upload Video",
-    "upload_failed": "The upload stopped (connection lost). Choose the file again to retry.", "uploading": "Uploading…",
+    "upload_failed": "The upload stopped (connection lost). Choose the file again to retry.",
+    "uploading": "Uploading…",
     "existing_file": "Existing file",
     "module_url": "URL",
     "article": "Article",
@@ -1894,7 +1914,13 @@
       "article": "Articles",
       "link": "Links"
     },
-    "content_kind": {"quiz": "Quiz", "assignment": "Assignment"}, "content_draft": "Draft", "content_due": "Due {{date}}", "edit_module_named": "Edit {{name}}",
+    "content_kind": {
+      "quiz": "Quiz",
+      "assignment": "Assignment"
+    },
+    "content_draft": "Draft",
+    "content_due": "Due {{date}}",
+    "edit_module_named": "Edit {{name}}",
     "delete_module_named": "Delete {{name}}",
     "duration_min": "{{count}} min",
     "duration_hours": {
@@ -1918,7 +1944,7 @@
     "col_enrolled": "Enrolled",
     "col_completion": "Completion",
     "col_status": "Last Status",
-    "type_hybrid":        "Hybrid",
+    "type_hybrid": "Hybrid",
     "type_external_link": "External Link",
     "updated_at": "Updated",
     "image": "Image",
@@ -1958,23 +1984,23 @@
     "completion_label": "{{value}}% of enrolled learners completed"
   },
   "course_detail_toasts": {
-    "course_updated":  "Course updated",
-    "module_added":    "Module added",
-    "module_updated":  "Module updated",
-    "module_deleted":  "Module deleted",
-    "module_delete_title":   "Delete module",
+    "course_updated": "Course updated",
+    "module_added": "Module added",
+    "module_updated": "Module updated",
+    "module_deleted": "Module deleted",
+    "module_delete_title": "Delete module",
     "module_delete_message": "Delete module \"{{name}}\"?",
-    "cohort_created":  "Cohort created",
-    "cohort_updated":  "Cohort updated",
-    "cohort_deleted":  "Cohort deleted"
+    "cohort_created": "Cohort created",
+    "cohort_updated": "Cohort updated",
+    "cohort_deleted": "Cohort deleted"
   },
   "quizzes_list_toasts": {
     "delete_title": "Delete Quiz",
-    "deleted":      "Quiz deleted."
+    "deleted": "Quiz deleted."
   },
   "assignments_list_toasts": {
     "delete_title": "Delete Assignment",
-    "deleted":      "Assignment deleted."
+    "deleted": "Assignment deleted."
   },
   "resources_list_toasts": {
     "delete_title": "Delete Resource"
@@ -1989,38 +2015,38 @@
   },
   "submission_score_updated": "Score updated.",
   "controllers_toasts": {
-    "required_summary":  "Required",
-    "required_message":  "Name, email and role are required.",
-    "password_summary":  "Password",
-    "password_short":    "Password must be at least 8 characters.",
+    "required_summary": "Required",
+    "required_message": "Name, email and role are required.",
+    "password_summary": "Password",
+    "password_short": "Password must be at least 8 characters.",
     "password_mismatch": "Passwords do not match.",
-    "delete_title":      "Delete Controller",
-    "removed":           "{{name}} removed.",
-    "delete_failed":     "Could not delete controller."
+    "delete_title": "Delete Controller",
+    "removed": "{{name}} removed.",
+    "delete_failed": "Could not delete controller."
   },
   "users_toasts": {
     "deactivate_failed": "Could not deactivate the user. Please retry.",
-    "deactivated":       "{{name}} has been deactivated.",
+    "deactivated": "{{name}} has been deactivated.",
     "reactivate_failed": "Could not reactivate the user. Please retry.",
-    "reactivated":       "{{name}} has been reactivated."
+    "reactivated": "{{name}} has been reactivated."
   },
   "audit_toasts": {
-    "generate_failed":    "Could not generate the audit log. Please retry.",
-    "export_downloaded":  "{{filename}} has been downloaded."
+    "generate_failed": "Could not generate the audit log. Please retry.",
+    "export_downloaded": "{{filename}} has been downloaded."
   },
   "roles_toasts": {
     "load_failed": "Could not load this role. Please retry."
   },
   "certificates_toasts": {
-    "upload_invalid_type":  "Upload a JPG, PNG, WEBP, or PDF file.",
-    "upload_max_size":      "Maximum size is 8 MB.",
-    "download_failed":      "Could not download this certificate.",
-    "download_failed_title":"Download failed",
-    "unsupported_type":     "Unsupported file type",
-    "file_too_large":       "File too large",
-    "template_updated":     "Template updated",
-    "template_active":      "{{name}} is now the active certificate template.",
-    "upload_failed":        "Upload failed",
+    "upload_invalid_type": "Upload a JPG, PNG, WEBP, or PDF file.",
+    "upload_max_size": "Maximum size is 8 MB.",
+    "download_failed": "Could not download this certificate.",
+    "download_failed_title": "Download failed",
+    "unsupported_type": "Unsupported file type",
+    "file_too_large": "File too large",
+    "template_updated": "Template updated",
+    "template_active": "{{name}} is now the active certificate template.",
+    "upload_failed": "Upload failed",
     "upload_failed_detail": "Could not upload the template."
   },
   "errors": {
@@ -2061,8 +2087,6 @@
     "subtitle": "Configure platform behaviour",
     "save_changes": "Save Changes",
     "saved": "Platform settings updated.",
-
-
     "enrolment_learning": "Enrolment & Learning",
     "enrolment_attendance": "Enrolment & Attendance",
     "default_cohort_size": "Default Cohort Size",
@@ -2074,7 +2098,6 @@
     "course_attendance_sub": "The passcode will remain the same for the entire session.",
     "passcode_reset_each": "Passcode will reset each",
     "seconds": "Seconds",
-
     "grading_certs": "Grading & Certificates",
     "cert_basis": "Certificate Awarded Based On",
     "basis_attendance": "Attendance only",
@@ -2089,14 +2112,11 @@
     "min_passing_score_help": "Learners must reach this score to earn the certificate.",
     "compliance_target": "Compliance Target (%)",
     "compliance_target_help": "The Compliance by Job Title report marks a job title On Track at or above this share of fully compliant employees, otherwise At Risk.",
-
     "description_placeholder": "Tell visitors what your academy does…",
     "our_values_placeholder": "What you stand for…",
     "our_mission_placeholder": "What you set out to do…",
     "our_vision_placeholder": "Where you're heading…",
-
     "why_choose_us_placeholder": "Selling points for prospective learners…",
-
     "upload_photo": "Upload Photo",
     "replace_photo": "Replace Photo"
   },
@@ -2296,12 +2316,17 @@
     "button": "Generate with AI",
     "title_quiz": "Generate quiz questions with AI",
     "title_assignment": "Generate assignment questions with AI",
-    "subtitle": "Written from your material, in English and Arabic. You review them before anything is saved.",
-    "sources": "Course material",
-    "tab_upload": "Upload files",
+    "steps": "Steps",
+    "step_material": "Course material",
+    "step_questions": "Questions",
+    "material_intro": "Add the material the questions are written from: files, pasted text, or both.",
+    "drop_title": "Drag PDF, Word or PowerPoint files here",
+    "or": "or",
+    "paste_instead": "Paste text instead",
+    "next": "Next",
+    "generate_n": "Generate ({{n}})",
     "tab_paste": "Paste text",
-    "drop": "Drag files here or",
-    "browse": "browse",
+    "choose_files": "Choose files",
     "formats": "PDF, Word or PowerPoint · up to {{max}} files · {{mb}} MB each",
     "file_type": "\"{{name}}\" is not a PDF, DOCX or PPTX file.",
     "file_size": "\"{{name}}\" is larger than {{mb}} MB.",
@@ -2310,7 +2335,6 @@
     "paste_placeholder": "Paste course notes, a lesson outline or a policy text…",
     "paste_count": "{{n}} characters (at least {{min}})",
     "counts": "Questions",
-    "presets": "Question mix",
     "preset": {
       "quick": "Quick check · 5",
       "standard": "Standard · 10",
@@ -2328,10 +2352,7 @@
       "open": "Answered in a few sentences",
       "reorder": "Steps in the right order"
     },
-    "fewer": "Fewer {{type}} questions",
-    "more": "More {{type}} questions",
     "file_questions_hint": "File-upload questions are added by hand with \"Add question\".",
-    "options": "Fine-tune",
     "difficulty": "Difficulty",
     "difficulties": {
       "easy": "Easy",
@@ -2340,8 +2361,6 @@
       "mixed": "Mixed"
     },
     "score": "Points per question",
-    "score_less": "Fewer points",
-    "score_more": "More points",
     "more_options": "Bloom's levels and learning objectives",
     "bloom": "Target these Bloom's levels (optional)",
     "blooms": {
@@ -2355,8 +2374,7 @@
     "objectives": "Learning objectives (optional)",
     "objectives_placeholder": "One per line, e.g. \"Identify the fire exits on the floor plan\".",
     "summary": "Questions: {{n}} · English + Arabic",
-    "usage": "AI generations today: {{used}} / {{limit}}",
-    "generate": "Generate",
+    "usage_short": "AI today: {{used}} / {{limit}}",
     "running_title": "Writing {{n}} questions in English and Arabic",
     "running_hint": "You can hide this window: the questions appear for review as soon as they are ready.",
     "running_foot": "Reading your material and writing the questions…",
@@ -2364,19 +2382,21 @@
     "review_ready": "Questions ready: {{n}}. Untick any you do not want.",
     "select_all": "Select all",
     "include_n": "Include question {{n}}",
-    "points": "Points: {{n}}",
     "correct": "Correct answer",
     "regenerate": "Generate a new set",
     "add_n": "Add questions ({{n}})",
     "failed_title": "The questions could not be generated",
     "back_to_settings": "Back to settings",
-    "try_again": "Try again",
     "toast_added": "AI questions added: {{n}}. Review them, then save.",
     "err_not_configured": "AI generation is not set up on this server yet. Ask the platform administrator to add the Gemini API key.",
     "err_daily_limit": "You have used all your AI generations for today. Try again tomorrow.",
     "err_no_source": "Upload a file or paste at least {{min}} characters of course text.",
     "err_counts": "Ask for between 1 and {{max}} questions in total.",
     "err_invalid": "Check the highlighted values.",
-    "err_failed": "The questions could not be generated. Try again."
+    "err_failed": "The questions could not be generated. Try again.",
+    "material_title": "Where should the questions come from?",
+    "paste_hint": "Course notes, an article or a transcript · at least {{min}} characters",
+    "questions_title": "What should the AI write?",
+    "questions_intro": "Pick a ready mix, then set how many of each type you want."
   }
 }

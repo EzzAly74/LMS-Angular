@@ -1,5 +1,14 @@
 {
-  "hr_sync": {"hint": "يتم تحديث المتعلمين والمسميات الوظيفية من نظام الموارد البشرية تلقائيًا كل {{hours}} ساعة. آخر تحديث: {{date}}.", "hint_overdue": "لم يتم التحديث من نظام الموارد البشرية منذ {{date}}. التحديث التلقائي كل {{hours}} ساعة لا يعمل: تواصل مع مسؤول النظام.", "hint_never": "لم يتم أي تحديث ناجح من نظام الموارد البشرية بعد. يعمل التحديث التلقائي كل {{hours}} ساعة بعد إعداد المجدول على الخادم.", "no_data": "لم يُرسل نظام الموارد البشرية أي موظفين: فشل تسجيل الدخول إليه أو تعذّر الوصول إليه. تحقّق من عنوان النظام والحساب على الخادم.", "not_configured": "الاتصال بنظام الموارد البشرية غير مُعدّ على الخادم (العنوان والحساب). تواصل مع مسؤول النظام.", "running": "جارٍ التحديث…", "done": "تم التحديث من نظام الموارد البشرية: {{employees}} موظف ({{created}} جديد، {{updated}} محدَّث).", "failed": "لم يكتمل التحديث من نظام الموارد البشرية. حاول مرة أخرى لاحقًا."},
+  "hr_sync": {
+    "hint": "يتم تحديث المتعلمين والمسميات الوظيفية من نظام الموارد البشرية تلقائيًا كل {{hours}} ساعة. آخر تحديث: {{date}}.",
+    "hint_overdue": "لم يتم التحديث من نظام الموارد البشرية منذ {{date}}. التحديث التلقائي كل {{hours}} ساعة لا يعمل: تواصل مع مسؤول النظام.",
+    "hint_never": "لم يتم أي تحديث ناجح من نظام الموارد البشرية بعد. يعمل التحديث التلقائي كل {{hours}} ساعة بعد إعداد المجدول على الخادم.",
+    "no_data": "لم يُرسل نظام الموارد البشرية أي موظفين: فشل تسجيل الدخول إليه أو تعذّر الوصول إليه. تحقّق من عنوان النظام والحساب على الخادم.",
+    "not_configured": "الاتصال بنظام الموارد البشرية غير مُعدّ على الخادم (العنوان والحساب). تواصل مع مسؤول النظام.",
+    "running": "جارٍ التحديث…",
+    "done": "تم التحديث من نظام الموارد البشرية: {{employees}} موظف ({{created}} جديد، {{updated}} محدَّث).",
+    "failed": "لم يكتمل التحديث من نظام الموارد البشرية. حاول مرة أخرى لاحقًا."
+  },
   "app": {
     "title": "أكاديمية 2B",
     "loading": "جاري التحميل..."
@@ -97,7 +106,10 @@
     "add": "إضافة عنصر"
   },
   "common": {
-    "empty_state": { "title": "لا توجد نتائج", "hint": "جرّب تعديل عوامل التصفية أو مسحها للعثور على ما تبحث عنه." },
+    "empty_state": {
+      "title": "لا توجد نتائج",
+      "hint": "جرّب تعديل عوامل التصفية أو مسحها للعثور على ما تبحث عنه."
+    },
     "language": "اللغة",
     "no_keep": "لا، احتفظ به",
     "list_separator": "، ",
@@ -381,8 +393,22 @@
     "search_items": "ابحث باسم التكليف أو الدورة",
     "search_attempts": "ابحث بالمتعلم أو التكليف أو الدورة",
     "col_assignments": "المهام",
-    "count_created": {"zero":"لا توجد مهام مُنشأة","one":"مهمة واحدة مُنشأة","two":"مهمتان مُنشأتان","few":"{{count}} مهام مُنشأة","many":"{{count}} مهمةً مُنشأةً","other":"{{count}} مهمة مُنشأة"},
-    "count_courses": {"zero":"بدون دورات","one":"في دورة واحدة","two":"في دورتين","few":"في {{count}} دورات","many":"في {{count}} دورةً","other":"في {{count}} دورة"},
+    "count_created": {
+      "zero": "لا توجد مهام مُنشأة",
+      "one": "مهمة واحدة مُنشأة",
+      "two": "مهمتان مُنشأتان",
+      "few": "{{count}} مهام مُنشأة",
+      "many": "{{count}} مهمةً مُنشأةً",
+      "other": "{{count}} مهمة مُنشأة"
+    },
+    "count_courses": {
+      "zero": "بدون دورات",
+      "one": "في دورة واحدة",
+      "two": "في دورتين",
+      "few": "في {{count}} دورات",
+      "many": "في {{count}} دورةً",
+      "other": "في {{count}} دورة"
+    },
     "filter_type": "النوع",
     "sub_col_type": "النوع",
     "result": "النتيجة",
@@ -524,8 +550,6 @@
     "form_key_no_options": "أضف الخيارات أولًا.",
     "form_add": "إضافة",
     "form_remove_option": "إزالة {{label}}",
-    "form_score_up": "زيادة الدرجة",
-    "form_score_down": "تقليل الدرجة",
     "form_publish_summary": "ملخص النشر",
     "form_scope": "النطاق",
     "form_total_score": "الدرجة الكاملة",
@@ -1317,8 +1341,22 @@
     "search_items": "ابحث باسم الاختبار أو الدورة",
     "search_attempts": "ابحث بالمتعلم أو الاختبار أو الدورة",
     "col_quizzes": "الاختبارات",
-    "count_created": {"zero":"لا توجد اختبارات مُنشأة","one":"اختبار واحد مُنشأ","two":"اختباران مُنشآن","few":"{{count}} اختبارات مُنشأة","many":"{{count}} اختبارًا مُنشأً","other":"{{count}} اختبار مُنشأ"},
-    "count_courses": {"zero":"بدون دورات","one":"في دورة واحدة","two":"في دورتين","few":"في {{count}} دورات","many":"في {{count}} دورةً","other":"في {{count}} دورة"},
+    "count_created": {
+      "zero": "لا توجد اختبارات مُنشأة",
+      "one": "اختبار واحد مُنشأ",
+      "two": "اختباران مُنشآن",
+      "few": "{{count}} اختبارات مُنشأة",
+      "many": "{{count}} اختبارًا مُنشأً",
+      "other": "{{count}} اختبار مُنشأ"
+    },
+    "count_courses": {
+      "zero": "بدون دورات",
+      "one": "في دورة واحدة",
+      "two": "في دورتين",
+      "few": "في {{count}} دورات",
+      "many": "في {{count}} دورةً",
+      "other": "في {{count}} دورة"
+    },
     "filter_type": "النوع",
     "result": "النتيجة",
     "sub_col_type": "النوع",
@@ -1418,8 +1456,6 @@
     "form_key_no_options": "أضف الخيارات أولًا.",
     "form_add": "إضافة",
     "form_remove_option": "إزالة {{label}}",
-    "form_score_up": "زيادة الدرجة",
-    "form_score_down": "تقليل الدرجة",
     "toast_created": "تم إنشاء الاختبار.",
     "toast_updated": "تم تحديث الاختبار.",
     "form_publish_summary": "ملخص النشر",
@@ -1698,8 +1734,6 @@
       "file_size": "حجم الملف أكبر من 8 ميجابايت.",
       "file_required": "ارفع الجدول المكتمل.",
       "add_cohort": "إضافة مجموعة",
-      "capacity_up": "زيادة السعة",
-      "capacity_down": "تقليل السعة",
       "capacity_range": "يجب أن تكون السعة بين 1 و10,000.",
       "step1_edit": "الخطوة 1 · تنزيل الجدول الحالي",
       "download_title_edit": "تنزيل الجدول الحالي",
@@ -1792,7 +1826,10 @@
     "attendance_session_n": "الجلسة {{n}}",
     "attendance_sessions_count": "{{count}} جلسة",
     "attendance_absence_heading": "الغياب",
-    "attendance_load_failed": "تعذر تحميل سجل الحضور.", "attendance_upcoming": "قادمة", "attendance_live": "مباشرة الآن", "attendance_no_data": "لا توجد سجلات حضور لهذه المجموعة بعد.",
+    "attendance_load_failed": "تعذر تحميل سجل الحضور.",
+    "attendance_upcoming": "قادمة",
+    "attendance_live": "مباشرة الآن",
+    "attendance_no_data": "لا توجد سجلات حضور لهذه المجموعة بعد.",
     "attendance_no_results": "لا توجد نتائج مطابقة.",
     "up_coming": "قادمة",
     "no_modules": "لا توجد وحدات بعد",
@@ -1812,12 +1849,11 @@
     "cohort": "المجموعة",
     "select_cohort": "اختر مجموعة",
     "approximate_duration": "المدة التقريبية",
-    "increase_duration": "زيادة المدة",
-    "decrease_duration": "إنقاص المدة",
     "document": "مستند",
     "video": "فيديو",
     "upload_video": "رفع فيديو",
-    "upload_failed": "توقف الرفع (انقطع الاتصال). اختر الملف مرة أخرى للمحاولة.", "uploading": "جارٍ الرفع…",
+    "upload_failed": "توقف الرفع (انقطع الاتصال). اختر الملف مرة أخرى للمحاولة.",
+    "uploading": "جارٍ الرفع…",
     "existing_file": "ملف موجود",
     "module_url": "الرابط",
     "article": "مقال",
@@ -1970,7 +2006,13 @@
       "article": "المقالات",
       "link": "الروابط"
     },
-    "content_kind": {"quiz": "اختبار", "assignment": "تكليف"}, "content_draft": "مسودة", "content_due": "التسليم {{date}}", "edit_module_named": "تعديل {{name}}",
+    "content_kind": {
+      "quiz": "اختبار",
+      "assignment": "تكليف"
+    },
+    "content_draft": "مسودة",
+    "content_due": "التسليم {{date}}",
+    "edit_module_named": "تعديل {{name}}",
     "delete_module_named": "حذف {{name}}",
     "duration_min": "{{count}} دقيقة",
     "duration_hours": {
@@ -1998,7 +2040,7 @@
     "col_enrolled": "المسجلون",
     "col_completion": "الإتمام",
     "col_status": "آخر حالة",
-    "type_hybrid":        "مدمج",
+    "type_hybrid": "مدمج",
     "type_external_link": "رابط خارجي",
     "updated_at": "آخر تحديث",
     "image": "الصورة",
@@ -2038,23 +2080,23 @@
     "completion_label": "أتمّ {{value}}٪ من المسجلين"
   },
   "course_detail_toasts": {
-    "course_updated":  "تم تحديث الدورة",
-    "module_added":    "تمت إضافة الوحدة",
-    "module_updated":  "تم تحديث الوحدة",
-    "module_deleted":  "تم حذف الوحدة",
-    "module_delete_title":   "حذف الوحدة",
+    "course_updated": "تم تحديث الدورة",
+    "module_added": "تمت إضافة الوحدة",
+    "module_updated": "تم تحديث الوحدة",
+    "module_deleted": "تم حذف الوحدة",
+    "module_delete_title": "حذف الوحدة",
     "module_delete_message": "هل تريد حذف الوحدة \"{{name}}\"؟",
-    "cohort_created":  "تم إنشاء المجموعة",
-    "cohort_updated":  "تم تحديث المجموعة",
-    "cohort_deleted":  "تم حذف المجموعة"
+    "cohort_created": "تم إنشاء المجموعة",
+    "cohort_updated": "تم تحديث المجموعة",
+    "cohort_deleted": "تم حذف المجموعة"
   },
   "quizzes_list_toasts": {
     "delete_title": "حذف الاختبار",
-    "deleted":      "تم حذف الاختبار."
+    "deleted": "تم حذف الاختبار."
   },
   "assignments_list_toasts": {
     "delete_title": "حذف المهمة",
-    "deleted":      "تم حذف المهمة."
+    "deleted": "تم حذف المهمة."
   },
   "resources_list_toasts": {
     "delete_title": "حذف المورد"
@@ -2069,38 +2111,38 @@
   },
   "submission_score_updated": "تم تحديث الدرجة.",
   "controllers_toasts": {
-    "required_summary":  "حقول مطلوبة",
-    "required_message":  "الاسم والبريد الإلكتروني والدور حقول مطلوبة.",
-    "password_summary":  "كلمة المرور",
-    "password_short":    "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+    "required_summary": "حقول مطلوبة",
+    "required_message": "الاسم والبريد الإلكتروني والدور حقول مطلوبة.",
+    "password_summary": "كلمة المرور",
+    "password_short": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
     "password_mismatch": "كلمتا المرور غير متطابقتين.",
-    "delete_title":      "حذف المسؤول",
-    "removed":           "تمت إزالة {{name}}.",
-    "delete_failed":     "تعذّر حذف المسؤول."
+    "delete_title": "حذف المسؤول",
+    "removed": "تمت إزالة {{name}}.",
+    "delete_failed": "تعذّر حذف المسؤول."
   },
   "users_toasts": {
     "deactivate_failed": "تعذّر إلغاء تفعيل المستخدم. يُرجى إعادة المحاولة.",
-    "deactivated":       "تم إلغاء تفعيل {{name}}.",
+    "deactivated": "تم إلغاء تفعيل {{name}}.",
     "reactivate_failed": "تعذّر إعادة تفعيل المستخدم. يُرجى إعادة المحاولة.",
-    "reactivated":       "تمت إعادة تفعيل {{name}}."
+    "reactivated": "تمت إعادة تفعيل {{name}}."
   },
   "audit_toasts": {
-    "generate_failed":   "تعذّر إنشاء سجل التدقيق. يُرجى إعادة المحاولة.",
+    "generate_failed": "تعذّر إنشاء سجل التدقيق. يُرجى إعادة المحاولة.",
     "export_downloaded": "تم تنزيل {{filename}}."
   },
   "roles_toasts": {
     "load_failed": "تعذّر تحميل هذا الدور. يُرجى إعادة المحاولة."
   },
   "certificates_toasts": {
-    "upload_invalid_type":  "يُرجى رفع ملف JPG أو PNG أو WEBP أو PDF.",
-    "upload_max_size":      "الحجم الأقصى المسموح به 8 ميجابايت.",
-    "download_failed":      "تعذّر تنزيل هذه الشهادة.",
-    "download_failed_title":"فشل التنزيل",
-    "unsupported_type":     "نوع الملف غير مدعوم",
-    "file_too_large":       "الملف كبير جدًا",
-    "template_updated":     "تم تحديث القالب",
-    "template_active":      "أصبح {{name}} هو قالب الشهادة النشط الآن.",
-    "upload_failed":        "فشل الرفع",
+    "upload_invalid_type": "يُرجى رفع ملف JPG أو PNG أو WEBP أو PDF.",
+    "upload_max_size": "الحجم الأقصى المسموح به 8 ميجابايت.",
+    "download_failed": "تعذّر تنزيل هذه الشهادة.",
+    "download_failed_title": "فشل التنزيل",
+    "unsupported_type": "نوع الملف غير مدعوم",
+    "file_too_large": "الملف كبير جدًا",
+    "template_updated": "تم تحديث القالب",
+    "template_active": "أصبح {{name}} هو قالب الشهادة النشط الآن.",
+    "upload_failed": "فشل الرفع",
     "upload_failed_detail": "تعذّر رفع القالب."
   },
   "errors": {
@@ -2141,8 +2183,6 @@
     "subtitle": "تكوين سلوك المنصة",
     "save_changes": "حفظ التغييرات",
     "saved": "تم تحديث إعدادات المنصة.",
-
-
     "enrolment_learning": "التسجيل والتعلم",
     "enrolment_attendance": "التسجيل والحضور",
     "default_cohort_size": "الحجم الافتراضي للمجموعة",
@@ -2154,7 +2194,6 @@
     "course_attendance_sub": "سيظل رمز المرور كما هو طوال الجلسة.",
     "passcode_reset_each": "تتم إعادة تعيين رمز المرور كل",
     "seconds": "ثانية",
-
     "grading_certs": "التقييم والشهادات",
     "cert_basis": "تُمنح الشهادة بناءً على",
     "basis_attendance": "الحضور فقط",
@@ -2169,14 +2208,11 @@
     "min_passing_score_help": "يجب على المتعلمين الوصول إلى هذه الدرجة لاستحقاق الشهادة.",
     "compliance_target": "نسبة الامتثال المستهدفة (%)",
     "compliance_target_help": "يعرض تقرير الامتثال حسب المسمى الوظيفي المسمى «على المسار» عند بلوغ هذه النسبة من الموظفين الممتثلين بالكامل، وإلا «معرض للخطر».",
-
     "description_placeholder": "اخبر الزوار عن أكاديميتك…",
     "our_values_placeholder": "ما الذي تؤمن به…",
     "our_mission_placeholder": "ما الذي تسعى لتحقيقه…",
     "our_vision_placeholder": "إلى أين تتجه…",
-
     "why_choose_us_placeholder": "نقاط البيع للمتعلمين المحتملين…",
-
     "upload_photo": "رفع صورة",
     "replace_photo": "استبدال الصورة"
   },
@@ -2376,12 +2412,17 @@
     "button": "إنشاء بالذكاء الاصطناعي",
     "title_quiz": "إنشاء أسئلة الاختبار بالذكاء الاصطناعي",
     "title_assignment": "إنشاء أسئلة المهمة بالذكاء الاصطناعي",
-    "subtitle": "تُكتب من مادتك بالعربية والإنجليزية، وتراجعها قبل حفظ أي شيء.",
-    "sources": "مادة الدورة",
-    "tab_upload": "رفع ملفات",
+    "steps": "الخطوات",
+    "step_material": "مادة الدورة",
+    "step_questions": "الأسئلة",
+    "material_intro": "أضف المادة التي تُكتب منها الأسئلة: ملفات أو نص ملصق أو كلاهما.",
+    "drop_title": "اسحب ملفات PDF أو Word أو PowerPoint إلى هنا",
+    "or": "أو",
+    "paste_instead": "لصق نص بدلًا من ذلك",
+    "next": "التالي",
+    "generate_n": "إنشاء ({{n}})",
     "tab_paste": "لصق نص",
-    "drop": "اسحب الملفات إلى هنا أو",
-    "browse": "تصفّح",
+    "choose_files": "اختر الملفات",
     "formats": "PDF أو Word أو PowerPoint · حتى {{max}} ملفات · {{mb}} ميجابايت لكل ملف",
     "file_type": "الملف \"{{name}}\" ليس ملف PDF أو DOCX أو PPTX.",
     "file_size": "حجم الملف \"{{name}}\" أكبر من {{mb}} ميجابايت.",
@@ -2390,7 +2431,6 @@
     "paste_placeholder": "الصق ملاحظات الدورة أو مخطط الدرس أو نص سياسة…",
     "paste_count": "عدد الأحرف: {{n}} (الحد الأدنى {{min}})",
     "counts": "الأسئلة",
-    "presets": "مزيج الأسئلة",
     "preset": {
       "quick": "تحقق سريع · 5",
       "standard": "قياسي · 10",
@@ -2408,10 +2448,7 @@
       "open": "يُجاب عنه في بضع جمل",
       "reorder": "خطوات بالترتيب الصحيح"
     },
-    "fewer": "تقليل أسئلة {{type}}",
-    "more": "زيادة أسئلة {{type}}",
     "file_questions_hint": "تُضاف أسئلة رفع الملفات يدويًا من \"إضافة سؤال\".",
-    "options": "الضبط الدقيق",
     "difficulty": "مستوى الصعوبة",
     "difficulties": {
       "easy": "سهل",
@@ -2420,8 +2457,6 @@
       "mixed": "متنوع"
     },
     "score": "درجة كل سؤال",
-    "score_less": "درجات أقل",
-    "score_more": "درجات أكثر",
     "more_options": "مستويات بلوم وأهداف التعلم",
     "bloom": "استهدف مستويات بلوم هذه (اختياري)",
     "blooms": {
@@ -2435,8 +2470,7 @@
     "objectives": "أهداف التعلم (اختياري)",
     "objectives_placeholder": "هدف في كل سطر، مثال: \"تحديد مخارج الطوارئ على مخطط الطابق\".",
     "summary": "عدد الأسئلة: {{n}} · عربي + إنجليزي",
-    "usage": "مرات الإنشاء بالذكاء الاصطناعي اليوم: {{used}} / {{limit}}",
-    "generate": "إنشاء",
+    "usage_short": "الذكاء الاصطناعي اليوم: {{used}} / {{limit}}",
     "running_title": "جارٍ كتابة الأسئلة بالعربية والإنجليزية (العدد: {{n}})",
     "running_hint": "يمكنك إخفاء هذه النافذة: ستظهر الأسئلة للمراجعة فور جاهزيتها.",
     "running_foot": "جارٍ قراءة المادة وكتابة الأسئلة…",
@@ -2444,19 +2478,21 @@
     "review_ready": "الأسئلة الجاهزة: {{n}}. ألغِ تحديد ما لا تريده.",
     "select_all": "تحديد الكل",
     "include_n": "تضمين السؤال {{n}}",
-    "points": "الدرجة: {{n}}",
     "correct": "الإجابة الصحيحة",
     "regenerate": "إنشاء مجموعة جديدة",
     "add_n": "إضافة الأسئلة ({{n}})",
     "failed_title": "تعذر إنشاء الأسئلة",
     "back_to_settings": "العودة إلى الإعدادات",
-    "try_again": "حاول مرة أخرى",
     "toast_added": "تمت إضافة أسئلة الذكاء الاصطناعي (العدد: {{n}}). راجعها ثم احفظ.",
     "err_not_configured": "لم يتم إعداد الإنشاء بالذكاء الاصطناعي على هذا الخادم بعد. اطلب من مسؤول المنصة إضافة مفتاح Gemini API.",
     "err_daily_limit": "لقد استخدمت جميع مرات الإنشاء بالذكاء الاصطناعي المتاحة لك اليوم. حاول مرة أخرى غدًا.",
     "err_no_source": "ارفع ملفًا أو الصق {{min}} حرفًا على الأقل من نص الدورة.",
     "err_counts": "اطلب ما بين 1 و{{max}} سؤالًا إجمالًا.",
     "err_invalid": "راجع القيم المحددة.",
-    "err_failed": "تعذر إنشاء الأسئلة. حاول مرة أخرى."
+    "err_failed": "تعذر إنشاء الأسئلة. حاول مرة أخرى.",
+    "material_title": "من أين تُكتب الأسئلة؟",
+    "paste_hint": "ملاحظات الدورة أو مقال أو نص مفرّغ · {{min}} حرفًا على الأقل",
+    "questions_title": "ماذا يكتب الذكاء الاصطناعي؟",
+    "questions_intro": "اختر مزيجًا جاهزًا، ثم حدّد عدد الأسئلة من كل نوع."
   }
 }
