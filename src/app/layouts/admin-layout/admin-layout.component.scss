@@ -226,6 +226,8 @@
   // Figma "Learning" row: Icon/Solid/chevron-left in its 16px frame, turned
   // -90deg (pointing down), full #fffbf7. Open, it turns to point up. The old
   // asset was only the 4.8x8 vector squeezed into a 6px box, so it distorted.
+  // The file is `icon-chevron-16.svg`: browsers that cached the old
+  // `icon-chevron.svg` (an unhashed path) kept stretching it to 16px, huge.
   &__chevron {
     flex-shrink: 0;
     display: block;

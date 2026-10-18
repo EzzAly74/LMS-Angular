@@ -102,17 +102,20 @@
 
               <div class="tl__tcard-foot">
                 <span class="tl__created">{{ 'evaluations.created_on' | translate: { date: (t.created_at | nasDate: locale()) } }}</span>
-                @if (!t.locked) {
-                  <a *nasCan="'edit-evaluations'" class="ev__btn ev__btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
-                    <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
-                    {{ 'common.edit' | translate }}
+                <!-- Figma 2009:88432: Edit and the results button side by side at the card's end. -->
+                <div class="tl__tcard-actions">
+                  @if (!t.locked) {
+                    <a *nasCan="'edit-evaluations'" class="ev__btn ev__btn--outline tl__edit" [routerLink]="[t.id, 'edit']">
+                      <img src="assets/icons/figma/pencil-simple.svg" width="20" height="20" alt="" />
+                      {{ 'common.edit' | translate }}
+                      <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
+                    </a>
+                  }
+                  <a class="ev__btn ev__btn--primary tl__results" [routerLink]="[t.id]">
+                    {{ 'evaluations.templates.view_results' | translate }}
                     <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
                   </a>
-                }
-                <a class="ev__btn ev__btn--primary" [routerLink]="[t.id]">
-                  {{ 'evaluations.templates.view_results' | translate }}
-                  <span class="ev__sr-only"><bdi>{{ t.name }}</bdi></span>
-                </a>
+                </div>
               </div>
             </article>
           } @empty {

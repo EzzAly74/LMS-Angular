@@ -117,6 +117,18 @@
 
 .tl__created { font-size: var(--nas-size-2xs); color: var(--nas-color-text-muted); }
 
+// The buttons stay together at the end (Figma 2009:88432), 8 px apart, the
+// same 36 px height; on a narrow card they wrap under the date as one group.
+.tl__tcard-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--nas-space-2);
+  margin-inline-start: auto;
+}
+
+.tl__tcard-actions .ev__btn { block-size: 36px; min-block-size: 36px; padding-block: 0; }
+
 // ── Table ────────────────────────────────────────────────────────────────
 .tl__table { min-inline-size: 1040px; }
 
