@@ -4,7 +4,7 @@ import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 import { QUIET_STATUSES } from '../../../core/interceptors/error.interceptor';
 import { ApiParams, ApiService } from '../../../core/services/api.service';
 import { API } from '../../../core/constants/api.constants';
-import { saveBlob } from '../../../core/utils/save-blob';
+import { contentDispositionName, saveBlob } from '../../../core/utils/save-blob';
 import type {
   ReportDefinition, ReportFilterOption, ReportFilterParams, ReportFormat, ReportPage,
 } from '../models/report.model';
@@ -56,7 +56,7 @@ export class ReportsApiService {
       })
       .pipe(
         map((res: HttpResponse<Blob>) => {
-          if (res.body) saveBlob(res.body, fileName(res.headers.get('Content-Disposition')) ?? fallbackName);
+          if (res.body) saveBlob(res.body, contentDispositionName(res.headers.get('Content-Disposition')) ?? fallbackName);
         }),
         catchError((err: unknown) => err instanceof HttpErrorResponse && err.status === 422 && err.error instanceof Blob
           ? from(err.error.text()).pipe(switchMap(text => throwError(() => new ReportExportError(messageOf(text)))))
@@ -93,13 +93,4 @@ function messageOf(text: string): string | null {
   } catch {
     return null;
   }
-}
-
-/** The file name of a Content-Disposition header (plain or RFC 5987 form). */
-function fileName(header: string | null): string | null {
-  if (!header) return null;
-  const star = /filename\*=UTF-8''([^;]+)/i.exec(header);
-  if (star) return decodeURIComponent(star[1]);
-  const plain = /filename="?([^";]+)"?/i.exec(header);
-  return plain ? plain[1] : null;
 }

@@ -31,3 +31,14 @@ export function openDownload(url: string): void {
   link.click();
   link.remove();
 }
+
+/** The file name of a Content-Disposition header (RFC 5987 `filename*` first, then plain). */
+export function contentDispositionName(header: string | null): string | null {
+  if (!header) return null;
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (star) {
+    try { return decodeURIComponent(star[1]); } catch { /* malformed: fall back to the plain name */ }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header);
+  return plain ? plain[1] : null;
+}
